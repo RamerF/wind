@@ -3,8 +3,7 @@ package io.github.ramerf.mybatisturbo.core.util;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ramerf.mybatisturbo.core.entity.AbstractEntity;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -32,6 +31,13 @@ public class CollectionUtils {
 
   public static boolean nonEmpty(@Nullable Map<?, ?> map) {
     return !isEmpty(map);
+  }
+
+  public static void doIfNonEmpty(
+      @Nullable Collection<?> collection, @Nonnull Consumer<Collection<?>> consumer) {
+    if (nonEmpty(collection)) {
+      consumer.accept(collection);
+    }
   }
 
   /** 转换 {@link List} 对象,可选过滤. */

@@ -279,11 +279,11 @@ public class Rs<T> implements Serializable {
   }
 
   /**
-   * 接口调用判断,如果出现网络异常(如中断),抛出{@link CommonException#of()}.
+   * 接口调用判断,如果出现网络异常(如中断),抛出{@link CommonException#of(ResultCode)}.
    *
    * @param responseEntity 接口返回
    * @return 请求数据实体
-   * @see CommonException#of()
+   * @see #requireNonNull(ResponseEntity, ResultCode)
    */
   public static <R> R requireNonNull(ResponseEntity<Rs<R>> responseEntity) {
     return requireNonNull(responseEntity, null);
@@ -296,18 +296,16 @@ public class Rs<T> implements Serializable {
    * @param resultCode 返回该结果码,当满足以下任一条件时:<br>
    *     1. <code>responseEntity</code>为空<br>
    *     2. <code>responseEntity.body</code>为空<br>
-   *     3. responseEntity.body.result=false
    * @return Rs内的对象
    */
   public static <R> R requireNonNull(
       final ResponseEntity<Rs<R>> responseEntity, final ResultCode resultCode) {
     if (Objects.isNull(responseEntity) || !responseEntity.hasBody()) {
-      throw CommonException.of(resultCode);
+      throw CommonException.of(Objects.nonNull(resultCode) ? resultCode : ResultCode.ERROR);
     }
     final Rs<R> body = responseEntity.getBody();
     if (!Objects.requireNonNull(body, ResultCode.ERROR.desc).isResult()) {
-      throw CommonException.of(
-          Objects.nonNull(resultCode) ? resultCode : ResultCode.of(body.code, body.msg));
+      throw CommonException.of(ResultCode.of(body.code, body.msg));
     }
     return body.data;
   }
