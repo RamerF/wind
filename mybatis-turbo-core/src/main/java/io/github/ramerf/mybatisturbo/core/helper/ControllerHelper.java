@@ -245,7 +245,7 @@ public final class ControllerHelper {
       T update = invoke.update(entity);
       return Objects.isNull(update)
           ? notExist(String.valueOf(id))
-          : ok(json().put("id", update.getId()), ResultCode.API_FAIL_EXEC_UPDATE.desc());
+          : ok(json().put("id", update.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
     } catch (Exception e) {
       return errorResponse(e);
     }
