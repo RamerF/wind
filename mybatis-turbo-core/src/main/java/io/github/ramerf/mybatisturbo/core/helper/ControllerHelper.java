@@ -54,7 +54,7 @@ public final class ControllerHelper {
         throw CommonException.of(ResultCode.API_FAIL_EXEC_ADD);
       }
     } catch (Exception e) {
-      throw CommonException.of(Objects.nonNull(error) ? error : ResultCode.API_FAIL_EXEC_UPDATE);
+      throw CommonException.of(Objects.nonNull(error) ? error : ResultCode.API_FAIL_EXEC_ADD);
     }
   }
 
