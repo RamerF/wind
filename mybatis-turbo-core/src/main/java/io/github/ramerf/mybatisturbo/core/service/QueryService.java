@@ -265,7 +265,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
    */
   default <R extends AbstractEntity> List<R> lists(
       Consumer<Conditions<T>> consumer, Class<R> clazz) {
-    final QueryColumn<T> queryColumn = QueryColumnFactory.<T>getInstance(getPoJoClass(getClass()));
+    final QueryColumn<T> queryColumn = QueryColumnFactory.<T>getInstance(getPoJoClass(this));
     final Conditions<T> conditions = queryColumn.getConditions();
     Optional.ofNullable(consumer).ifPresent(con -> con.accept(conditions));
     return Query.getInstance().select(queryColumn).where(conditions).fetch(clazz);
