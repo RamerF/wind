@@ -54,15 +54,26 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
   }
 
   /**
-   * 条件is_delete=false的总记录数.
+   * 给定条件,执行count 指定列.
    *
    * @param consumer the consumer
    * @return long long
    */
-  default long count(Consumer<QueryColumn<T>> consumer) {
+  default long count(Consumer<QueryColumn<T>> query, Consumer<Conditions<T>> condition) {
     final QueryColumn<T> queryColumn = QueryColumnFactory.<T>getInstance(getPoJoClass(this));
-    consumer.accept(queryColumn);
+    Optional.ofNullable(query).ifPresent(q -> q.accept(queryColumn));
+    Optional.ofNullable(condition).ifPresent(cond -> cond.accept(queryColumn.getConditions()));
     return Query.getInstance().select(queryColumn).where(queryColumn.getConditions()).fetchCount();
+  }
+
+  /**
+   * 给定条件,执行count(1).
+   *
+   * @param condition the condition
+   * @return long long
+   */
+  default long count(Consumer<Conditions<T>> condition) {
+    return count(null, condition);
   }
 
   /**

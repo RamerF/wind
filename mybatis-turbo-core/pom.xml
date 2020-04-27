@@ -11,7 +11,7 @@
 
     <artifactId>mybatis-turbo-core</artifactId>
     <name>mybatis-turbo-core</name>
-    <version>2.0.1-SNAPSHOT</version>
+    <version>2.0.2-SNAPSHOT</version>
     <properties>
         <logback-classic.version>1.2.3</logback-classic.version>
         <mybatis-turbo-annotation.version>1.0.0-SNAPSHOT</mybatis-turbo-annotation.version>
