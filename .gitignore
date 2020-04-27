@@ -1,2 +1,2 @@
 *.iml
-/mybatis-turbo-core/target/**
+/**/target/**
