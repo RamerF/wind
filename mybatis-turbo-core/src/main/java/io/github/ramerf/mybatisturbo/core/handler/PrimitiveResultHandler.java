@@ -1,6 +1,7 @@
 package io.github.ramerf.mybatisturbo.core.handler;
 
 import io.github.ramerf.mybatisturbo.core.conditions.QueryColumn;
+import io.github.ramerf.mybatisturbo.core.entity.enums.InterEnum;
 import io.github.ramerf.mybatisturbo.core.util.CollectionUtils;
 import java.util.*;
 import java.util.Map.Entry;
@@ -43,8 +44,16 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
     if (value instanceof Long) {
       return (E) Long.valueOf(value.toString());
     }
+    if (InterEnum.class.isAssignableFrom(clazz)) {
+      final Class<? extends InterEnum> cls = (Class<? extends InterEnum>) clazz;
+      return (E) InterEnum.of(cls, Integer.valueOf(value.toString()));
+    }
+    final Class<?> valueClass = value.getClass();
+    if (valueClass.isArray()) {
+      return (E) value;
+    }
     try {
-      return (E) value.getClass().getConstructor(value.getClass()).newInstance(value);
+      return (E) valueClass.getConstructor(valueClass).newInstance(value);
     } catch (Exception e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);

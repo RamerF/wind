@@ -139,7 +139,7 @@ public class Query {
 
   public <R> R fetchOne(final Class<R> clazz) {
     ResultHandler resultHandler =
-        BeanUtils.isPrimitiveType(clazz)
+        BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
     final Map<String, Object> result =
@@ -154,7 +154,7 @@ public class Query {
       return Collections.emptyList();
     }
     ResultHandler resultHandler =
-        BeanUtils.isPrimitiveType(clazz)
+        BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
     return resultHandler.handle(list);
@@ -184,7 +184,7 @@ public class Query {
       log.debug("fetch:[{}]", list);
     }
     ResultHandler resultHandler =
-        BeanUtils.isPrimitiveType(clazz)
+        BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
     return resultHandler.handle(list);
@@ -217,7 +217,7 @@ public class Query {
       return CollectionUtils.toPage(Collections.emptyList(), 0, currentPage, pageSize);
     }
     ResultHandler resultHandler =
-        BeanUtils.isPrimitiveType(clazz)
+        BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
     return CollectionUtils.toPage(resultHandler.handle(list), fetchCount(), currentPage, pageSize);
