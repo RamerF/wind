@@ -286,7 +286,7 @@ public class Rs<T> implements Serializable {
    * @see #requireNonNull(ResponseEntity, ResultCode)
    */
   public static <R> R requireNonNull(ResponseEntity<Rs<R>> responseEntity) {
-    return requireNonNull(responseEntity, null);
+    return requireNonNull(responseEntity, ResultCode.ERROR);
   }
 
   /**
@@ -299,12 +299,12 @@ public class Rs<T> implements Serializable {
    * @return Rs内的对象
    */
   public static <R> R requireNonNull(
-      final ResponseEntity<Rs<R>> responseEntity, final ResultCode resultCode) {
+      final ResponseEntity<Rs<R>> responseEntity, @Nonnull final ResultCode resultCode) {
     if (Objects.isNull(responseEntity) || !responseEntity.hasBody()) {
-      throw CommonException.of(Objects.nonNull(resultCode) ? resultCode : ResultCode.ERROR);
+      throw CommonException.of(resultCode);
     }
     final Rs<R> body = responseEntity.getBody();
-    if (!Objects.requireNonNull(body, ResultCode.ERROR.desc).isResult()) {
+    if (!Objects.requireNonNull(body, resultCode.desc).isResult()) {
       throw CommonException.of(ResultCode.of(body.code, body.msg));
     }
     return body.data;
