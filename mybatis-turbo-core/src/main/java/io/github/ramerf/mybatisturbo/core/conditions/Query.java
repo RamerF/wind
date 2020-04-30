@@ -1,19 +1,19 @@
 package io.github.ramerf.mybatisturbo.core.conditions;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.github.ramerf.mybatisturbo.core.conditions.Predicate.SqlOperator;
 import io.github.ramerf.mybatisturbo.core.config.AppContextInject;
 import io.github.ramerf.mybatisturbo.core.entity.AbstractEntity;
 import io.github.ramerf.mybatisturbo.core.entity.constant.Constant;
 import io.github.ramerf.mybatisturbo.core.entity.response.ResultCode;
 import io.github.ramerf.mybatisturbo.core.exception.CommonException;
 import io.github.ramerf.mybatisturbo.core.handler.*;
+import io.github.ramerf.mybatisturbo.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.mybatisturbo.core.repository.AbstractBaseRepository;
 import io.github.ramerf.mybatisturbo.core.util.*;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.*;
+import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -22,12 +22,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import static io.github.ramerf.mybatisturbo.core.conditions.Predicate.SqlOperator.*;
 import static io.github.ramerf.mybatisturbo.core.helper.SqlHelper.optimizeQueryString;
 
 /**
  * 构建 SQL.所有的条件字符串构造,需要改为对象<br>
  * 如: OrdrByClause... <br>
  * TODO: 查询缓存
+ *
+ * <p>下面是新的实现思路 <br>
+ * select {@link SqlFunction} <br>
+ * from table1 left join table2<br>
+ * where {@link SqlFunction} <br>
+ * {@link SqlFunction}
+ *
+ * <p>当{@link QueryAlia#sqlFunction}为null时,退化为普通条件,否则就是函数
  *
  * @author Tang Xiaofeng
  * @since 2019/12/28
@@ -51,6 +60,8 @@ public class Query {
   private String conditionString;
   private String countString;
   private String orderByString;
+  /** 暂时用于where之后的函数(group by等). */
+  private final StringBuilder suffixString = new StringBuilder();
 
   public static Query getInstance() {
     final Query bean = AppContextInject.getBean(Query.class);
@@ -63,7 +74,7 @@ public class Query {
     this.queryString =
         this.queryColumns.stream()
             .map(QueryColumn::getString)
-            .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT));
+            .collect(Collectors.joining(Constant.SEMICOLON));
     return this;
   }
 
@@ -77,28 +88,36 @@ public class Query {
     String conditionString =
         this.conditions.stream()
             .map(Conditions::getString)
-            .collect(Collectors.joining(SqlOperator.AND.operator()));
+            .collect(Collectors.joining(AND.operator()));
 
-    if (conditionString.endsWith(SqlOperator.AND.operator())) {
+    if (conditionString.endsWith(AND.operator())) {
       conditionString =
-          conditionString.substring(
-              0, conditionString.length() - SqlOperator.AND.operator().length());
+          conditionString.substring(0, conditionString.length() - AND.operator().length());
     }
     this.conditionString =
         this.conditions.stream()
             .map(o -> o.queryEntityMetaData.getFromTable())
-            .collect(Collectors.joining(SqlOperator.SEMICOLON.operator()));
+            .collect(Collectors.joining(SEMICOLON.operator()));
     // TODO-WARN 修复orderBy从这里下手
     // 每个条件带表别名
     // 定义orderByString ,这里赋值
 
     if (StringUtils.nonEmpty(conditionString)) {
-      this.conditionString =
-          this.conditionString.concat(SqlOperator.WHERE.operator()).concat(conditionString);
+      this.conditionString = this.conditionString.concat(WHERE.operator()).concat(conditionString);
     }
     if (StringUtils.nonEmpty(this.conditionString)) {
       this.countString = this.conditionString;
     }
+    return this;
+  }
+
+  public Query groupBy(@Nonnull final GroupByClause... groupByClauses) {
+    suffixString
+        .append(GROUP_BY)
+        .append(
+            Stream.of(groupByClauses)
+                .flatMap(groupByClause -> groupByClause.getCols().stream())
+                .collect(Collectors.joining()));
     return this;
   }
 
@@ -119,20 +138,18 @@ public class Query {
     String conditionString =
         this.conditions.stream()
             .map(Conditions::getString)
-            .collect(Collectors.joining(SqlOperator.AND.operator()));
+            .collect(Collectors.joining(AND.operator()));
 
-    if (conditionString.endsWith(SqlOperator.AND.operator())) {
+    if (conditionString.endsWith(AND.operator())) {
       conditionString =
-          conditionString.substring(
-              0, conditionString.length() - SqlOperator.AND.operator().length());
+          conditionString.substring(0, conditionString.length() - AND.operator().length());
     }
     this.conditionString =
         this.conditions.stream()
             .map(o -> o.queryEntityMetaData.getFromTable())
-            .collect(Collectors.joining(SqlOperator.SEMICOLON.operator()));
+            .collect(Collectors.joining(SEMICOLON.operator()));
     if (StringUtils.nonEmpty(conditionString)) {
-      this.conditionString =
-          this.conditionString.concat(SqlOperator.WHERE.operator()).concat(conditionString);
+      this.conditionString = this.conditionString.concat(WHERE.operator()).concat(conditionString);
     }
     return this;
   }
@@ -140,14 +157,28 @@ public class Query {
   public <R> R fetchOne(final Class<R> clazz) {
     ResultHandler resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler(clazz, queryColumns)
+            ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
+    // TODO-WARN: 待测试
+    StringUtils.doIfNonEmpty(
+        str -> {
+          conditionString = conditionString.concat(str);
+        },
+        suffixString.toString());
+    // TODO-WARN: 待测试
     final Map<String, Object> result =
         repository.findOne(optimizeQueryString(queryString, clazz), conditionString);
     return (R) resultHandler.handle(result);
   }
 
   public <R> List<R> fetch(final Class<R> clazz) {
+    // TODO-WARN: 待测试
+    StringUtils.doIfNonEmpty(
+        str -> {
+          conditionString = conditionString.concat(str);
+        },
+        suffixString.toString());
+    // TODO-WARN: 待测试
     final List<Map<String, Object>> list =
         repository.findAll(optimizeQueryString(queryString, clazz), conditionString);
     if (CollectionUtils.isEmpty(list)) {
@@ -155,7 +186,7 @@ public class Query {
     }
     ResultHandler resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler(clazz, queryColumns)
+            ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
     return resultHandler.handle(list);
   }
@@ -173,8 +204,8 @@ public class Query {
                     s.getProperty()
                         .concat(Constant.DEFAULT_SPLIT_SPACE)
                         .concat(s.getDirection().name()))
-            .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT));
-    conditionString = conditionString.concat(SqlOperator.ORDER_BY.operator()).concat(orderByString);
+            .collect(Collectors.joining(Constant.SEMICOLON));
+    conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
     if (log.isDebugEnabled()) {
       log.debug("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
     }
@@ -185,7 +216,7 @@ public class Query {
     }
     ResultHandler resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler(clazz, queryColumns)
+            ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
     return resultHandler.handle(list);
   }
@@ -202,8 +233,8 @@ public class Query {
                     s.getProperty()
                         .concat(Constant.DEFAULT_SPLIT_SPACE)
                         .concat(s.getDirection().name()))
-            .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT));
-    conditionString = conditionString.concat(SqlOperator.ORDER_BY.operator()).concat(orderByString);
+            .collect(Collectors.joining(Constant.SEMICOLON));
+    conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
     if (log.isDebugEnabled()) {
       log.debug("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
     }
@@ -218,7 +249,7 @@ public class Query {
     }
     ResultHandler resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler(clazz, queryColumns)
+            ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
     return CollectionUtils.toPage(resultHandler.handle(list), fetchCount(), currentPage, pageSize);
   }

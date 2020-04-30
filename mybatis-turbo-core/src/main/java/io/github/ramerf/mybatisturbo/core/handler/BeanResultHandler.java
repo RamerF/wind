@@ -3,8 +3,7 @@ package io.github.ramerf.mybatisturbo.core.handler;
 import io.github.ramerf.mybatisturbo.core.conditions.QueryColumn;
 import io.github.ramerf.mybatisturbo.core.config.AppContextInject;
 import io.github.ramerf.mybatisturbo.core.factory.TypeConverterRegistryFactory;
-import io.github.ramerf.mybatisturbo.core.util.BeanUtils;
-import io.github.ramerf.mybatisturbo.core.util.CollectionUtils;
+import io.github.ramerf.mybatisturbo.core.util.*;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,11 +43,12 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
         continue;
       }
       final String fieldName = PropertyNamer.methodToProperty(method.getName());
-      final String columnAlia = queryAlias.get(fieldName);
-      if (Objects.isNull(columnAlia)) {
-        continue;
-      }
-      Object value = map.get(columnAlia);
+      //      final String columnAlia = queryAlias.get(fieldName);
+      //      final String columnAlia = fieldName;
+      //      if (Objects.isNull(columnAlia)) {
+      //        continue;
+      //      }
+      Object value = map.get(StringUtils.camelToUnderline(fieldName));
       // 有风险! 这里假设类初始化后,如果查询数据库列为空,类的属性值也为空
       if (Objects.isNull(value)) {
         continue;

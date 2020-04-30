@@ -19,6 +19,7 @@
         <module>mybatis-turbo</module>
         <module>mybatis-turbo-core</module>
         <module>mybatis-turbo-annotation</module>
+        <module>mybatis-turbo-test</module>
     </modules>
     <distributionManagement>
         <repository>
@@ -34,21 +35,25 @@
         <jackson.version>2.9.8</jackson.version>
         <lombok.version>1.18.10</lombok.version>
         <fastjson.version>1.2.67</fastjson.version>
+        <javax.inject.version>1</javax.inject.version>
         <mybatis-plus.version>3.3.0</mybatis-plus.version>
         <springfox-swagger.version>2.9.2</springfox-swagger.version>
         <mybatis-spring-boot.version>2.1.0</mybatis-spring-boot.version>
+        <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
+        <swagger-annotations.version>1.5.22</swagger-annotations.version>
+        <mybatis-turbo-annotation.version>1.0.0-SNAPSHOT</mybatis-turbo-annotation.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
         <!-- mybatis的支持 -->
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>${mybatis-spring-boot.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -59,7 +64,6 @@
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>javax.persistence-api</artifactId>
-            <version>2.2</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -79,13 +83,11 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
-            <version>2.2.1.RELEASE</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
-            <version>5.2.1.RELEASE</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -131,10 +133,24 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-aspects</artifactId>
-                <version>5.2.1.RELEASE</version>
-                <scope>compile</scope>
+                <groupId>javax.persistence</groupId>
+                <artifactId>javax.persistence-api</artifactId>
+                <version>${javax.persistence-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.inject</groupId>
+                <artifactId>javax.inject</artifactId>
+                <version>${javax.inject.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.ramerf</groupId>
+                <artifactId>mybatis-turbo-annotation</artifactId>
+                <version>${mybatis-turbo-annotation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-annotations.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

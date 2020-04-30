@@ -21,7 +21,6 @@
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <version>1.5.22</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -49,7 +48,6 @@
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
-            <version>1</version>
         </dependency>
     </dependencies>
 </project>

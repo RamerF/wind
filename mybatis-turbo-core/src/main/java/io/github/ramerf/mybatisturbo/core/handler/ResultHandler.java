@@ -2,6 +2,7 @@ package io.github.ramerf.mybatisturbo.core.handler;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.mybatisturbo.core.conditions.IFunction;
+import io.github.ramerf.mybatisturbo.core.conditions.SqlFunction;
 import io.github.ramerf.mybatisturbo.core.entity.AbstractEntity;
 import io.github.ramerf.mybatisturbo.core.util.*;
 import java.lang.ref.Reference;
@@ -39,6 +40,9 @@ public interface ResultHandler<T, E> {
 
   @Data
   class QueryAlia {
+    /*
+    case when 时,QueryAlia.case(1).then().case(2).then().else()
+    */
     /** 字段名. */
     private String fieldName;
     /** 列名(字段名下划线分割). */
@@ -49,6 +53,8 @@ public interface ResultHandler<T, E> {
     private String tableName;
     /** 表别名. */
     private String tableAlia;
+    /** sql函数. */
+    private SqlFunction sqlFunction;
 
     private QueryAlia() {}
 
@@ -59,6 +65,14 @@ public interface ResultHandler<T, E> {
 
     public static <T extends AbstractEntity> QueryAlia of(
         IFunction<T, ?> function, final String alia, String tableAlia) {
+      return of(function, alia, tableAlia, null);
+    }
+
+    public static <T extends AbstractEntity> QueryAlia of(
+        IFunction<T, ?> function,
+        final String alia,
+        String tableAlia,
+        final SqlFunction sqlFunction) {
       final QueryAlia queryAlia = new QueryAlia();
 
       final SerializedLambda lambda = LambdaUtils.serializedLambda(function);
@@ -100,6 +114,7 @@ public interface ResultHandler<T, E> {
       }
 
       queryAlia.setTableAlia(tableAlia);
+      queryAlia.setSqlFunction(sqlFunction);
       return queryAlia;
     }
 
@@ -113,6 +128,18 @@ public interface ResultHandler<T, E> {
       columnAlia.setTableAlia(tableAlia);
       columnAlia.setTableName(tableName);
       return columnAlia;
+    }
+
+    public String getQueryString() {
+      StringBuilder sb = new StringBuilder();
+      // 这里可能会出现较复杂逻辑,不要改为三目运算符
+      if (Objects.nonNull(sqlFunction)) {
+        sb.append(sqlFunction.string(columnAlia));
+      } else {
+        sb.append(" ".concat(columnAlia));
+      }
+
+      return sb.toString();
     }
   }
 }

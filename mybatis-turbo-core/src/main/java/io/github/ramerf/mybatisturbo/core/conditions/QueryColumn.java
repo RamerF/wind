@@ -1,6 +1,5 @@
 package io.github.ramerf.mybatisturbo.core.conditions;
 
-import io.github.ramerf.mybatisturbo.core.conditions.Predicate.SqlOperator;
 import io.github.ramerf.mybatisturbo.core.config.MybatisTurboConfiguration;
 import io.github.ramerf.mybatisturbo.core.entity.AbstractEntity;
 import io.github.ramerf.mybatisturbo.core.entity.constant.Constant;
@@ -14,6 +13,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
+import static io.github.ramerf.mybatisturbo.core.conditions.Predicate.SqlOperator.*;
+import static io.github.ramerf.mybatisturbo.core.entity.constant.Constant.SEMICOLON;
+
 /**
  * sql查询列定义.即 select 后跟的字段.
  *
@@ -24,10 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 @EqualsAndHashCode(callSuper = true)
+@SuppressWarnings("UnusedReturnValue")
 public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T> {
   // 预留嵌套语句
   private List<QueryColumn<T>> children = new ArrayList<>();
   private Conditions<T> conditions = null;
+  private FuncCondition<T> funcCondition;
 
   private QueryColumn() {}
 
@@ -82,20 +86,34 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
             .getTableName()
             .concat(Constant.DEFAULT_SPLIT_SPACE)
             .concat(columnAlia.getTableAlia()));
-    queryEntityMetaData.columnAlias.add(columnAlia);
+    queryEntityMetaData.queryAlias.add(columnAlia);
+    return this;
+  }
+
+  public QueryColumn<T> sum(final IFunction<T, ?> function) {
+    return sum(function, null);
+  }
+
+  public QueryColumn<T> sum(final IFunction<T, ?> function, final String alia) {
+    final QueryAlia columnAlia = QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia());
+    queryEntityMetaData.setTableName(columnAlia.getTableName());
+    queryEntityMetaData.setFromTable(
+        columnAlia
+            .getTableName()
+            .concat(Constant.DEFAULT_SPLIT_SPACE)
+            .concat(columnAlia.getTableAlia()));
+    columnAlia.setSqlFunction(SqlAggregateFunction.SUM);
+    queryEntityMetaData.queryAlias.add(columnAlia);
     return this;
   }
 
   @Override
   public String getString() {
-    return CollectionUtils.isEmpty(queryEntityMetaData.columnAlias)
-        ? queryEntityMetaData
-            .getTableAlia()
-            .concat(SqlOperator.DOT.operator())
-            .concat(SqlOperator.WILDCARD.operator())
-        : queryEntityMetaData.columnAlias.stream()
+    return CollectionUtils.isEmpty(queryEntityMetaData.queryAlias)
+        ? queryEntityMetaData.getTableAlia().concat(DOT.operator()).concat(WILDCARD.operator())
+        : queryEntityMetaData.queryAlias.stream()
             .map(QueryColumn::methodToColumnWithAlia)
-            .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT));
+            .collect(Collectors.joining(SEMICOLON));
   }
 
   /**
@@ -119,11 +137,15 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
     final String alia = columnAlia.getColumnAlia();
     final String name = columnAlia.getColumnName();
     final String tableAlias = columnAlia.getTableAlia();
-    return tableAlias
-        .concat(SqlOperator.DOT.operator())
-        .concat(name)
-        .concat(SqlOperator.AS.operator())
-        .concat(alia);
+
+    // 待测试
+    final SqlFunction sqlFunction = columnAlia.getSqlFunction();
+    final String queryName =
+        Objects.isNull(sqlFunction)
+            ? tableAlias.concat(DOT.operator()).concat(name)
+            : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
+    // 待测试
+    return queryName.concat(AS.operator()).concat(alia);
   }
 
   /**

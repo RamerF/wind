@@ -16,7 +16,7 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  * @since 2019/12/28
  */
 public class QueryEntityMetaData<T extends AbstractEntity> extends EntityMetaData<T> {
-  protected List<QueryAlia> columnAlias = new ArrayList<>();
+  protected List<QueryAlia> queryAlias = new ArrayList<>();
 
   @Getter(AccessLevel.PROTECTED)
   @Setter
@@ -24,7 +24,7 @@ public class QueryEntityMetaData<T extends AbstractEntity> extends EntityMetaDat
 
   /** 如果没有设置查询列,这里默认返回所有列,作为扩展,之后可以用注解定义. */
   public List<QueryAlia> getQueryAlias() {
-    if (CollectionUtils.isEmpty(columnAlias)) {
+    if (CollectionUtils.isEmpty(queryAlias)) {
       return Stream.of(
               CommonException.requireNonNull(
                       getClazz(),
@@ -40,6 +40,17 @@ public class QueryEntityMetaData<T extends AbstractEntity> extends EntityMetaDat
                       PropertyNamer.methodToProperty(o.getName()), getTableAlia(), getTableName()))
           .collect(Collectors.toList());
     }
-    return columnAlias;
+    return queryAlias;
+  }
+
+  /**
+   * 获取group by条件.
+   *
+   * @return the {@link GroupByClause}
+   */
+  public GroupByClause<T> getGroupByClause() {
+    GroupByClause<T> groupByClause = new GroupByClause<>();
+    groupByClause.setTableAlia(this.tableAlia);
+    return groupByClause;
   }
 }

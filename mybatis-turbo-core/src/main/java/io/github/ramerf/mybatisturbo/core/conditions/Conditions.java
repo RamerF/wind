@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import static io.github.ramerf.mybatisturbo.core.conditions.Predicate.SqlOperator.*;
+import static io.github.ramerf.mybatisturbo.core.entity.constant.Constant.SEMICOLON;
 import static io.github.ramerf.mybatisturbo.core.helper.SqlHelper.toSqlVal;
 
 /**
@@ -55,9 +57,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.EQUAL.operator())
               .concat(toSqlVal(value)));
@@ -67,9 +69,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   private Conditions<T> eq(final String field, final Object value) {
     conditionSql.add(
-        (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+        (conditionSql.size() > 0 ? AND.operator() : "")
             .concat(queryEntityMetaData.getTableAlia())
-            .concat(SqlOperator.DOT.operator())
+            .concat(DOT.operator())
             .concat(StringUtils.camelToUnderline(field))
             .concat(MatchPattern.EQUAL.operator())
             .concat(toSqlVal(value)));
@@ -94,13 +96,13 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final IFunction<R, ?> field2) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.EQUAL.operator())
               .concat(queryColumn.queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field2)));
     }
     return this;
@@ -116,9 +118,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.NOT_EQUAL.operator())
               .concat(toSqlVal(value)));
@@ -136,9 +138,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.GREATER.operator())
               .concat(toSqlVal(value)));
@@ -156,9 +158,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.GE.operator())
               .concat(toSqlVal(value)));
@@ -176,9 +178,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.LESS.operator())
               .concat(toSqlVal(value)));
@@ -196,9 +198,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.LE.operator())
               .concat(toSqlVal(value)));
@@ -216,9 +218,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(String.format(MatchPattern.LIKE.operator(), value)));
     }
@@ -235,9 +237,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(String.format(MatchPattern.LIKE_LEFT.operator(), value)));
     }
@@ -254,9 +256,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(String.format(MatchPattern.LIKE_RIGHT.operator(), value)));
     }
@@ -273,9 +275,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object value) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(String.format(MatchPattern.NOT_LIKE.operator(), value)));
     }
@@ -292,9 +294,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object start, final Object end) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(
                   String.format(MatchPattern.BETWEEN.operator(), toSqlVal(start), toSqlVal(end))));
@@ -313,9 +315,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final boolean condition, final IFunction<T, ?> field, final Object start, final Object end) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(
                   String.format(
@@ -333,9 +335,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
   public Conditions<T> isNull(final boolean condition, final IFunction<T, ?> field) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.IS_NULL.operator()));
     }
@@ -351,9 +353,9 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
   public Conditions<T> isNotNull(final boolean condition, final IFunction<T, ?> field) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(MatchPattern.IS_NOT_NULL.operator()));
     }
@@ -372,7 +374,7 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       final String childConditionsSql = childConditions.getString();
       if (StringUtils.nonEmpty(childConditionsSql)) {
-        conditionSql.add(SqlOperator.BRACKET_FORMAT.format(childConditionsSql));
+        conditionSql.add(BRACKET_FORMAT.format(childConditionsSql));
       }
     }
     return this;
@@ -391,16 +393,16 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final Collection<? extends Serializable> values) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(
                   String.format(
                       MatchPattern.IN.operator(),
                       values.stream()
                           .map(SqlHelper::toSqlVal)
-                          .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT)))));
+                          .collect(Collectors.joining(SEMICOLON)))));
     }
     return this;
   }
@@ -418,16 +420,16 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
       final Collection<? extends Serializable> values) {
     if (condition) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
+          (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(queryEntityMetaData.getTableAlia())
-              .concat(SqlOperator.DOT.operator())
+              .concat(DOT.operator())
               .concat(BeanUtils.methodToColumn(field))
               .concat(
                   String.format(
                       MatchPattern.NOT_IN.operator(),
                       values.stream()
                           .map(SqlHelper::toSqlVal)
-                          .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT)))));
+                          .collect(Collectors.joining(SEMICOLON)))));
     }
     return this;
   }
@@ -436,8 +438,8 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
   public Conditions<T> and(Conditions<T> children) {
     if (Objects.nonNull(children)) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.AND.operator() : "")
-              .concat(SqlOperator.BRACKET_FORMAT.format(children.getString())));
+          (conditionSql.size() > 0 ? AND.operator() : "")
+              .concat(BRACKET_FORMAT.format(children.getString())));
     }
     return this;
   }
@@ -446,8 +448,8 @@ public class Conditions<T extends AbstractEntity> extends AbstractQueryEntity<T>
   public Conditions<T> or(Conditions<T> children) {
     if (Objects.nonNull(children)) {
       conditionSql.add(
-          (conditionSql.size() > 0 ? SqlOperator.OR.operator() : "")
-              .concat(SqlOperator.BRACKET_FORMAT.format(children.getString())));
+          (conditionSql.size() > 0 ? OR.operator() : "")
+              .concat(BRACKET_FORMAT.format(children.getString())));
     }
     return this;
   }

@@ -352,7 +352,7 @@ public final class BeanUtils {
             classes.add(clazz);
           }
         } catch (Throwable e) {
-          log.warn("Cannot load the '" + resource + "'. Cause by " + e.toString());
+          log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", resource, e.toString());
         }
       }
     }
@@ -454,6 +454,6 @@ public final class BeanUtils {
     invoke(null, String.class.getMethods()[0], "string");
 
     invoke(null, String.class.getMethods()[0], "string")
-        .ifPresent(e -> log.info(" BeanUtils.main:调用失败处理[{}]", e.getClass()));
+        .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
   }
 }

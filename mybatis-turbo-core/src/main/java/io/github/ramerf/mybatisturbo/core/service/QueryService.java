@@ -345,7 +345,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
         ? new Page<>()
         : getRepository()
             .selectPage(
-                new Page<>(pageable.getPageNumber(), pageable.getPageSize()), getWrapper(criteria));
+                new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize()), getWrapper(criteria));
   }
 
   /**
@@ -425,7 +425,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
         : Optional.ofNullable(
                 getRepository()
                     .selectPage(
-                        new Page<>(pageable.getPageNumber(), pageable.getPageSize()),
+                        new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize()),
                         getWrapper(companyId, extraProps)))
             .orElse(new Page<>());
   }
@@ -597,7 +597,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
         ? new Page<>()
         : getRepository()
             .selectPage(
-                new Page<>(pageable.getPageNumber(), pageable.getPageSize()),
+                new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize()),
                 getWrapper(companyId, criteria));
   }
 

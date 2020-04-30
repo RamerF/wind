@@ -13,6 +13,8 @@ public class Constant {
 
   /** 默认list字符串分隔符 */
   public static final String DEFAULT_STRING_SPLIT = ",";
+  /** 逗号. */
+  public static final String SEMICOLON = ",";
 
   /** 默认list字符串以空格为分割符 */
   public static final String DEFAULT_SPLIT_SPACE = " ";

@@ -38,6 +38,10 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
     if (value == null) {
       return null;
     }
+    final Class<?> valueClass = value.getClass();
+    if (valueClass.equals(clazz)) {
+      return (E) value;
+    }
     if (value instanceof String) {
       return (E) String.valueOf(value);
     }
@@ -48,15 +52,22 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
       final Class<? extends InterEnum> cls = (Class<? extends InterEnum>) clazz;
       return (E) InterEnum.of(cls, Integer.valueOf(value.toString()));
     }
-    final Class<?> valueClass = value.getClass();
     if (valueClass.isArray()) {
       return (E) value;
     }
+    // 使用构造器
     try {
-      return (E) valueClass.getConstructor(valueClass).newInstance(value);
+      return clazz.getConstructor(valueClass).newInstance(value);
     } catch (Exception e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
+      // 使用valueOf
+      try {
+        return (E) clazz.getMethod("valueOf", valueClass).invoke(null, value);
+      } catch (Exception ex) {
+        log.warn(ex.getMessage());
+        log.error(ex.getMessage(), ex);
+      }
     }
     return (E) value;
   }

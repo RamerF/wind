@@ -52,7 +52,10 @@ public interface Predicate<T extends AbstractEntity> extends QueryEntity<T> {
 
     ORDER_BY(" ORDER BY "),
 
-    OR(" OR ");
+    GROUP_BY(" GROUP BY "),
+
+    OR(" OR "),
+    ;
 
     private final String operator;
 

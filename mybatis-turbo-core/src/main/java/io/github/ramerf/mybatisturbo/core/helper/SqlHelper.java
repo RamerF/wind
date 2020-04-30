@@ -1,6 +1,5 @@
 package io.github.ramerf.mybatisturbo.core.helper;
 
-import io.github.ramerf.mybatisturbo.core.conditions.Predicate.SqlOperator;
 import io.github.ramerf.mybatisturbo.core.entity.AbstractEntity;
 import io.github.ramerf.mybatisturbo.core.entity.constant.Constant;
 import io.github.ramerf.mybatisturbo.core.entity.enums.InterEnum;
@@ -10,6 +9,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 
+import static io.github.ramerf.mybatisturbo.core.conditions.Predicate.SqlOperator.*;
+
 /**
  * The type Sql helper.
  *
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class SqlHelper {
+  @SuppressWarnings("unused")
   private static final Map<Class<? extends AbstractEntity>, WeakReference<String>>
       QUERY_CLAZZ_FIELD = new HashMap<>();
 
@@ -41,21 +43,21 @@ public class SqlHelper {
       if (val.contains("'")) {
         val = val.replaceAll("'", "''");
       }
-      return SqlOperator.QUOTE_FORMAT.format(val);
+      return QUOTE_FORMAT.format(val);
     }
     if (value instanceof Date) {
-      return SqlOperator.QUOTE_FORMAT.format(
+      return QUOTE_FORMAT.format(
           LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
     }
     if (List.class.isAssignableFrom(value.getClass())) {
       // 数组拼接为: '{name1,name2}' 或使用函数 string_to_array('name1,name2', ',')
       // 目前不支持多数据库,考虑到兼容性,不使用函数
-      return SqlOperator.QUOTE_FORMAT.format(
-          SqlOperator.BRACE_FORMAT.format(
+      return QUOTE_FORMAT.format(
+          BRACE_FORMAT.format(
               ((List<?>) value)
                   .stream()
                       .map(Object::toString)
-                      .reduce((a, b) -> String.join(SqlOperator.SEMICOLON.operator(), a, b))
+                      .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
                       .orElse(value.toString())));
     }
     if (value instanceof Collection) {
@@ -65,7 +67,7 @@ public class SqlHelper {
               .map(SqlHelper::toSqlVal)
               .filter(Objects::nonNull)
               .map(Object::toString)
-              .reduce((a, b) -> String.join(SqlOperator.SEMICOLON.operator(), a, b))
+              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
               .orElse(value.toString());
     }
     if (InterEnum.class.isAssignableFrom(value.getClass())) {
@@ -75,22 +77,21 @@ public class SqlHelper {
     }
     if (value.getClass().isArray()) {
       if (value instanceof String[]) {
-        return SqlOperator.QUOTE_FORMAT.format(
-            SqlOperator.LEFT_BRACE
+        return QUOTE_FORMAT.format(
+            LEFT_BRACE
                 .operator()
                 .concat(
                     Arrays.stream((String[]) value)
-                        .reduce((a, b) -> String.join(SqlOperator.SEMICOLON.operator(), a, b))
+                        .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
                         .orElse(value.toString()))
-                .concat(SqlOperator.RIGHT_BRACE.operator()));
+                .concat(RIGHT_BRACE.operator()));
       }
       String str =
           Arrays.stream((Object[]) value)
               .map(SqlHelper::toSqlVal)
-              .reduce((a, b) -> String.join(SqlOperator.SEMICOLON.operator(), a, b))
+              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
               .orElse(value.toString());
-      return SqlOperator.QUOTE_FORMAT.format(
-          SqlOperator.LEFT_BRACE.operator().concat(str).concat(SqlOperator.RIGHT_BRACE.operator()));
+      return QUOTE_FORMAT.format(LEFT_BRACE.operator().concat(str).concat(RIGHT_BRACE.operator()));
     }
     return String.valueOf(value);
   }
@@ -103,6 +104,7 @@ public class SqlHelper {
    * @param clazz 返回类型
    * @return string
    */
+  @SuppressWarnings("unused")
   public static <R> String optimizeQueryString(final String old, final Class<R> clazz) {
     /// 目前项目代码使用了很多包含非pojo字段的 response返回,导致推断出来的字段不存在,所以暂时禁用
     //    if (log.isDebugEnabled()) {
@@ -116,7 +118,7 @@ public class SqlHelper {
     //      final String optimizedString = BeanUtils.getPrivateFields(clazz,
     // true).stream().filter(str -> !str.contains("."))
     //          .map(StringUtils::camelToUnderline).reduce((a, b) ->
-    // String.join(SqlOperator.SEMICOLON.operator(), a, b))
+    // String.join(SEMICOLON.operator(), a, b))
     //          .orElse(old);
     //      log.info("optimizeQueryString:after optimized[{}]", optimizedString);
     //      QUERY_CLAZZ_FIELD.put(clazz, new WeakReference<>(optimizedString));

@@ -2,9 +2,12 @@ package io.github.ramerf.mybatisturbo.core.util;
 
 import io.github.ramerf.mybatisturbo.core.entity.constant.Constant;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.*;
 import lombok.extern.slf4j.Slf4j;
+
+import static io.github.ramerf.mybatisturbo.core.entity.constant.Constant.SEMICOLON;
 
 /**
  * The type String utils.
@@ -13,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2019 /12/27
  */
 @Slf4j
+@SuppressWarnings("unused")
 public class StringUtils {
 
   /**
@@ -77,9 +81,7 @@ public class StringUtils {
         .mapToObj(i -> String.valueOf(chars[i]))
         .forEach(
             s -> {
-              if (!Objects.equals(s, "_")
-                  && Objects.equals(s, s.toUpperCase())
-                  && stringBuilder.length() > 0) {
+              if (s.matches("[A-Z]") && stringBuilder.length() > 0) {
                 stringBuilder.append("_");
               }
               stringBuilder.append(s.toLowerCase());
@@ -88,14 +90,14 @@ public class StringUtils {
   }
 
   /**
-   * 给定字符串以{@link Constant#DEFAULT_STRING_SPLIT}分割,最后一个空白字符将会被删除.
+   * 给定字符串以{@link Constant#SEMICOLON}分割,最后一个空白字符将会被删除.
    *
    * @param str the str
    * @return the list
    * @see StringUtils#splitToLong(String, String)
    */
   public static List<Long> splitToLong(final String str) {
-    return splitToLong(str, Constant.DEFAULT_STRING_SPLIT);
+    return splitToLong(str, SEMICOLON);
   }
 
   /**
@@ -207,6 +209,12 @@ public class StringUtils {
     return sb.toString();
   }
 
+  public static void doIfNonEmpty(final Consumer<String> consumer, final String string) {
+    if (nonEmpty(string)) {
+      consumer.accept(string);
+    }
+  }
+
   /**
    * The entry point of application.
    *
@@ -221,5 +229,8 @@ public class StringUtils {
     log.info("main:hasLength[{}]", hasLength(" "));
     log.info("main:trimAllWhitespace[{}]", trimWhitespace(" Q W E "));
     log.info("main:trimAllWhitespace[{}]", trimAllWhitespace(" Q W E "));
+    log.info("main:camelToUnderline[{}]", camelToUnderline("name"));
+    log.info("main:camelToUnderline[{}]", camelToUnderline("name2"));
+    log.info("main:camelToUnderline[{}]", camelToUnderline("bigDecimal"));
   }
 }

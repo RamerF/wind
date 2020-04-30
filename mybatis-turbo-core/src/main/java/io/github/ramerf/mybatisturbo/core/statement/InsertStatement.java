@@ -3,7 +3,6 @@ package io.github.ramerf.mybatisturbo.core.statement;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.mybatisturbo.core.conditions.Predicate.SqlOperator;
 import io.github.ramerf.mybatisturbo.core.entity.AbstractEntity;
-import io.github.ramerf.mybatisturbo.core.entity.constant.Constant;
 import io.github.ramerf.mybatisturbo.core.exception.CommonException;
 import io.github.ramerf.mybatisturbo.core.helper.SqlHelper;
 import io.github.ramerf.mybatisturbo.core.util.CollectionUtils;
@@ -11,6 +10,8 @@ import io.github.ramerf.mybatisturbo.core.util.StringUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+
+import static io.github.ramerf.mybatisturbo.core.entity.constant.Constant.SEMICOLON;
 
 /**
  * 查询工厂,支持通用增删改查.
@@ -51,7 +52,7 @@ public class InsertStatement {
           SqlOperator.BRACKET_FORMAT.format(
               rowCols.stream()
                   .map(StringUtils::camelToUnderline)
-                  .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT))));
+                  .collect(Collectors.joining(SEMICOLON))));
       return new InsertValue(insertStatement);
     }
 
@@ -77,9 +78,7 @@ public class InsertStatement {
       // 目前特殊数据类型,只能先拼接好,如数组传递'{1,2}'
       public InsertValue values(List<InsertValue> ts) {
         valueString.append(
-            ts.stream()
-                .map(InsertValue::getString)
-                .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT)));
+            ts.stream().map(InsertValue::getString).collect(Collectors.joining(SEMICOLON)));
         return this;
       }
 
@@ -89,9 +88,7 @@ public class InsertStatement {
           throw CommonException.of("值不能为空,请调用value方法设置值");
         }
         return SqlOperator.BRACKET_FORMAT.format(
-            rowValues.stream()
-                .map(SqlHelper::toSqlVal)
-                .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT)));
+            rowValues.stream().map(SqlHelper::toSqlVal).collect(Collectors.joining(SEMICOLON)));
       }
 
       public String getInsertStr() {
@@ -138,9 +135,7 @@ public class InsertStatement {
             throw CommonException.of("值不能为空,请调用value方法设置值");
           }
           return SqlOperator.BRACKET_FORMAT.format(
-              values.stream()
-                  .map(SqlHelper::toSqlVal)
-                  .collect(Collectors.joining(Constant.DEFAULT_STRING_SPLIT)));
+              values.stream().map(SqlHelper::toSqlVal).collect(Collectors.joining(SEMICOLON)));
         }
       }
     }

@@ -22,7 +22,7 @@ public abstract class AbstractQueryEntity<T extends AbstractEntity> implements Q
   protected Object logicDeleted = true;
 
   //  public void setFromTables(final String fromTables) {
-  //    this.fromTables = String.join(Constant.DEFAULT_STRING_SPLIT, fromTables);
+  //    this.fromTables = String.join(SEMICOLON, fromTables);
   //  }
 
   //  public String getFromTables() {
