@@ -12,14 +12,13 @@
     <packaging>pom</packaging>
 
     <groupId>io.github.ramerf</groupId>
-    <artifactId>ratel-mybatis</artifactId>
-    <name>ratel-mybatis</name>
+    <artifactId>ratel-wind</artifactId>
+    <name>ratel-wind</name>
     <version>1.0.0-SNAPSHOT</version>
     <modules>
-        <module>mybatis-turbo</module>
-        <module>mybatis-turbo-core</module>
-        <module>mybatis-turbo-annotation</module>
-        <module>mybatis-turbo-test</module>
+        <module>wind-core</module>
+        <module>wind-annotation</module>
+        <module>wind-test</module>
     </modules>
     <distributionManagement>
         <repository>
@@ -42,7 +41,7 @@
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <mybatis-turbo-annotation.version>1.0.0-SNAPSHOT</mybatis-turbo-annotation.version>
+        <wind-annotation.version>1.0.0-SNAPSHOT</wind-annotation.version>
     </properties>
     <dependencies>
         <dependency>
@@ -144,8 +143,8 @@
             </dependency>
             <dependency>
                 <groupId>io.github.ramerf</groupId>
-                <artifactId>mybatis-turbo-annotation</artifactId>
-                <version>${mybatis-turbo-annotation.version}</version>
+                <artifactId>wind-annotation</artifactId>
+                <version>${wind-annotation.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.swagger</groupId>
