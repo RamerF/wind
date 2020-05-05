@@ -14,7 +14,7 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>ratel-wind</artifactId>
     <name>ratel-wind</name>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <modules>
         <module>wind-core</module>
         <module>wind-annotation</module>

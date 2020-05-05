@@ -11,10 +11,9 @@
 
     <artifactId>wind-core</artifactId>
     <name>wind-core</name>
-    <version>2.0.2-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <properties>
-        <logback-classic.version>1.2.3</logback-classic.version>
-        <wind-annotation.version>1.0.0-SNAPSHOT</wind-annotation.version>
+        <wind-annotation.version>3.0.0-SNAPSHOT</wind-annotation.version>
     </properties>
 
     <dependencies>
