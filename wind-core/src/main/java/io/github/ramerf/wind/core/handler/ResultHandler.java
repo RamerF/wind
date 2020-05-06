@@ -8,6 +8,7 @@ import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.*;
+import javax.persistence.Entity;
 import lombok.Data;
 
 import static io.github.ramerf.wind.core.util.BeanUtils.methodToProperty;
@@ -85,19 +86,25 @@ public interface ResultHandler<T, E> {
       queryAlia.setColumnAlia(StringUtils.isEmpty(alia) ? columnName : alia);
 
       final String methodType = lambda.getInstantiatedMethodType();
+      final String actualType = LambdaUtils.getActualType(methodType);
       queryAlia.setTableName(
           Optional.ofNullable(tableNameMap.get(methodType))
               .map(Reference::get)
               .orElseGet(
                   () -> {
-                    final String tableName =
-                        Optional.ofNullable(
-                                BeanUtils.getClazz(LambdaUtils.getActualTypePath(methodType))
-                                    .getAnnotation(TableName.class))
-                            .map(TableName::value)
-                            .orElse(
-                                StringUtils.camelToUnderline(
-                                    LambdaUtils.getActualType(methodType)));
+                    final String actualTypePath = LambdaUtils.getActualTypePath(methodType);
+                    final Class<Object> clazz = BeanUtils.getClazz(actualTypePath);
+                    final Entity annotEntity = clazz.getAnnotation(Entity.class);
+                    final TableName annotTableName = clazz.getAnnotation(TableName.class);
+                    final String tableName;
+                    // 表名: @Entity > @TableName > 类名(驼封转下划线)
+                    if (Objects.nonNull(annotEntity)) {
+                      tableName = annotEntity.name();
+                    } else if (Objects.nonNull(annotTableName)) {
+                      tableName = annotTableName.value();
+                    } else {
+                      tableName = StringUtils.camelToUnderline(actualType);
+                    }
                     tableNameMap.put(methodType, new WeakReference<>(tableName));
                     return tableName;
                   }));
@@ -107,8 +114,7 @@ public interface ResultHandler<T, E> {
                 .map(Reference::get)
                 .orElseGet(
                     () -> {
-                      final String type =
-                          StringUtils.camelToUnderline(LambdaUtils.getActualType(methodType));
+                      final String type = StringUtils.camelToUnderline(actualType);
                       tableAliaMap.put(methodType, new WeakReference<>(type));
                       return type;
                     });
@@ -131,6 +137,7 @@ public interface ResultHandler<T, E> {
       return columnAlia;
     }
 
+    @SuppressWarnings("unused")
     public String getQueryString() {
       StringBuilder sb = new StringBuilder();
       // 这里可能会出现较复杂逻辑,不要改为三目运算符

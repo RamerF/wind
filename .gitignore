@@ -2,3 +2,4 @@
 /**/target/**
 *.log
 wind-test/src/main/resources/config
+/**/TestController.java
