@@ -209,7 +209,7 @@ public class StringUtils {
     return sb.toString();
   }
 
-  public static void doIfNonEmpty(final Consumer<String> consumer, final String string) {
+  public static void doIfNonEmpty(final String string, final Consumer<String> consumer) {
     if (nonEmpty(string)) {
       consumer.accept(string);
     }

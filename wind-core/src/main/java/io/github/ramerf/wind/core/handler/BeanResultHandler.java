@@ -2,8 +2,8 @@ package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.converter.TypeConverter;
+import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -37,6 +37,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     }
     // map = {alia:value}
     final E obj = BeanUtils.initial(clazz);
+
     for (Method method : super.methods) {
       final boolean isWriteMethod =
           (method.getName().startsWith("set") || method.getName().startsWith("is"))
@@ -45,11 +46,6 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
         continue;
       }
       final String fieldName = methodToProperty(method.getName());
-      //      final String columnAlia = queryAlias.get(fieldName);
-      //      final String columnAlia = fieldName;
-      //      if (Objects.isNull(columnAlia)) {
-      //        continue;
-      //      }
       Object value = map.get(StringUtils.camelToUnderline(fieldName));
       // 有风险! 这里假设类初始化后,如果查询数据库列为空,类的属性值也为空
       if (Objects.isNull(value)) {
@@ -68,7 +64,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
           .ifPresent(
               exception ->
                   log.warn(
-                      "mapToBean:跳过不合法的字段[{} {}->{}]",
+                      "mapToBean:跳过类型不匹配的字段[{} {}->{}]",
                       fieldName,
                       parameterType.getSimpleName(),
                       Optional.ofNullable(finalValue)

@@ -6,7 +6,6 @@ import io.github.ramerf.wind.core.entity.AbstractEntity;
  * @author Tang Xiaofeng
  * @since 2020/1/5
  */
-@SuppressWarnings("unused")
 public interface Predicate<T extends AbstractEntity> extends QueryEntity<T> {
   /**
    * 获取条件sql.
@@ -21,6 +20,10 @@ public interface Predicate<T extends AbstractEntity> extends QueryEntity<T> {
     DOT("."),
     /** 逗号. */
     SEMICOLON(","),
+    /** 问号. */
+    QUESTION_MARK("?"),
+    /** 百分号. */
+    PERCENT("%"),
     /** 星号. */
     WILDCARD("*"),
     /** 等于. */
@@ -58,7 +61,7 @@ public interface Predicate<T extends AbstractEntity> extends QueryEntity<T> {
     OR(" OR "),
     ;
 
-    private final String operator;
+    protected final String operator;
 
     SqlOperator(final String operator) {
       this.operator = operator;

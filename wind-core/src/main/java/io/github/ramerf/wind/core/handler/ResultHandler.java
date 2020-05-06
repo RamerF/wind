@@ -2,8 +2,7 @@ package io.github.ramerf.wind.core.handler;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -65,16 +64,12 @@ public interface ResultHandler<T, E> {
     /** {@link java.lang.invoke.SerializedLambda#getInstantiatedMethodType()}:tableName */
     private static Map<String, WeakReference<String>> tableNameMap = new HashMap<>();
 
-    public static <T extends AbstractEntity> QueryAlia of(
-        IFunction<T, ?> function, final String alia, String tableAlia) {
+    public static QueryAlia of(BeanFunction function, final String alia, String tableAlia) {
       return of(function, alia, tableAlia, null);
     }
 
-    public static <T extends AbstractEntity> QueryAlia of(
-        IFunction<T, ?> function,
-        final String alia,
-        String tableAlia,
-        final SqlFunction sqlFunction) {
+    public static QueryAlia of(
+        BeanFunction function, final String alia, String tableAlia, final SqlFunction sqlFunction) {
       final QueryAlia queryAlia = new QueryAlia();
 
       final SerializedLambda lambda = LambdaUtils.serializedLambda(function);

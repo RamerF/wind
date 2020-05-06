@@ -7,4 +7,4 @@ import java.util.function.Function;
  * @since 2019/12/26
  */
 @FunctionalInterface
-public interface IFunction<T, R> extends Function<T, R>, BeanFunction {}
+public interface IFunction<T, U> extends Function<T, U>, BeanFunction {}

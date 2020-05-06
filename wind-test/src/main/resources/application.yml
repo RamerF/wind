@@ -66,8 +66,10 @@ spring:
 logging:
   level:
     root: info
-    io.github.ramerf.mybatiturbo: debug
+    io.github.ramerf.wind: debug
     io.swagger.models.parameters.AbstractSerializableParameter: ERROR
+    log4j.logger.org.springframework.jdbc.core.StatementCreatorUtils: TRACE
+    jdbc.sqltiming: info
 mybatis-plus:
   global-config:
     db-config:

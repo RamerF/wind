@@ -39,18 +39,17 @@ public final class LambdaUtils {
    * @see SerializedLambda#getInstantiatedMethodType()
    */
   public static String getActualTypePath(final String instantiatedMethodType) {
-    return instantiatedMethodType.substring(2, instantiatedMethodType.indexOf(")") - 1);
+    return instantiatedMethodType.substring(2, instantiatedMethodType.indexOf(";"));
   }
 
   /**
    * 获取lambda表达式对应的方法名.
    *
    * @param function 需要解析的 lambda 对象
-   * @param <T> 类型，被调用的 Function 对象的目标类型
    * @return 返回解析后的结果
    * @see LambdaUtils#serializedLambda(BeanFunction)
    */
-  public static <T extends BeanFunction> String getMethodName(T function) {
+  public static String getMethodName(BeanFunction function) {
     Class<?> clazz = function.getClass();
     return Optional.ofNullable(LAMBDA_MAP.get(clazz))
         .map(WeakReference::get)
@@ -63,7 +62,7 @@ public final class LambdaUtils {
             });
   }
 
-  public static <T extends BeanFunction> SerializedLambda serializedLambda(T lambda) {
+  public static SerializedLambda serializedLambda(BeanFunction lambda) {
     if (!lambda.getClass().isSynthetic()) {
       throw CommonException.of("不支持非lambda表达式");
     }
@@ -84,7 +83,7 @@ public final class LambdaUtils {
     }
   }
 
-  private static <T extends BeanFunction> byte[] serialize(T lambda) {
+  private static byte[] serialize(BeanFunction lambda) {
     if (lambda == null) {
       return null;
     }
@@ -101,6 +100,13 @@ public final class LambdaUtils {
 
   public static void main(String[] args) {
     IFunction<AbstractEntityPoJo, Long> function = AbstractEntityPoJo::getId;
+    IConsumer<AbstractEntityPoJo, Long> consumer = AbstractEntityPoJo::setId;
     System.out.println("main:" + getMethodName(function));
+    System.out.println(
+        "main:getActualTypePath"
+            + getActualTypePath(serializedLambda(function).getInstantiatedMethodType()));
+    System.out.println(
+        "main:getActualTypePath"
+            + getActualTypePath(serializedLambda(consumer).getInstantiatedMethodType()));
   }
 }

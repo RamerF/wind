@@ -222,7 +222,10 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
       Consumer<QueryColumn<T>> consumer, Class<R> clazz) {
     final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
     consumer.accept(queryColumn);
-    return Query.getInstance().select(queryColumn).where(queryColumn.getCondition()).fetch(clazz);
+    return Query.getInstance()
+        .select(queryColumn)
+        .where(queryColumn.getCondition())
+        .fetchAll(clazz);
   }
 
   /**
@@ -251,7 +254,10 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
     query.accept(queryColumn);
     Optional.ofNullable(condition)
         .ifPresent(consumer -> consumer.accept(queryColumn.getCondition()));
-    return Query.getInstance().select(queryColumn).where(queryColumn.getCondition()).fetch(clazz);
+    return Query.getInstance()
+        .select(queryColumn)
+        .where(queryColumn.getCondition())
+        .fetchAll(clazz);
   }
 
   /**
@@ -277,7 +283,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
     final QueryColumn<T> queryColumn = QueryColumnFactory.<T>getInstance(getPoJoClass(this));
     final Condition<T> condition = queryColumn.getCondition();
     Optional.ofNullable(consumer).ifPresent(con -> con.accept(condition));
-    return Query.getInstance().select(queryColumn).where(condition).fetch(clazz);
+    return Query.getInstance().select(queryColumn).where(condition).fetchAll(clazz);
   }
 
   /**
@@ -307,7 +313,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
     return Query.getInstance()
         .select(queryColumn)
         .where(queryColumn.getCondition())
-        .fetch(clazz, pageable);
+        .fetchAll(clazz, pageable);
   }
 
   /**
@@ -469,7 +475,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
     return Query.getInstance()
         .select(queryColumn)
         .where(queryColumn.getCondition())
-        .fetch(pageable, getPoJoClass(this));
+        .fetchPage(getPoJoClass(this), pageable);
   }
 
   /**
@@ -502,7 +508,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
     return Query.getInstance()
         .select(queryColumn)
         .where(queryColumn.getCondition())
-        .fetch(pageable, clazz);
+        .fetchPage(clazz, pageable);
   }
 
   /**
@@ -531,7 +537,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
     return Query.getInstance()
         .select(queryColumn)
         .where(queryColumn.getCondition())
-        .fetch(pageable, getPoJoClass(this));
+        .fetchPage(getPoJoClass(this), pageable);
   }
 
   /**
@@ -579,7 +585,7 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
     return Query.getInstance()
         .select(queryColumn)
         .where(queryColumn.getCondition())
-        .fetch(pageable, clazz);
+        .fetchPage(clazz, pageable);
   }
 
   /**

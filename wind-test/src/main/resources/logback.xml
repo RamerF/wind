@@ -31,9 +31,18 @@
     <logger name="io.github.ramerf" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
-    <logger name="com.alibaba.nacos.client.naming.updater" level="ERROR"/>
-    <logger name="com.alibaba.nacos.naming.beat.sender" level="ERROR"/>
-    <logger name="org.springframework.jdbc.core.JdbcTemplate" level="DEBUG"/>
+    <logger name="com.alibaba.nacos.client.naming.updater" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="com.alibaba.nacos.naming.beat.sender" level="ERROR" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org.springframework.jdbc.core.JdbcTemplate" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="TRACE" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
 
     <springProfile name="dev,default,test,local">
         <root>

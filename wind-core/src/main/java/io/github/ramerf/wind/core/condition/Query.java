@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
+import static java.util.stream.Collectors.toList;
 
 /**
  * 构建 SQL.所有的条件字符串构造,需要改为对象<br>
@@ -57,7 +58,7 @@ public class Query {
   */
   @Resource private AbstractBaseRepository repository;
   private List<QueryColumn<?>> queryColumns;
-  private List<Condition<?>> condition;
+  private List<Condition<?>> conditions;
   private String queryString;
   private String conditionString;
   private String countString;
@@ -92,9 +93,9 @@ public class Query {
   }
 
   public Query where(final Condition<?>... conditions) {
-    this.condition = new LinkedList<>(Arrays.asList(conditions));
+    this.conditions = new LinkedList<>(Arrays.asList(conditions));
     String conditionString =
-        this.condition.stream()
+        this.conditions.stream()
             .map(Condition::getString)
             .collect(Collectors.joining(AND.operator()));
 
@@ -103,7 +104,7 @@ public class Query {
           conditionString.substring(0, conditionString.length() - AND.operator().length());
     }
     this.conditionString =
-        this.condition.stream()
+        this.conditions.stream()
             .map(o -> o.queryEntityMetaData.getFromTable())
             .collect(Collectors.joining(SEMICOLON.operator()));
     // TODO-WARN 修复orderBy从这里下手
@@ -113,6 +114,7 @@ public class Query {
     if (StringUtils.nonEmpty(conditionString)) {
       this.conditionString = this.conditionString.concat(WHERE.operator()).concat(conditionString);
     }
+
     if (StringUtils.nonEmpty(this.conditionString)) {
       this.countString = this.conditionString;
     }
@@ -131,7 +133,7 @@ public class Query {
 
   // TODO-WARN 这里可以做优化,调用插件分析优化sql,最简单的比如: 删掉 1=1
   public Query where(final Consumer<Condition<?>>... consumers) {
-    this.condition =
+    this.conditions =
         consumers.length > 0
             ? IntStream.range(0, consumers.length)
                 .mapToObj(
@@ -144,7 +146,7 @@ public class Query {
                 .collect(Collectors.toCollection(LinkedList::new))
             : new LinkedList<>();
     String conditionString =
-        this.condition.stream()
+        this.conditions.stream()
             .map(Condition::getString)
             .collect(Collectors.joining(AND.operator()));
 
@@ -153,7 +155,7 @@ public class Query {
           conditionString.substring(0, conditionString.length() - AND.operator().length());
     }
     this.conditionString =
-        this.condition.stream()
+        this.conditions.stream()
             .map(o -> o.queryEntityMetaData.getFromTable())
             .collect(Collectors.joining(SEMICOLON.operator()));
     if (StringUtils.nonEmpty(conditionString)) {
@@ -163,36 +165,52 @@ public class Query {
   }
 
   public <R> R fetchOne(final Class<R> clazz) {
-    ResultHandler resultHandler =
+    StringUtils.doIfNonEmpty(
+        suffixString.toString(),
+        str -> {
+          conditionString = conditionString.concat(str);
+        });
+
+    final String sql = "SELECT %s FROM %s";
+    final String queryString =
+        String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
+    if (log.isDebugEnabled()) {
+      log.debug("fetch:[{}]", queryString);
+    }
+    final Map<String, Object> result =
+        JDBC_TEMPLATE.queryForMap(
+            queryString,
+            conditions.stream()
+                .flatMap(cond -> cond.getValues().stream())
+                .collect(toList())
+                .toArray(new Object[0]));
+    ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
-    // TODO-WARN: 待测试
-    StringUtils.doIfNonEmpty(
-        str -> {
-          conditionString = conditionString.concat(str);
-        },
-        suffixString.toString());
-    // TODO-WARN: 待测试
-    final Map<String, Object> result =
-        repository.findOne(optimizeQueryString(queryString, clazz), conditionString);
-    return (R) resultHandler.handle(result);
+    return resultHandler.handle(result);
   }
 
-  public <R> List<R> fetch(final Class<R> clazz) {
-    // TODO-WARN: 待测试
+  public <R> List<R> fetchAll(final Class<R> clazz) {
     StringUtils.doIfNonEmpty(
+        suffixString.toString(),
         str -> {
           conditionString = conditionString.concat(str);
-        },
-        suffixString.toString());
-    // TODO-WARN: 待测试
+        });
+
+    final String sql = "SELECT %s FROM %s";
+    final String queryString =
+        String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
+    if (log.isDebugEnabled()) {
+      log.debug("fetch:[{}]", queryString);
+    }
     final List<Map<String, Object>> list =
-        repository.findAll(optimizeQueryString(queryString, clazz), conditionString);
-    //    final String sql = "SELECT %s FROM %s";
-    //    final List<Map<String, Object>> list =
-    //        JDBC_TEMPLATE.queryForList(
-    //            String.format(sql, optimizeQueryString(queryString, clazz), conditionString));
+        JDBC_TEMPLATE.queryForList(
+            queryString,
+            conditions.stream()
+                .flatMap(cond -> cond.getValues().stream())
+                .collect(toList())
+                .toArray(new Object[0]));
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
@@ -204,7 +222,7 @@ public class Query {
   }
 
   /** 获取某页列表数据. 注意: 该方法不支持多表查询. */
-  public <R extends AbstractEntity> List<R> fetch(
+  public <R extends AbstractEntity> List<R> fetchAll(
       final Class<R> clazz, final PageRequest pageable) {
     final Sort sort = pageable.getSort();
     // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
@@ -217,12 +235,31 @@ public class Query {
                         .concat(Constant.DEFAULT_SPLIT_SPACE)
                         .concat(s.getDirection().name()))
             .collect(Collectors.joining(Constant.SEMICOLON));
-    conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
+    if (StringUtils.nonEmpty(orderByString)) {
+      conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
+    }
     if (log.isDebugEnabled()) {
       log.debug("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
     }
+
+    final String sql = "SELECT %s FROM %s LIMIT %s OFFSET %s";
+    final String queryString =
+        String.format(
+            sql,
+            optimizeQueryString(this.queryString, clazz),
+            conditionString,
+            pageable.getPageSize(),
+            pageable.getOffset());
+    if (log.isDebugEnabled()) {
+      log.debug("fetch:[{}]", queryString);
+    }
     final List<Map<String, Object>> list =
-        repository.findAllPage(optimizeQueryString(queryString, clazz), conditionString, pageable);
+        JDBC_TEMPLATE.queryForList(
+            queryString,
+            conditions.stream()
+                .flatMap(cond -> cond.getValues().stream())
+                .collect(toList())
+                .toArray(new Object[0]));
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", list);
     }
@@ -234,7 +271,7 @@ public class Query {
   }
 
   /** 注意: 该方法不支持多表查询. */
-  public <R> Page<R> fetch(final PageRequest pageable, final Class<R> clazz) {
+  public <R> Page<R> fetchPage(final Class<R> clazz, final PageRequest pageable) {
     final Sort sort = pageable.getSort();
     // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
@@ -246,12 +283,34 @@ public class Query {
                         .concat(Constant.DEFAULT_SPLIT_SPACE)
                         .concat(s.getDirection().name()))
             .collect(Collectors.joining(Constant.SEMICOLON));
-    conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
+    if (StringUtils.nonEmpty(orderByString)) {
+      conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
+    }
     if (log.isDebugEnabled()) {
       log.debug("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
     }
+
+    final String sql = "SELECT %s FROM %s LIMIT %s OFFSET %s";
+    final String queryString =
+        String.format(
+            sql,
+            optimizeQueryString(this.queryString, clazz),
+            conditionString,
+            pageable.getPageSize(),
+            pageable.getOffset());
+    if (log.isDebugEnabled()) {
+      log.debug("fetch:[{}]", queryString);
+    }
+    final long total = fetchCount();
     final List<Map<String, Object>> list =
-        repository.findAllPage(optimizeQueryString(queryString, clazz), conditionString, pageable);
+        total < 1
+            ? null
+            : JDBC_TEMPLATE.queryForList(
+                queryString,
+                conditions.stream()
+                    .flatMap(cond -> cond.getValues().stream())
+                    .collect(toList())
+                    .toArray(new Object[0]));
     // 从1开始
     final int currentPage = pageable.getPageNumber();
     // 每页大小
@@ -263,15 +322,23 @@ public class Query {
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
-    return CollectionUtils.toPage(resultHandler.handle(list), fetchCount(), currentPage, pageSize);
+    return CollectionUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
   }
 
-  // TODO-ZRH 此处有问题
   public long fetchCount() {
+    final String sql = "SELECT COUNT(1) FROM %s";
+    final String queryString =
+        String.format(sql, StringUtils.nonEmpty(countString) ? countString : "");
     if (log.isDebugEnabled()) {
-      log.debug("fetchCount:[queryString:{},countString:{}]", queryString, countString);
+      log.debug("fetchCount:[{}]", queryString);
     }
-    return repository.count(StringUtils.nonEmpty(countString) ? countString : "");
+    return JDBC_TEMPLATE.queryForObject(
+        queryString,
+        conditions.stream()
+            .flatMap(cond -> cond.getValues().stream())
+            .collect(toList())
+            .toArray(new Object[0]),
+        Long.class);
   }
 
   // TODO-WARN 根据条件批量删除,批量更新

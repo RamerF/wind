@@ -35,6 +35,11 @@ public class SqlHelper {
    * @return the string
    */
   public static String toSqlVal(final Object value) {
+    // 测试: 占位符
+    if (Objects.nonNull(value)) {
+      return "?";
+    }
+    // 测试: 占位符
     if (Objects.isNull(value)) {
       return null;
     }

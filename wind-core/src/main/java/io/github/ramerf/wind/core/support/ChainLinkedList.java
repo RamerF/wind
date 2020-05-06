@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.support;
 
 import java.util.*;
 import java.util.stream.Stream;
+import lombok.ToString;
 
 /**
  * 支持链式调用的List.
@@ -9,8 +10,9 @@ import java.util.stream.Stream;
  * @author Tang Xiaofeng
  * @since 2020/1/14
  */
+@ToString
 public class ChainLinkedList<E> implements ChainList<E> {
-  private List<E> list = new LinkedList<>();
+  private final List<E> list = new LinkedList<>();
 
   @Override
   public Stream<E> stream() {

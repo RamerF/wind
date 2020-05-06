@@ -7,10 +7,10 @@ import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.CollectionUtils;
-import java.util.*;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,7 +32,7 @@ import static io.github.ramerf.wind.core.entity.constant.Constant.SEMICOLON;
 @SuppressWarnings("UnusedReturnValue")
 public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T> {
   /** 预留嵌套语句. */
-  private List<QueryColumn<T>> children = new ArrayList<>();
+  //  private List<QueryColumn<T>> children = new ArrayList<>();
 
   private Condition<T> condition = null;
 
@@ -66,6 +66,26 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   /**
    * 新增查询列.
    *
+   * @param consumer the consumer
+   * @return the query column
+   */
+  public <U> QueryColumn<T> col(final IConsumer<T, U> consumer) {
+    return col(consumer, null);
+  }
+
+  /**
+   * 新增查询列.
+   *
+   * @param consumer the consumer
+   * @return the query column
+   */
+  public <U> QueryColumn<T> col(final IConsumer<T, U> consumer, final String alia) {
+    return col((BeanFunction) consumer, alia);
+  }
+
+  /**
+   * 新增查询列.
+   *
    * @param function the function
    * @return the query column
    */
@@ -81,14 +101,18 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    * @return the query column
    */
   public QueryColumn<T> col(final IFunction<T, ?> function, final String alia) {
-    final QueryAlia columnAlia = QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia());
-    queryEntityMetaData.setTableName(columnAlia.getTableName());
+    return col((BeanFunction) function, alia);
+  }
+
+  public QueryColumn<T> col(final BeanFunction function, final String alia) {
+    final QueryAlia queryAlia = QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia());
+    queryEntityMetaData.setTableName(queryAlia.getTableName());
     queryEntityMetaData.setFromTable(
-        columnAlia
+        queryAlia
             .getTableName()
             .concat(Constant.DEFAULT_SPLIT_SPACE)
-            .concat(columnAlia.getTableAlia()));
-    queryEntityMetaData.queryAlias.add(columnAlia);
+            .concat(queryAlia.getTableAlia()));
+    queryEntityMetaData.queryAlias.add(queryAlia);
     return this;
   }
 
@@ -97,15 +121,15 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   }
 
   public QueryColumn<T> sum(final IFunction<T, ?> function, final String alia) {
-    final QueryAlia columnAlia = QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia());
-    queryEntityMetaData.setTableName(columnAlia.getTableName());
+    final QueryAlia queryAlia = QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia());
+    queryEntityMetaData.setTableName(queryAlia.getTableName());
     queryEntityMetaData.setFromTable(
-        columnAlia
+        queryAlia
             .getTableName()
             .concat(Constant.DEFAULT_SPLIT_SPACE)
-            .concat(columnAlia.getTableAlia()));
-    columnAlia.setSqlFunction(SqlAggregateFunction.SUM);
-    queryEntityMetaData.queryAlias.add(columnAlia);
+            .concat(queryAlia.getTableAlia()));
+    queryAlia.setSqlFunction(SqlAggregateFunction.SUM);
+    queryEntityMetaData.queryAlias.add(queryAlia);
     return this;
   }
 
@@ -135,13 +159,13 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   }
 
   /** 增加额外的表别名前缀 */
-  private static String methodToColumnWithAlia(final QueryAlia columnAlia) {
-    final String alia = columnAlia.getColumnAlia();
-    final String name = columnAlia.getColumnName();
-    final String tableAlias = columnAlia.getTableAlia();
+  private static String methodToColumnWithAlia(final QueryAlia queryAlia) {
+    final String alia = queryAlia.getColumnAlia();
+    final String name = queryAlia.getColumnName();
+    final String tableAlias = queryAlia.getTableAlia();
 
     // 待测试
-    final SqlFunction sqlFunction = columnAlia.getSqlFunction();
+    final SqlFunction sqlFunction = queryAlia.getSqlFunction();
     final String queryName =
         Objects.isNull(sqlFunction)
             ? tableAlias.concat(DOT.operator()).concat(name)

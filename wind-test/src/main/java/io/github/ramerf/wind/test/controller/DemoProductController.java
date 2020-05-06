@@ -9,14 +9,12 @@ import io.github.ramerf.wind.test.entity.pojo.DemoProductPoJo.Type;
 import io.github.ramerf.wind.test.service.DemoProductService;
 import io.swagger.annotations.Api;
 import java.math.BigDecimal;
-import java.sql.Types;
-import java.util.BitSet;
 import java.util.List;
 import javax.annotation.Resource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -45,7 +43,6 @@ public class DemoProductController {
         queryColumn.getQueryEntityMetaData();
     final GroupByClause<DemoProductPoJo> clause = queryEntityMetaData.getGroupByClause();
     //    clause.
-    final long start = System.currentTimeMillis();
     final List<Ts> one =
         prototypeBean
             .query()
@@ -55,26 +52,33 @@ public class DemoProductController {
                     .col(DemoProductPoJo::getName, "name2"))
             .where(condition)
             .groupBy(clause.col(DemoProductPoJo::getName))
-            .fetch(Ts.class);
-
-    queryColumn = QueryColumnFactory.getInstance(DemoProductPoJo.class);
-    condition = queryColumn.getCondition().gt(DemoProductPoJo::getId, 0L);
-    for (int i = 0; i < 10; i++) {
-      prototypeBean.query().select(queryColumn).where(condition).fetch(Ts.class);
-    }
-    log.info("foo:[{}ms]", (System.currentTimeMillis() - start));
+            .fetchAll(Ts.class);
     return Rs.ok();
   }
 
   @GetMapping(params = "type=2")
   public ResponseEntity<Rs<Object>> foo2() {
-    final BitSet set = BitSet.valueOf(new byte[] {0x1, 0x0});
-    final SqlParameterValue value = new SqlParameterValue(Types.BLOB, set);
-    jdbcTemplate.update("select * from demo_product where bit_set=?", value);
-    return Rs.ok(
-        jdbcTemplate.query(
-            "select * from demo_product where is_delete=false",
-            new BeanPropertyRowMapper<>(Ts.class)));
+    QueryColumn<DemoProductPoJo> queryColumn =
+        QueryColumnFactory.getInstance(DemoProductPoJo.class);
+    Condition<DemoProductPoJo> condition =
+        queryColumn.getCondition().gt(DemoProductPoJo::getId, 0L);
+    final QueryEntityMetaData<DemoProductPoJo> queryEntityMetaData =
+        queryColumn.getQueryEntityMetaData();
+    final GroupByClause<DemoProductPoJo> clause = queryEntityMetaData.getGroupByClause();
+    final List<Ts> one =
+        prototypeBean
+            .query()
+            .select(
+                queryColumn
+                    .sum(DemoProductPoJo::getId, "big_decimal")
+                    .col(DemoProductPoJo::getName, "name2"))
+            .where(
+                condition
+                    .eq(DemoProductPoJo::setName, "ramer")
+                    .eq(DemoProductPoJo::setCode, "code"))
+            .groupBy(clause.col(DemoProductPoJo::getName))
+            .fetchAll(Ts.class);
+    return Rs.ok(one);
   }
 
   @GetMapping(params = "type=3")
