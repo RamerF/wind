@@ -9,7 +9,6 @@ import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.support.ChainLinkedList;
 import io.github.ramerf.wind.core.support.ChainList;
 import io.github.ramerf.wind.core.util.StringUtils;
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -116,7 +115,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   @Override
   public <V> Condition<T> ge(
-      final boolean condition, @Nonnull final IConsumer<T, ?> field, final V value) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -158,7 +157,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   @Override
   public <V> Condition<T> le(
-      final boolean condition, @Nonnull final IConsumer<T, ?> field, final V value) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -179,7 +178,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   @Override
   public <V> Condition<T> like(
-      final boolean condition, @Nonnull final IConsumer<T, ?> field, @Nonnull final V value) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -219,7 +218,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   @Override
   public <V> Condition<T> likeRight(
-      final boolean condition, @Nonnull final IConsumer<T, ?> field, @Nonnull final V value) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -302,12 +301,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public Condition<T> isNull(@Nonnull final IConsumer<T, ?> field) {
+  public <V> Condition<T> isNull(@Nonnull final IConsumer<T, V> field) {
     return isNull(true, field);
   }
 
   @Override
-  public Condition<T> isNull(final boolean condition, @Nonnull final IConsumer<T, ?> field) {
+  public <V> Condition<T> isNull(final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -320,12 +319,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public Condition<T> isNotNull(@Nonnull final IConsumer<T, ?> field) {
+  public <V> Condition<T> isNotNull(@Nonnull final IConsumer<T, V> field) {
     return isNotNull(true, field);
   }
 
   @Override
-  public Condition<T> isNotNull(final boolean condition, @Nonnull final IConsumer<T, ?> field) {
+  public <V> Condition<T> isNotNull(final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -395,27 +394,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   // 下面是老接口
 
-  @Override
-  public Condition<T> eq(@Nonnull final IFunction<T, ?> field, final Object value) {
-    return eq(true, field, value);
-  }
-
-  @Override
-  public Condition<T> eq(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(MatchPattern.EQUAL.operator)
-              .concat(toSqlVal(value)));
-      values.add(value);
-    }
-    return this;
-  }
-
   private Condition<T> eq(@Nonnull final String field, final Object value) {
     conditionSql.add(
         (conditionSql.size() > 0 ? AND.operator : "")
@@ -428,7 +406,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     return this;
   }
 
-  /** 连表条件. */
   @Override
   public <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
       @Nonnull final IFunction<T, ?> field,
@@ -437,7 +414,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     return eq(true, field, queryColumn, field2);
   }
 
-  /** 连表条件. */
   @Override
   public <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
       final boolean condition,
@@ -459,280 +435,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public Condition<T> ne(@Nonnull final IFunction<T, ?> field, final Object value) {
-    return ne(true, field, value);
-  }
-
-  @Override
-  public Condition<T> ne(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(MatchPattern.NOT_EQUAL.operator)
-              .concat(toSqlVal(value)));
-      values.add(value);
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> gt(@Nonnull final IFunction<T, ?> field, final Object value) {
-    return gt(true, field, value);
-  }
-
-  @Override
-  public Condition<T> gt(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(MatchPattern.GREATER.operator)
-              .concat(toSqlVal(value)));
-      values.add(value);
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> ge(@Nonnull final IFunction<T, ?> field, final Object value) {
-    return ge(true, field, value);
-  }
-
-  @Override
-  public Condition<T> ge(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(MatchPattern.GE.operator)
-              .concat(toSqlVal(value)));
-      values.add(value);
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> lt(@Nonnull final IFunction<T, ?> field, final Object value) {
-    return lt(true, field, value);
-  }
-
-  @Override
-  public Condition<T> lt(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(MatchPattern.LESS.operator)
-              .concat(toSqlVal(value)));
-      values.add(value);
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> le(@Nonnull final IFunction<T, ?> field, final Object value) {
-    return le(true, field, value);
-  }
-
-  @Override
-  public Condition<T> le(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(MatchPattern.LE.operator)
-              .concat(toSqlVal(value)));
-      values.add(value);
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> like(@Nonnull final IFunction<T, ?> field, @Nonnull final Object value) {
-    return like(true, field, value);
-  }
-
-  @Override
-  public Condition<T> like(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, @Nonnull final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      values.add(PERCENT.operator.concat(String.valueOf(value)).concat(PERCENT.operator));
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> likeLeft(@Nonnull final IFunction<T, ?> field, @Nonnull final Object value) {
-    return likeLeft(true, field, value);
-  }
-
-  @Override
-  public Condition<T> likeLeft(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, @Nonnull final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      values.add(PERCENT.operator.concat(String.valueOf(value)));
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> likeRight(@Nonnull final IFunction<T, ?> field, @Nonnull final Object value) {
-    return likeRight(true, field, value);
-  }
-
-  @Override
-  public Condition<T> likeRight(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, @Nonnull final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      values.add(String.valueOf(value).concat(PERCENT.operator));
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> notLike(@Nonnull final IFunction<T, ?> field, @Nonnull final Object value) {
-    return notLike(true, field, value);
-  }
-
-  @Override
-  public Condition<T> notLike(
-      final boolean condition, @Nonnull final IFunction<T, ?> field, @Nonnull final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      values.add(PERCENT.operator.concat(String.valueOf(value)).concat(PERCENT.operator));
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> between(
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final Object start,
-      @Nonnull final Object end) {
-    return between(true, field, start, end);
-  }
-
-  @Override
-  public Condition<T> between(
-      final boolean condition,
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final Object start,
-      @Nonnull final Object end) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(
-                  String.format(MatchPattern.BETWEEN.operator, toSqlVal(start), toSqlVal(end))));
-      values.add(start).add(end);
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> notBetween(
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final Object start,
-      @Nonnull final Object end) {
-    return notBetween(true, field, start, end);
-  }
-
-  @Override
-  public Condition<T> notBetween(
-      final boolean condition,
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final Object start,
-      @Nonnull final Object end) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(String.format(NOT_BETWEEN.operator, toSqlVal(start), toSqlVal(end))));
-      values.add(start).add(end);
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> isNull(@Nonnull final IFunction<T, ?> field) {
-    return isNull(true, field);
-  }
-
-  @Override
-  public Condition<T> isNull(final boolean condition, @Nonnull final IFunction<T, ?> field) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(MatchPattern.IS_NULL.operator));
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> isNotNull(@Nonnull final IFunction<T, ?> field) {
-    return isNotNull(true, field);
-  }
-
-  @Override
-  public Condition<T> isNotNull(final boolean condition, @Nonnull final IFunction<T, ?> field) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(MatchPattern.IS_NOT_NULL.operator));
-    }
-    return this;
-  }
-
-  @Override
   public Condition<T> exists(@Nonnull final Condition<T> childConditions) {
     return exists(true, childConditions);
   }
@@ -746,64 +448,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       if (StringUtils.nonEmpty(childConditionsSql)) {
         conditionSql.add(BRACKET_FORMAT.format(childConditionsSql));
       }
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> in(
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final Collection<? extends Serializable> values) {
-    return in(true, field, values);
-  }
-
-  @Override
-  public Condition<T> in(
-      final boolean condition,
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final Collection<? extends Serializable> values) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(
-                  String.format(
-                      MatchPattern.IN.operator,
-                      values.stream()
-                          .map(SqlHelper::toSqlVal)
-                          .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(v -> this.values.add(v));
-    }
-    return this;
-  }
-
-  @Override
-  public Condition<T> notIn(
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final Collection<? extends Serializable> values) {
-    return notIn(true, field, values);
-  }
-
-  @Override
-  public Condition<T> notIn(
-      final boolean condition,
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final Collection<? extends Serializable> values) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(methodToColumn(field))
-              .concat(
-                  String.format(
-                      NOT_IN.operator,
-                      values.stream()
-                          .map(SqlHelper::toSqlVal)
-                          .collect(Collectors.joining(SqlOperator.SEMICOLON.operator)))));
-      values.forEach(v -> this.values.add(v));
     }
     return this;
   }

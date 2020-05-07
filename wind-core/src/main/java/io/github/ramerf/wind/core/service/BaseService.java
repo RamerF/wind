@@ -1,10 +1,9 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.Condition.MatchPattern;
-import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.function.IFunction;
 import java.util.*;
 import lombok.Data;
 import org.slf4j.Logger;
@@ -21,13 +20,14 @@ import static io.github.ramerf.wind.core.util.BeanUtils.methodToColumn;
  * @since 2019 /11/13
  */
 @SuppressWarnings("unused")
-public interface BaseService<T extends AbstractEntityPoJo, E extends AbstractEntity>
-    extends QueryService<T, E>, UpdateService<T, E> {
+public interface BaseService<T extends AbstractEntityPoJo>
+    extends QueryService<T>, UpdateService<T> {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(BaseService.class);
 
   /** 条件构造. */
   @Data
+  @Deprecated
   class ExtraProp {
 
     /**

@@ -37,17 +37,12 @@ public final class ControllerHelper {
    * @param error 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
-      void create(final S invoke, final T entity, final ResultCode error) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R> void create(
+      final S invoke, final T entity, final ResultCode error) {
     try {
       invoke.create(entity);
       if (Objects.isNull(entity.getId())) {
@@ -63,18 +58,13 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    * @param bindingResult the binding result
    * @return the response entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<R>> create(
           final S invoke, final T entity, final BindingResult bindingResult) {
     log.info("create:[{}]", entity);
@@ -96,7 +86,6 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param <P> the type parameter
    * @param invoke the invoke
@@ -106,9 +95,8 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <
-          S extends BaseService<T, E>,
+          S extends BaseService<T>,
           T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
           R extends AbstractEntityRequest,
           P>
       ResponseEntity<Rs<P>> create(
@@ -124,7 +112,6 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param <P> the type parameter
    * @param invoke the invoke
@@ -135,9 +122,8 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <
-          S extends BaseService<T, E>,
+          S extends BaseService<T>,
           T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
           R extends AbstractEntityRequest,
           P>
       ResponseEntity<Rs<P>> create(
@@ -154,18 +140,13 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the service
    * @param id the id
    * @return the entity
    * @see #detail(BaseService, long, Function)
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<R>> detail(final S invoke, final long id) {
     return detail(invoke, id, null);
   }
@@ -175,7 +156,6 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the service
    * @param id the id
@@ -187,11 +167,7 @@ public final class ControllerHelper {
    *     </code>
    * @return the entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<R>> detail(final S invoke, final long id, Function<T, R> function) {
     if (id < 1) {
       return wrongFormat("id");
@@ -219,7 +195,6 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
@@ -227,11 +202,7 @@ public final class ControllerHelper {
    * @param bindingResult the binding result
    * @return the response entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<R>> update(
           final S invoke, final T entity, final long id, final BindingResult bindingResult) {
     if (id < 1) {
@@ -256,17 +227,12 @@ public final class ControllerHelper {
    *
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode)
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<Long>> update(final S invoke, final T entity) {
     return update(invoke, entity, null, null);
   }
@@ -277,17 +243,12 @@ public final class ControllerHelper {
    * @param errorCode 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode)
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<Long>> update(final S invoke, final T entity, final ResultCode errorCode) {
     return update(invoke, entity, null, errorCode);
   }
@@ -299,16 +260,11 @@ public final class ControllerHelper {
    * @param errorCode 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<Long>> update(
           final S invoke, final T entity, final ResultCode succCode, final ResultCode errorCode) {
     try {
@@ -325,7 +281,6 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param <P> the type parameter
    * @param invoke the invoke
@@ -336,9 +291,8 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <
-          S extends BaseService<T, E>,
+          S extends BaseService<T>,
           T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
           R extends AbstractEntityRequest,
           P>
       ResponseEntity<Rs<P>> update(
@@ -359,7 +313,6 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param <P> the type parameter
    * @param invoke the invoke
@@ -371,9 +324,8 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <
-          S extends BaseService<T, E>,
+          S extends BaseService<T>,
           T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
           R extends AbstractEntityRequest,
           P>
       ResponseEntity<Rs<P>> update(
@@ -395,7 +347,6 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entities the entities
@@ -403,10 +354,7 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R extends AbstractEntityRequest>
+          S extends BaseService<T>, T extends AbstractEntityPoJo, R extends AbstractEntityRequest>
       ResponseEntity<Rs<List<Long>>> updateBatch(
           final S invoke, final List<R> entities, final String... includeNullProperties) {
     try {
@@ -424,17 +372,12 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param id the id
    * @return the response entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<R>> delete(final S invoke, final long id) {
     if (id < 1) {
       return wrongFormat("id");
@@ -455,14 +398,9 @@ public final class ControllerHelper {
    * @param errorCode 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<String>> delete(
           final Runnable runnable,
           final Supplier<ResponseEntity<Rs<String>>> success,
@@ -486,14 +424,9 @@ public final class ControllerHelper {
    * @param errorCode 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<String>> delete(
           final R result,
           final Function<R, ResponseEntity<Rs<String>>> function,
@@ -512,18 +445,13 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param id the id
    * @param companyId the company id
    * @return the response entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
-          R>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<R>> delete(final S invoke, final long id, final long companyId) {
     if (id < 1) {
       return wrongFormat("id");
@@ -541,15 +469,11 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param invoke the invoke
    * @param ids the ids
    * @return the response entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
       ResponseEntity<Rs<String>> deleteBatch(final S invoke, final List<Long> ids) {
     try {
       invoke.deleteBatch(ids);
@@ -564,16 +488,12 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param invoke the invoke
    * @param ids the ids
    * @param companyId the company id
    * @return the response entity
    */
-  public static <
-          S extends BaseService<T, E>,
-          T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse>
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
       ResponseEntity<Rs<String>> deleteBatch(
           final S invoke, final List<Long> ids, final long companyId) {
     try {
@@ -696,14 +616,12 @@ public final class ControllerHelper {
    * @param create 是否是创建.
    * @param bindingResult 校验器校验结果.
    * @param <T> 服务层实现类.
-   * @param <E> 要更新的对象.
    * @return {@link ResponseEntity}
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static <
-          S extends BaseService<T, E>,
+          S extends BaseService<T>,
           T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
           R extends AbstractEntityRequest,
           P>
       ResponseEntity<Rs<P>> createOrUpdate(
@@ -776,9 +694,8 @@ public final class ControllerHelper {
    * @return {@link ResponseEntity}
    */
   private static <
-          S extends BaseService<T, E>,
+          S extends BaseService<T>,
           T extends AbstractEntityPoJo,
-          E extends AbstractEntityResponse,
           R extends AbstractEntityRequest,
           P>
       ResponseEntity<Rs<P>> createOrUpdate(
@@ -796,7 +713,10 @@ public final class ControllerHelper {
   }
 
   private static <R> ResponseEntity<Rs<R>> errorResponse(Exception e) {
-    log.warn("{}:[{}]", Thread.currentThread().getStackTrace()[2].getMethodName(), e.getMessage());
+    log.warn(
+        "errorResponse:{}[{}]",
+        Thread.currentThread().getStackTrace()[2].getMethodName(),
+        e.getMessage());
     log.error(e.getMessage(), e);
     return e instanceof CommonException && !StringUtils.isEmpty(e.getMessage())
         ? fail(e.getMessage())

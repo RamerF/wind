@@ -228,20 +228,17 @@ public final class BeanUtils {
    * 如果在service方法之外获取泛型参数poJo,需要调用这个方法,因为service被代理了.
    *
    * @param <T> the type parameter
-   * @param <E> the type parameter
    * @param <S> the type parameter
    * @param service the service
    * @return the poJo class
    */
   @SuppressWarnings("unchecked")
-  public static <
-          T extends AbstractEntityPoJo, E extends AbstractEntity, S extends InterService<T, E>>
-      Class<T> getPoJoClass(S service) {
+  public static <T extends AbstractEntityPoJo, S extends InterService<T>> Class<T> getPoJoClass(
+      S service) {
     return (Class<T>) getParamTypeClass((Class<S>) getProxyTarget(service).getClass())[0];
   }
 
-  private static <
-          T extends AbstractEntityPoJo, E extends AbstractEntity, S extends InterService<T, E>>
+  private static <T extends AbstractEntityPoJo, S extends InterService<T>>
       Class<?>[] getParamTypeClass(Class<S> serviceClazz) {
     Class<?>[] classes =
         Optional.ofNullable(SERVICE_GENERIC.get(serviceClazz))

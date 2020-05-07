@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import io.github.ramerf.wind.core.condition.ICondition;
 import io.github.ramerf.wind.core.condition.Update;
 import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -26,13 +25,11 @@ import static io.github.ramerf.wind.core.util.BeanUtils.*;
  * The interface Update service.
  *
  * @param <T> the type parameter
- * @param <E> the type parameter
  * @author Tang Xiaofeng
  * @since 2020 /1/5
  */
 @SuppressWarnings("rawtypes")
-public interface UpdateService<T extends AbstractEntityPoJo, E extends AbstractEntity>
-    extends InterService<T, E> {
+public interface UpdateService<T extends AbstractEntityPoJo> extends InterService<T> {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(UpdateService.class);
 
@@ -155,7 +152,7 @@ public interface UpdateService<T extends AbstractEntityPoJo, E extends AbstractE
    * @see SQLException
    * @see CommonException
    */
-  @SuppressWarnings({"unchecked", "DeprecatedIsStillUsed"})
+  @SuppressWarnings("unchecked")
   @Deprecated
   default <U extends AbstractEntityRequest> T createOrUpdate(U u, String... includeNullProperties)
       throws RuntimeException {

@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import com.baomidou.mybatisplus.core.toolkit.*;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
@@ -43,7 +42,7 @@ import static org.springframework.util.Assert.notNull;
  * @since 2020 /1/5
  */
 @SuppressWarnings({"unused", "rawtypes", "DuplicatedCode"})
-public interface InterService<T extends AbstractEntityPoJo, E extends AbstractEntity> {
+public interface InterService<T extends AbstractEntityPoJo > {
   Logger log = LoggerFactory.getLogger(InterService.class);
 
   /**

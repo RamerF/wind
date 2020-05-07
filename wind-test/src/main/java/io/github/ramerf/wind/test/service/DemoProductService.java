@@ -2,7 +2,6 @@ package io.github.ramerf.wind.test.service;
 
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.test.entity.pojo.DemoProductPoJo;
-import io.github.ramerf.wind.test.entity.response.DemoProductResponse;
 
 /**
  * The interface Demo product service.
@@ -11,7 +10,7 @@ import io.github.ramerf.wind.test.entity.response.DemoProductResponse;
  * @since 2019 /12/17
  */
 @SuppressWarnings("unused")
-public interface DemoProductService extends BaseService<DemoProductPoJo, DemoProductResponse> {
+public interface DemoProductService extends BaseService<DemoProductPoJo> {
   /**
    * 判断商品名称是否重复.
    *

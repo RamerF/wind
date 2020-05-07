@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.condition;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -20,12 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
+import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -64,7 +63,7 @@ public class Query {
   private String countString;
   private String orderByString;
   /** 暂时用于where之后的函数(group by等). */
-  private final StringBuilder suffixString = new StringBuilder();
+  private final StringBuilder afterWhereString = new StringBuilder();
 
   private static JdbcTemplate JDBC_TEMPLATE;
 
@@ -122,7 +121,7 @@ public class Query {
   }
 
   public Query groupBy(@Nonnull final GroupByClause... groupByClauses) {
-    suffixString
+    afterWhereString
         .append(GROUP_BY)
         .append(
             Stream.of(groupByClauses)
@@ -165,8 +164,8 @@ public class Query {
   }
 
   public <R> R fetchOne(final Class<R> clazz) {
-    StringUtils.doIfNonEmpty(
-        suffixString.toString(),
+    doIfNonEmpty(
+        afterWhereString.toString(),
         str -> {
           conditionString = conditionString.concat(str);
         });
@@ -192,8 +191,8 @@ public class Query {
   }
 
   public <R> List<R> fetchAll(final Class<R> clazz) {
-    StringUtils.doIfNonEmpty(
-        suffixString.toString(),
+    doIfNonEmpty(
+        afterWhereString.toString(),
         str -> {
           conditionString = conditionString.concat(str);
         });
@@ -214,7 +213,7 @@ public class Query {
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
-    ResultHandler resultHandler =
+    ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
@@ -222,13 +221,17 @@ public class Query {
   }
 
   /** 获取某页列表数据. 注意: 该方法不支持多表查询. */
-  public <R extends AbstractEntity> List<R> fetchAll(
-      final Class<R> clazz, final PageRequest pageable) {
-    final Sort sort = pageable.getSort();
+  public <R> List<R> fetchAll(final Class<R> clazz, final PageRequest pageable) {
+    doIfNonEmpty(
+        afterWhereString.toString(),
+        str -> {
+          conditionString = conditionString.concat(str);
+        });
+
     // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
     orderByString =
-        sort.stream()
+        pageable.getSort().stream()
             .map(
                 s ->
                     s.getProperty()
@@ -263,7 +266,7 @@ public class Query {
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", list);
     }
-    ResultHandler resultHandler =
+    ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
@@ -272,11 +275,16 @@ public class Query {
 
   /** 注意: 该方法不支持多表查询. */
   public <R> Page<R> fetchPage(final Class<R> clazz, final PageRequest pageable) {
-    final Sort sort = pageable.getSort();
+    doIfNonEmpty(
+        afterWhereString.toString(),
+        str -> {
+          conditionString = conditionString.concat(str);
+        });
+
     // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
     orderByString =
-        sort.stream()
+        pageable.getSort().stream()
             .map(
                 s ->
                     s.getProperty()
@@ -326,6 +334,21 @@ public class Query {
   }
 
   public long fetchCount() {
+    doIfNonEmpty(
+        afterWhereString.toString(),
+        str -> {
+          countString = countString.concat(str);
+        });
+    /*
+    拼接下方的字符串:
+    select sum(b.a)
+    from (select sum(1) a
+          from demo_product
+          where is_delete = false
+          group by name
+         ) b;
+     */
+
     final String sql = "SELECT COUNT(1) FROM %s";
     final String queryString =
         String.format(sql, StringUtils.nonEmpty(countString) ? countString : "");

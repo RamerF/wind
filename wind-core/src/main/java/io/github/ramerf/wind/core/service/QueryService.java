@@ -15,7 +15,6 @@ import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.service.BaseService.ExtraProp;
 import io.github.ramerf.wind.core.util.CollectionUtils;
-import java.io.Serializable;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -39,8 +38,7 @@ import static io.github.ramerf.wind.core.util.BeanUtils.getPoJoClass;
  * @since 2020 /1/5
  */
 @SuppressWarnings("all")
-public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEntity>
-    extends InterService<T, E> {
+public interface QueryService<T extends AbstractEntityPoJo> extends InterService<T> {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(QueryService.class);
 
@@ -323,14 +321,10 @@ public interface QueryService<T extends AbstractEntityPoJo, E extends AbstractEn
    * @param companyId the companyId
    * @return the list
    */
-  default List<T> listByIds(final Collection<? extends Serializable> ids, final long companyId) {
+  default List<T> listByIds(final Collection<Long> ids, final long companyId) {
     return CollectionUtils.isEmpty(ids)
         ? Collections.emptyList()
-        : lists(
-            condition ->
-                condition
-                    .in(AbstractEntityPoJo::getId, ids)
-                    .eq(AbstractEntityPoJo::getCompanyId, companyId));
+        : lists(condition -> condition.in(T::setId, ids).eq(T::setCompanyId, companyId));
   }
 
   /**

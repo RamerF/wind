@@ -8,7 +8,6 @@ import io.github.ramerf.wind.core.repository.BaseRepository;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.BaseServiceImpl;
 import io.github.ramerf.wind.test.entity.pojo.DemoProductPoJo;
-import io.github.ramerf.wind.test.entity.response.DemoProductResponse;
 import io.github.ramerf.wind.test.repository.DemoProductRepository;
 import io.github.ramerf.wind.test.service.DemoProductService;
 import java.util.Collections;
@@ -34,11 +33,10 @@ public class DemoProductServiceImpl implements DemoProductService {
 
   /** 注意: 与下方Bean中的名称对应,保证模块内唯一 */
   @Resource(name = "demoProductBS")
-  private BaseService<DemoProductPoJo, DemoProductResponse> baseService;
+  private BaseService<DemoProductPoJo> baseService;
 
   @Bean("demoProductBS")
-  public BaseService<DemoProductPoJo, DemoProductResponse> setBaseService(
-      @Autowired DemoProductRepository repository) {
+  public BaseService<DemoProductPoJo> setBaseService(@Autowired DemoProductRepository repository) {
     return new BaseServiceImpl<>(repository);
   }
 

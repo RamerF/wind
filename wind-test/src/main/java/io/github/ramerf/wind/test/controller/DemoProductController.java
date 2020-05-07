@@ -38,7 +38,7 @@ public class DemoProductController {
     QueryColumn<DemoProductPoJo> queryColumn =
         QueryColumnFactory.getInstance(DemoProductPoJo.class);
     Condition<DemoProductPoJo> condition =
-        queryColumn.getCondition().gt(DemoProductPoJo::getId, 0L);
+        queryColumn.getCondition().gt(DemoProductPoJo::setId, 0L);
     final QueryEntityMetaData<DemoProductPoJo> queryEntityMetaData =
         queryColumn.getQueryEntityMetaData();
     final GroupByClause<DemoProductPoJo> clause = queryEntityMetaData.getGroupByClause();
@@ -61,7 +61,7 @@ public class DemoProductController {
     QueryColumn<DemoProductPoJo> queryColumn =
         QueryColumnFactory.getInstance(DemoProductPoJo.class);
     Condition<DemoProductPoJo> condition =
-        queryColumn.getCondition().gt(DemoProductPoJo::getId, 0L);
+        queryColumn.getCondition().gt(DemoProductPoJo::setId, 0L);
     final QueryEntityMetaData<DemoProductPoJo> queryEntityMetaData =
         queryColumn.getQueryEntityMetaData();
     final GroupByClause<DemoProductPoJo> clause = queryEntityMetaData.getGroupByClause();
@@ -75,7 +75,8 @@ public class DemoProductController {
             .where(
                 condition
                     .eq(DemoProductPoJo::setName, "ramer")
-                    .eq(DemoProductPoJo::setCode, "code"))
+                    .eq(DemoProductPoJo::setCode, "code")
+                    .isNull(DemoProductPoJo::setName))
             .groupBy(clause.col(DemoProductPoJo::getName))
             .fetchAll(Ts.class);
     return Rs.ok(one);

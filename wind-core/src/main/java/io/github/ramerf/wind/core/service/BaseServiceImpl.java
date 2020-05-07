@@ -15,7 +15,7 @@ public class BaseServiceImpl<
         T extends AbstractEntityPoJo,
         E extends AbstractEntityResponse,
         R extends BaseRepository<T, Long>>
-    implements BaseService<T, E> {
+    implements BaseService<T> {
   private final R repository;
 
   public BaseServiceImpl(R repository) {
