@@ -392,20 +392,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     return this;
   }
 
-  // 下面是老接口
-
-  private Condition<T> eq(@Nonnull final String field, final Object value) {
-    conditionSql.add(
-        (conditionSql.size() > 0 ? AND.operator : "")
-            .concat(queryEntityMetaData.getTableAlia())
-            .concat(DOT.operator)
-            .concat(camelToUnderline(field))
-            .concat(MatchPattern.EQUAL.operator)
-            .concat(toSqlVal(value)));
-    values.add(value);
-    return this;
-  }
-
   @Override
   public <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
       @Nonnull final IFunction<T, ?> field,
@@ -477,6 +463,18 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     final Condition<AbstractEntityPoJo> condition = (Condition<AbstractEntityPoJo>) this;
     condition.eq(logicDeleteField, logicNotDelete);
     return String.join(Constant.DEFAULT_SPLIT_SPACE, conditionSql);
+  }
+
+  private Condition<T> eq(@Nonnull final String field, final Object value) {
+    conditionSql.add(
+        (conditionSql.size() > 0 ? AND.operator : "")
+            .concat(queryEntityMetaData.getTableAlia())
+            .concat(DOT.operator)
+            .concat(camelToUnderline(field))
+            .concat(MatchPattern.EQUAL.operator)
+            .concat(toSqlVal(value)));
+    values.add(value);
+    return this;
   }
 
   @Override

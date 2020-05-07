@@ -45,7 +45,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 @Slf4j
 @SuppressWarnings({"unused"})
 public final class BeanUtils {
-  private static final Map<Class<?>, WeakReference<Class<?>[]>> SERVICE_GENERIC = new HashMap<>();
+  private static final Map<Class<?>, WeakReference<Class<?>>> SERVICE_GENERIC = new HashMap<>();
 
   /**
    * Map转Bean.
@@ -235,16 +235,16 @@ public final class BeanUtils {
   @SuppressWarnings("unchecked")
   public static <T extends AbstractEntityPoJo, S extends InterService<T>> Class<T> getPoJoClass(
       S service) {
-    return (Class<T>) getParamTypeClass((Class<S>) getProxyTarget(service).getClass())[0];
+    return getParamTypeClass((Class<S>) getProxyTarget(service).getClass());
   }
 
+  @SuppressWarnings("unchecked")
   private static <T extends AbstractEntityPoJo, S extends InterService<T>>
-      Class<?>[] getParamTypeClass(Class<S> serviceClazz) {
-    Class<?>[] classes =
-        Optional.ofNullable(SERVICE_GENERIC.get(serviceClazz))
-            .map(Reference::get)
-            .orElse(new Class[2]);
-    if (Objects.nonNull(classes[0])) {
+      Class<T> getParamTypeClass(Class<S> serviceClazz) {
+    Class<T> classes =
+        (Class<T>)
+            Optional.ofNullable(SERVICE_GENERIC.get(serviceClazz)).map(Reference::get).orElse(null);
+    if (Objects.nonNull(classes)) {
       return classes;
     }
 
@@ -252,8 +252,7 @@ public final class BeanUtils {
     ParameterizedType parameterizedType = (ParameterizedType) baseServiceType;
     final Type[] arguments = parameterizedType.getActualTypeArguments();
     try {
-      classes[0] = Class.forName(arguments[0].getTypeName());
-      classes[1] = Class.forName(arguments[1].getTypeName());
+      classes = (Class<T>) Class.forName(arguments[0].getTypeName());
     } catch (ClassNotFoundException ignored) {
       throw CommonException.of("无法获取父类泛型");
     }
