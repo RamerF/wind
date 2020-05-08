@@ -1,8 +1,9 @@
-package io.github.ramerf.wind.core.exception;
+package io.github.ramerf.wind.test.exception;
 
 import com.alibaba.fastjson.JSONException;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.entity.response.Rs;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.sql.SQLException;
 import java.util.Objects;
