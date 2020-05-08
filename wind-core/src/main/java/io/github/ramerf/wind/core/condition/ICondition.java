@@ -18,6 +18,14 @@ import javax.annotation.Nonnull;
 public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
 
   /**
+   * 创建一个空的条件,包含表信息.
+   *
+   * @return the Condition
+   * @see Condition#of(QueryColumn)
+   */
+  Condition<T> condition();
+
+  /**
    * Eq condition.
    *
    * @param <V> the type parameter
@@ -389,6 +397,8 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    */
   Condition<T> exists(final Condition<T> childConditions);
 
+  // TODO-WARN 很明显这里的拼接有问题,要传递的参数是(Query+Condition)最上层的接口,能够获取到每个段的sql.
+  //  因为涉及到整个模式调整,暂时不动
   /**
    * Exists condition.
    *
@@ -396,8 +406,6 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param childConditions the child conditions
    * @return the condition
    */
-  // TODO-WARN 很明显这里的拼接有问题,要传递的参数是(Query+Condition)最上层的接口,能够获取到每个段的sql.
-  //  因为涉及到整个模式调整,暂时不动
   Condition<T> exists(final boolean condition, final Condition<T> childConditions);
 
   /**
@@ -409,12 +417,30 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   Condition<T> and(Condition<T> children);
 
   /**
+   * And condition.
+   *
+   * @param condition the condition
+   * @param children the children
+   * @return the condition
+   */
+  Condition<T> and(final boolean condition, @Nonnull final Condition<T> children);
+
+  /**
    * Or condition.
    *
    * @param children the children
    * @return the condition
    */
   Condition<T> or(Condition<T> children);
+
+  /**
+   * Or condition.
+   *
+   * @param condition the condition
+   * @param children the children
+   * @return the condition
+   */
+  Condition<T> or(final boolean condition, @Nonnull final Condition<T> children);
 
   /**
    * 获取占位符值.

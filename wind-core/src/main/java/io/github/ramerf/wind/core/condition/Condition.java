@@ -46,6 +46,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
+  public Condition<T> condition() {
+    final Condition<T> condition = new Condition<>();
+    condition.queryEntityMetaData = this.queryEntityMetaData;
+    return condition;
+  }
+
+  @Override
   public <V> Condition<T> eq(@Nonnull final IConsumer<T, V> field, final V value) {
     return eq(true, field, value);
   }
@@ -440,7 +447,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   @Override
   public Condition<T> and(@Nonnull Condition<T> children) {
-    if (Objects.nonNull(children)) {
+    return and(true, children);
+  }
+
+  @Override
+  public Condition<T> and(final boolean condition, @Nonnull Condition<T> children) {
+    if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
@@ -451,7 +463,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   @Override
   public Condition<T> or(@Nonnull Condition<T> children) {
-    if (Objects.nonNull(children)) {
+    return or(true, children);
+  }
+
+  @Override
+  public Condition<T> or(final boolean condition, @Nonnull Condition<T> children) {
+    if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
