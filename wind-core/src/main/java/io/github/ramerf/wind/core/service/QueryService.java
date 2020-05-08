@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.Condition.MatchPattern;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -216,8 +215,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @param clazz 返回对象
    * @return the list
    */
-  default <R extends AbstractEntity> List<R> list(
-      Consumer<QueryColumn<T>> consumer, Class<R> clazz) {
+  default <R> List<R> list(Consumer<QueryColumn<T>> consumer, Class<R> clazz) {
     final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
     consumer.accept(queryColumn);
     return Query.getInstance()
@@ -276,8 +274,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @param clazz 返回对象class
    * @return the list
    */
-  default <R extends AbstractEntity> List<R> lists(
-      Consumer<Condition<T>> consumer, Class<R> clazz) {
+  default <R> List<R> lists(Consumer<Condition<T>> consumer, Class<R> clazz) {
     final QueryColumn<T> queryColumn = QueryColumnFactory.<T>getInstance(getPoJoClass(this));
     final Condition<T> condition = queryColumn.getCondition();
     Optional.ofNullable(consumer).ifPresent(con -> con.accept(condition));
@@ -295,7 +292,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @param sortColumns the sort columns
    * @return list list
    */
-  default <R extends AbstractEntity> List<R> lists(
+  default <R> List<R> lists(
       Consumer<Condition<T>> consumer,
       final int page,
       final int size,
@@ -563,7 +560,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the page
    */
   @SuppressWarnings("unchecked")
-  default <R extends AbstractEntity> Page<R> page(
+  default <R> Page<R> page(
       @Nonnull Consumer<QueryColumn<T>> consumer,
       final int page,
       final int size,

@@ -36,7 +36,7 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
     }
     final Object value = map.entrySet().stream().findFirst().map(Entry::getValue).orElse(null);
     if (value == null) {
-      return null;
+      return nullToZero();
     }
     final Class<?> valueClass = value.getClass();
     if (valueClass.equals(clazz)) {
@@ -78,5 +78,9 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
       return Collections.emptyList();
     }
     return maps.stream().map(this::handle).collect(Collectors.toList());
+  }
+
+  private E nullToZero() {
+    return null;
   }
 }

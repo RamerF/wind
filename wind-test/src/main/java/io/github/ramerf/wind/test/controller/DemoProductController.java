@@ -65,20 +65,18 @@ public class DemoProductController {
     final QueryEntityMetaData<DemoProductPoJo> queryEntityMetaData =
         queryColumn.getQueryEntityMetaData();
     final GroupByClause<DemoProductPoJo> clause = queryEntityMetaData.getGroupByClause();
-    final List<Ts> one =
+    final Long one =
         prototypeBean
             .query()
-            .select(
-                queryColumn
-                    .sum(DemoProductPoJo::getId, "big_decimal")
-                    .col(DemoProductPoJo::getName, "name2"))
+            .select(queryColumn.sum(DemoProductPoJo::getId, "big_decimal"))
             .where(
                 condition
                     .eq(DemoProductPoJo::setName, "ramer")
                     .eq(DemoProductPoJo::setCode, "code")
-                    .isNull(DemoProductPoJo::setName))
+                    .isNull(DemoProductPoJo::setName)
+                    .isNotNull(DemoProductPoJo::setName))
             .groupBy(clause.col(DemoProductPoJo::getName))
-            .fetchAll(Ts.class);
+            .fetchOne(Long.class);
     return Rs.ok(one);
   }
 

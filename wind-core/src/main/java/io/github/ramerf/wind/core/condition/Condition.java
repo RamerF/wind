@@ -444,6 +444,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
+      children.values.stream().forEach(value -> values.add(value));
     }
     return this;
   }
@@ -454,6 +455,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
+      children.values.stream().forEach(value -> values.add(value));
     }
     return this;
   }
