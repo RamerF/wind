@@ -176,18 +176,24 @@ public class Query {
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", queryString);
     }
-    final Map<String, Object> result =
-        JDBC_TEMPLATE.queryForMap(
+    final List<Map<String, Object>> result =
+        JDBC_TEMPLATE.queryForList(
             queryString,
             conditions.stream()
                 .flatMap(cond -> cond.getValues().stream())
                 .collect(toList())
                 .toArray(new Object[0]));
+    if (CollectionUtils.isEmpty(result)) {
+      return null;
+    }
+    if (result.size() > 1) {
+      throw CommonException.of(ResultCode.API_TOO_MANY_RESULTS);
+    }
     ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz, queryColumns)
             : new BeanResultHandler<>(clazz, queryColumns);
-    return resultHandler.handle(result);
+    return resultHandler.handle(result.get(0));
   }
 
   public <R> List<R> fetchAll(final Class<R> clazz) {
@@ -339,19 +345,12 @@ public class Query {
         str -> {
           countString = countString.concat(str);
         });
-    /*
-    拼接下方的字符串:
-    select sum(b.a)
-    from (select sum(1) a
-          from demo_product
-          where is_delete = false
-          group by name
-         ) b;
-     */
-
-    final String sql = "SELECT COUNT(1) FROM %s";
-    final String queryString =
-        String.format(sql, StringUtils.nonEmpty(countString) ? countString : "");
+    final boolean nonEmpty = StringUtils.nonEmpty(countString);
+    final String sql =
+        nonEmpty && countString.contains(GROUP_BY.operator)
+            ? "SELECT SUM(b.a) FROM (SELECT 1 a FROM %s) b"
+            : "SELECT COUNT(1) FROM %s";
+    final String queryString = String.format(sql, nonEmpty ? countString : "");
     if (log.isDebugEnabled()) {
       log.debug("fetchCount:[{}]", queryString);
     }
