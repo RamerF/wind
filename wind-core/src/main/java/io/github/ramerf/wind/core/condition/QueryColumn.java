@@ -10,6 +10,7 @@ import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.Data;
@@ -119,6 +120,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
 
   /**
    * Sum query column.<br>
+   * 不清楚返回类型的情况下使用{@link BigDecimal}
    *
    * <pre>
    * <b>注意:该列的返回类型与数据库对应关系</b>
