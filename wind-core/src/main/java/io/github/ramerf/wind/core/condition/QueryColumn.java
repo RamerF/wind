@@ -107,20 +107,28 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   }
 
   /**
-   * Sum query column.
+   * Sum query column.<br>
    *
    * @param function the function
    * @return the query column
+   * @see #sum(IFunction, String)
    */
   public QueryColumn<T> sum(final IFunction<T, ?> function) {
     return sum(function, null);
   }
 
   /**
-   * Sum query column.
+   * Sum query column.<br>
+   *
+   * <pre>
+   * <b>注意:该列的返回类型与数据库对应关系</b>
+   * <b>java           jdbc</b>
+   * BigDecimal     bigint/numeric/decimal
+   * Double         double/float
+   *
+   * </pre>
    *
    * @param function the function
-   * @param alia the alia
    * @return the query column
    */
   public QueryColumn<T> sum(final IFunction<T, ?> function, final String alia) {
