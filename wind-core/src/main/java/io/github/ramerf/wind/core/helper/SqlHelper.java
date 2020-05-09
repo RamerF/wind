@@ -1,15 +1,10 @@
 package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.constant.Constant;
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.converter.EnumTypeConverter;
 import java.lang.ref.WeakReference;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 
 /**
  * The type Sql helper.
@@ -35,70 +30,68 @@ public class SqlHelper {
    * @return the string
    */
   public static String toSqlVal(final Object value) {
-    // 测试: 占位符
-    if (Objects.nonNull(value)) {
-      return "?";
-    }
-    // 测试: 占位符
-    if (Objects.isNull(value)) {
-      return null;
-    }
-    if (value instanceof String) {
-      String val = ((String) value);
-      if (val.contains("'")) {
-        val = val.replaceAll("'", "''");
-      }
-      return QUOTE_FORMAT.format(val);
-    }
-    if (value instanceof Date) {
-      return QUOTE_FORMAT.format(
-          LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
-    }
-    if (List.class.isAssignableFrom(value.getClass())) {
-      // 数组拼接为: '{name1,name2}' 或使用函数 string_to_array('name1,name2', ',')
-      // 目前不支持多数据库,考虑到兼容性,不使用函数
-      return QUOTE_FORMAT.format(
-          BRACE_FORMAT.format(
-              ((List<?>) value)
-                  .stream()
-                      .map(Object::toString)
-                      .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
-                      .orElse(value.toString())));
-    }
-    if (value instanceof Collection) {
-      // 不知道当时写这个是干什么的 0_0
-      return ((Collection<?>) value)
-          .stream()
-              .map(SqlHelper::toSqlVal)
-              .filter(Objects::nonNull)
-              .map(Object::toString)
-              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
-              .orElse(value.toString());
-    }
-    if (InterEnum.class.isAssignableFrom(value.getClass())) {
-      // TODO-WARN 考虑到数据库兼容性,这里暂时还没使用转换器接口处理
-      //  遇到特殊的数据需要处理再考虑参考TypeConverter
-      return new EnumTypeConverter().convertToJdbc((InterEnum) value).toString();
-    }
-    if (value.getClass().isArray()) {
-      if (value instanceof String[]) {
-        return QUOTE_FORMAT.format(
-            LEFT_BRACE
-                .operator()
-                .concat(
-                    Arrays.stream((String[]) value)
-                        .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
-                        .orElse(value.toString()))
-                .concat(RIGHT_BRACE.operator()));
-      }
-      String str =
-          Arrays.stream((Object[]) value)
-              .map(SqlHelper::toSqlVal)
-              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
-              .orElse(value.toString());
-      return QUOTE_FORMAT.format(LEFT_BRACE.operator().concat(str).concat(RIGHT_BRACE.operator()));
-    }
-    return String.valueOf(value);
+    return "?";
+    //    if (Objects.isNull(value)) {
+    //      return null;
+    //    }
+    //    if (value instanceof String) {
+    //      String val = ((String) value);
+    //      if (val.contains("'")) {
+    //        val = val.replaceAll("'", "''");
+    //      }
+    //      return QUOTE_FORMAT.format(val);
+    //    }
+    //    if (value instanceof Date) {
+    //      return QUOTE_FORMAT.format(
+    //          LocalDateTime.ofInstant(((Date) value).toInstant(),
+    // Constant.DEFAULT_ZONE).toString());
+    //    }
+    //    if (List.class.isAssignableFrom(value.getClass())) {
+    //      // 数组拼接为: '{name1,name2}' 或使用函数 string_to_array('name1,name2', ',')
+    //      // 目前不支持多数据库,考虑到兼容性,不使用函数
+    //      return QUOTE_FORMAT.format(
+    //          BRACE_FORMAT.format(
+    //              ((List<?>) value)
+    //                  .stream()
+    //                      .map(Object::toString)
+    //                      .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+    //                      .orElse(value.toString())));
+    //    }
+    //    if (value instanceof Collection) {
+    //      // 不知道当时写这个是干什么的 0_0
+    //      return ((Collection<?>) value)
+    //          .stream()
+    //              .map(SqlHelper::toSqlVal)
+    //              .filter(Objects::nonNull)
+    //              .map(Object::toString)
+    //              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+    //              .orElse(value.toString());
+    //    }
+    //    if (InterEnum.class.isAssignableFrom(value.getClass())) {
+    //      // TODO-WARN 考虑到数据库兼容性,这里暂时还没使用转换器接口处理
+    //      //  遇到特殊的数据需要处理再考虑参考TypeConverter
+    //      return new EnumTypeConverter().convertToJdbc((InterEnum) value).toString();
+    //    }
+    //    if (value.getClass().isArray()) {
+    //      if (value instanceof String[]) {
+    //        return QUOTE_FORMAT.format(
+    //            LEFT_BRACE
+    //                .operator()
+    //                .concat(
+    //                    Arrays.stream((String[]) value)
+    //                        .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+    //                        .orElse(value.toString()))
+    //                .concat(RIGHT_BRACE.operator()));
+    //      }
+    //      String str =
+    //          Arrays.stream((Object[]) value)
+    //              .map(SqlHelper::toSqlVal)
+    //              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+    //              .orElse(value.toString());
+    //      return
+    // QUOTE_FORMAT.format(LEFT_BRACE.operator().concat(str).concat(RIGHT_BRACE.operator()));
+    //    }
+    //    return String.valueOf(value);
   }
 
   /**

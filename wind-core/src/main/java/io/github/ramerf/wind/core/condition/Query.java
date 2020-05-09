@@ -354,13 +354,13 @@ public class Query {
     if (log.isDebugEnabled()) {
       log.debug("fetchCount:[{}]", queryString);
     }
-    return JDBC_TEMPLATE.queryForObject(
-        queryString,
+    final Object[] args =
         conditions.stream()
             .flatMap(cond -> cond.getValues().stream())
             .collect(toList())
-            .toArray(new Object[0]),
-        Long.class);
+            .toArray(new Object[0]);
+    log.info("fetchCount:args[{}]", (Object) args);
+    return JDBC_TEMPLATE.queryForObject(queryString, args, Long.class);
   }
 
   // TODO-WARN 根据条件批量删除,批量更新

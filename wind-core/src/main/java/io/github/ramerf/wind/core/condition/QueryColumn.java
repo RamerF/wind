@@ -107,6 +107,27 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   }
 
   /**
+   * Sum query column.
+   *
+   * @param function the function
+   * @return the query column
+   */
+  public QueryColumn<T> sum(final IFunction<T, ?> function) {
+    return sum(function, null);
+  }
+
+  /**
+   * Sum query column.
+   *
+   * @param function the function
+   * @param alia the alia
+   * @return the query column
+   */
+  public QueryColumn<T> sum(final IFunction<T, ?> function, final String alia) {
+    return add(function, alia, SqlAggregateFunction.SUM);
+  }
+
+  /**
    * Max query column.
    *
    * @param function the function
@@ -128,24 +149,24 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   }
 
   /**
-   * Sum query column.
+   * Min query column.
    *
    * @param function the function
    * @return the query column
    */
-  public QueryColumn<T> sum(final IFunction<T, ?> function) {
-    return sum(function, null);
+  public QueryColumn<T> min(final IFunction<T, ?> function) {
+    return min(function, null);
   }
 
   /**
-   * Sum query column.
+   * Min query column.
    *
    * @param function the function
    * @param alia the alia
    * @return the query column
    */
-  public QueryColumn<T> sum(final IFunction<T, ?> function, final String alia) {
-    return add(function, alia, SqlAggregateFunction.SUM);
+  public QueryColumn<T> min(final IFunction<T, ?> function, final String alia) {
+    return add(function, alia, SqlAggregateFunction.MIN);
   }
 
   /** 添加查询对象(列/聚合函数). */
