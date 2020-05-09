@@ -19,16 +19,12 @@ import org.springframework.stereotype.Component;
 public class TypeConverterRegistryFactory {
   private List<TypeConverter> typeConverters = new ArrayList<>();
 
-  /**
-   * Instantiates a new Type converter registry.
-   */
+  /** Instantiates a new Type converter registry. */
   public TypeConverterRegistryFactory() {
     initDefaultTypeConverters();
   }
 
-  /**
-   * 初始化默认的类型转换器.
-   */
+  /** 初始化默认的类型转换器. */
   private void initDefaultTypeConverters() {
     addTypeConverters(new EnumTypeConverter());
     addTypeConverters(new BigDecimalTypeConverter());
@@ -80,7 +76,7 @@ public class TypeConverterRegistryFactory {
    * 获取Jdbc值转换为Java值类型转换器,用于将数据库值转换为Java类型.<br>
    * 后面可能会再添加一个Class/Field参数(用于获取字段上的转换器注解)
    *
-   * @param value         jdbc查询值
+   * @param value jdbc查询值
    * @param parameterType java类型
    * @return the type converter
    * @see TypeConverter
@@ -89,25 +85,30 @@ public class TypeConverterRegistryFactory {
     if (Objects.isNull(value)) {
       return null;
     }
-    return getTypeConverters().stream().filter(typeConverter -> {
-      final Type javaClass = typeConverter.getJavaClass();
-      final Type jdbcClass = typeConverter.getJdbcClass();
-      try {
-        return (Objects.equals(javaClass, parameterType) || Class.forName(javaClass.getTypeName())
-            .isAssignableFrom(Class.forName(parameterType.getTypeName()))) && Objects
-            .equals(value.getClass(), jdbcClass);
-      } catch (ClassNotFoundException ignored) {
-        // 如果这里抛出异常,就是程序的BUG,所以不需要处理
-      }
-      return false;
-    }).findFirst().orElse(null);
+    return getTypeConverters().stream()
+        .filter(
+            typeConverter -> {
+              final Type javaClass = typeConverter.getJavaClass();
+              final Type jdbcClass = typeConverter.getJdbcClass();
+              try {
+                return (Objects.equals(javaClass, parameterType)
+                        || Class.forName(javaClass.getTypeName())
+                            .isAssignableFrom(Class.forName(parameterType.getTypeName())))
+                    && Objects.equals(value.getClass(), jdbcClass);
+              } catch (ClassNotFoundException ignored) {
+                // 如果这里抛出异常,就是程序的BUG,所以不需要处理
+              }
+              return false;
+            })
+        .findFirst()
+        .orElse(null);
   }
 
   /**
    * 获取Java值转换为Jdbc值类型转换器,用于将数据库值转换为Java类型.<br>
    * 后面可能会再添加一个Class/Field参数(用于获取字段上的转换器注解)
    *
-   * @param value         java值
+   * @param value java值
    * @param parameterType java类型
    * @return the type converter
    * @see TypeConverter
@@ -116,15 +117,19 @@ public class TypeConverterRegistryFactory {
     if (Objects.isNull(value)) {
       return null;
     }
-    return getTypeConverters().stream().filter(typeConverter -> {
-      try {
-        return Objects.equals(typeConverter.getJavaClass(), parameterType) || Class
-            .forName(typeConverter.getJavaClass().getTypeName())
-            .isAssignableFrom(Class.forName(parameterType.getTypeName()));
-      } catch (ClassNotFoundException ignored) {
-        // 如果这里抛出异常,就是程序的BUG,所以不需要处理
-      }
-      return false;
-    }).findFirst().orElse(null);
+    return getTypeConverters().stream()
+        .filter(
+            typeConverter -> {
+              try {
+                return Objects.equals(typeConverter.getJavaClass(), parameterType)
+                    || Class.forName(typeConverter.getJavaClass().getTypeName())
+                        .isAssignableFrom(Class.forName(parameterType.getTypeName()));
+              } catch (Exception ignored) {
+                // 如果这里抛出异常,就是程序的BUG,所以不需要处理
+              }
+              return false;
+            })
+        .findFirst()
+        .orElse(null);
   }
 }

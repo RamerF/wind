@@ -3,8 +3,8 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.support.ChainList;
 import java.util.Collection;
+import java.util.List;
 import javax.annotation.Nonnull;
 
 /**
@@ -447,5 +447,5 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    *
    * @return 占位符对应的值 values
    */
-  ChainList<Object> getValues();
+  List<Object> getValues();
 }

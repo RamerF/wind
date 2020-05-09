@@ -1,8 +1,10 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
@@ -497,8 +499,15 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public ChainList<Object> getValues() {
-    return values;
+  public List<Object> getValues() {
+    return values.stream()
+        .map(
+            value ->
+                Optional.ofNullable(AppContextInject.getBean(TypeConverterRegistryFactory.class))
+                    .map(o -> o.getToJdbcTypeConverter(value, value.getClass()))
+                    .map(converter -> converter.convertToJdbc(value))
+                    .orElse(value))
+        .collect(Collectors.toCollection(LinkedList::new));
   }
 
   /** 属性匹配模式 */
