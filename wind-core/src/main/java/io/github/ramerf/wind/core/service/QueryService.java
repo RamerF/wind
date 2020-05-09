@@ -58,7 +58,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return long long
    */
   default long count(Consumer<QueryColumn<T>> query, Consumer<Condition<T>> condition) {
-    final QueryColumn<T> queryColumn = QueryColumnFactory.<T>getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     Optional.ofNullable(query).ifPresent(q -> q.accept(queryColumn));
     Optional.ofNullable(condition).ifPresent(cond -> cond.accept(queryColumn.getCondition()));
     return Query.getInstance().select(queryColumn).where(queryColumn.getCondition()).fetchCount();
@@ -143,7 +143,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    */
   default <R> R getOne(
       Consumer<QueryColumn<T>> query, Consumer<Condition<T>> condition, Class<R> clazz) {
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     query.accept(queryColumn);
     final Condition<T> cond = queryColumn.getCondition();
     Optional.ofNullable(condition).ifPresent(consumer -> consumer.accept(cond));
@@ -169,7 +169,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the ones
    */
   default <R> R getOnes(Consumer<Condition<T>> consumer, Class<R> clazz) {
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     final Condition<T> condition = queryColumn.getCondition();
     consumer.accept(condition);
     return Query.getInstance().select(queryColumn).where(condition).fetchOne(clazz);
@@ -216,7 +216,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the list
    */
   default <R> List<R> list(Consumer<QueryColumn<T>> consumer, Class<R> clazz) {
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     consumer.accept(queryColumn);
     return Query.getInstance()
         .select(queryColumn)
@@ -246,7 +246,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    */
   default <R> List<R> list(
       Consumer<QueryColumn<T>> query, Consumer<Condition<T>> condition, final Class<R> clazz) {
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     query.accept(queryColumn);
     Optional.ofNullable(condition)
         .ifPresent(consumer -> consumer.accept(queryColumn.getCondition()));
@@ -275,7 +275,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the list
    */
   default <R> List<R> lists(Consumer<Condition<T>> consumer, Class<R> clazz) {
-    final QueryColumn<T> queryColumn = QueryColumnFactory.<T>getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     final Condition<T> condition = queryColumn.getCondition();
     Optional.ofNullable(consumer).ifPresent(con -> con.accept(condition));
     return Query.getInstance().select(queryColumn).where(condition).fetchAll(clazz);
@@ -302,7 +302,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     if (Objects.isNull(pageable)) {
       return Collections.emptyList();
     }
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     final Condition<T> condition = queryColumn.getCondition();
     consumer.accept(condition);
     return Query.getInstance()
@@ -461,7 +461,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     if (Objects.isNull(pageable)) {
       return new Page<>();
     }
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     condition.accept(queryColumn.getCondition());
     return Query.getInstance()
         .select(queryColumn)
@@ -492,7 +492,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     if (Objects.isNull(pageable)) {
       return new Page<>();
     }
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     query.accept(queryColumn);
     final Condition<T> cond = queryColumn.getCondition();
     Optional.ofNullable(condition).ifPresent(consumer -> consumer.accept(cond));
@@ -518,7 +518,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       final int page,
       final int size,
       @Nonnull SortColumn... sortColumns) {
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     query.accept(queryColumn);
     condition.accept(queryColumn.getCondition());
     final PageRequest pageable = pageRequest(page, size, Arrays.asList(sortColumns));
@@ -570,8 +570,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     if (Objects.isNull(pageable)) {
       return new Page<>();
     }
-
-    final QueryColumn<T> queryColumn = QueryColumnFactory.getInstance(getPoJoClass(this));
+    final QueryColumn<T> queryColumn = getQueryColumn();
     consumer.accept(queryColumn);
     return Query.getInstance()
         .select(queryColumn)
@@ -600,8 +599,9 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
                 getWrapper(companyId, criteria));
   }
 
-  // TODO-WARN: wrapper 批量更新
-  // TODO-WARN: wrapper 批量删除
+  default QueryColumn<T> getQueryColumn() {
+    return QueryColumnFactory.getInstance(getPoJoClass(this));
+  }
 
   /**
    * 获取模糊查询条件,子类根据需要覆写该方法.

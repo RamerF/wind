@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.handler;
 
-import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.math.BigDecimal;
@@ -19,9 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
 
-  public PrimitiveResultHandler(
-      @Nonnull final Class<E> clazz, @Nonnull final List<QueryColumn<?>> queryColumns) {
-    super(clazz, queryColumns, false);
+  public PrimitiveResultHandler(@Nonnull final Class<E> clazz) {
+    super(clazz, false);
   }
 
   /**

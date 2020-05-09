@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.handler;
 
-import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.converter.TypeConverter;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
@@ -20,9 +19,8 @@ import static io.github.ramerf.wind.core.util.BeanUtils.methodToProperty;
 @Slf4j
 public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
 
-  public BeanResultHandler(
-      @Nonnull final Class<E> clazz, @Nonnull final List<QueryColumn<?>> queryColumns) {
-    super(clazz, queryColumns);
+  public BeanResultHandler(@Nonnull final Class<E> clazz) {
+    super(clazz);
   }
 
   /**

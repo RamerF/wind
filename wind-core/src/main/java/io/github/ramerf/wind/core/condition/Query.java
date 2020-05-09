@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.constant.Constant;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
@@ -41,7 +42,7 @@ import static java.util.stream.Collectors.toList;
  * <p>当{@link QueryAlia#sqlFunction}为null时,退化为普通条件,否则就是函数
  *
  * @author Tang Xiaofeng
- * @since 2019/12/28
+ * @since 2019 /12/28
  */
 @Slf4j
 @Component
@@ -67,16 +68,27 @@ public class Query {
 
   private static JdbcTemplate JDBC_TEMPLATE;
 
+  /** Instantiates a new Query. */
   public Query() {
     Query.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
   }
 
+  /**
+   * Gets instance.
+   *
+   * @return the instance
+   */
   public static Query getInstance() {
     final Query bean = AppContextInject.getBean(Query.class);
     log.info("getInstance:[{}]", bean);
     return bean;
   }
 
+  /**
+   * 指定查询列. @param queryColumns the query columns
+   *
+   * @return the query
+   */
   public Query select(final QueryColumn<?>... queryColumns) {
     this.queryColumns = new LinkedList<>(Arrays.asList(queryColumns));
     this.queryString =
@@ -86,11 +98,21 @@ public class Query {
     return this;
   }
 
+  /**
+   * 该方法暂时不用. @param conditions the conditions
+   *
+   * @return the query
+   */
   public Query from(final Condition<?>... conditions) {
     // TODO-WARN: from方法
     throw CommonException.of("方法未实现");
   }
 
+  /**
+   * 指定查询条件. @param conditions the conditions
+   *
+   * @return the query
+   */
   public Query where(final Condition<?>... conditions) {
     this.conditions = new LinkedList<>(Arrays.asList(conditions));
     String conditionString =
@@ -120,17 +142,13 @@ public class Query {
     return this;
   }
 
-  public Query groupBy(@Nonnull final GroupByClause... groupByClauses) {
-    afterWhereString
-        .append(GROUP_BY)
-        .append(
-            Stream.of(groupByClauses)
-                .flatMap(groupByClause -> groupByClause.getCols().stream())
-                .collect(Collectors.joining()));
-    return this;
-  }
-
-  // TODO-WARN 这里可以做优化,调用插件分析优化sql,最简单的比如: 删掉 1=1
+  /**
+   * 指定查询条件.
+   *
+   * @param consumers the consumers
+   * @return the query
+   * @see Condition
+   */
   public Query where(final Consumer<Condition<?>>... consumers) {
     this.conditions =
         consumers.length > 0
@@ -163,6 +181,37 @@ public class Query {
     return this;
   }
 
+  /**
+   * Group by 语句.<br>
+   *
+   * <pre>
+   *   初始化:
+   *   final QueryEntityMetaData<DemoProductPoJo> queryEntityMetaData =
+   *         queryColumn.getQueryEntityMetaData();
+   *   final GroupByClause<DemoProductPoJo> clause = queryEntityMetaData.getGroupByClause();
+   *   使用:
+   *   groupBy(clause.col(DemoProductPoJo::getName))
+   * </pre>
+   *
+   * @param groupByClauses the group by clauses
+   * @return the query
+   */
+  public Query groupBy(@Nonnull final GroupByClause... groupByClauses) {
+    afterWhereString
+        .append(GROUP_BY)
+        .append(
+            Stream.of(groupByClauses)
+                .flatMap(groupByClause -> groupByClause.getCols().stream())
+                .collect(Collectors.joining()));
+    return this;
+  }
+
+  /**
+   * 查询单条记录. @param <R> the type parameter
+   *
+   * @param clazz the clazz
+   * @return the r
+   */
   public <R> R fetchOne(final Class<R> clazz) {
     doIfNonEmpty(
         afterWhereString.toString(),
@@ -191,11 +240,17 @@ public class Query {
     }
     ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler<>(clazz, queryColumns)
-            : new BeanResultHandler<>(clazz, queryColumns);
+            ? new PrimitiveResultHandler<>(clazz)
+            : new BeanResultHandler<>(clazz);
     return resultHandler.handle(result.get(0));
   }
 
+  /**
+   * 查询列表数据. @param <R> the type parameter
+   *
+   * @param clazz the clazz
+   * @return the list
+   */
   public <R> List<R> fetchAll(final Class<R> clazz) {
     doIfNonEmpty(
         afterWhereString.toString(),
@@ -221,12 +276,18 @@ public class Query {
     }
     ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler<>(clazz, queryColumns)
-            : new BeanResultHandler<>(clazz, queryColumns);
+            ? new PrimitiveResultHandler<>(clazz)
+            : new BeanResultHandler<>(clazz);
     return resultHandler.handle(list);
   }
 
-  /** 获取某页列表数据. 注意: 该方法不支持多表查询. */
+  /**
+   * 分页查询列表数据. @param <R> the type parameter
+   *
+   * @param clazz the clazz
+   * @param pageable the pageable
+   * @return the list
+   */
   public <R> List<R> fetchAll(final Class<R> clazz, final PageRequest pageable) {
     doIfNonEmpty(
         afterWhereString.toString(),
@@ -274,12 +335,20 @@ public class Query {
     }
     ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler<>(clazz, queryColumns)
-            : new BeanResultHandler<>(clazz, queryColumns);
+            ? new PrimitiveResultHandler<>(clazz)
+            : new BeanResultHandler<>(clazz);
     return resultHandler.handle(list);
   }
 
-  /** 注意: 该方法不支持多表查询. */
+  /**
+   * 分页查询分页数据.<br>
+   * <b>注意: 该方法不支持多表查询.</b>
+   *
+   * @param <R> the type parameter
+   * @param clazz the clazz
+   * @param pageable the pageable
+   * @return the page
+   */
   public <R> Page<R> fetchPage(final Class<R> clazz, final PageRequest pageable) {
     doIfNonEmpty(
         afterWhereString.toString(),
@@ -334,11 +403,16 @@ public class Query {
     }
     ResultHandler resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler<>(clazz, queryColumns)
-            : new BeanResultHandler<>(clazz, queryColumns);
+            ? new PrimitiveResultHandler<>(clazz)
+            : new BeanResultHandler<>(clazz);
     return CollectionUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
   }
 
+  /**
+   * count查询.
+   *
+   * @return long long
+   */
   public long fetchCount() {
     doIfNonEmpty(
         afterWhereString.toString(),
@@ -363,8 +437,39 @@ public class Query {
     return JDBC_TEMPLATE.queryForObject(queryString, args, Long.class);
   }
 
-  // TODO-WARN 根据条件批量删除,批量更新
-  public boolean deleteBatch() {
-    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+  /**
+   * 自定义sql查询列表.
+   *
+   * @param <R> the type parameter
+   * @param sql the sql
+   * @param clazz the clazz
+   * @param args the args
+   * @return the list
+   */
+  public <T extends AbstractEntityPoJo, R> List<R> fetchBySql(
+      final String sql, final Class<T> poJoClazz, final Class<R> respClazz, final Object... args) {
+    final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(sql, args);
+    if (CollectionUtils.isEmpty(list)) {
+      return Collections.emptyList();
+    }
+    // 用于转换列
+    ResultHandler<Map<String, Object>, R> resultHandler =
+        BeanUtils.isPrimitiveType(respClazz) || respClazz.isArray()
+            ? new PrimitiveResultHandler<>(respClazz)
+            : new BeanResultHandler<>(respClazz);
+    return resultHandler.handle(list);
+  }
+
+  /**
+   * 自定义sql查询count.
+   *
+   * @param <R> the type parameter
+   * @param sql the sql
+   * @param clazz the clazz
+   * @param args the args
+   * @return the list
+   */
+  public long countBySql(final String sql, final Object... args) {
+    return JDBC_TEMPLATE.queryForObject(sql, args, Long.class);
   }
 }

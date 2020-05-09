@@ -1,12 +1,10 @@
 package io.github.ramerf.wind.core.handler;
 
-import io.github.ramerf.wind.core.condition.QueryColumn;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.annotation.Nonnull;
-
-import static java.util.stream.Collectors.toMap;
 
 /**
  * The type Abstract result handler.
@@ -18,12 +16,14 @@ import static java.util.stream.Collectors.toMap;
  */
 abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
   /** The Methods. */
-  final Method[] methods;
+  Method[] methods;
 
   /** The Clazz. */
   final Class<E> clazz;
   /** columnAlia:fieldName} */
-  final Map<String, String> queryAlias;
+  //  final Map<String, String> queryAlias;
+
+  private static final Map<Class<?>, WeakReference<Method[]>> METHODS_MAP = new HashMap<>();
 
   /**
    * Instantiates a new Abstract result handler.
@@ -31,9 +31,8 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
    * @param clazz the clazz
    * @param queryColumns the query columns
    */
-  public AbstractResultHandler(
-      @Nonnull final Class<E> clazz, @Nonnull final List<QueryColumn<?>> queryColumns) {
-    this(clazz, queryColumns, true);
+  public AbstractResultHandler(@Nonnull final Class<E> clazz) {
+    this(clazz, true);
   }
 
   /**
@@ -43,16 +42,23 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
    * @param queryColumns 查询对象
    * @param initMethods 是否调用初始化methods
    */
-  public AbstractResultHandler(
-      @Nonnull final Class<E> clazz,
-      @Nonnull final List<QueryColumn<?>> queryColumns,
-      final boolean initMethods) {
+  public AbstractResultHandler(@Nonnull final Class<E> clazz, final boolean initMethods) {
     this.clazz = clazz;
-    this.methods = initMethods ? clazz.getMethods() : new Method[0];
-    this.queryAlias =
-        queryColumns.stream()
-            .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
-            .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
+    if (initMethods) {
+      this.methods =
+          Optional.ofNullable(METHODS_MAP.get(clazz))
+              .map(Reference::get)
+              .orElseGet(
+                  () -> {
+                    final Method[] methods = clazz.getMethods();
+                    METHODS_MAP.put(clazz, new WeakReference<>(methods));
+                    return methods;
+                  });
+    }
+    //    this.queryAlias =
+    //        queryColumns.stream()
+    //            .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
+    //            .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
   }
 
   /**
