@@ -36,6 +36,23 @@ public interface ChainList<E> {
   ChainLinkedList<E> remove(E e);
 
   /**
+   * Remove chain linked list.
+   *
+   * @param index the index
+   * @return the chain linked list
+   */
+  ChainLinkedList<E> remove(int index);
+
+  /**
+   * Set chain linked list.
+   *
+   * @param index the index
+   * @param element the element
+   * @return the chain linked list
+   */
+  ChainLinkedList<E> set(int index, E element);
+
+  /**
    * Add all chain linked list.
    *
    * @param c the c

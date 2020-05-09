@@ -32,6 +32,18 @@ public class ChainLinkedList<E> implements ChainList<E> {
   }
 
   @Override
+  public ChainLinkedList<E> remove(final int index) {
+    list.remove(index);
+    return this;
+  }
+
+  @Override
+  public ChainLinkedList<E> set(final int index, final E element) {
+    list.set(index, element);
+    return this;
+  }
+
+  @Override
   public ChainLinkedList<E> addAll(final Collection<? extends E> c) {
     list.addAll(c);
     return this;

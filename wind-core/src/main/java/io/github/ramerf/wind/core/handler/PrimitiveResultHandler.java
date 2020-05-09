@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.handler;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -59,14 +60,12 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
     try {
       return clazz.getConstructor(valueClass).newInstance(value);
     } catch (Exception e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
+      log.warn("handle:[msg:{},class:{}]", e.getMessage(), e.getClass());
       // 使用valueOf
       try {
         return (E) clazz.getMethod("valueOf", valueClass).invoke(null, value);
       } catch (Exception ex) {
-        log.warn(ex.getMessage());
-        log.error(ex.getMessage(), ex);
+        log.warn("handle:[msg:{},class:{}]", ex.getMessage(), ex.getClass());
       }
     }
     return (E) value;
@@ -80,7 +79,21 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
     return maps.stream().map(this::handle).collect(Collectors.toList());
   }
 
+  /** null转换为基本类型零值. */
+  @SuppressWarnings("unchecked")
   private E nullToZero() {
+    if (Long.class.isAssignableFrom(clazz)) {
+      return (E) Long.valueOf(0);
+    }
+    if (Integer.class.isAssignableFrom(clazz)) {
+      return (E) Integer.valueOf(0);
+    }
+    if (BigDecimal.class.isAssignableFrom(clazz)) {
+      return (E) BigDecimal.valueOf(0);
+    }
+    if (Double.class.isAssignableFrom(clazz)) {
+      return (E) Double.valueOf(0);
+    }
     return null;
   }
 }
