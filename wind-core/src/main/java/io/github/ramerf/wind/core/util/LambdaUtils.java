@@ -39,7 +39,9 @@ public final class LambdaUtils {
    * @see SerializedLambda#getInstantiatedMethodType()
    */
   public static String getActualTypePath(final String instantiatedMethodType) {
-    return instantiatedMethodType.substring(2, instantiatedMethodType.indexOf(";"));
+    return instantiatedMethodType
+        .substring(2, instantiatedMethodType.indexOf(";"))
+        .replaceAll("/", ".");
   }
 
   /**
