@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.*;
@@ -22,26 +21,31 @@ public final class LambdaUtils {
   /**
    * 获取lambda表达式对应的方法引用类名.
    *
-   * @param instantiatedMethodType {@link SerializedLambda#getInstantiatedMethodType()}
+   * @param implClass {@link SerializedLambda#getImplClass()}
    */
-  public static String getActualType(final String instantiatedMethodType) {
-    final StringBuilder reverse = new StringBuilder(instantiatedMethodType).reverse();
-    final String substring =
-        reverse.substring(reverse.lastIndexOf(Constant.DEFAULT_STRING_SEMICOLON) + 1);
-    return new StringBuilder(substring.substring(0, substring.indexOf("/"))).reverse().toString();
+  public static String getActualType(final String implClass) {
+    return implClass.substring(implClass.lastIndexOf("/") + 1);
   }
 
   /**
    * 获取lambda表达式对应的方法引用类名全路径.
    *
-   * @param instantiatedMethodType {@link SerializedLambda#getInstantiatedMethodType()}
+   * @param function the IFunction
    * @see #serializedLambda(BeanFunction)
-   * @see SerializedLambda#getInstantiatedMethodType()
    */
-  public static String getActualTypePath(final String instantiatedMethodType) {
-    return instantiatedMethodType
-        .substring(2, instantiatedMethodType.indexOf(";"))
-        .replaceAll("/", ".");
+  public static String getActualTypePath(final IFunction<?, ?> function) {
+    final SerializedLambda lambda = serializedLambda(function);
+    return lambda.getImplClass().replaceAll("/", ".");
+  }
+
+  /**
+   * 获取lambda表达式对应的方法引用类名全路径.
+   *
+   * @param implClass {@link SerializedLambda#getImplClass()}
+   * @see #serializedLambda(BeanFunction)
+   */
+  public static String getActualTypePath(final String implClass) {
+    return implClass.replaceAll("/", ".");
   }
 
   /**
@@ -105,10 +109,10 @@ public final class LambdaUtils {
     IConsumer<AbstractEntityPoJo, Long> consumer = AbstractEntityPoJo::setId;
     System.out.println("main:" + getMethodName(function));
     System.out.println(
-        "main:getActualTypePath"
+        "main:getActualTypePath:"
             + getActualTypePath(serializedLambda(function).getInstantiatedMethodType()));
     System.out.println(
-        "main:getActualTypePath"
+        "main:getActualTypePath:"
             + getActualTypePath(serializedLambda(consumer).getInstantiatedMethodType()));
   }
 }

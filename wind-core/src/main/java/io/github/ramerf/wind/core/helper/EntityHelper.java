@@ -40,12 +40,12 @@ public class EntityHelper {
   }
 
   public static <T extends AbstractEntity> String getColumn(IFunction<T, ?> function) {
-    final SerializedLambda serializedLambda = LambdaUtils.serializedLambda(function);
-    BeanUtils.methodToColumn(function);
-    final Map<String, String> map =
-        FIELD_COLUMN_MAP.get(
-            LambdaUtils.getActualTypePath(serializedLambda.getInstantiatedMethodType()));
-    return map.get(BeanUtils.methodToProperty(LambdaUtils.getMethodName(function)));
+    if(FIELD_COLUMN_MAP.size() == 0){
+//      BeanUtils.scanClasses("", AbstractEntity.class);
+    }
+    return FIELD_COLUMN_MAP
+        .get(LambdaUtils.getActualTypePath(function))
+        .get(BeanUtils.methodToProperty(LambdaUtils.getMethodName(function)));
   }
 
   public static void main(String[] args) {
