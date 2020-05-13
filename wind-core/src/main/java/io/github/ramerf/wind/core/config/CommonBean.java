@@ -19,7 +19,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @since 2019/12/29
  */
 @Slf4j
-@Configuration("mt_c_cb")
+@Configuration("w_c_cb")
 public class CommonBean {
   @SuppressWarnings("DuplicatedCode")
   @Bean

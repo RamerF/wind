@@ -1,12 +1,12 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.condition.QueryEntity;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.service.InterService;
 import java.beans.FeatureDescriptor;
 import java.io.IOException;
@@ -326,9 +326,9 @@ public final class BeanUtils {
    * @return 所有子类 set
    * @throws IOException the IOException
    */
-  public static Set<Class<?>> scanClasses(String packagePatterns, Class<?> assignableType)
-      throws IOException {
-    Set<Class<?>> classes = new HashSet<>();
+  public static <T> Set<Class<? extends T>> scanClasses(
+      String packagePatterns, Class<T> assignableType) throws IOException {
+    Set<Class<? extends T>> classes = new HashSet<>();
     String[] packagePatternArray =
         tokenizeToStringArray(
             packagePatterns, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
@@ -343,7 +343,7 @@ public final class BeanUtils {
         try {
           ClassMetadata classMetadata =
               new CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
-          Class<?> clazz = Resources.classForName(classMetadata.getClassName());
+          Class<T> clazz = (Class<T>) Resources.classForName(classMetadata.getClassName());
           if (assignableType == null || assignableType.isAssignableFrom(clazz)) {
             classes.add(clazz);
           }

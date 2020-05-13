@@ -20,7 +20,7 @@ public class EntityHelper {
   private static final Map<String, Map<String, String>> FIELD_COLUMN_MAP =
       new ConcurrentHashMap<>();
 
-  public static <T extends AbstractEntity> void initEntity(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
     final Field[] fields = clazz.getDeclaredFields();
     Map<String, String> map = new HashMap<>(10);
     Arrays.stream(fields)
@@ -40,9 +40,7 @@ public class EntityHelper {
   }
 
   public static <T extends AbstractEntity> String getColumn(IFunction<T, ?> function) {
-    if(FIELD_COLUMN_MAP.size() == 0){
-//      BeanUtils.scanClasses("", AbstractEntity.class);
-    }
+    log.info("getColumn:[{}]", FIELD_COLUMN_MAP);
     return FIELD_COLUMN_MAP
         .get(LambdaUtils.getActualTypePath(function))
         .get(BeanUtils.methodToProperty(LambdaUtils.getMethodName(function)));
