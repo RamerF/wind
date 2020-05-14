@@ -1,10 +1,16 @@
 package io.github.ramerf.wind.core.helper;
 
+import io.github.ramerf.wind.core.converter.EnumTypeConverter;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.constant.Constant;
+import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 
 /**
  * The type Sql helper.
@@ -19,79 +25,96 @@ public class SqlHelper {
       QUERY_CLAZZ_FIELD = new HashMap<>();
 
   /**
+   * 将值转换成sql值,始终返回?.
    *
-   *
-   * <pre>
-   * 将值转换成sql语句可用的值.
-   * 目前仅支持 <code>null,String,Date,List,Collection,InterEnum,[]</code>
-   * </pre>
+   * @param value the value
+   * @return ?
+   */
+  public static String toPreFormatSqlVal(final Object value) {
+    return "?";
+  }
+
+  /**
+   * 将值转换成Sql字符串.目前仅支持 <code>null,String,Date,List,Collection,InterEnum,[]</code>
    *
    * @param value the value
    * @return the string
    */
-  public static String toSqlVal(final Object value) {
-    return "?";
-    //    if (Objects.isNull(value)) {
-    //      return null;
-    //    }
-    //    if (value instanceof String) {
-    //      String val = ((String) value);
-    //      if (val.contains("'")) {
-    //        val = val.replaceAll("'", "''");
-    //      }
-    //      return QUOTE_FORMAT.format(val);
-    //    }
-    //    if (value instanceof Date) {
-    //      return QUOTE_FORMAT.format(
-    //          LocalDateTime.ofInstant(((Date) value).toInstant(),
-    // Constant.DEFAULT_ZONE).toString());
-    //    }
-    //    if (List.class.isAssignableFrom(value.getClass())) {
-    //      // 数组拼接为: '{name1,name2}' 或使用函数 string_to_array('name1,name2', ',')
-    //      // 目前不支持多数据库,考虑到兼容性,不使用函数
-    //      return QUOTE_FORMAT.format(
-    //          BRACE_FORMAT.format(
-    //              ((List<?>) value)
-    //                  .stream()
-    //                      .map(Object::toString)
-    //                      .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
-    //                      .orElse(value.toString())));
-    //    }
-    //    if (value instanceof Collection) {
-    //      // 不知道当时写这个是干什么的 0_0
-    //      return ((Collection<?>) value)
-    //          .stream()
-    //              .map(SqlHelper::toSqlVal)
-    //              .filter(Objects::nonNull)
-    //              .map(Object::toString)
-    //              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
-    //              .orElse(value.toString());
-    //    }
-    //    if (InterEnum.class.isAssignableFrom(value.getClass())) {
-    //      // TODO-WARN 考虑到数据库兼容性,这里暂时还没使用转换器接口处理
-    //      //  遇到特殊的数据需要处理再考虑参考TypeConverter
-    //      return new EnumTypeConverter().convertToJdbc((InterEnum) value).toString();
-    //    }
-    //    if (value.getClass().isArray()) {
-    //      if (value instanceof String[]) {
-    //        return QUOTE_FORMAT.format(
-    //            LEFT_BRACE
-    //                .operator()
-    //                .concat(
-    //                    Arrays.stream((String[]) value)
-    //                        .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
-    //                        .orElse(value.toString()))
-    //                .concat(RIGHT_BRACE.operator()));
-    //      }
-    //      String str =
-    //          Arrays.stream((Object[]) value)
-    //              .map(SqlHelper::toSqlVal)
-    //              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
-    //              .orElse(value.toString());
-    //      return
-    // QUOTE_FORMAT.format(LEFT_BRACE.operator().concat(str).concat(RIGHT_BRACE.operator()));
-    //    }
-    //    return String.valueOf(value);
+  public static String toSqlString(final Object value) {
+    if (Objects.isNull(value)) {
+      return "null";
+    }
+    if (value instanceof String) {
+      String val = ((String) value);
+      if (val.contains("'")) {
+        val = val.replaceAll("'", "''");
+      }
+      return QUOTE_FORMAT.format(val);
+    }
+    if (value instanceof Date) {
+      return QUOTE_FORMAT.format(
+          LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
+    }
+    if (List.class.isAssignableFrom(value.getClass())) {
+      // 数组拼接为: '{name1,name2}' 或使用函数 string_to_array('name1,name2', ',')
+      // 目前不支持多数据库,考虑到兼容性,不使用函数
+      return QUOTE_FORMAT.format(
+          BRACE_FORMAT.format(
+              ((List<?>) value)
+                  .stream()
+                      .map(Object::toString)
+                      .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+                      .orElse(value.toString())));
+    }
+    if (value instanceof Collection) {
+      // 不知道当时写这个是干什么的 0_0
+      return ((Collection<?>) value)
+          .stream()
+              .map(SqlHelper::toSqlString)
+              .filter(Objects::nonNull)
+              .map(Object::toString)
+              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+              .orElse(value.toString());
+    }
+    if (InterEnum.class.isAssignableFrom(value.getClass())) {
+      return new EnumTypeConverter().convertToJdbc((InterEnum) value).toString();
+    }
+    if (value.getClass().isArray()) {
+      if (value instanceof String[]) {
+        return QUOTE_FORMAT.format(
+            LEFT_BRACE
+                .operator()
+                .concat(
+                    Arrays.stream((String[]) value)
+                        .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+                        .orElse(value.toString()))
+                .concat(RIGHT_BRACE.operator()));
+      }
+      String str =
+          Arrays.stream((Object[]) value)
+              .map(SqlHelper::toSqlString)
+              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+              .orElse(value.toString());
+      return QUOTE_FORMAT.format(LEFT_BRACE.operator().concat(str).concat(RIGHT_BRACE.operator()));
+    }
+    return String.valueOf(value);
+  }
+
+  /**
+   * 打印包含值的sql语句,仅用于调试.<br>
+   * 关于: @SneakyThrows,不考虑性能,不想关心失败情况
+   *
+   * @param sql the sql
+   * @param values the values
+   */
+  @SneakyThrows
+  public static void printSqlWithVal(final String sql, final List<Object> values) {
+    String sqlWithVal = sql;
+    int index = 0;
+    while (index < values.size()) {
+      sqlWithVal = sqlWithVal.replaceFirst("\\?", SqlHelper.toSqlString(values.get(index++)));
+    }
+    log.debug("printSqlWithVal:[{}]", sqlWithVal);
   }
 
   /**
@@ -100,7 +123,7 @@ public class SqlHelper {
    * @param <R> the type parameter
    * @param old 原字符串
    * @param clazz 返回类型
-   * @return string
+   * @return string string
    */
   @SuppressWarnings("unused")
   public static <R> String optimizeQueryString(final String old, final Class<R> clazz) {

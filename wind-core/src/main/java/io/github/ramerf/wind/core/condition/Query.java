@@ -25,7 +25,9 @@ import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
+import static io.github.ramerf.wind.core.helper.SqlHelper.printSqlWithVal;
 import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -160,7 +162,7 @@ public class Query {
                               consumer -> consumer.accept(queryColumns.get(i).getCondition()));
                       return queryColumns.get(i).getCondition();
                     })
-                .collect(Collectors.toCollection(LinkedList::new))
+                .collect(toCollection(LinkedList::new))
             : new LinkedList<>();
     String conditionString =
         this.conditions.stream()
@@ -223,15 +225,21 @@ public class Query {
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
     if (log.isDebugEnabled()) {
-      log.debug("fetch:[{}]", queryString);
+      printSqlWithVal(
+          queryString,
+          conditions.stream()
+              .flatMap(cond -> cond.getValues().stream())
+              .collect(toCollection(LinkedList::new)));
     }
-    final List<Map<String, Object>> result =
-        JDBC_TEMPLATE.queryForList(
-            queryString,
-            conditions.stream()
-                .flatMap(cond -> cond.getValues().stream())
-                .collect(toList())
-                .toArray(new Object[0]));
+    final Object[] args =
+        conditions.stream()
+            .flatMap(cond -> cond.getValues().stream())
+            .collect(toCollection(LinkedList::new))
+            .toArray(new Object[0]);
+    if (log.isDebugEnabled()) {
+      printSqlWithVal(queryString, Arrays.asList(args));
+    }
+    final List<Map<String, Object>> result = JDBC_TEMPLATE.queryForList(queryString, args);
     if (CollectionUtils.isEmpty(result)) {
       return null;
     }
@@ -264,13 +272,15 @@ public class Query {
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", queryString);
     }
-    final List<Map<String, Object>> list =
-        JDBC_TEMPLATE.queryForList(
-            queryString,
-            conditions.stream()
-                .flatMap(cond -> cond.getValues().stream())
-                .collect(toList())
-                .toArray(new Object[0]));
+    final Object[] args =
+        conditions.stream()
+            .flatMap(cond -> cond.getValues().stream())
+            .collect(toList())
+            .toArray(new Object[0]);
+    if (log.isDebugEnabled()) {
+      printSqlWithVal(queryString, Arrays.asList(args));
+    }
+    final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(queryString, args);
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
@@ -320,16 +330,15 @@ public class Query {
             conditionString,
             pageable.getPageSize(),
             pageable.getOffset());
+    final Object[] args =
+        conditions.stream()
+            .flatMap(cond -> cond.getValues().stream())
+            .collect(toList())
+            .toArray(new Object[0]);
     if (log.isDebugEnabled()) {
-      log.debug("fetch:[{}]", queryString);
+      printSqlWithVal(queryString, Arrays.asList(args));
     }
-    final List<Map<String, Object>> list =
-        JDBC_TEMPLATE.queryForList(
-            queryString,
-            conditions.stream()
-                .flatMap(cond -> cond.getValues().stream())
-                .collect(toList())
-                .toArray(new Object[0]));
+    final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(queryString, args);
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", list);
     }
@@ -385,15 +394,16 @@ public class Query {
       log.debug("fetch:[{}]", queryString);
     }
     final long total = fetchCount();
+    final Object[] args =
+        conditions.stream()
+            .flatMap(cond -> cond.getValues().stream())
+            .collect(toList())
+            .toArray(new Object[0]);
+    if (log.isDebugEnabled()) {
+      printSqlWithVal(queryString, Arrays.asList(args));
+    }
     final List<Map<String, Object>> list =
-        total < 1
-            ? null
-            : JDBC_TEMPLATE.queryForList(
-                queryString,
-                conditions.stream()
-                    .flatMap(cond -> cond.getValues().stream())
-                    .collect(toList())
-                    .toArray(new Object[0]));
+        total < 1 ? null : JDBC_TEMPLATE.queryForList(queryString, args);
     // 从1开始
     final int currentPage = pageable.getPageNumber();
     // 每页大小
@@ -425,15 +435,14 @@ public class Query {
             ? "SELECT SUM(b.a) FROM (SELECT 1 a FROM %s) b"
             : "SELECT COUNT(1) FROM %s";
     final String queryString = String.format(sql, nonEmpty ? countString : "");
-    if (log.isDebugEnabled()) {
-      log.debug("fetchCount:[{}]", queryString);
-    }
     final Object[] args =
         conditions.stream()
             .flatMap(cond -> cond.getValues().stream())
             .collect(toList())
             .toArray(new Object[0]);
-    log.info("fetchCount:args[{}]", (Object) args);
+    if (log.isDebugEnabled()) {
+      printSqlWithVal(queryString, Arrays.asList(args));
+    }
     return JDBC_TEMPLATE.queryForObject(queryString, args, Long.class);
   }
 
@@ -448,6 +457,9 @@ public class Query {
    */
   public <T extends AbstractEntityPoJo, R> List<R> fetchBySql(
       final String sql, final Class<T> poJoClazz, final Class<R> respClazz, final Object... args) {
+    if (log.isDebugEnabled()) {
+      printSqlWithVal(sql, Arrays.asList(args));
+    }
     final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(sql, args);
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
@@ -470,6 +482,9 @@ public class Query {
    * @return the list
    */
   public long countBySql(final String sql, final Object... args) {
+    if (log.isDebugEnabled()) {
+      printSqlWithVal(sql, Arrays.asList(args));
+    }
     return JDBC_TEMPLATE.queryForObject(sql, args, Long.class);
   }
 }

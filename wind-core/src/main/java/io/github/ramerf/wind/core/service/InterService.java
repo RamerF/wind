@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import com.baomidou.mybatisplus.core.toolkit.*;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.repository.BaseRepository;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
@@ -24,7 +26,6 @@ import org.mybatis.spring.MyBatisExceptionTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
 import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.COLUMN_COMPANY_ID;
@@ -37,12 +38,12 @@ import static org.springframework.util.Assert.notNull;
  * The interface Inter service.
  *
  * @param <T> the type parameter
- * @param <E> the type parameter
  * @author Tang Xiaofeng
  * @since 2020 /1/5
  */
 @SuppressWarnings({"unused", "rawtypes", "DuplicatedCode"})
-public interface InterService<T extends AbstractEntityPoJo > {
+public interface InterService<T extends AbstractEntityPoJo> {
+  /** The constant log. */
   Logger log = LoggerFactory.getLogger(InterService.class);
 
   /**
@@ -91,8 +92,6 @@ public interface InterService<T extends AbstractEntityPoJo > {
    *
    * @param t the {@link AbstractEntityPoJo}
    * @param consumer 入参为实际更新记录数(正常情况下应该返回1,但有些时候根据条件并没有找到记录,这时实际更新记录数会返回0)
-   * @throws DataAccessException 数据库异常时返回
-   * @throws CommonException 更新失败时
    * @throws RuntimeException 更新失败时
    */
   default void update(T t, @Nonnull Consumer<Integer> consumer) throws RuntimeException {
@@ -268,8 +267,8 @@ public interface InterService<T extends AbstractEntityPoJo > {
    * Delete batch ops.
    *
    * @param ids the ids
+   * @return 删除记录数 int
    * @throws RuntimeException the runtime exception
-   * @return 删除记录数
    */
   @Transactional(rollbackFor = Exception.class)
   default int deleteBatchOps(final List<Long> ids) throws RuntimeException {
@@ -354,6 +353,44 @@ public interface InterService<T extends AbstractEntityPoJo > {
    */
   default String sqlStatement(SqlMethod sqlMethod) {
     return SqlHelper.table(getPoJoClass(this)).getSqlStatement(sqlMethod.getMethod());
+  }
+
+  /**
+   * Gets query column.
+   *
+   * @return the query column
+   */
+  default QueryColumn<T> getQueryColumn() {
+    return QueryColumnFactory.getInstance(getPoJoClass(this));
+  }
+
+  /**
+   * Gets query.
+   *
+   * @return the query
+   */
+  default Query getQuery() {
+    return Query.getInstance();
+  }
+
+  /**
+   * Gets update.
+   *
+   * @return the update
+   */
+  default Update getUpdate() {
+    return getUpdate(false);
+  }
+
+  /**
+   * Gets update for current.
+   *
+   * @param current 是否当前类的更新组件
+   * @return the update
+   */
+  default Update getUpdate(final boolean current) {
+    final Update instance = Update.getInstance();
+    return current ? instance.from(getPoJoClass(this)) : instance;
   }
 
   /**

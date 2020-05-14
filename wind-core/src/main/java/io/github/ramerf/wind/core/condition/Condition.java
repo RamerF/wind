@@ -1,13 +1,11 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
+import io.github.ramerf.wind.core.helper.TypeConverterHelper;
 import io.github.ramerf.wind.core.support.ChainLinkedList;
 import io.github.ramerf.wind.core.support.ChainList;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -20,9 +18,10 @@ import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
-import static io.github.ramerf.wind.core.helper.SqlHelper.toSqlVal;
+import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 import static io.github.ramerf.wind.core.util.BeanUtils.methodToColumn;
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * 条件构造.
@@ -33,13 +32,14 @@ import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 @Slf4j
 @Component
 @ToString
-@SuppressWarnings("all")
 public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     implements ICondition<T> {
   /** where后的字符串,参数占位符为 ?. */
-  private List<String> conditionSql = new LinkedList<>();
+  private final List<String> conditionSql = new LinkedList<>();
   /** 占位符对应的值. */
-  private ChainList<Object> values = new ChainLinkedList<>();
+  private final ChainList<Object> values = new ChainLinkedList<>();
+
+  private boolean containLogicNotDelete = false;
 
   public static <T extends AbstractEntity> Condition<T> of(QueryColumn<T> queryColumn) {
     final Condition<T> condition = new Condition<>();
@@ -69,7 +69,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(methodToColumn(field))
               .concat(MatchPattern.EQUAL.operator)
-              .concat(toSqlVal(value)));
+              .concat(toPreFormatSqlVal(value)));
       values.add(value);
     }
     return this;
@@ -90,7 +90,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(methodToColumn(field))
               .concat(MatchPattern.NOT_EQUAL.operator)
-              .concat(toSqlVal(value)));
+              .concat(toPreFormatSqlVal(value)));
       values.add(value);
     }
     return this;
@@ -111,7 +111,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(methodToColumn(field))
               .concat(MatchPattern.GREATER.operator)
-              .concat(toSqlVal(value)));
+              .concat(toPreFormatSqlVal(value)));
       values.add(value);
     }
     return this;
@@ -132,7 +132,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(methodToColumn(field))
               .concat(MatchPattern.GE.operator)
-              .concat(toSqlVal(value)));
+              .concat(toPreFormatSqlVal(value)));
       values.add(value);
     }
     return this;
@@ -153,7 +153,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(methodToColumn(field))
               .concat(MatchPattern.LESS.operator)
-              .concat(toSqlVal(value)));
+              .concat(toPreFormatSqlVal(value)));
       values.add(value);
     }
     return this;
@@ -174,7 +174,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(methodToColumn(field))
               .concat(MatchPattern.LE.operator)
-              .concat(toSqlVal(value)));
+              .concat(toPreFormatSqlVal(value)));
       values.add(value);
     }
     return this;
@@ -279,7 +279,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(methodToColumn(field))
               .concat(
-                  String.format(MatchPattern.BETWEEN.operator, toSqlVal(start), toSqlVal(end))));
+                  String.format(
+                      MatchPattern.BETWEEN.operator,
+                      toPreFormatSqlVal(start),
+                      toPreFormatSqlVal(end))));
       values.add(start).add(end);
     }
     return this;
@@ -303,7 +306,9 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
               .concat(methodToColumn(field))
-              .concat(String.format(NOT_BETWEEN.operator, toSqlVal(start), toSqlVal(end))));
+              .concat(
+                  String.format(
+                      NOT_BETWEEN.operator, toPreFormatSqlVal(start), toPreFormatSqlVal(end))));
       values.add(start).add(end);
     }
     return this;
@@ -366,9 +371,9 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                   String.format(
                       MatchPattern.IN.operator,
                       values.stream()
-                          .map(SqlHelper::toSqlVal)
+                          .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(v -> this.values.add(v));
+      values.forEach(this.values::add);
     }
     return this;
   }
@@ -394,9 +399,9 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                   String.format(
                       NOT_IN.operator,
                       values.stream()
-                          .map(SqlHelper::toSqlVal)
+                          .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(v -> this.values.add(v));
+      values.forEach(this.values::add);
     }
     return this;
   }
@@ -436,6 +441,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   // TODO-WARN 很明显这里的拼接有问题,要传递的参数是(Query+Condition)最上层的接口,能够获取到每个段的sql.
   //  因为涉及到整个模式调整,暂时不动
+
   @Override
   public Condition<T> exists(final boolean condition, @Nonnull final Condition<T> childConditions) {
     if (condition) {
@@ -458,7 +464,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
-      children.values.stream().forEach(value -> values.add(value));
+      children.values.stream().forEach(values::add);
     }
     return this;
   }
@@ -474,43 +480,44 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
-      children.values.stream().forEach(value -> values.add(value));
+      children.values.stream().forEach(values::add);
     }
     return this;
   }
 
   @Override
   public String getString() {
-    final Condition<AbstractEntityPoJo> condition = (Condition<AbstractEntityPoJo>) this;
-    condition.eq(logicDeleteField, logicNotDelete);
+    if (!containLogicNotDelete) {
+      appendLogicNotDelete();
+      containLogicNotDelete = true;
+    }
     return String.join(Constant.DEFAULT_SPLIT_SPACE, conditionSql);
   }
 
-  private Condition<T> eq(@Nonnull final String field, final Object value) {
+  private void appendLogicNotDelete() {
     conditionSql.add(
         (conditionSql.size() > 0 ? AND.operator : "")
             .concat(queryEntityMetaData.getTableAlia())
             .concat(DOT.operator)
-            .concat(camelToUnderline(field))
+            .concat(camelToUnderline(logicDeleteField))
             .concat(MatchPattern.EQUAL.operator)
-            .concat(toSqlVal(value)));
-    values.add(value);
-    return this;
+            .concat(toPreFormatSqlVal(logicNotDelete)));
+    values.add(logicNotDelete);
   }
 
   @Override
   public List<Object> getValues() {
+    if (!containLogicNotDelete) {
+      appendLogicNotDelete();
+      containLogicNotDelete = true;
+    }
     return values.stream()
-        .map(
-            value ->
-                Optional.ofNullable(AppContextInject.getBean(TypeConverterRegistryFactory.class))
-                    .map(o -> o.getToJdbcTypeConverter(value, value.getClass()))
-                    .map(converter -> converter.convertToJdbc(value))
-                    .orElse(value))
-        .collect(Collectors.toCollection(LinkedList::new));
+        .map(TypeConverterHelper::toJdbcValue)
+        .collect(toCollection(LinkedList::new));
   }
 
   /** 属性匹配模式 */
+  @SuppressWarnings("unused")
   public enum MatchPattern {
     /** = */
     EQUAL("="),
@@ -559,14 +566,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     /** <=ANY() */
     LE_ANY(" <=ANY(%s)");
 
-    private String operator;
+    private final String operator;
 
     MatchPattern(final String operator) {
       this.operator = operator;
-    }
-
-    public String operator() {
-      return operator;
     }
   }
 }

@@ -5,21 +5,18 @@ import io.github.ramerf.wind.core.condition.ICondition;
 import io.github.ramerf.wind.core.condition.Update;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.SnowflakeIdWorker;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import static io.github.ramerf.wind.core.util.BeanUtils.*;
+import static io.github.ramerf.wind.core.util.BeanUtils.getPoJoClass;
 
 /**
  * The interface Update service.
@@ -95,6 +92,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
     //    if (count != ts.size()) {
     //      throw CommonException.of(ResultCode.API_FAIL_EXEC_ADD);
     //    }
+
     ts.forEach(t -> textFilter(t, t));
     String sqlStatement = sqlStatement(SqlMethod.INSERT_ONE);
     int size = ts.size();
@@ -123,52 +121,47 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
   }
 
   /**
+   * 条件更新,<b>不更新值为<code>null</code>的列</b>.
+   *
+   * @param t the t
+   * @param consumer the consumer
+   * @return 更新记录数
+   * @throws RuntimeException the runtime exception
+   * @see DataAccessException
+   */
+  default long updateBatch(@Nonnull final T t, @Nonnull final Consumer<ICondition<T>> consumer)
+      throws RuntimeException {
+    return getUpdate(true).where(consumer).update(t, false);
+  }
+
+  /**
+   * 条件更新,<b>更新所有列(即使值为<code>null</code>的)</b>.
+   *
+   * @param t the t
+   * @param consumer the consumer
+   * @return 更新记录数
+   * @throws RuntimeException the runtime exception
+   * @see DataAccessException
+   */
+  default long updateBatchAll(@Nonnull final T t, @Nonnull final Consumer<ICondition<T>> consumer)
+      throws RuntimeException {
+    return getUpdate(true).where(consumer).update(t, true);
+  }
+
+  /**
    * 条件删除.
    *
    * @param consumer the consumer.<br>
    *     示例:
    *     <pre>
-   *      condition -&gt; condition.eq(AbstractEntityPoJo::getId)
+   *      condition -&gt; condition.eq(AbstractEntityPoJo::setId)
    *     </pre>
    *
-   * @return 删除记录数
+   * @return 删除记录数 long
    * @throws RuntimeException the runtime exception
    * @see DataAccessException
    */
   default long delete(Consumer<ICondition<T>> consumer) throws RuntimeException {
     return Update.getInstance().from(getPoJoClass(this)).where(consumer).delete();
-  }
-
-  /**
-   * 保存/更新{@link U}对应的Domain对象.默认不会覆盖{@link U}中为null的字段,包含{@code
-   * includeNullProperties}**中的属性,即使值为null.
-   *
-   * @param <U> Request 实体.
-   * @param u 页面请求对象 {@link AbstractEntityRequest}.
-   * @param includeNullProperties 覆写这些属性值,即使值为null.
-   * @return T <br>
-   *     null,如果保存/更新失败,或者更新时记录不存在.
-   * @throws RuntimeException the runtime exception
-   * @see SQLException
-   * @see CommonException
-   */
-  @SuppressWarnings("unchecked")
-  @Deprecated
-  default <U extends AbstractEntityRequest> T createOrUpdate(U u, String... includeNullProperties)
-      throws RuntimeException {
-    final Long id = u.getId();
-    T domain = Objects.isNull(id) ? null : getById(id);
-    if (Objects.nonNull(id) && Objects.isNull(domain)) {
-      return null;
-    }
-    domain = Objects.isNull(domain) ? initial(getPoJoClass(this)) : domain;
-    BeanUtils.copyProperties(
-        u,
-        domain,
-        getNullProp(u).stream()
-            .filter(prop -> !Arrays.asList(includeNullProperties).contains(prop))
-            .toArray(String[]::new));
-    u.redundantValue(domain);
-    return Objects.isNull(id) ? create(domain) : update(domain);
   }
 }

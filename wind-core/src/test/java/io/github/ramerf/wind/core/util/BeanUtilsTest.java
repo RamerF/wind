@@ -50,7 +50,7 @@ public class BeanUtilsTest {
 
   @Test
   public void testGetPrivateFields() throws Exception {
-    log.info(" BeanUtils.main : [{}]", BeanUtils.getPrivateFields(Ts.class, true));
+    log.info("main:[{}]", BeanUtils.getAllPrivateFields(Ts.class));
   }
 
   @Test

@@ -55,6 +55,7 @@ public class ResultCode {
       of("E1310", "请求ContentType不支持:[%s]");
   public static final ResultCode API_METHOD_NOT_SUPPORT = of("E1311", "请求方式不支持:[%s]");
   public static final ResultCode API_TOO_MANY_RESULTS = of("E1312", "返回结果过多");
+  public static final ResultCode API_UPDATE_ID_NOT_EMPTY = of("E1313", "id 不能为空");
 
   protected String code;
   protected String desc;
@@ -270,7 +271,6 @@ public class ResultCode {
   public static final ResultCode CUSTOMER_SHARE_NO_EXIST_ERR = of("E0531", "该分享客户不存在");
   public static final ResultCode CUSTOMER_DEL_VIP_ERR = of("E0532", "会员等级删除失败");
   public static final ResultCode CUSTOMER_NO_EXIST = of("E0533", "客户不存在");
-
 
   /** order E0601-E0699 */
   public static final ResultCode ORDER_INVALID_ERR = of("E0601", "订单无效");

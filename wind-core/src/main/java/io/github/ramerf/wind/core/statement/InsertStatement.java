@@ -88,7 +88,7 @@ public class InsertStatement {
           throw CommonException.of("值不能为空,请调用value方法设置值");
         }
         return SqlOperator.BRACKET_FORMAT.format(
-            rowValues.stream().map(SqlHelper::toSqlVal).collect(Collectors.joining(SEMICOLON)));
+            rowValues.stream().map(SqlHelper::toPreFormatSqlVal).collect(Collectors.joining(SEMICOLON)));
       }
 
       public String getInsertStr() {
@@ -135,7 +135,7 @@ public class InsertStatement {
             throw CommonException.of("值不能为空,请调用value方法设置值");
           }
           return SqlOperator.BRACKET_FORMAT.format(
-              values.stream().map(SqlHelper::toSqlVal).collect(Collectors.joining(SEMICOLON)));
+              values.stream().map(SqlHelper::toPreFormatSqlVal).collect(Collectors.joining(SEMICOLON)));
         }
       }
     }

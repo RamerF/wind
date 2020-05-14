@@ -443,7 +443,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   Condition<T> or(final boolean condition, @Nonnull final Condition<T> children);
 
   /**
-   * 获取占位符值.
+   * 获取占位符值.<br>
    *
    * @return 占位符对应的值 values
    */
