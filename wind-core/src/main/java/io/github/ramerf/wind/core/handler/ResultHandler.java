@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.handler;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -76,18 +77,27 @@ public interface ResultHandler<T, E> {
       final String fieldName = methodToProperty(lambda.getImplMethodName());
       queryAlia.setFieldName(fieldName);
 
-      final String columnName = StringUtils.camelToUnderline(fieldName);
+      final String columnName = EntityHelper.getColumn(function);
       queryAlia.setColumnName(columnName);
-      queryAlia.setColumnAlia(StringUtils.isEmpty(alia) ? columnName : alia);
+      /*
+       别名逻辑:
+       1. 别名
+       2. 别名为空时,如果用户定义的列名(@Column.name)和下划线格式的字段名不相等,使用字段对应的下划线表示(解决字段名和列名不对应时,查询字段为空)
+      */
+      final String underlineField = StringUtils.camelToUnderline(fieldName);
+      queryAlia.setColumnAlia(
+          StringUtils.nonEmpty(alia)
+              ? alia
+              : columnName.equals(fieldName) ? columnName : underlineField);
 
-      final String methodType = lambda.getInstantiatedMethodType();
-      final String actualType = LambdaUtils.getActualType(methodType);
+      final String implClass = lambda.getImplClass();
+      final String actualType = LambdaUtils.getActualType(implClass);
       queryAlia.setTableName(
-          Optional.ofNullable(tableNameMap.get(methodType))
+          Optional.ofNullable(tableNameMap.get(implClass))
               .map(Reference::get)
               .orElseGet(
                   () -> {
-                    final String actualTypePath = LambdaUtils.getActualTypePath(methodType);
+                    final String actualTypePath = LambdaUtils.getActualTypePath(implClass);
                     final Class<Object> clazz = BeanUtils.getClazz(actualTypePath);
                     final Entity annotEntity = clazz.getAnnotation(Entity.class);
                     final TableName annotTableName = clazz.getAnnotation(TableName.class);
@@ -100,17 +110,17 @@ public interface ResultHandler<T, E> {
                     } else {
                       tableName = StringUtils.camelToUnderline(actualType);
                     }
-                    tableNameMap.put(methodType, new WeakReference<>(tableName));
+                    tableNameMap.put(implClass, new WeakReference<>(tableName));
                     return tableName;
                   }));
       if (StringUtils.isEmpty(tableAlia)) {
         tableAlia =
-            Optional.ofNullable(tableAliaMap.get(methodType))
+            Optional.ofNullable(tableAliaMap.get(implClass))
                 .map(Reference::get)
                 .orElseGet(
                     () -> {
                       final String type = StringUtils.camelToUnderline(actualType);
-                      tableAliaMap.put(methodType, new WeakReference<>(type));
+                      tableAliaMap.put(implClass, new WeakReference<>(type));
                       return type;
                     });
       }

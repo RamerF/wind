@@ -5,6 +5,8 @@ import io.github.ramerf.wind.core.converter.TypeConverter;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Method;
+import java.sql.Array;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -45,6 +47,16 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       }
       final String fieldName = methodToProperty(method.getName());
       Object value = map.get(StringUtils.camelToUnderline(fieldName));
+      // 如果是数据库数组类型,获取对应的java值
+      if (value instanceof Array) {
+        try {
+          value = ((Array) value).getArray();
+        } catch (SQLException e) {
+          log.warn("handle:fail to get array[{}]", e.getMessage());
+          log.error(e.getMessage(), e);
+        }
+      }
+
       // 有风险! 这里假设类初始化后,如果查询数据库列为空,类的属性值也为空
       if (Objects.isNull(value)) {
         continue;

@@ -33,7 +33,7 @@ public final class LambdaUtils {
    * @param function the IFunction
    * @see #serializedLambda(BeanFunction)
    */
-  public static String getActualTypePath(final IFunction<?, ?> function) {
+  public static String getActualTypePath(final BeanFunction function) {
     final SerializedLambda lambda = serializedLambda(function);
     return lambda.getImplClass().replaceAll("/", ".");
   }

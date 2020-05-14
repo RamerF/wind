@@ -15,7 +15,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
@@ -36,6 +35,7 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.util.ClassUtils;
 
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
+import static java.util.stream.Collectors.toList;
 import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
@@ -90,7 +90,7 @@ public final class BeanUtils {
     return Stream.of(wrapper.getPropertyDescriptors())
         .filter(o -> Objects.isNull(wrapper.getPropertyValue(o.getName())))
         .map(FeatureDescriptor::getName)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**
@@ -105,7 +105,7 @@ public final class BeanUtils {
         .filter(o -> Objects.nonNull(wrapper.getPropertyValue(o.getName())))
         .map(FeatureDescriptor::getName)
         .filter(o -> !Objects.equals("class", o))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**
@@ -118,7 +118,7 @@ public final class BeanUtils {
     return Stream.of(new BeanWrapperImpl(obj).getPropertyDescriptors())
         .map(FeatureDescriptor::getName)
         .filter(o -> !Objects.equals("class", o))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**
@@ -137,7 +137,7 @@ public final class BeanUtils {
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .collect(Collectors.toList());
+            .collect(toList());
     log.debug("getAllPrivateField:[{}]", fields);
     return fields;
   }
@@ -158,7 +158,7 @@ public final class BeanUtils {
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
             .filter(field -> Objects.nonNull(invoke(t, field, null)))
-            .collect(Collectors.toList());
+            .collect(toList());
     log.debug("getNonNullPrivateFields:[{}]", fields);
     return fields;
   }
@@ -179,8 +179,8 @@ public final class BeanUtils {
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
             .filter(field -> Objects.isNull(invoke(t, field, ex -> -1)))
-            .collect(Collectors.toList());
-    log.debug("getNonNullPrivateFields:[{}]", fields);
+            .collect(toList());
+    log.debug("getNullPrivateFields:[{}]", fields);
     return fields;
   }
 
@@ -192,8 +192,7 @@ public final class BeanUtils {
    * @return the non null prop
    */
   public static List<String> getAllColumn(@Nonnull final List<Field> fields) {
-    final List<String> columns =
-        fields.stream().map(BeanUtils::fieldToColumn).collect(Collectors.toList());
+    final List<String> columns = fields.stream().map(BeanUtils::fieldToColumn).collect(toList());
     log.debug("getAllColumn:[{}]", columns);
     return columns;
   }
@@ -207,9 +206,7 @@ public final class BeanUtils {
    */
   public static List<String> getAllColumn(@Nonnull final Class<?> obj) {
     final List<String> columns =
-        getAllPrivateFields(obj).stream()
-            .map(BeanUtils::fieldToColumn)
-            .collect(Collectors.toList());
+        getAllPrivateFields(obj).stream().map(BeanUtils::fieldToColumn).collect(toList());
     log.debug("getAllColumn:[{}]", columns);
     return columns;
   }
@@ -282,7 +279,7 @@ public final class BeanUtils {
    * @param classPath the class path
    * @return the clazz
    */
-  @SuppressWarnings({"unchecked", "AlibabaUndefineMagicConstant"})
+  @SuppressWarnings("all")
   public static <T> Class<T> getClazz(String classPath) {
     if (classPath.contains("/")) {
       classPath = classPath.replaceAll("/", ".");
@@ -297,7 +294,7 @@ public final class BeanUtils {
   }
 
   /**
-   * 如果在service方法之外获取泛型参数poJo,需要调用这个方法,因为service被代理了.
+   * 获取Service泛型参数poJo.
    *
    * @param <T> the type parameter
    * @param <S> the type parameter
@@ -351,6 +348,7 @@ public final class BeanUtils {
    * @param name the name
    * @return the string
    */
+  @SuppressWarnings("all")
   public static String methodToProperty(String name) {
     if (name.startsWith("is")) {
       name = name.substring(2);
@@ -398,6 +396,7 @@ public final class BeanUtils {
    * @return 所有子类 set
    * @throws IOException the IOException
    */
+  @SuppressWarnings("unchecked")
   public static <T> Set<Class<? extends T>> scanClasses(
       String packagePatterns, Class<T> assignableType) throws IOException {
     Set<Class<? extends T>> classes = new HashSet<>();
@@ -573,8 +572,9 @@ public final class BeanUtils {
   }
 }
 
+@SuppressWarnings("unused")
 class Ts extends AbstractEntityPoJo {
-  @Column(name = "name2222")
+  @Column(name = "alia")
   private String name;
 
   private Integer size;

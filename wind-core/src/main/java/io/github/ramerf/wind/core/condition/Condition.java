@@ -4,8 +4,7 @@ import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.helper.SqlHelper;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper;
+import io.github.ramerf.wind.core.helper.*;
 import io.github.ramerf.wind.core.support.ChainLinkedList;
 import io.github.ramerf.wind.core.support.ChainList;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -67,7 +66,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
@@ -88,7 +87,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.NOT_EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
@@ -109,7 +108,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.GREATER.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
@@ -130,7 +129,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.GE.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
@@ -151,7 +150,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.LESS.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
@@ -172,7 +171,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.LE.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
@@ -193,7 +192,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
       values.add(PERCENT.operator.concat(String.valueOf(value)).concat(PERCENT.operator));
     }
@@ -213,7 +212,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
       values.add(PERCENT.operator.concat(String.valueOf(value)));
     }
@@ -233,7 +232,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
       values.add(String.valueOf(value).concat(PERCENT.operator));
     }
@@ -253,7 +252,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
       values.add(PERCENT.operator.concat(String.valueOf(value)).concat(PERCENT.operator));
     }
@@ -277,7 +276,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(
                   String.format(
                       MatchPattern.BETWEEN.operator,
@@ -305,7 +304,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(
                   String.format(
                       NOT_BETWEEN.operator, toPreFormatSqlVal(start), toPreFormatSqlVal(end))));
@@ -326,7 +325,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.IS_NULL.operator));
     }
     return this;
@@ -344,7 +343,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.IS_NOT_NULL.operator));
     }
     return this;
@@ -366,7 +365,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(
                   String.format(
                       MatchPattern.IN.operator,
@@ -394,7 +393,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(
                   String.format(
                       NOT_IN.operator,
@@ -425,7 +424,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field))
+              .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.EQUAL.operator)
               .concat(queryColumn.queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)

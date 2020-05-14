@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 @SuppressWarnings({"rawtypes", "unused"})
 public class TypeConverterRegistryFactory {
-  private List<TypeConverter> typeConverters = new ArrayList<>();
+  private List<TypeConverter> typeConverters = new LinkedList<>();
 
   /** Instantiates a new Type converter registry. */
   public TypeConverterRegistryFactory() {
@@ -28,6 +28,7 @@ public class TypeConverterRegistryFactory {
   private void initDefaultTypeConverters() {
     addTypeConverters(new EnumTypeConverter());
     addTypeConverters(new BigDecimalTypeConverter());
+    addTypeConverters(new StringArrayTypeConverter());
     addTypeConverters(new ListLongArrayTypeConverter());
     addTypeConverters(new ListStringArrayTypeConverter());
   }

@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.helper;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
@@ -39,7 +39,7 @@ public class EntityHelper {
             });
   }
 
-  public static <T extends AbstractEntity> String getColumn(IFunction<T, ?> function) {
+  public static String getColumn(BeanFunction function) {
     log.info("getColumn:[{}]", FIELD_COLUMN_MAP);
     return FIELD_COLUMN_MAP
         .get(LambdaUtils.getActualTypePath(function))
@@ -48,6 +48,7 @@ public class EntityHelper {
 
   public static void main(String[] args) {
     initEntity(AbstractEntityPoJo.class);
-    log.info("main:[{}]", getColumn(AbstractEntityPoJo::getCompanyId));
+    IFunction<AbstractEntityPoJo, Long> function = AbstractEntityPoJo::getCompanyId;
+    log.info("main:[{}]", getColumn(function));
   }
 }
