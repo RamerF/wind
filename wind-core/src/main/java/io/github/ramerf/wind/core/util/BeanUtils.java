@@ -398,9 +398,9 @@ public final class BeanUtils {
    * @return 所有子类 set
    * @throws IOException the IOException
    */
-  public static Set<Class<?>> scanClasses(String packagePatterns, Class<?> assignableType)
-      throws IOException {
-    Set<Class<?>> classes = new HashSet<>();
+  public static <T> Set<Class<? extends T>> scanClasses(
+      String packagePatterns, Class<T> assignableType) throws IOException {
+    Set<Class<? extends T>> classes = new HashSet<>();
     String[] packagePatternArray =
         tokenizeToStringArray(
             packagePatterns, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
@@ -415,7 +415,7 @@ public final class BeanUtils {
         try {
           ClassMetadata classMetadata =
               new CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
-          Class<?> clazz = Resources.classForName(classMetadata.getClassName());
+          Class<T> clazz = (Class<T>) Resources.classForName(classMetadata.getClassName());
           if (assignableType == null || assignableType.isAssignableFrom(clazz)) {
             classes.add(clazz);
           }

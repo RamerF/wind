@@ -63,10 +63,9 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
   private BigDecimal bigDecimal;
 
   public enum Type implements InterEnum {
-    /**
-     * 商品类别
-     */
-    PHONE(0, "手机"), SPORT(1, "运动");
+    /** 商品类别 */
+    PHONE(0, "手机"),
+    SPORT(1, "运动");
 
     private final int value;
     private final String desc;
@@ -88,10 +87,9 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
   }
 
   public enum State implements InterEnum {
-    /**
-     * 商品类别
-     */
-    UP_SHELVES(0, "上架"), DOWN_SHELVES(1, "下架");
+    /** 商品类别 */
+    UP_SHELVES(0, "上架"),
+    DOWN_SHELVES(1, "下架");
 
     private final int value;
     private final String desc;
