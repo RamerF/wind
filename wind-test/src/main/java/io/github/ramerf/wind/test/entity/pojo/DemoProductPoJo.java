@@ -62,6 +62,11 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
   @Column(columnDefinition = "double")
   private BigDecimal bigDecimal;
 
+  /** 本字段用于测试字段与数据库列不对应的场景. */
+  @Column(name = "non_match_column")
+  @TableField(value = "non_match_column")
+  private String column;
+
   public enum Type implements InterEnum {
     /** 商品类别 */
     PHONE(0, "手机"),
