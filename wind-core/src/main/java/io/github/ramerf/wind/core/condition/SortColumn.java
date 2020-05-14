@@ -2,8 +2,9 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.util.BeanUtils;
-import java.util.*;
+import io.github.ramerf.wind.core.helper.EntityHelper;
+import java.util.LinkedList;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -87,7 +88,7 @@ public class SortColumn {
   }
 
   public static <T extends AbstractEntity> SortColumn asc(final IFunction<T, ?> function) {
-    return asc(BeanUtils.methodToColumn(function));
+    return asc(EntityHelper.getColumn(function));
   }
 
   /** {@link SortColumn#asc(IFunction)} */
@@ -98,7 +99,7 @@ public class SortColumn {
   }
 
   public static <T extends AbstractEntity> SortColumn desc(final IFunction<T, ?> function) {
-    return desc(BeanUtils.methodToColumn(function));
+    return desc(EntityHelper.getColumn(function));
   }
 
   /** {@link SortColumn#desc(IFunction)} */

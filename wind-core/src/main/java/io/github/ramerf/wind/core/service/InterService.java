@@ -14,6 +14,7 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.repository.BaseRepository;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import io.github.ramerf.wind.core.util.EntityUtils;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.COLUMN_COMPANY_ID;
 import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.COLUMN_ID;
-import static io.github.ramerf.wind.core.util.BeanUtils.getPoJoClass;
 import static io.github.ramerf.wind.core.util.BeanUtils.initial;
 import static org.springframework.util.Assert.notNull;
 
@@ -173,7 +173,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
           AtomicInteger i = new AtomicInteger(1);
           ts.forEach(
               t -> {
-                T td = initial(getPoJoClass(this));
+                T td = initial(EntityUtils.getPoJoClass(this));
                 notNull(td, "无法实例化PoJo对象");
                 BeanUtils.copyProperties(t, td);
                 td.setUpdateTime(new Date());
@@ -212,7 +212,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
           AtomicInteger i = new AtomicInteger(1);
           ts.forEach(
               t -> {
-                T td = initial(getPoJoClass(this));
+                T td = initial(EntityUtils.getPoJoClass(this));
                 BeanUtils.copyProperties(t, td);
                 td.setUpdateTime(new Date());
                 sqlSession.update(sqlStatement, Collections.singletonMap(Constants.ENTITY, td));
@@ -322,7 +322,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * @since 3.3.0
    */
   default void executeBatch(Consumer<SqlSession> consumer) {
-    Class<T> tClass = getPoJoClass(this);
+    Class<T> tClass = EntityUtils.getPoJoClass(this);
     SqlHelper.clearCache(tClass);
     SqlSessionFactory sqlSessionFactory = SqlHelper.sqlSessionFactory(tClass);
     SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH);
@@ -352,7 +352,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * @return the string
    */
   default String sqlStatement(SqlMethod sqlMethod) {
-    return SqlHelper.table(getPoJoClass(this)).getSqlStatement(sqlMethod.getMethod());
+    return SqlHelper.table(EntityUtils.getPoJoClass(this)).getSqlStatement(sqlMethod.getMethod());
   }
 
   /**
@@ -361,7 +361,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * @return the query column
    */
   default QueryColumn<T> getQueryColumn() {
-    return QueryColumnFactory.getInstance(getPoJoClass(this));
+    return QueryColumnFactory.getInstance(EntityUtils.getPoJoClass(this));
   }
 
   /**
@@ -390,7 +390,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    */
   default Update getUpdate(final boolean current) {
     final Update instance = Update.getInstance();
-    return current ? instance.from(getPoJoClass(this)) : instance;
+    return current ? instance.from(EntityUtils.getPoJoClass(this)) : instance;
   }
 
   /**

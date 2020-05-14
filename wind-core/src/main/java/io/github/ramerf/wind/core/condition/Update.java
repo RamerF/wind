@@ -221,8 +221,8 @@ public class Update {
     final StringBuilder setBuilder = new StringBuilder();
     final List<Field> fields =
         includeNull
-            ? BeanUtils.getAllPrivateFields(t.getClass())
-            : BeanUtils.getNonNullPrivateFields(t);
+            ? EntityUtils.getAllColumnFields(t.getClass())
+            : EntityUtils.getNonNullColumnFields(t);
     if (log.isDebugEnabled()) {
       log.debug("updateBatch:[{}]", fields);
     }
@@ -235,14 +235,13 @@ public class Update {
                     .orElse(true))
         .forEach(
             field -> {
-              final String column = BeanUtils.fieldToColumn(field);
+              final String column = EntityUtils.fieldToColumn(field);
               setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
               final Object value =
                   TypeConverterHelper.toJdbcValue(BeanUtils.invoke(t, field, null));
               log.debug("updateBatch:[field:{},value:{}]", field.getName(), value);
               values.add(value);
             });
-    // 必须先调用getString方法,否则会缺少是否删除的参数值
     final String conditionString = condition.getString();
     values.addAll(condition.getValues());
     final String sql = "update %s set %s where %s";

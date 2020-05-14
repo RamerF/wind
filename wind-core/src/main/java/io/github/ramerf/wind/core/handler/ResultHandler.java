@@ -11,8 +11,6 @@ import java.util.*;
 import javax.persistence.Entity;
 import lombok.Data;
 
-import static io.github.ramerf.wind.core.util.BeanUtils.methodToProperty;
-
 /**
  * 返回结果转换.
  *
@@ -74,7 +72,7 @@ public interface ResultHandler<T, E> {
       final QueryAlia queryAlia = new QueryAlia();
 
       final SerializedLambda lambda = LambdaUtils.serializedLambda(function);
-      final String fieldName = methodToProperty(lambda.getImplMethodName());
+      final String fieldName = BeanUtils.methodToProperty(lambda.getImplMethodName());
       queryAlia.setFieldName(fieldName);
 
       final String columnName = EntityHelper.getColumn(function);

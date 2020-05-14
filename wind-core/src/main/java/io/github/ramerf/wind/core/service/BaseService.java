@@ -4,18 +4,16 @@ import io.github.ramerf.wind.core.condition.Condition.MatchPattern;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.util.*;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.github.ramerf.wind.core.util.BeanUtils.methodToColumn;
-
 /**
  * 通用业务方法.
  *
  * @param <T> the type parameter
- * @param <E> the type parameter
  * @author Tang Xiaofeng
  * @since 2019 /11/13
  */
@@ -122,7 +120,7 @@ public interface BaseService<T extends AbstractEntityPoJo>
      */
     public static <T extends AbstractEntityPoJo, R> ExtraProp ofListValue(
         IFunction<T, R> function, MatchPattern matchPattern, List<R> value) {
-      return ofListValue(methodToColumn(function), matchPattern, value);
+      return ofListValue(EntityHelper.getColumn(function), matchPattern, value);
     }
 
     /**
@@ -153,7 +151,7 @@ public interface BaseService<T extends AbstractEntityPoJo>
      */
     public static <T extends AbstractEntityPoJo, R> ExtraProp of(
         IFunction<T, R> function, MatchPattern matchPattern, Object... value) {
-      return of(methodToColumn(function), matchPattern, value);
+      return of(EntityHelper.getColumn(function), matchPattern, value);
     }
 
     /**
@@ -190,7 +188,7 @@ public interface BaseService<T extends AbstractEntityPoJo>
         final boolean isGroup,
         final MatchPattern matchPattern,
         Object... value) {
-      return of(methodToColumn(function), isGroup, matchPattern, value);
+      return of(EntityHelper.getColumn(function), isGroup, matchPattern, value);
     }
 
     private static ExtraProp copyValue(

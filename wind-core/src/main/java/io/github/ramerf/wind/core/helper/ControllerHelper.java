@@ -21,6 +21,7 @@ import org.springframework.validation.*;
 
 import static io.github.ramerf.wind.core.entity.response.Rs.*;
 import static io.github.ramerf.wind.core.util.BeanUtils.*;
+import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
 
 /**
  * 简化Controller操作.
@@ -690,7 +691,6 @@ public final class ControllerHelper {
    * @param create 是否是创建.
    * @param bindingResult 校验器校验结果.
    * @param <T> 服务层实现类.
-   * @param <E> 要更新的对象.
    * @return {@link ResponseEntity}
    */
   private static <

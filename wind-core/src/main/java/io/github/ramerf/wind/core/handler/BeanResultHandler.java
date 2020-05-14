@@ -46,6 +46,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
         continue;
       }
       final String fieldName = methodToProperty(method.getName());
+      // TODO-WARN 这里获取列值有问题
       Object value = map.get(StringUtils.camelToUnderline(fieldName));
       // 如果是数据库数组类型,获取对应的java值
       if (value instanceof Array) {

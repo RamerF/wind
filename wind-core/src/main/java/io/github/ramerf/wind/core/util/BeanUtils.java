@@ -3,14 +3,11 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.condition.QueryEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.IConsumer;
-import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.service.InterService;
 import java.beans.FeatureDescriptor;
 import java.io.IOException;
-import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
@@ -21,9 +18,6 @@ import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.reflection.ReflectionException;
-import org.springframework.aop.framework.AdvisedSupport;
-import org.springframework.aop.framework.AopProxy;
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -64,7 +58,7 @@ public final class BeanUtils {
         .filter(o -> o.getName().startsWith("set") && o.getParameterTypes().length == 1)
         .forEach(
             f -> {
-              final Object value = map.get(methodToColumn(f.getName()));
+              final Object value = map.get(camelToUnderline(methodToProperty(f.getName())));
               try {
                 f.setAccessible(true);
                 f.invoke(r, value);
@@ -122,96 +116,6 @@ public final class BeanUtils {
   }
 
   /**
-   * 获取对象所有(<code>private && !static && !transient</code>)属性对应的数据库列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
-   *
-   * @param obj the obj
-   * @return the non null prop
-   */
-  public static List<Field> getAllPrivateFields(@Nonnull final Class<?> obj) {
-    final List<Field> allFields = new ArrayList<>();
-    retrievePrivateField(obj, allFields);
-    final List<Field> fields =
-        allFields.stream()
-            .filter(field -> Modifier.isPrivate(field.getModifiers()))
-            .filter(field -> !Modifier.isStatic(field.getModifiers()))
-            .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .collect(toList());
-    log.debug("getAllPrivateField:[{}]", fields);
-    return fields;
-  }
-
-  /**
-   * 获取对象所有值不为null的(<code>private && !static && !transient</code>)属性对应的数据库列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
-   *
-   * @return the non null prop
-   */
-  public static <T> List<Field> getNonNullPrivateFields(@Nonnull final T t) {
-    final List<Field> allFields = new ArrayList<>();
-    retrievePrivateField(t.getClass(), allFields);
-    final List<Field> fields =
-        allFields.stream()
-            .filter(field -> Modifier.isPrivate(field.getModifiers()))
-            .filter(field -> !Modifier.isStatic(field.getModifiers()))
-            .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .filter(field -> Objects.nonNull(invoke(t, field, null)))
-            .collect(toList());
-    log.debug("getNonNullPrivateFields:[{}]", fields);
-    return fields;
-  }
-
-  /**
-   * 获取对象所有值为null的(<code>private && !static && !transient</code>)属性对应的数据库列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
-   *
-   * @return the non null prop
-   */
-  public static <T> List<Field> getNullPrivateFields(@Nonnull final T t) {
-    final List<Field> allFields = new ArrayList<>();
-    retrievePrivateField(t.getClass(), allFields);
-    final List<Field> fields =
-        allFields.stream()
-            .filter(field -> Modifier.isPrivate(field.getModifiers()))
-            .filter(field -> !Modifier.isStatic(field.getModifiers()))
-            .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .filter(field -> Objects.isNull(invoke(t, field, ex -> -1)))
-            .collect(toList());
-    log.debug("getNullPrivateFields:[{}]", fields);
-    return fields;
-  }
-
-  /**
-   * 获取对象所有(<code>private && !static && !transient</code>)属性对应的数据库列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
-   *
-   * @return the non null prop
-   */
-  public static List<String> getAllColumn(@Nonnull final List<Field> fields) {
-    final List<String> columns = fields.stream().map(BeanUtils::fieldToColumn).collect(toList());
-    log.debug("getAllColumn:[{}]", columns);
-    return columns;
-  }
-
-  /**
-   * 获取对象所有(<code>private && !static && !transient</code>)属性对应的数据库列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
-   *
-   * @return the non null prop
-   */
-  public static List<String> getAllColumn(@Nonnull final Class<?> obj) {
-    final List<String> columns =
-        getAllPrivateFields(obj).stream().map(BeanUtils::fieldToColumn).collect(toList());
-    log.debug("getAllColumn:[{}]", columns);
-    return columns;
-  }
-
-  /**
    * 获取对象属性对应的数据库列名.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
@@ -230,11 +134,12 @@ public final class BeanUtils {
   }
 
   /** 获取所有(包含父类)private属性. */
-  private static void retrievePrivateField(
+  public static List<Field> retrievePrivateFields(
       @Nonnull Class<?> clazz, @Nonnull final List<Field> fields) {
     do {
       fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
     } while (Objects.nonNull(clazz = clazz.getSuperclass()));
+    return fields;
   }
 
   /**
@@ -294,55 +199,6 @@ public final class BeanUtils {
   }
 
   /**
-   * 获取Service泛型参数poJo.
-   *
-   * @param <T> the type parameter
-   * @param <S> the type parameter
-   * @param service the service
-   * @return the poJo class
-   */
-  @SuppressWarnings("unchecked")
-  public static <T extends AbstractEntityPoJo, S extends InterService<T>> Class<T> getPoJoClass(
-      S service) {
-    return getParamTypeClass((Class<S>) getProxyTarget(service).getClass());
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T extends AbstractEntityPoJo, S extends InterService<T>>
-      Class<T> getParamTypeClass(Class<S> serviceClazz) {
-    Class<T> classes =
-        (Class<T>)
-            Optional.ofNullable(SERVICE_GENERIC.get(serviceClazz)).map(Reference::get).orElse(null);
-    if (Objects.nonNull(classes)) {
-      return classes;
-    }
-
-    final Type baseServiceType = serviceClazz.getInterfaces()[0].getGenericInterfaces()[0];
-    ParameterizedType parameterizedType = (ParameterizedType) baseServiceType;
-    final Type[] arguments = parameterizedType.getActualTypeArguments();
-    try {
-      classes = (Class<T>) Class.forName(arguments[0].getTypeName());
-    } catch (ClassNotFoundException ignored) {
-      throw CommonException.of("无法获取父类泛型");
-    }
-    SERVICE_GENERIC.put(serviceClazz, new WeakReference<>(classes));
-    return classes;
-  }
-
-  /**
-   * 通过方法名获取列名.
-   *
-   * @param method the method
-   * @return the string
-   */
-  public static String methodToColumn(final String method) {
-    if (Objects.isNull(method) || method.length() < 1) {
-      return method;
-    }
-    return camelToUnderline(methodToProperty(method));
-  }
-
-  /**
    * 通过方法名获取bean属性名.
    *
    * @param name the name
@@ -364,28 +220,6 @@ public final class BeanUtils {
     }
 
     return name;
-  }
-
-  /**
-   * 通过lambda方法引用获取列名.
-   *
-   * @param <T> the type parameter
-   * @param function the function
-   * @return the string
-   */
-  public static <T> String methodToColumn(final IFunction<T, ?> function) {
-    return methodToColumn(LambdaUtils.getMethodName(function));
-  }
-
-  /**
-   * 通过lambda方法引用获取列名.
-   *
-   * @param <T> the type parameter
-   * @param function the function
-   * @return the string
-   */
-  public static <T> String methodToColumn(final IConsumer<T, ?> function) {
-    return methodToColumn(LambdaUtils.getMethodName(function));
   }
 
   /**
@@ -495,51 +329,6 @@ public final class BeanUtils {
   }
 
   /**
-   * 获取代理对象的目标对象.
-   *
-   * @param proxy 代理对象
-   */
-  private static Object getProxyTarget(Object proxy) {
-    if (!AopUtils.isAopProxy(proxy)) {
-      return proxy;
-    }
-    if (AopUtils.isJdkDynamicProxy(proxy)) {
-      try {
-        return getJdkDynamicProxyTargetObject(proxy);
-      } catch (Exception e) {
-        log.warn(e.getMessage());
-        log.error(e.getMessage(), e);
-      }
-    } else {
-      try {
-        return getCglibProxyTargetObject(proxy);
-      } catch (Exception e) {
-        log.warn(e.getMessage());
-        log.error(e.getMessage(), e);
-      }
-    }
-    return proxy;
-  }
-
-  private static Object getCglibProxyTargetObject(Object proxy) throws Exception {
-    Field field = proxy.getClass().getDeclaredField("CGLIB$CALLBACK_0");
-    field.setAccessible(true);
-    Object dynamicAdvisedInterceptor = field.get(proxy);
-    Field advised = dynamicAdvisedInterceptor.getClass().getDeclaredField("advised");
-    advised.setAccessible(true);
-    return ((AdvisedSupport) advised.get(dynamicAdvisedInterceptor)).getTargetSource().getTarget();
-  }
-
-  private static Object getJdkDynamicProxyTargetObject(Object proxy) throws Exception {
-    Field h = proxy.getClass().getSuperclass().getDeclaredField("h");
-    h.setAccessible(true);
-    AopProxy aopProxy = (AopProxy) h.get(proxy);
-    Field advised = aopProxy.getClass().getDeclaredField("advised");
-    advised.setAccessible(true);
-    return ((AdvisedSupport) advised.get(aopProxy)).getTargetSource().getTarget();
-  }
-
-  /**
    * The entry point of application.
    *
    * @param args the input arguments
@@ -553,8 +342,6 @@ public final class BeanUtils {
 
     invoke(null, String.class.getMethods()[0], "string")
         .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
-
-    log.info("main:[{}]", getAllPrivateFields(Ts.class));
 
     Stream.of(new BeanWrapperImpl(new Ts()).getPropertyDescriptors())
         .forEach(

@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.util.BeanUtils;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,7 +25,7 @@ public class GroupByClause<T extends AbstractEntity> {
   }
 
   public GroupByClause<T> col(@Nonnull final IFunction<T, ?> function, final String columnAlia) {
-    cols.add(StringUtils.nonEmpty(columnAlia) ? columnAlia : BeanUtils.methodToColumn(function));
+    cols.add(StringUtils.nonEmpty(columnAlia) ? columnAlia : EntityHelper.getColumn(function));
     return this;
   }
 }

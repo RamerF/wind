@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
-import static io.github.ramerf.wind.core.util.BeanUtils.methodToColumn;
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static java.util.stream.Collectors.toCollection;
 
@@ -428,7 +427,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(MatchPattern.EQUAL.operator)
               .concat(queryColumn.queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(methodToColumn(field2)));
+              .concat(EntityHelper.getColumn(field2)));
     }
     return this;
   }

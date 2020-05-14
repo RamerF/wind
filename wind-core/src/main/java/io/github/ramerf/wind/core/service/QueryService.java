@@ -25,7 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 
-import static io.github.ramerf.wind.core.util.BeanUtils.getPoJoClass;
+import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
 
 /**
  * 公共查询接口,<b>注意: 所有的方法忽略已删除记录.</b>

@@ -5,6 +5,7 @@ import io.github.ramerf.wind.core.condition.ICondition;
 import io.github.ramerf.wind.core.condition.Update;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.util.EntityUtils;
 import io.github.ramerf.wind.core.util.SnowflakeIdWorker;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-
-import static io.github.ramerf.wind.core.util.BeanUtils.getPoJoClass;
 
 /**
  * The interface Update service.
@@ -162,6 +161,6 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @see DataAccessException
    */
   default long delete(Consumer<ICondition<T>> consumer) throws RuntimeException {
-    return Update.getInstance().from(getPoJoClass(this)).where(consumer).delete();
+    return Update.getInstance().from(EntityUtils.getPoJoClass(this)).where(consumer).delete();
   }
 }
