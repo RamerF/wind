@@ -1,10 +1,14 @@
 package io.github.ramerf.wind.core.handler;
 
+import io.github.ramerf.wind.core.condition.QueryColumn;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.*;
 import javax.annotation.Nonnull;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * The type Abstract result handler.
@@ -16,33 +20,35 @@ import javax.annotation.Nonnull;
  */
 abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
   /** The Methods. */
-  Method[] methods;
+  List<Method> methods;
 
   /** The Clazz. */
   final Class<E> clazz;
   /** columnAlia:fieldName} */
-  //  final Map<String, String> queryAlias;
+  Map<String, String> fieldAliaMap;
 
-  private static final Map<Class<?>, WeakReference<Method[]>> METHODS_MAP = new HashMap<>();
+  private static final Map<Class<?>, WeakReference<List<Method>>> METHODS_MAP = new HashMap<>();
 
   /**
    * Instantiates a new Abstract result handler.
    *
    * @param clazz the clazz
-   * @param queryColumns the query columns
    */
-  public AbstractResultHandler(@Nonnull final Class<E> clazz) {
-    this(clazz, true);
+  public AbstractResultHandler(
+      @Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
+    this(clazz, queryColumns, true);
   }
 
   /**
    * 初始化数据.
    *
    * @param clazz 支持转换的对象
-   * @param queryColumns 查询对象
    * @param initMethods 是否调用初始化methods
    */
-  public AbstractResultHandler(@Nonnull final Class<E> clazz, final boolean initMethods) {
+  public AbstractResultHandler(
+      @Nonnull final Class<E> clazz,
+      final List<QueryColumn<?>> queryColumns,
+      final boolean initMethods) {
     this.clazz = clazz;
     if (initMethods) {
       this.methods =
@@ -50,15 +56,15 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
               .map(Reference::get)
               .orElseGet(
                   () -> {
-                    final Method[] methods = clazz.getMethods();
+                    final List<Method> methods = BeanUtils.getWriteMethods(clazz);
                     METHODS_MAP.put(clazz, new WeakReference<>(methods));
                     return methods;
                   });
+      this.fieldAliaMap =
+          queryColumns.stream()
+              .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
+              .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
     }
-    //    this.queryAlias =
-    //        queryColumns.stream()
-    //            .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
-    //            .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
   }
 
   /**

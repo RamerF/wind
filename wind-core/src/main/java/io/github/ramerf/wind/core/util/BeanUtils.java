@@ -3,14 +3,17 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.condition.QueryEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.function.BeanFunction;
 import java.beans.FeatureDescriptor;
 import java.io.IOException;
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -41,8 +44,12 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 @Slf4j
 @SuppressWarnings({"unused"})
 public final class BeanUtils {
-  private static final Map<Class<?>, WeakReference<Class<?>>> SERVICE_GENERIC = new HashMap<>();
-  private static final Map<Class<?>, WeakReference<List<Field>>> POJO_FIELD_MAP = new HashMap<>();
+  /** 对象所有(包含父类)私有字段. */
+  private static final Map<Class<?>, WeakReference<List<Field>>> PRIVATE_FIELDS_MAP =
+      new ConcurrentHashMap<>();
+  /** 对象的写入方法. */
+  private static final Map<Class<?>, WeakReference<List<Method>>> WRITE_METHOD_MAP =
+      new ConcurrentHashMap<>();
 
   /**
    * Map转Bean.
@@ -115,31 +122,57 @@ public final class BeanUtils {
         .collect(toList());
   }
 
-  /**
-   * 获取对象属性对应的数据库列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
-   *
-   * @return the non null prop
-   */
-  public static String fieldToColumn(@Nonnull final Field field) {
-    String column = null;
-    if (field.isAnnotationPresent(Column.class)) {
-      column = field.getAnnotation(Column.class).name();
-    }
-    if (StringUtils.isEmpty(column)) {
-      column = camelToUnderline(field.getName());
-    }
-    return column;
-  }
-
   /** 获取所有(包含父类)private属性. */
   public static List<Field> retrievePrivateFields(
+      @Nonnull final Class<?> clazz, @Nonnull final List<Field> fields) {
+    return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
+        .map(Reference::get)
+        .orElseGet(
+            () -> {
+              final List<Field> list = getPrivateFields(clazz, fields);
+              PRIVATE_FIELDS_MAP.put(clazz, new WeakReference<>(list));
+              return list;
+            });
+  }
+
+  private static List<Field> getPrivateFields(
       @Nonnull Class<?> clazz, @Nonnull final List<Field> fields) {
     do {
       fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
     } while (Objects.nonNull(clazz = clazz.getSuperclass()));
     return fields;
+  }
+
+  public static List<Method> getWriteMethods(final Class<?> clazz) {
+    return Optional.ofNullable(WRITE_METHOD_MAP.get(clazz))
+        .map(Reference::get)
+        .orElseGet(
+            () -> {
+              final List<Method> methods =
+                  Arrays.stream(clazz.getMethods())
+                      .filter(method -> method.getParameterTypes().length > 0)
+                      .filter(
+                          method -> {
+                            final String name = method.getName();
+                            return name.startsWith("set") || name.startsWith("is");
+                          })
+                      .collect(toList());
+              WRITE_METHOD_MAP.put(clazz, new WeakReference<>(methods));
+              return methods;
+            });
+  }
+
+  public static <T> Field getFieldFromBeanFunction(
+      final BeanFunction beanFunction, Class<T> clazz) {
+    final SerializedLambda lambda = LambdaUtils.serializedLambda(beanFunction);
+    try {
+      return getClazz(lambda.getImplClass())
+          .getDeclaredField(BeanUtils.methodToProperty(lambda.getImplMethodName()));
+    } catch (Exception e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+      throw CommonException.of(e.getMessage(), e);
+    }
   }
 
   /**
@@ -342,20 +375,7 @@ public final class BeanUtils {
 
     invoke(null, String.class.getMethods()[0], "string")
         .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
-
-    Stream.of(new BeanWrapperImpl(new Ts()).getPropertyDescriptors())
-        .forEach(
-            o -> {
-              final Method method = o.getReadMethod();
-              try {
-                final Field f = Method.class.getDeclaredField("signature");
-                f.setAccessible(true);
-                final Object signature = f.get(method);
-                log.info("main:[{}]", signature);
-              } catch (Exception e) {
-                e.printStackTrace();
-              }
-            });
+    log.info("main:[{}]", retrievePrivateFields(Ts.class, new ArrayList<>()));
   }
 }
 

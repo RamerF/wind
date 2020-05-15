@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.converter;
 
+import java.sql.PreparedStatement;
 import java.util.*;
 
 /**
@@ -10,13 +11,14 @@ import java.util.*;
  */
 public class ListStringArrayTypeConverter implements TypeConverter<List<String>, String[]> {
   @Override
-  public String[] convertToJdbc(List<String> javaVal) {
+  public String[] convertToJdbc(List<String> javaVal, final PreparedStatement ps) {
     final String[] empty = new String[0];
     return Objects.nonNull(javaVal) ? javaVal.toArray(empty) : empty;
   }
 
   @Override
-  public List<String> covertFromJdbc(final String[] jdbcVal, final Class<? extends List<String>> clazz) {
+  public List<String> covertFromJdbc(
+      final String[] jdbcVal, final Class<? extends List<String>> clazz) {
     return Objects.nonNull(jdbcVal) ? Arrays.asList(jdbcVal) : new ArrayList<>();
   }
 }

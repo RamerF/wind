@@ -15,6 +15,7 @@ import lombok.*;
  */
 public class QueryEntityMetaData<T extends AbstractEntity> extends EntityMetaData<T> {
   /** 查询字段. */
+  @Getter
   protected List<QueryAlia> queryAlias = new ArrayList<>();
 
   /** 对应sql语句from后的table字符串. */

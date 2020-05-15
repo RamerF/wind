@@ -4,6 +4,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.sql.PreparedStatement;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,23 +21,20 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings({"rawtypes", "unused"})
 public interface TypeConverter<T, V> {
-  /**
-   * The constant log.
-   */
+  /** The constant log. */
   Logger log = LoggerFactory.getLogger(TypeConverter.class);
 
-  /**
-   * The constant PARAM_TYPE_CLAZZ.
-   */
+  /** The constant PARAM_TYPE_CLAZZ. */
   Map<Class<?>, WeakReference<Type[]>> PARAM_TYPE_CLAZZ = new HashMap<>();
 
   /**
    * Java对象值转换为数据库值.
    *
    * @param t Java对象实例
+   * @param ps {@link PreparedStatement}
    * @return 数据库值 v
    */
-  V convertToJdbc(final T t);
+  Object convertToJdbc(final T t, final PreparedStatement ps);
 
   /**
    * 数据库值转换为Java对象值
@@ -82,7 +80,8 @@ public interface TypeConverter<T, V> {
    */
   default Type[] getParamTypeClass() {
     Class<? extends TypeConverter> clazz = this.getClass();
-    Type[] types = Optional.ofNullable(PARAM_TYPE_CLAZZ.get(clazz)).map(Reference::get).orElse(new Type[2]);
+    Type[] types =
+        Optional.ofNullable(PARAM_TYPE_CLAZZ.get(clazz)).map(Reference::get).orElse(new Type[2]);
     if (Objects.nonNull(types[0])) {
       return types;
     }

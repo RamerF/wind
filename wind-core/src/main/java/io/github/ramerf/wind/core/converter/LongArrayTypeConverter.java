@@ -8,14 +8,14 @@ import java.sql.PreparedStatement;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class StringArrayTypeConverter implements TypeConverter<String[], String[]> {
+public class LongArrayTypeConverter implements TypeConverter<Long[], Long[]> {
   @Override
-  public String[] convertToJdbc(String[] javaVal, final PreparedStatement ps) {
+  public Long[] convertToJdbc(Long[] javaVal, final PreparedStatement ps) {
     return javaVal;
   }
 
   @Override
-  public String[] covertFromJdbc(final String[] jdbcVal, final Class<? extends String[]> clazz) {
+  public Long[] covertFromJdbc(final Long[] jdbcVal, final Class<? extends Long[]> clazz) {
     return jdbcVal;
   }
 }

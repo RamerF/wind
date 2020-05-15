@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.converter;
 
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
 import java.util.Objects;
 
 /**
@@ -11,7 +12,7 @@ import java.util.Objects;
  */
 public class BigDecimalTypeConverter implements TypeConverter<BigDecimal, Double> {
   @Override
-  public Double convertToJdbc(BigDecimal val) {
+  public Double convertToJdbc(BigDecimal val, final PreparedStatement ps) {
     return Objects.nonNull(val) ? val.doubleValue() : null;
   }
 

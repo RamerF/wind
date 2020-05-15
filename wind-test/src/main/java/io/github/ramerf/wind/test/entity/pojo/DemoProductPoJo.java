@@ -40,10 +40,12 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
   @TableField(exist = false)
   private DemoProductCategoryPoJo productCategory;
 
+  /** List&lt;Long&gt; 可对应数据库类型 bigint[] */
   @ApiModelProperty(value = "sku id 集合", example = "1,2,3")
   @Column(columnDefinition = "bigint[]")
   private List<Long> skuIds;
 
+  /** String[] 可对应数据库类型 text[]/varchar[] */
   @ApiModelProperty(value = "测试text数组", example = "'名称1','名称2'")
   private String[] texts;
 
@@ -53,6 +55,7 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
   @Column(columnDefinition = "bit[]")
   private BitSet bitSet;
 
+  /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 smallint/int */
   @Column(columnDefinition = "smallint")
   private Type type;
 
@@ -62,7 +65,7 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
   @Column(columnDefinition = "double")
   private BigDecimal bigDecimal;
 
-  /** 本字段用于测试字段与数据库列不对应的场景. */
+  /** 字段与数据库列不对应时,使用{@link Column#name()}指定数据库字段名. */
   @Column(name = "non_match_column")
   @TableField(value = "non_match_column")
   private String column;

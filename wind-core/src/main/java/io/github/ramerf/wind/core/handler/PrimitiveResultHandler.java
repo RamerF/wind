@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
 
   public PrimitiveResultHandler(@Nonnull final Class<E> clazz) {
-    super(clazz, false);
+    super(clazz, null, false);
   }
 
   /**

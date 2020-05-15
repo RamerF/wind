@@ -29,6 +29,8 @@ public class TypeConverterRegistryFactory {
     addTypeConverters(new EnumTypeConverter());
     addTypeConverters(new BigDecimalTypeConverter());
     addTypeConverters(new StringArrayTypeConverter());
+    addTypeConverters(new LongArrayTypeConverter());
+    addTypeConverters(new IntegerArrayTypeConverter());
     addTypeConverters(new ListLongArrayTypeConverter());
     addTypeConverters(new ListStringArrayTypeConverter());
   }
@@ -96,8 +98,8 @@ public class TypeConverterRegistryFactory {
                         || Class.forName(javaClass.getTypeName())
                             .isAssignableFrom(Class.forName(parameterType.getTypeName())))
                     && Objects.equals(value.getClass(), jdbcClass);
-              } catch (ClassNotFoundException ignored) {
-                // 如果这里抛出异常,就是程序的BUG,所以不需要处理
+              } catch (ClassNotFoundException e) {
+                log.warn("getToJavaTypeConverter:[{}]", e.getMessage());
               }
               return false;
             })
@@ -122,11 +124,12 @@ public class TypeConverterRegistryFactory {
         .filter(
             typeConverter -> {
               try {
-                return Objects.equals(typeConverter.getJavaClass(), parameterType)
-                    || Class.forName(typeConverter.getJavaClass().getTypeName())
+                final Type javaClass = typeConverter.getJavaClass();
+                return Objects.equals(javaClass, parameterType)
+                    || Class.forName(javaClass.getTypeName())
                         .isAssignableFrom(Class.forName(parameterType.getTypeName()));
-              } catch (Exception ignored) {
-                // 如果这里抛出异常,就是程序的BUG,所以不需要处理
+              } catch (ClassNotFoundException e) {
+                log.warn("getToJdbcTypeConverter:[{}]", e.getMessage());
               }
               return false;
             })

@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.converter;
 
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -10,8 +11,14 @@ import java.util.*;
  */
 public class ListLongArrayTypeConverter implements TypeConverter<List<Long>, Long[]> {
   @Override
-  public Long[] convertToJdbc(List<Long> javaVal) {
+  public Object convertToJdbc(List<Long> javaVal, final PreparedStatement ps) {
     final Long[] empty = new Long[0];
+    try {
+      final Connection connection = ps.getConnection();
+      return connection.createArrayOf("bigint", javaVal.toArray());
+    } catch (SQLException throwables) {
+      throwables.printStackTrace();
+    }
     return Objects.nonNull(javaVal) ? javaVal.toArray(empty) : empty;
   }
 

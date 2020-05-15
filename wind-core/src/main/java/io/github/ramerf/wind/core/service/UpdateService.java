@@ -130,7 +130,8 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    */
   default long updateBatch(@Nonnull final T t, @Nonnull final Consumer<ICondition<T>> consumer)
       throws RuntimeException {
-    return getUpdate(true).where(consumer).update(t, false);
+//    return getUpdate(true).where(consumer).update(t, false);
+    return 0;
   }
 
   /**
@@ -144,7 +145,8 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    */
   default long updateBatchAll(@Nonnull final T t, @Nonnull final Consumer<ICondition<T>> consumer)
       throws RuntimeException {
-    return getUpdate(true).where(consumer).update(t, true);
+//    return getUpdate(true).where(consumer).update(t, true);
+    return 0;
   }
 
   /**

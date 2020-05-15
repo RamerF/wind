@@ -77,7 +77,7 @@ public class SqlHelper {
               .orElse(value.toString());
     }
     if (InterEnum.class.isAssignableFrom(value.getClass())) {
-      return new EnumTypeConverter().convertToJdbc((InterEnum) value).toString();
+      return new EnumTypeConverter().convertToJdbc((InterEnum) value, null).toString();
     }
     if (value.getClass().isArray()) {
       if (value instanceof String[]) {

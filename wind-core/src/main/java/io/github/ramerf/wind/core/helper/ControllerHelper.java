@@ -657,11 +657,12 @@ public final class ControllerHelper {
       CommonException.requireNonNull(exist, ResultCode.API_DATA_NOT_EXIST.desc(String.valueOf(id)));
     }
     T domain = initial(getPoJoClass(invoke));
+    final List<String> includeNullProp = Arrays.asList(includeNullProperties);
     BeanUtils.copyProperties(
         entity,
         domain,
         getNullProp(entity).stream()
-            .filter(prop -> !Arrays.asList(includeNullProperties).contains(prop))
+            .filter(prop -> !includeNullProp.contains(prop))
             .toArray(String[]::new));
     // 额外处理
     entity.redundantValue(domain);

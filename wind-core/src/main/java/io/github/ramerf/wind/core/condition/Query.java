@@ -249,7 +249,7 @@ public class Query {
     ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz)
-            : new BeanResultHandler<>(clazz);
+            : new BeanResultHandler<>(clazz, queryColumns);
     return resultHandler.handle(result.get(0));
   }
 
@@ -287,7 +287,7 @@ public class Query {
     ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz)
-            : new BeanResultHandler<>(clazz);
+            : new BeanResultHandler<>(clazz, queryColumns);
     return resultHandler.handle(list);
   }
 
@@ -345,7 +345,7 @@ public class Query {
     ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz)
-            : new BeanResultHandler<>(clazz);
+            : new BeanResultHandler<>(clazz, queryColumns);
     return resultHandler.handle(list);
   }
 
@@ -414,7 +414,7 @@ public class Query {
     ResultHandler resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz)
-            : new BeanResultHandler<>(clazz);
+            : new BeanResultHandler<>(clazz, queryColumns);
     return CollectionUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
   }
 
@@ -468,7 +468,7 @@ public class Query {
     ResultHandler<Map<String, Object>, R> resultHandler =
         BeanUtils.isPrimitiveType(respClazz) || respClazz.isArray()
             ? new PrimitiveResultHandler<>(respClazz)
-            : new BeanResultHandler<>(respClazz);
+            : new BeanResultHandler<>(respClazz, queryColumns);
     return resultHandler.handle(list);
   }
 

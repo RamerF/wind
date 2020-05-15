@@ -37,16 +37,18 @@ public class SnowflakeIdWorker {
   private final long sequenceMask = ~(-1L << sequenceBits);
 
   /** 工作机器ID(0~31) */
-  private long workerId;
+  public static long workerId;
 
   /** 数据中心ID(0~31) */
-  private long datacenterId;
+  public static long datacenterId;
 
   /** 毫秒内序列(0~4095) */
   private long sequence = 0L;
 
   /** 上次生成ID的时间截 */
   private long lastTimestamp = -1L;
+
+  public SnowflakeIdWorker() {}
   /**
    * 构造函数
    *
@@ -62,8 +64,16 @@ public class SnowflakeIdWorker {
       throw new IllegalArgumentException(
           String.format("datacenter Id can't be greater than %d or less than 0", maxDatacenterId));
     }
-    this.workerId = workerId;
-    this.datacenterId = dataCenterId;
+    SnowflakeIdWorker.workerId = workerId;
+    SnowflakeIdWorker.datacenterId = dataCenterId;
+  }
+
+  public static void setWorkerId(final long workerId) {
+    SnowflakeIdWorker.workerId = workerId;
+  }
+
+  public static void setDatacenterId(final long datacenterId) {
+    SnowflakeIdWorker.datacenterId = datacenterId;
   }
 
   // ==============================Methods==========================================

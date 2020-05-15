@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.converter;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import java.sql.PreparedStatement;
 import java.util.Objects;
 
 /**
@@ -11,7 +12,7 @@ import java.util.Objects;
  */
 public class EnumTypeConverter implements TypeConverter<InterEnum, Integer> {
   @Override
-  public Integer convertToJdbc(InterEnum interEnum) {
+  public Integer convertToJdbc(InterEnum interEnum, final PreparedStatement ps) {
     return Objects.nonNull(interEnum) ? interEnum.value() : null;
   }
 

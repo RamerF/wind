@@ -4,7 +4,6 @@ import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
@@ -12,7 +11,6 @@ import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.Objects;
-import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -182,15 +180,8 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   /** 添加查询对象(列/聚合函数). */
   private QueryColumn<T> add(
       final IFunction<T, ?> function, final String alia, final SqlFunction sqlFunction) {
-    final QueryAlia queryAlia = QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia());
-    queryEntityMetaData.setTableName(queryAlia.getTableName());
-    queryEntityMetaData.setFromTable(
-        queryAlia
-            .getTableName()
-            .concat(Constant.DEFAULT_SPLIT_SPACE)
-            .concat(queryAlia.getTableAlia()));
-    Optional.ofNullable(sqlFunction).ifPresent(o -> queryAlia.setSqlFunction(sqlFunction));
-    queryEntityMetaData.queryAlias.add(queryAlia);
+    queryEntityMetaData.queryAlias.add(
+        QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia(), sqlFunction));
     return this;
   }
 

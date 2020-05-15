@@ -1,14 +1,18 @@
 package io.github.ramerf.wind.core.util;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.InterService;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AdvisedSupport;
 import org.springframework.aop.framework.AopProxy;
@@ -26,8 +30,9 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @SuppressWarnings({"unused"})
 public final class EntityUtils {
-  private static final Map<Class<?>, WeakReference<Class<?>>> SERVICE_GENERIC = new HashMap<>();
-  private static final Map<Class<?>, WeakReference<List<Field>>> POJO_FIELD_MAP = new HashMap<>();
+  /** {@link BaseService} 泛型{@link AbstractEntityPoJo} */
+  private static final Map<Class<?>, WeakReference<Class<?>>> SERVICE_POJO_MAP =
+      new ConcurrentHashMap<>();
 
   /**
    * 获取对象所有(<code>private && !static && !transient</code>)保存到数据库的属性.<br>
@@ -100,6 +105,40 @@ public final class EntityUtils {
   }
 
   /**
+   * 获取对象所有非空(<code>private && !static && !transient</code>)属性对应的数据库列名.<br>
+   * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
+   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
+   *
+   * @see Column#name()
+   * @see StringUtils#camelToUnderline(String)
+   * @see Field#getName()
+   * @return string
+   */
+  public static <T> List<String> getNonNullColumns(@Nonnull final T t) {
+    final List<String> columns =
+        getNonNullColumnFields(t).stream().map(EntityUtils::fieldToColumn).collect(toList());
+    log.debug("getNonNullColumns:[{}]", columns);
+    return columns;
+  }
+
+  /**
+   * 获取对象所有非空(<code>private && !static && !transient</code>)属性对应的数据库列名,以逗号分割.<br>
+   * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
+   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
+   *
+   * @see Column#name()
+   * @see StringUtils#camelToUnderline(String)
+   * @see Field#getName()
+   * @see #getNonNullColumns(Object)
+   * @return string
+   */
+  public static <T> String getNonNullColumn(@Nonnull final T t) {
+    final String nonNullColumn = String.join(",", getNonNullColumns(t));
+    log.debug("getNonNullColumn:[{}]", nonNullColumn);
+    return nonNullColumn;
+  }
+
+  /**
    * 获取对象属性对应的数据库列名.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
@@ -121,6 +160,25 @@ public final class EntityUtils {
   }
 
   /**
+   * 表名: @Entity > @TableName > 类名(驼封转下划线)
+   *
+   * @param clazz the clazz
+   * @param <T> the type t
+   * @return the table name
+   */
+  public static <T> String getTableName(final Class<T> clazz) {
+    final Entity annotEntity = clazz.getAnnotation(Entity.class);
+    final TableName annotTableName = clazz.getAnnotation(TableName.class);
+    // 表名: @Entity > @TableName > 类名(驼封转下划线)
+    if (Objects.nonNull(annotEntity)) {
+      return annotEntity.name();
+    } else if (Objects.nonNull(annotTableName)) {
+      return annotTableName.value();
+    } else {
+      return StringUtils.camelToUnderline(clazz.getSimpleName());
+    }
+  }
+  /**
    * 获取Service泛型参数poJo.
    *
    * @param <T> the type parameter
@@ -134,7 +192,9 @@ public final class EntityUtils {
     Class<S> serviceClazz = (Class<S>) getProxyTarget(service).getClass();
     Class<T> classes =
         (Class<T>)
-            Optional.ofNullable(SERVICE_GENERIC.get(serviceClazz)).map(Reference::get).orElse(null);
+            Optional.ofNullable(SERVICE_POJO_MAP.get(serviceClazz))
+                .map(Reference::get)
+                .orElse(null);
     if (Objects.nonNull(classes)) {
       return classes;
     }
@@ -147,7 +207,7 @@ public final class EntityUtils {
     } catch (ClassNotFoundException ignored) {
       throw CommonException.of("无法获取父类泛型");
     }
-    SERVICE_GENERIC.put(serviceClazz, new WeakReference<>(classes));
+    SERVICE_POJO_MAP.put(serviceClazz, new WeakReference<>(classes));
     return classes;
   }
 
