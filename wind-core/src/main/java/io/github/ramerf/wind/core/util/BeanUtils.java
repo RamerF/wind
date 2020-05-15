@@ -162,12 +162,12 @@ public final class BeanUtils {
             });
   }
 
-  public static <T> Field getFieldFromBeanFunction(
-      final BeanFunction beanFunction, Class<T> clazz) {
+  public static java.lang.reflect.Type getGenericType(final BeanFunction beanFunction) {
     final SerializedLambda lambda = LambdaUtils.serializedLambda(beanFunction);
     try {
       return getClazz(lambda.getImplClass())
-          .getDeclaredField(BeanUtils.methodToProperty(lambda.getImplMethodName()));
+          .getDeclaredField(BeanUtils.methodToProperty(lambda.getImplMethodName()))
+          .getGenericType();
     } catch (Exception e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);

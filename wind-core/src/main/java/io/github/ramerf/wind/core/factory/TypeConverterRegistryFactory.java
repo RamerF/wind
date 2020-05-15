@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.factory;
 
 import io.github.ramerf.wind.core.converter.*;
+import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
 import java.lang.reflect.Type;
 import java.util.*;
 import javax.annotation.Nonnull;
@@ -26,13 +27,16 @@ public class TypeConverterRegistryFactory {
 
   /** 初始化默认的类型转换器. */
   private void initDefaultTypeConverters() {
-    addTypeConverters(new EnumTypeConverter());
     addTypeConverters(new BigDecimalTypeConverter());
-    addTypeConverters(new StringArrayTypeConverter());
-    addTypeConverters(new LongArrayTypeConverter());
+    addTypeConverters(new BitSetTypeConverter());
+    addTypeConverters(new DateTypeConverter());
+    addTypeConverters(new EnumTypeConverter());
     addTypeConverters(new IntegerArrayTypeConverter());
     addTypeConverters(new ListLongArrayTypeConverter());
     addTypeConverters(new ListStringArrayTypeConverter());
+    addTypeConverters(new LongArrayTypeConverter());
+    addTypeConverters(new StringArrayTypeConverter());
+    addTypeConverters(new TimestampTypeConverter());
   }
 
   /**
@@ -79,27 +83,28 @@ public class TypeConverterRegistryFactory {
    * 获取Jdbc值转换为Java值类型转换器,用于将数据库值转换为Java类型.<br>
    * 后面可能会再添加一个Class/Field参数(用于获取字段上的转换器注解)
    *
-   * @param value jdbc查询值
-   * @param parameterType java类型
+   * <p>valueType {@link ValueType}
+   *
    * @return the type converter
    * @see TypeConverter
    */
-  public TypeConverter getToJavaTypeConverter(final Object value, final Type parameterType) {
+  public TypeConverter getToJavaTypeConverter(final ValueType valueType) {
+    final Object value = valueType.getOriginVal();
     if (Objects.isNull(value)) {
       return null;
     }
+    final Type genericParameterType = valueType.getGenericParameterType();
     return getTypeConverters().stream()
         .filter(
             typeConverter -> {
               final Type javaClass = typeConverter.getJavaClass();
               final Type jdbcClass = typeConverter.getJdbcClass();
               try {
-                return (Objects.equals(javaClass, parameterType)
+                return (Objects.equals(javaClass, genericParameterType)
                         || Class.forName(javaClass.getTypeName())
-                            .isAssignableFrom(Class.forName(parameterType.getTypeName())))
+                            .isAssignableFrom(Class.forName(genericParameterType.getTypeName())))
                     && Objects.equals(value.getClass(), jdbcClass);
-              } catch (ClassNotFoundException e) {
-                log.warn("getToJavaTypeConverter:[{}]", e.getMessage());
+              } catch (ClassNotFoundException ignored) {
               }
               return false;
             })
@@ -111,25 +116,25 @@ public class TypeConverterRegistryFactory {
    * 获取Java值转换为Jdbc值类型转换器,用于将数据库值转换为Java类型.<br>
    * 后面可能会再添加一个Class/Field参数(用于获取字段上的转换器注解)
    *
-   * @param value java值
-   * @param parameterType java类型
+   * @param valueType {@link ValueType}
    * @return the type converter
    * @see TypeConverter
    */
-  public TypeConverter getToJdbcTypeConverter(final Object value, final Type parameterType) {
+  public TypeConverter getToJdbcTypeConverter(final ValueType valueType) {
+    final Object value = valueType.getOriginVal();
     if (Objects.isNull(value)) {
       return null;
     }
+    final Type genericParameterType = valueType.getGenericParameterType();
     return getTypeConverters().stream()
         .filter(
             typeConverter -> {
+              final Type javaClass = typeConverter.getJavaClass();
               try {
-                final Type javaClass = typeConverter.getJavaClass();
-                return Objects.equals(javaClass, parameterType)
+                return Objects.equals(javaClass, genericParameterType)
                     || Class.forName(javaClass.getTypeName())
-                        .isAssignableFrom(Class.forName(parameterType.getTypeName()));
-              } catch (ClassNotFoundException e) {
-                log.warn("getToJdbcTypeConverter:[{}]", e.getMessage());
+                        .isAssignableFrom(Class.forName(genericParameterType.getTypeName()));
+              } catch (ClassNotFoundException ignored) {
               }
               return false;
             })

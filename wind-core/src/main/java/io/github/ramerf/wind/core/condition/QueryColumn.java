@@ -20,7 +20,10 @@ import static io.github.ramerf.wind.core.entity.constant.Constant.SEMICOLON;
 import static java.util.stream.Collectors.joining;
 
 /**
- * sql查询列定义.即 select 后跟的字段.
+ * sql查询列定义.即 select 后跟的字段.<br>
+ * 注意:当查询所有字段(未指定查询列)时,如果属性的下划线格式与对应数据库列不匹配,返回对象的该属性值将始终为零值.<br>
+ * 可以指定查询列或者确保返回对象的属性下划线格式与数据库列对应,详情见<br>
+ * wind-test: DemoProductPoJo#getColumn
  *
  * @param <T> the type parameter
  * @author Tang Xiaofeng

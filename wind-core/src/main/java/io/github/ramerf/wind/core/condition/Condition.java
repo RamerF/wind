@@ -3,14 +3,12 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.function.*;
+import io.github.ramerf.wind.core.function.IConsumer;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.*;
-import io.github.ramerf.wind.core.support.ChainLinkedList;
-import io.github.ramerf.wind.core.support.ChainList;
+import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -38,9 +36,9 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   /** where后的字符串,参数占位符为 ?. */
   private final List<String> conditionSql = new LinkedList<>();
   /** 占位符对应的值. */
-  private final ChainList<Object> values = new ChainLinkedList<>();
+  private final List<Object> values = new LinkedList<>();
 
-  private final Map<BeanFunction, List<Object>> FIELD_VALUE_MAP = new LinkedHashMap<>();
+  private final List<ValueType> valueTypes = new LinkedList<>();
 
   private boolean containLogicNotDelete = false;
 
@@ -74,7 +72,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -96,7 +94,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(MatchPattern.NOT_EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -118,7 +116,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(MatchPattern.GREATER.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -140,7 +138,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(MatchPattern.GE.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -162,7 +160,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(MatchPattern.LESS.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -184,7 +182,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(MatchPattern.LE.operator)
               .concat(toPreFormatSqlVal(value)));
       values.add(value);
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -205,7 +203,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
       values.add(PERCENT.operator.concat(String.valueOf(value)).concat(PERCENT.operator));
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -226,7 +224,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
       values.add(PERCENT.operator.concat(String.valueOf(value)));
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -247,7 +245,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
       values.add(String.valueOf(value).concat(PERCENT.operator));
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -268,7 +266,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
       values.add(PERCENT.operator.concat(String.valueOf(value)).concat(PERCENT.operator));
-      FIELD_VALUE_MAP.put(field, Collections.singletonList(value));
+      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -296,8 +294,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                       MatchPattern.BETWEEN.operator,
                       toPreFormatSqlVal(start),
                       toPreFormatSqlVal(end))));
-      values.add(start).add(end);
-      FIELD_VALUE_MAP.put(field, Arrays.asList(start, end));
+      values.add(start);
+      values.add(end);
+      valueTypes.add(ValueType.of(start, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(end, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -323,8 +323,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(
                   String.format(
                       NOT_BETWEEN.operator, toPreFormatSqlVal(start), toPreFormatSqlVal(end))));
-      values.add(start).add(end);
-      FIELD_VALUE_MAP.put(field, Arrays.asList(start, end));
+      values.add(start);
+      values.add(end);
+      valueTypes.add(ValueType.of(start, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(end, BeanUtils.getGenericType(field)));
     }
     return this;
   }
@@ -388,7 +390,11 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(this.values::add);
+      values.forEach(
+          value -> {
+            this.values.add(value);
+            valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+          });
     }
     return this;
   }
@@ -416,7 +422,11 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(this.values::add);
+      values.forEach(
+          value -> {
+            this.values.add(value);
+            valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+          });
     }
     return this;
   }
@@ -479,7 +489,8 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
-      children.values.stream().forEach(values::add);
+      values.addAll(children.values);
+      valueTypes.addAll(children.valueTypes);
     }
     return this;
   }
@@ -519,7 +530,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
             .concat(toPreFormatSqlVal(logicNotDelete)));
     values.add(logicNotDelete);
     final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setIsDelete;
-    FIELD_VALUE_MAP.put(beanFunction, Collections.singletonList(logicNotDelete));
+    valueTypes.add(ValueType.of(logicNotDelete, BeanUtils.getGenericType(beanFunction)));
   }
 
   @Override
@@ -528,24 +539,8 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       appendLogicNotDelete();
       containLogicNotDelete = true;
     }
-    return FIELD_VALUE_MAP.entrySet().stream()
-        .flatMap(
-            entry -> {
-              final List<Object> values = entry.getValue();
-              log.info("getValues:[{}]", values);
-              final BeanFunction beanFunction = entry.getKey();
-              return values.stream()
-                  .map(
-                      value -> {
-                        Type genericFieldType = null;
-                        if (Objects.nonNull(value)) {
-                          final Field field =
-                              BeanUtils.getFieldFromBeanFunction(beanFunction, value.getClass());
-                          genericFieldType = field.getGenericType();
-                        }
-                        return TypeConverterHelper.toJdbcValue(value, genericFieldType, null);
-                      });
-            })
+    return valueTypes.stream()
+        .map(valueType -> TypeConverterHelper.toJdbcValue(valueType, null))
         .collect(toCollection(LinkedList::new));
   }
 

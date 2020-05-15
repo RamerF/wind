@@ -2,9 +2,11 @@ package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.sql.PreparedStatement;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * The type Type converter helper.
@@ -14,19 +16,25 @@ import java.util.Optional;
  */
 @SuppressWarnings("unchecked")
 public class TypeConverterHelper {
-  public static Object toJavaValue(
-      final Object originVal, final Type genericParameterType, final Class<?> parameterType) {
+  public static Object toJavaValue(final ValueType valueType, final Class<?> parameterType) {
     return Optional.of(AppContextInject.getBean(TypeConverterRegistryFactory.class))
-        .map(o -> o.getToJavaTypeConverter(originVal, genericParameterType))
-        .map(converter -> converter.covertFromJdbc(originVal, parameterType))
-        .orElse(originVal);
+        .map(o -> o.getToJavaTypeConverter(valueType))
+        .map(converter -> converter.covertFromJdbc(valueType.originVal, parameterType))
+        .orElse(valueType.originVal);
   }
 
-  public static Object toJdbcValue(
-      final Object originVal, final Type genericFieldType, final PreparedStatement ps) {
+  public static Object toJdbcValue(final ValueType valueType, final PreparedStatement ps) {
     return Optional.of(AppContextInject.getBean(TypeConverterRegistryFactory.class))
-        .map(o -> o.getToJdbcTypeConverter(originVal, genericFieldType))
-        .map(converter -> converter.convertToJdbc(originVal, ps))
-        .orElse(originVal);
+        .map(o -> o.getToJdbcTypeConverter(valueType))
+        .map(converter -> converter.convertToJdbc(valueType.originVal, ps))
+        .orElse(valueType.originVal);
+  }
+
+  @AllArgsConstructor(staticName = "of")
+  public static class ValueType {
+    /** 原始值,可能是java值或数据库值 */
+    @Getter private final Object originVal;
+    /** 泛型参数类型,可能是{@link Field#getGenericType()}或者{@link Method#getGenericParameterTypes()}[0] */
+    @Getter private final Type genericParameterType;
   }
 }

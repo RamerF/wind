@@ -12,14 +12,13 @@ import java.util.*;
 public class ListLongArrayTypeConverter implements TypeConverter<List<Long>, Long[]> {
   @Override
   public Object convertToJdbc(List<Long> javaVal, final PreparedStatement ps) {
-    final Long[] empty = new Long[0];
     try {
       final Connection connection = ps.getConnection();
       return connection.createArrayOf("bigint", javaVal.toArray());
     } catch (SQLException throwables) {
       throwables.printStackTrace();
     }
-    return Objects.nonNull(javaVal) ? javaVal.toArray(empty) : empty;
+    return Objects.nonNull(javaVal) ? javaVal.toArray(new Long[0]) : new Long[0];
   }
 
   @Override

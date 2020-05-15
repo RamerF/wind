@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.converter;
 
-import java.sql.PreparedStatement;
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -11,9 +11,14 @@ import java.util.*;
  */
 public class ListStringArrayTypeConverter implements TypeConverter<List<String>, String[]> {
   @Override
-  public String[] convertToJdbc(List<String> javaVal, final PreparedStatement ps) {
-    final String[] empty = new String[0];
-    return Objects.nonNull(javaVal) ? javaVal.toArray(empty) : empty;
+  public Object convertToJdbc(List<String> javaVal, final PreparedStatement ps) {
+    try {
+      final Connection connection = ps.getConnection();
+      return connection.createArrayOf("varchar", javaVal.toArray());
+    } catch (SQLException throwables) {
+      throwables.printStackTrace();
+    }
+    return Objects.nonNull(javaVal) ? javaVal.toArray(new String[0]) : new String[0];
   }
 
   @Override

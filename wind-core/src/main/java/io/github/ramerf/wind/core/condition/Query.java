@@ -215,12 +215,7 @@ public class Query {
    * @return the r
    */
   public <R> R fetchOne(final Class<R> clazz) {
-    doIfNonEmpty(
-        afterWhereString.toString(),
-        str -> {
-          conditionString = conditionString.concat(str);
-        });
-
+    doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
     final String sql = "SELECT %s FROM %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
@@ -260,12 +255,7 @@ public class Query {
    * @return the list
    */
   public <R> List<R> fetchAll(final Class<R> clazz) {
-    doIfNonEmpty(
-        afterWhereString.toString(),
-        str -> {
-          conditionString = conditionString.concat(str);
-        });
-
+    doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
     final String sql = "SELECT %s FROM %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
@@ -299,11 +289,7 @@ public class Query {
    * @return the list
    */
   public <R> List<R> fetchAll(final Class<R> clazz, final PageRequest pageable) {
-    doIfNonEmpty(
-        afterWhereString.toString(),
-        str -> {
-          conditionString = conditionString.concat(str);
-        });
+    doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
 
     // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
@@ -359,11 +345,7 @@ public class Query {
    * @return the page
    */
   public <R> Page<R> fetchPage(final Class<R> clazz, final PageRequest pageable) {
-    doIfNonEmpty(
-        afterWhereString.toString(),
-        str -> {
-          conditionString = conditionString.concat(str);
-        });
+    doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
 
     // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
@@ -424,11 +406,7 @@ public class Query {
    * @return long long
    */
   public long fetchCount() {
-    doIfNonEmpty(
-        afterWhereString.toString(),
-        str -> {
-          countString = countString.concat(str);
-        });
+    doIfNonEmpty(afterWhereString.toString(), str -> countString = countString.concat(str));
     final boolean nonEmpty = StringUtils.nonEmpty(countString);
     final String sql =
         nonEmpty && countString.contains(GROUP_BY.operator)

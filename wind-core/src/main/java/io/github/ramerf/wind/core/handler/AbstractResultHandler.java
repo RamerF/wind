@@ -60,6 +60,7 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
                     METHODS_MAP.put(clazz, new WeakReference<>(methods));
                     return methods;
                   });
+      // 这里由于查询所有字段使用了*,所以字段名不匹配的时候,无法赋值,为了兼容性,需要把*转换为具体的字段
       this.fieldAliaMap =
           queryColumns.stream()
               .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())

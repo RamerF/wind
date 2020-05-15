@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper;
+import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Method;
 import java.sql.Array;
@@ -23,7 +24,6 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
   }
 
   @Override
-  @SuppressWarnings({"rawtypes", "unchecked"})
   public E handle(Map<String, Object> map) {
     // map = {alia:value}
     if (CollectionUtils.isEmpty(map)) {
@@ -53,7 +53,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       final Class<?> parameterType = method.getParameterTypes()[0];
       final Object finalValue =
           TypeConverterHelper.toJavaValue(
-              value, method.getGenericParameterTypes()[0], parameterType);
+              ValueType.of(value, method.getGenericParameterTypes()[0]), parameterType);
       BeanUtils.invoke(obj, method, finalValue)
           .ifPresent(
               exception ->
