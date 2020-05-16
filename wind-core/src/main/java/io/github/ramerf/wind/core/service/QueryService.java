@@ -1,28 +1,14 @@
 package io.github.ramerf.wind.core.service;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.condition.Condition.MatchPattern;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.service.BaseService.ExtraProp;
-import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.*;
 import org.springframework.data.domain.Sort.Order;
 
 import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
@@ -31,11 +17,10 @@ import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
  * 公共查询接口,<b>注意: 所有的方法忽略已删除记录.</b>
  *
  * @param <T> the type parameter
- * @param <E> the type parameter
  * @author Tang Xiaofeng
  * @since 2020 /1/5
  */
-@SuppressWarnings("all")
+@SuppressWarnings("unused")
 public interface QueryService<T extends AbstractEntityPoJo> extends InterService<T> {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(QueryService.class);
@@ -46,7 +31,8 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return long long
    */
   default long count() {
-    return getRepository().selectCount(null);
+    final QueryColumn<T> queryColumn = getQueryColumn();
+    return getQuery().select(queryColumn).where(queryColumn.getCondition()).fetchCount();
   }
 
   /**
@@ -71,28 +57,6 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    */
   default long count(Consumer<Condition<T>> condition) {
     return count(null, condition);
-  }
-
-  /**
-   * 拼接条件is_delete=false.
-   *
-   * @param extraProps the extra props
-   * @return the long
-   */
-  default long count(List<ExtraProp> extraProps) {
-    return getRepository().selectCount(getWrapper(extraProps));
-  }
-
-  /**
-   * 获取单个PoJo对象.
-   *
-   * @param extraProps 查询条件
-   * @return the one
-   * @see ExtraProp
-   * @see ExtraProp#builder() ExtraProp#builder()ExtraProp#builder()
-   */
-  default T getOne(final List<ExtraProp> extraProps) {
-    return getRepository().selectOne(getWrapper(extraProps));
   }
 
   /**
@@ -172,28 +136,6 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     final Condition<T> condition = queryColumn.getCondition();
     consumer.accept(condition);
     return getQuery().select(queryColumn).where(condition).fetchOne(clazz);
-  }
-
-  /**
-   * 条件查询. 替代方法: {@link BaseService#list(Consumer)}
-   *
-   * @param extraProps 查询条件
-   * @return {@link List <T>}
-   */
-  default List<T> list(List<ExtraProp> extraProps) {
-    return Optional.ofNullable(getRepository().selectList(getWrapper(extraProps)))
-        .orElse(Collections.emptyList());
-  }
-
-  /**
-   * List list.
-   *
-   * @param extraProps the extra props
-   * @param sortColumns the sort columns
-   * @return the list
-   */
-  default List<T> list(List<ExtraProp> extraProps, SortColumn... sortColumns) {
-    return page(-1, -1, extraProps, sortColumns).getRecords();
   }
 
   /**
@@ -282,16 +224,16 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @param page the page
    * @param size the size
    * @param clazz the clazz
-   * @param sortColumns the sort columns
+   * @param sortColumn the sort column
    * @return list list
    */
   default <R> List<R> lists(
       Consumer<Condition<T>> consumer,
       final int page,
       final int size,
-      @Nonnull Class<R> clazz,
-      SortColumn... sortColumns) {
-    final PageRequest pageable = pageRequest(page, size, Arrays.asList(sortColumns));
+      SortColumn sortColumn,
+      @Nonnull Class<R> clazz) {
+    final PageRequest pageable = pageRequest(page, size, sortColumn);
     if (Objects.isNull(pageable)) {
       return Collections.emptyList();
     }
@@ -305,135 +247,18 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
   }
 
   /**
-   * 通过id集合和企业id获取PoJo对象集合.
-   *
-   * @param ids the ids
-   * @param companyId the companyId
-   * @return the list
-   */
-  default List<T> listByIds(final Collection<Long> ids, final long companyId) {
-    return CollectionUtils.isEmpty(ids)
-        ? Collections.emptyList()
-        : lists(condition -> condition.in(T::setId, ids).eq(T::setCompanyId, companyId));
-  }
-
-  /**
-   * 不建议使用该方法.<br>
-   * . 替代方法: {@link BaseService#page(int, int, List, SortColumn...)}}
-   *
-   * @param criteria 查询条件
-   * @param page 当前页号 当page和size同时为-1时,将不会分页.
-   * @param size 每页条目
-   * @return {@link Page <T>}
-   */
-  @Deprecated
-  default Page<T> page(final String criteria, final int page, final int size) {
-    final PageRequest pageable = pageRequest(page, size);
-    return Objects.isNull(pageable)
-        ? new Page<>()
-        : getRepository()
-            .selectPage(
-                new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize()),
-                getWrapper(criteria));
-  }
-
-  /**
-   * Page page.
-   *
-   * @param page the page
-   * @param size the size
-   * @param extraProps the extra props
-   * @param sortColumns the sort columns
-   * @return the page
-   */
-  default Page<T> page(
-      final int page, final int size, List<ExtraProp> extraProps, SortColumn... sortColumns) {
-    final PageRequest pageable = pageRequest(page, size);
-    if (Objects.isNull(pageable)) {
-      return new Page<>();
-    }
-    final Page<T> queryPage = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-    queryPage.setOrders(
-        Stream.of(sortColumns)
-            .map(
-                s -> {
-                  OrderItem orderItem = new OrderItem();
-                  orderItem.setAsc(s.isAsc());
-                  orderItem.setColumn(s.getColumn());
-                  return orderItem;
-                })
-            .collect(Collectors.toList()));
-    return Optional.ofNullable(getRepository().selectPage(queryPage, getWrapper(extraProps)))
-        .orElse(new Page<>());
-  }
-
-  /**
-   * Page page.
-   *
-   * @param page the page
-   * @param size the size
-   * @param extraProps the extra props
-   * @param sortColumns the sort columns
-   * @return the page
-   */
-  default Page<T> page(
-      final int page, final int size, List<ExtraProp> extraProps, List<SortColumn> sortColumns) {
-    final PageRequest pageable = pageRequest(page, size);
-    if (Objects.isNull(pageable)) {
-      return new Page<>();
-    }
-    final Page<T> queryPage = new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize());
-    queryPage.setOrders(
-        sortColumns.stream()
-            .map(
-                s -> {
-                  OrderItem orderItem = new OrderItem();
-                  orderItem.setAsc(s.isAsc());
-                  orderItem.setColumn(s.getColumn());
-                  return orderItem;
-                })
-            .collect(Collectors.toList()));
-    return Optional.ofNullable(getRepository().selectPage(queryPage, getWrapper(extraProps)))
-        .orElse(new Page<>());
-  }
-
-  /**
-   * Page page.
-   *
-   * @param page the page
-   * @param size the size
-   * @param companyId the company id
-   * @param extraProps the extra props
-   * @return the page
-   */
-  default Page<T> page(
-      final int page, final int size, final long companyId, List<ExtraProp> extraProps) {
-    final PageRequest pageable = pageRequest(page, size);
-    return Objects.isNull(pageable)
-        ? new Page<>()
-        : Optional.ofNullable(
-                getRepository()
-                    .selectPage(
-                        new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize()),
-                        getWrapper(companyId, extraProps)))
-            .orElse(new Page<>());
-  }
-
-  /**
    * Page page.
    *
    * @param consumer the consumer
    * @param page the page
    * @param size the size
-   * @param sortColumns the sort columns
+   * @param sortColumn the sort column
    * @return the page
+   * @see #page(Consumer, int, int, SortColumn, Class)
    */
   default Page<T> page(
-      Consumer<QueryColumn<T>> consumer,
-      final int page,
-      final int size,
-      @Nonnull SortColumn... sortColumns) {
-    return page(consumer, page, size, getPoJoClass(this), sortColumns);
+      Consumer<QueryColumn<T>> consumer, final int page, final int size, SortColumn sortColumn) {
+    return page(consumer, page, size, sortColumn, getPoJoClass(this));
   }
 
   /**
@@ -442,17 +267,14 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @param condition the condition
    * @param page the page
    * @param size the size
-   * @param sortColumns the sort columns
+   * @param sortColumn the sort column
    * @return the page
    */
   default Page<T> pages(
-      Consumer<ICondition<T>> condition,
-      final int page,
-      final int size,
-      @Nonnull SortColumn... sortColumns) {
-    final PageRequest pageable = pageRequest(page, size, Arrays.asList(sortColumns));
+      Consumer<ICondition<T>> condition, final int page, final int size, SortColumn sortColumn) {
+    final PageRequest pageable = pageRequest(page, size, sortColumn);
     if (Objects.isNull(pageable)) {
-      return new Page<>();
+      return new PageImpl<>(Collections.emptyList());
     }
     final QueryColumn<T> queryColumn = getQueryColumn();
     condition.accept(queryColumn.getCondition());
@@ -471,7 +293,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @param page the page
    * @param size the size
    * @param clazz the clazz
-   * @param sortColumns the sort columns
+   * @param sortColumn the sort column
    * @return the page
    */
   default <R> Page<R> page(
@@ -480,10 +302,10 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       final int page,
       final int size,
       final Class<R> clazz,
-      @Nonnull SortColumn... sortColumns) {
-    final PageRequest pageable = pageRequest(page, size, Arrays.asList(sortColumns));
+      SortColumn sortColumn) {
+    final PageRequest pageable = pageRequest(page, size, sortColumn);
     if (Objects.isNull(pageable)) {
-      return new Page<>();
+      return new PageImpl<>(Collections.emptyList());
     }
     final QueryColumn<T> queryColumn = getQueryColumn();
     query.accept(queryColumn);
@@ -502,7 +324,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @param condition 查询条件
    * @param page 当前页,从1开始
    * @param size 每页大小
-   * @param sortColumns 排序规则,参考: {@link SortColumn#desc(IFunction)}
+   * @param sortColumn 排序规则,null时按update_time倒序
    * @return the page
    */
   default Page<T> page(
@@ -510,13 +332,13 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       @Nonnull Consumer<Condition<T>> condition,
       final int page,
       final int size,
-      @Nonnull SortColumn... sortColumns) {
+      @Nonnull SortColumn sortColumn) {
     final QueryColumn<T> queryColumn = getQueryColumn();
     query.accept(queryColumn);
     condition.accept(queryColumn.getCondition());
-    final PageRequest pageable = pageRequest(page, size, Arrays.asList(sortColumns));
+    final PageRequest pageable = pageRequest(page, size, sortColumn);
     if (Objects.isNull(pageable)) {
-      return new Page<>();
+      return new PageImpl<>(Collections.emptyList());
     }
     return getQuery()
         .select(queryColumn)
@@ -527,41 +349,23 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
   /**
    * Page page.
    *
-   * @param consumer the consumer
-   * @param page the page
-   * @param size the size
-   * @param sortColumns the sort columns
-   * @return the page
-   */
-  default Page<T> page(
-      @Nonnull Consumer<QueryColumn<T>> consumer,
-      final int page,
-      final int size,
-      @Nonnull List<SortColumn> sortColumns) {
-    return page(consumer, page, size, getPoJoClass(this), sortColumns.toArray(new SortColumn[0]));
-  }
-
-  /**
-   * Page page.
-   *
    * @param <R> the type parameter
    * @param consumer the consumer
    * @param page the page
    * @param size the size
    * @param clazz the clazz
-   * @param sortColumns the sort columns
+   * @param sortColumn the sort column
    * @return the page
    */
-  @SuppressWarnings("unchecked")
   default <R> Page<R> page(
       @Nonnull Consumer<QueryColumn<T>> consumer,
       final int page,
       final int size,
-      @Nonnull Class<R> clazz,
-      @Nonnull SortColumn... sortColumns) {
-    final PageRequest pageable = pageRequest(page, size, Arrays.asList(sortColumns));
+      SortColumn sortColumn,
+      @Nonnull Class<R> clazz) {
+    final PageRequest pageable = pageRequest(page, size, sortColumn);
     if (Objects.isNull(pageable)) {
-      return new Page<>();
+      return new PageImpl<>(Collections.emptyList());
     }
     final QueryColumn<T> queryColumn = getQueryColumn();
     consumer.accept(queryColumn);
@@ -572,153 +376,35 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
   }
 
   /**
-   * 分页条件查询.
-   *
-   * @param companyId the company id
-   * @param criteria 查询条件
-   * @param page 当前页号 当page和size同时为-1时,将不会分页.
-   * @param size 每页条目
-   * @return {@link Page <T>}
-   */
-  @Deprecated
-  default Page<T> page(
-      final long companyId, final String criteria, final int page, final int size) {
-    final PageRequest pageable = pageRequest(page, size);
-    return Objects.isNull(pageable)
-        ? new Page<>()
-        : getRepository()
-            .selectPage(
-                new Page<>(pageable.getPageNumber() + 1, pageable.getPageSize()),
-                getWrapper(companyId, criteria));
-  }
-
-  /**
-   * 获取模糊查询条件,子类根据需要覆写该方法.
-   *
-   * @param criteria the criteria
-   * @return the wrapper
-   */
-  @Deprecated
-  default Wrapper<T> getWrapper(String criteria) {
-    return null;
-  }
-
-  /**
-   * 获取模糊查询条件,子类应该根据需要覆写该方法.
-   *
-   * @param companyId the company id
-   * @param criteria the criteria
-   * @return the wrapper
-   */
-  @Deprecated
-  default Wrapper<T> getWrapper(final long companyId, final String criteria) {
-
-    return null;
-  }
-
-  /**
-   * Gets wrapper.
-   *
-   * @param extraProps the extra props
-   * @return the wrapper
-   */
-  default Wrapper<T> getWrapper(List<ExtraProp> extraProps) {
-    if (CollectionUtils.isEmpty(extraProps)) {
-      return null;
-    }
-    final QueryWrapper<T> query = Wrappers.query();
-    extraProps.forEach(
-        extraProp -> {
-          final MatchPattern pattern = extraProp.getMatchPattern();
-          final String name = extraProp.getName();
-          final List<Object> value = extraProp.getValue();
-          final boolean notEmpty = !CollectionUtils.isEmpty(value) && Objects.nonNull(value.get(0));
-          switch (pattern) {
-            case EQUAL:
-              query.eq(notEmpty, name, value.get(0));
-              break;
-            case NOT_EQUAL:
-              query.ne(notEmpty, name, value.get(0));
-              break;
-            case GREATER:
-              query.gt(notEmpty, name, value.get(0));
-              break;
-            case GE:
-              query.ge(notEmpty, name, value.get(0));
-              break;
-            case LESS:
-              query.lt(notEmpty, name, value.get(0));
-              break;
-            case LE:
-              query.le(notEmpty, name, value.get(0));
-              break;
-            case LIKE:
-              query.like(notEmpty, name, notEmpty ? value.get(0) : "");
-              break;
-            case LIKE_LEFT:
-              query.likeLeft(notEmpty, name, notEmpty ? value.get(0) : "");
-              break;
-            case LIKE_RIGHT:
-              query.likeRight(notEmpty, name, notEmpty ? value.get(0) : "");
-              break;
-            case NOT_LIKE:
-              query.notLike(notEmpty, name, notEmpty ? value.get(0) : "");
-              break;
-            case BETWEEN:
-              query.between(notEmpty, name, value.get(0), value.get(1));
-              break;
-            case NOT_BETWEEN:
-              query.notBetween(notEmpty, name, value.get(0), value.get(1));
-              break;
-            case IS_NULL:
-              query.isNull(notEmpty, name);
-              break;
-            case IS_NOT_NULL:
-              query.isNotNull(notEmpty, name);
-              break;
-            case EXISTS:
-            case NOT_EXISTS:
-              query.notExists(notEmpty, (String) value.get(0));
-              break;
-            case IN:
-              query.in(notEmpty, name, value);
-              break;
-            case NOT_IN:
-              query.notIn(notEmpty, name, value);
-              break;
-            default:
-              throw CommonException.of(String.format("表达式[%s]不支持", pattern.name()));
-          }
-        });
-    // 自动会加上这条语句
-    // query.eq("is_delete", false);
-    return query;
-  }
-
-  /**
-   * Gets wrapper.
-   *
-   * @param companyId the company id
-   * @param extraProps the extra props
-   * @return the wrapper
-   */
-  default Wrapper<T> getWrapper(final long companyId, List<ExtraProp> extraProps) {
-    if (companyId < 1) {
-      throw CommonException.of("条件[company_id]不能为空");
-    }
-    extraProps.add(ExtraProp.of(AbstractEntityPoJo::getCompanyId, MatchPattern.EQUAL, companyId));
-    return getWrapper(extraProps);
-  }
-
-  /**
-   * 获取分页对象.
+   * 获取分页对象,以更新时间倒序.
    *
    * @param page 当前页,从1开始
    * @param size 每页大小
    * @return the page request
    */
   default PageRequest pageRequest(final int page, final int size) {
-    return pageRequest(page, size, Sort.by(Direction.DESC, "updateTime"));
+    return pageRequest(page, size, (SortColumn) null);
+  }
+
+  /**
+   * 获取分页对象,支持排序.
+   *
+   * @param page 当前页,从1开始
+   * @param size 每页大小
+   * @param sortColumn 排序规则,null时以更新时间倒序
+   * @return the page request
+   * @see SortColumn
+   * @see Order
+   * @see Sort
+   */
+  default PageRequest pageRequest(final int page, final int size, SortColumn sortColumn) {
+    // 默认以update_time倒序
+    return pageRequest(
+        page,
+        size,
+        Objects.nonNull(sortColumn)
+            ? sortColumn.getSort()
+            : SortColumn.of().desc(AbstractEntityPoJo::getCreateTime).getSort());
   }
 
   /**
@@ -736,33 +422,5 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     return page == -1
         ? PageRequest.of(0, Integer.MAX_VALUE, sort)
         : PageRequest.of(page - 1, size > 0 ? size : Constant.DEFAULT_PAGE_SIZE, sort);
-  }
-
-  /**
-   * 获取分页对象,支持排序.
-   *
-   * @param page 当前页,从1开始
-   * @param size 每页大小
-   * @param sortColumns 排序规则
-   * @return the page request
-   */
-  default PageRequest pageRequest(final int page, final int size, List<SortColumn> sortColumns) {
-    if (CollectionUtils.isEmpty(sortColumns)) {
-      sortColumns = null;
-    }
-    return pageRequest(
-        page,
-        size,
-        Sort.by(
-            Optional.ofNullable(sortColumns)
-                .orElse(
-                    Collections.singletonList(SortColumn.desc(AbstractEntityPoJo::getCreateTime)))
-                .stream()
-                .map(
-                    sortColumn ->
-                        sortColumn.isAsc()
-                            ? Order.asc(sortColumn.getColumn())
-                            : Order.desc(sortColumn.getColumn()))
-                .collect(Collectors.toList())));
   }
 }

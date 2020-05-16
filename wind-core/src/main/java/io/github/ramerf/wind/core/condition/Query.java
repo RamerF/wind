@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.condition;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.constant.Constant;
@@ -9,16 +8,15 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
-import io.github.ramerf.wind.core.repository.AbstractBaseRepository;
 import io.github.ramerf.wind.core.util.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.*;
 import javax.annotation.Nonnull;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -58,7 +56,6 @@ public class Query {
    2. orderby id not in (?,?) 特性
    3. orderby case when id=? then min_number else max_number end
   */
-  @Resource private AbstractBaseRepository repository;
   private List<QueryColumn<?>> queryColumns;
   private List<Condition<?>> conditions;
   private String queryString;
@@ -391,13 +388,13 @@ public class Query {
     // 每页大小
     final int pageSize = pageable.getPageSize();
     if (CollectionUtils.isEmpty(list)) {
-      return CollectionUtils.toPage(Collections.emptyList(), 0, currentPage, pageSize);
+      return PageUtils.toPage(Collections.emptyList(), 0, currentPage, pageSize);
     }
     ResultHandler resultHandler =
         BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
             ? new PrimitiveResultHandler<>(clazz)
             : new BeanResultHandler<>(clazz, queryColumns);
-    return CollectionUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
+    return PageUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
   }
 
   /**

@@ -19,8 +19,6 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.reflection.ReflectionException;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -223,6 +221,8 @@ public final class BeanUtils {
       classPath = classPath.replaceAll("/", ".");
     }
     try {
+      // 后期需要改成多个加载器,参考: org.apache.ibatis.io.ClassLoaderWrapper#classForName(java.lang.String,
+      // java.lang.ClassLoader[])
       return (Class<T>) Class.forName(classPath);
     } catch (Exception e) {
       log.warn("initial:[{}]", e.getMessage());
@@ -237,17 +237,20 @@ public final class BeanUtils {
    * @param name the name
    * @return the string
    */
-  @SuppressWarnings("all")
   public static String methodToProperty(String name) {
-    if (name.startsWith("is")) {
+    final String is = "is";
+    final String get = "get";
+    final String set = "set";
+    if (name.startsWith(is)) {
       name = name.substring(2);
-    } else if (name.startsWith("get") || name.startsWith("set")) {
-      name = name.substring(3);
     } else {
-      throw new ReflectionException(
-          "Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
+      if (name.startsWith(get) || name.startsWith(set)) {
+        name = name.substring(3);
+      } else {
+        throw new IllegalArgumentException(
+            "Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
+      }
     }
-
     if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
       name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
     }
@@ -263,7 +266,6 @@ public final class BeanUtils {
    * @return 所有子类 set
    * @throws IOException the IOException
    */
-  @SuppressWarnings("unchecked")
   public static <T> Set<Class<? extends T>> scanClasses(
       String packagePatterns, Class<T> assignableType) throws IOException {
     Set<Class<? extends T>> classes = new HashSet<>();
@@ -281,7 +283,7 @@ public final class BeanUtils {
         try {
           ClassMetadata classMetadata =
               new CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
-          Class<T> clazz = (Class<T>) Resources.classForName(classMetadata.getClassName());
+          Class<T> clazz = BeanUtils.getClazz(classMetadata.getClassName());
           if (assignableType == null || assignableType.isAssignableFrom(clazz)) {
             classes.add(clazz);
           }

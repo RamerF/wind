@@ -18,7 +18,7 @@
     <modules>
         <module>wind-core</module>
         <module>wind-annotation</module>
-        <module>wind-test</module>
+        <module>wind-demo</module>
     </modules>
     <distributionManagement>
         <repository>
@@ -36,25 +36,13 @@
         <lombok.version>1.18.10</lombok.version>
         <fastjson.version>1.2.67</fastjson.version>
         <javax.inject.version>1</javax.inject.version>
-        <mybatis-plus.version>3.3.0</mybatis-plus.version>
         <springfox-swagger.version>2.9.2</springfox-swagger.version>
-        <mybatis-spring-boot.version>2.1.0</mybatis-spring-boot.version>
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
         <wind-annotation.version>3.1.0-SNAPSHOT</wind-annotation.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <!-- mybatis的支持 -->
-        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>${mybatis-spring-boot.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
@@ -89,11 +77,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>${mybatis-plus.version}</version>
         </dependency>
         <!-- springfox-swagger2 -->
         <dependency>

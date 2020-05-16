@@ -1,26 +1,28 @@
 package io.github.ramerf.wind.core.helper;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
-import io.github.ramerf.wind.core.entity.response.*;
+import io.github.ramerf.wind.core.entity.response.ResultCode;
+import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import io.github.ramerf.wind.core.util.PageUtils;
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.*;
 
 import static io.github.ramerf.wind.core.entity.response.Rs.*;
-import static io.github.ramerf.wind.core.util.BeanUtils.*;
+import static io.github.ramerf.wind.core.util.BeanUtils.getNullProp;
+import static io.github.ramerf.wind.core.util.BeanUtils.initial;
 import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
 
 /**
@@ -73,10 +75,7 @@ public final class ControllerHelper {
       return fail(collectBindingResult(bindingResult));
     }
     try {
-      final T create = invoke.create(entity);
-      return Objects.isNull(create)
-          ? fail()
-          : ok(json().put("id", create.getId()), ResultCode.API_SUCCESS_EXEC_CREATE.desc());
+      return ok(json().put("id", invoke.create(entity)), ResultCode.API_SUCCESS_EXEC_CREATE.desc());
     } catch (Exception e) {
       return errorResponse(e);
     }
@@ -106,34 +105,6 @@ public final class ControllerHelper {
           final BindingResult bindingResult,
           final String... includeNullProperties) {
     return createOrUpdate(invoke, entity, bindingResult, true, includeNullProperties);
-  }
-
-  /**
-   * Create response entity.
-   *
-   * @param <S> the type parameter
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param <P> the type parameter
-   * @param invoke the invoke
-   * @param entity the entity
-   * @param companyId the company id
-   * @param bindingResult the binding result
-   * @param includeNullProperties the include null properties
-   * @return the response entity
-   */
-  public static <
-          S extends BaseService<T>,
-          T extends AbstractEntityPoJo,
-          R extends AbstractEntityRequest,
-          P>
-      ResponseEntity<Rs<P>> create(
-          final S invoke,
-          final R entity,
-          final long companyId,
-          final BindingResult bindingResult,
-          final String... includeNullProperties) {
-    return createOrUpdate(invoke, entity, bindingResult, true, companyId, includeNullProperties);
   }
 
   /**
@@ -188,7 +159,7 @@ public final class ControllerHelper {
    */
   public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(
       final Page<T> page, final Function<T, R> function) {
-    return ok(CollectionUtils.toPage(page, function, null));
+    return ok(PageUtils.toPage(page, function, null));
   }
 
   /**
@@ -214,10 +185,9 @@ public final class ControllerHelper {
     }
     entity.setId(id);
     try {
-      T update = invoke.update(entity);
-      return Objects.isNull(update)
+      return invoke.update(entity) < 1
           ? notExist(String.valueOf(id))
-          : ok(json().put("id", update.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
+          : ok(json().put("id", entity.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
     } catch (Exception e) {
       return errorResponse(e);
     }
@@ -257,7 +227,7 @@ public final class ControllerHelper {
   /**
    * 执行更新.
    *
-   * @param succCode 执行成功时的响应码,可以为null
+   * @param successCode 执行成功时的响应码,可以为null
    * @param errorCode 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
@@ -267,11 +237,14 @@ public final class ControllerHelper {
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<Long>> update(
-          final S invoke, final T entity, final ResultCode succCode, final ResultCode errorCode) {
+          final S invoke,
+          final T entity,
+          final ResultCode successCode,
+          final ResultCode errorCode) {
     try {
-      return Objects.isNull(invoke.update(entity))
+      return invoke.update(entity) < 1
           ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
-          : Objects.nonNull(succCode) ? ok(entity.getId(), succCode) : ok();
+          : Objects.nonNull(successCode) ? ok(entity.getId(), successCode) : ok();
     } catch (Exception e) {
       return fail(Objects.nonNull(errorCode) ? errorCode : ResultCode.API_FAIL_EXEC_UPDATE);
     }
@@ -310,40 +283,6 @@ public final class ControllerHelper {
   }
 
   /**
-   * Update response entity.
-   *
-   * @param <S> the type parameter
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param <P> the type parameter
-   * @param invoke the invoke
-   * @param entity the entity
-   * @param id the id
-   * @param companyId the company id
-   * @param bindingResult the binding result
-   * @param includeNullProperties the include null properties
-   * @return the response entity
-   */
-  public static <
-          S extends BaseService<T>,
-          T extends AbstractEntityPoJo,
-          R extends AbstractEntityRequest,
-          P>
-      ResponseEntity<Rs<P>> update(
-          final S invoke,
-          final R entity,
-          final long id,
-          final long companyId,
-          final BindingResult bindingResult,
-          final String... includeNullProperties) {
-    if (id < 1) {
-      return wrongFormat("id");
-    }
-    entity.setId(id);
-    return createOrUpdate(invoke, entity, bindingResult, false, companyId, includeNullProperties);
-  }
-
-  /**
    * Update batch response entity.
    *
    * @param <S> the type parameter
@@ -356,13 +295,11 @@ public final class ControllerHelper {
    */
   public static <
           S extends BaseService<T>, T extends AbstractEntityPoJo, R extends AbstractEntityRequest>
-      ResponseEntity<Rs<List<Long>>> updateBatch(
+      ResponseEntity<Rs<String>> updateBatch(
           final S invoke, final List<R> entities, final String... includeNullProperties) {
     try {
-      return ok(
-          invoke.updateBatch(entities, includeNullProperties).stream()
-              .map(AbstractEntityPoJo::getId)
-              .collect(Collectors.toList()));
+      invoke.updateBatchRequest(entities, includeNullProperties);
+      return ok(ResultCode.API_SUCCESS_EXEC_UPDATE);
     } catch (Exception e) {
       return errorResponse(e);
     }
@@ -442,30 +379,6 @@ public final class ControllerHelper {
   }
 
   /**
-   * Delete response entity.
-   *
-   * @param <S> the type parameter
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param invoke the invoke
-   * @param id the id
-   * @param companyId the company id
-   * @return the response entity
-   */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<R>> delete(final S invoke, final long id, final long companyId) {
-    if (id < 1) {
-      return wrongFormat("id");
-    }
-    try {
-      invoke.delete(id, companyId);
-    } catch (Exception e) {
-      return errorResponse(e);
-    }
-    return ok(ResultCode.API_SUCCESS_EXEC_DELETE);
-  }
-
-  /**
    * Delete batch response entity.
    *
    * @param <S> the type parameter
@@ -478,27 +391,6 @@ public final class ControllerHelper {
       ResponseEntity<Rs<String>> deleteBatch(final S invoke, final List<Long> ids) {
     try {
       invoke.deleteBatch(ids);
-    } catch (Exception e) {
-      return errorResponse(e);
-    }
-    return ok(ResultCode.API_SUCCESS_EXEC_DELETE);
-  }
-
-  /**
-   * Delete batch response entity.
-   *
-   * @param <S> the type parameter
-   * @param <T> the type parameter
-   * @param invoke the invoke
-   * @param ids the ids
-   * @param companyId the company id
-   * @return the response entity
-   */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<String>> deleteBatch(
-          final S invoke, final List<Long> ids, final long companyId) {
-    try {
-      invoke.deleteBatch(ids, companyId);
     } catch (Exception e) {
       return errorResponse(e);
     }
@@ -528,7 +420,7 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(final List<T> page) {
-    return ok(CollectionUtils.toPage(page));
+    return ok(PageUtils.toPage(page));
   }
 
   /**
@@ -542,7 +434,7 @@ public final class ControllerHelper {
    */
   public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(
       final List<T> page, final Function<T, R> function, final Predicate<R> filterFunction) {
-    return ok(CollectionUtils.toPage(page, function, filterFunction));
+    return ok(PageUtils.toPage(page, function, filterFunction));
   }
 
   /**
@@ -668,49 +560,20 @@ public final class ControllerHelper {
     entity.redundantValue(domain);
     try {
       log.info("createOrUpdate:[{}]", domain);
-      domain = create ? invoke.create(domain) : invoke.update(domain);
-      return Objects.isNull(domain) || Objects.isNull(domain.getId())
-          ? fail(
-              create
-                  ? ResultCode.API_FAIL_EXEC_ADD.desc()
-                  : ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST.desc())
-          : ok(
+      long row = create ? invoke.create(domain) : invoke.update(domain);
+      return row == 1
+          ? ok(
               json().put("id", domain.getId()),
               create
                   ? ResultCode.API_SUCCESS_EXEC_CREATE.desc()
-                  : ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
+                  : ResultCode.API_SUCCESS_EXEC_UPDATE.desc())
+          : fail(
+              create
+                  ? ResultCode.API_FAIL_EXEC_ADD.desc()
+                  : ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST.desc());
     } catch (Exception e) {
       return errorResponse(e);
     }
-  }
-
-  /**
-   * 创建或更新.
-   *
-   * @param invoke 服务层实现类.
-   * @param entity 要更新的request {@link AbstractEntityRequest} 对象.
-   * @param create 是否是创建.
-   * @param bindingResult 校验器校验结果.
-   * @param <T> 服务层实现类.
-   * @return {@link ResponseEntity}
-   */
-  private static <
-          S extends BaseService<T>,
-          T extends AbstractEntityPoJo,
-          R extends AbstractEntityRequest,
-          P>
-      ResponseEntity<Rs<P>> createOrUpdate(
-          final S invoke,
-          final R entity,
-          final BindingResult bindingResult,
-          final boolean create,
-          final long companyId,
-          final String... includeNullProperties) {
-    // token中的companyId和实体中的companyId不同,拒绝操作
-    if (!create && !Objects.equals(companyId, entity.getCompanyId())) {
-      return forbidden();
-    }
-    return createOrUpdate(invoke, entity, bindingResult, create, includeNullProperties);
   }
 
   private static <R> ResponseEntity<Rs<R>> errorResponse(Exception e) {

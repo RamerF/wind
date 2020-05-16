@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.util;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.BaseService;
@@ -167,16 +166,11 @@ public final class EntityUtils {
    * @return the table name
    */
   public static <T> String getTableName(final Class<T> clazz) {
-    final Entity annotEntity = clazz.getAnnotation(Entity.class);
-    final TableName annotTableName = clazz.getAnnotation(TableName.class);
-    // 表名: @Entity > @TableName > 类名(驼封转下划线)
-    if (Objects.nonNull(annotEntity)) {
-      return annotEntity.name();
-    } else if (Objects.nonNull(annotTableName)) {
-      return annotTableName.value();
-    } else {
-      return StringUtils.camelToUnderline(clazz.getSimpleName());
-    }
+    final Entity entity = clazz.getAnnotation(Entity.class);
+    // 表名: @Entity#name > 类名(驼封转下划线)
+    return Objects.nonNull(entity) && StringUtils.nonEmpty(entity.name())
+        ? entity.name()
+        : StringUtils.camelToUnderline(clazz.getSimpleName());
   }
   /**
    * 获取Service泛型参数poJo.

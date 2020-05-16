@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.entity.enums;
 
-import com.baomidou.mybatisplus.core.enums.IEnum;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.EnumUtils;
@@ -10,14 +9,13 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public interface InterEnum extends IEnum<Integer>, Serializable {
+public interface InterEnum extends Serializable {
   Logger log = LoggerFactory.getLogger(InterEnum.class);
 
   Integer value();
 
   String desc();
 
-  @Override
   default Integer getValue() {
     return value();
   }
