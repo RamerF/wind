@@ -45,7 +45,7 @@ public class DemoProductServiceImpl implements DemoProductService {
   }
 
   @Cacheable(
-      value = "tech.yooo.ratel.wind.service.impl.DemoProductServiceImpl",
+      value = "io.github.ramerf.wind.demo.service.impl.DemoProductServiceImpl",
       key = "caches[0].name+'('+#id+')'")
   @Override
   public DemoProductPoJo redisCache(final long id) {
@@ -54,7 +54,7 @@ public class DemoProductServiceImpl implements DemoProductService {
 
   @Override
   @CacheEvict(
-      value = "tech.yooo.ratel.wind.service.impl.DemoProductServiceImpl",
+      value = "io.github.ramerf.wind.demo.service.impl.DemoProductServiceImpl",
       key = "caches[0].name+'('+#poJo.id+')'")
   @Transactional(rollbackFor = Exception.class)
   public void redisCacheClear(final DemoProductPoJo poJo) {

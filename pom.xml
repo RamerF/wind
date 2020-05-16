@@ -12,8 +12,8 @@
     <packaging>pom</packaging>
 
     <groupId>io.github.ramerf</groupId>
-    <artifactId>ratel-wind</artifactId>
-    <name>ratel-wind</name>
+    <artifactId>wind</artifactId>
+    <name>wind</name>
     <version>3.1.0-SNAPSHOT</version>
     <modules>
         <module>wind-core</module>
