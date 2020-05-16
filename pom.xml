@@ -14,7 +14,7 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>ratel-wind</artifactId>
     <name>ratel-wind</name>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
     <modules>
         <module>wind-core</module>
         <module>wind-annotation</module>
@@ -42,7 +42,7 @@
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <wind-annotation.version>3.0.0-SNAPSHOT</wind-annotation.version>
+        <wind-annotation.version>3.1.0-SNAPSHOT</wind-annotation.version>
     </properties>
     <dependencies>
         <dependency>
