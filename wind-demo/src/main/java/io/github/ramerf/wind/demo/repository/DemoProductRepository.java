@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
  * @since 2019/12/17
  */
 @Repository
-public class DemoProductRepository {}
+public class DemoProductRepository {
+  // 作为示例,如果接入其它持久化框架如mybatis或者jpa等,这里改为对应的写法即可
+}

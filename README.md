@@ -1,6 +1,33 @@
-﻿# 功能
+﻿# wind
 
 ---
+基于spring-boot的快速开发框架.
+
+### 特性
+ - 查询支持返回指定列,返回基本类型(Long/BigDecimal等)
+ - lambda方式构造条件,支持类型推断
+ - 基于jdbc-template
+ - service层切入,repository层依然可以使用其它持久化框架
+
+### 开始使用
+ 1. 引入jar包:
+    ```xml
+    <dependency>
+        <groupId>io.github.ramerf</groupId>
+        <artifactId>wind-core</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
+    </dependency>
+    ```
+ 2. 新建 pojo 实体`DemoProductPoJo`继承于`AbstractEntityPoJo`
+    ```java
+    public class DemoProductPoJo extends AbstractEntityPoJo{}
+    ```
+ 3. 新建 service `DemoProductService`继承于`BaseService`
+    ```java
+    public interface DemoProductService extends BaseService<DemoProductPoJo> {}
+    ```
+ 4. 注入`DemoProduceService`即可使用.
+   
 
 ### 功能
 #### controller层
@@ -112,5 +139,5 @@
     - 包注释
     - 测试项目
     - 部分函数支持(待测试)
-### 进行中
+#### 进行中
  - [ ] 批量新增性能优化,待测试

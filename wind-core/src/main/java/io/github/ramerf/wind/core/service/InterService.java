@@ -176,7 +176,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
   }
 
   /**
-   * Gets repository.
+   * 该方法作为扩展,可在service接口中获取到repository.
    *
    * @param <U> the type parameter
    * @return the repository
