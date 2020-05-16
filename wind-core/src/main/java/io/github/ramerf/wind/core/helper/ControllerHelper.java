@@ -29,7 +29,7 @@ import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
  * 简化Controller操作.
  *
  * @author Tang Xiaofeng
- * @since 2019/12/26
+ * @since 2019 /12/26
  */
 @Slf4j
 @SuppressWarnings({"unused", "rawtypes"})
@@ -37,12 +37,12 @@ public final class ControllerHelper {
   /**
    * 执行创建.
    *
-   * @param error 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
+   * @param error 执行失败时的错误码,可以为null
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R> void create(
       final S invoke, final T entity, final ResultCode error) {
@@ -116,7 +116,7 @@ public final class ControllerHelper {
    * @param invoke the service
    * @param id the id
    * @return the entity
-   * @see #detail(BaseService, long, Function)
+   * @see #detail(BaseService, long, Function) #detail(BaseService, long, Function)
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<R>> detail(final S invoke, final long id) {
@@ -132,11 +132,7 @@ public final class ControllerHelper {
    * @param invoke the service
    * @param id the id
    * @param function 对查询到的数据执行额外的处理,例:<br>
-   *     <code>
-   *      poJo -> {
-   *        poJo.setPassword(null);
-   *      }
-   *     </code>
+   *     <code>      poJo -&gt; {        poJo.setPassword(null);      }     </code>
    * @return the entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
@@ -201,7 +197,9 @@ public final class ControllerHelper {
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
-   * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode)
+   * @return the response entity
+   * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode) #update(BaseService,
+   *     AbstractEntityPoJo, ResultCode, ResultCode)
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<Long>> update(final S invoke, final T entity) {
@@ -211,13 +209,15 @@ public final class ControllerHelper {
   /**
    * 执行更新.
    *
-   * @param errorCode 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
-   * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode)
+   * @param errorCode 执行失败时的错误码,可以为null
+   * @return the response entity
+   * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode) #update(BaseService,
+   *     AbstractEntityPoJo, ResultCode, ResultCode)
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<Long>> update(final S invoke, final T entity, final ResultCode errorCode) {
@@ -227,13 +227,14 @@ public final class ControllerHelper {
   /**
    * 执行更新.
    *
-   * @param successCode 执行成功时的响应码,可以为null
-   * @param errorCode 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
    * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
+   * @param successCode 执行成功时的响应码,可以为null
+   * @param errorCode 执行失败时的错误码,可以为null
+   * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<Long>> update(
@@ -331,12 +332,13 @@ public final class ControllerHelper {
   /**
    * 执行删除,不包含返回值.
    *
-   * @param runnable 执行删除操作
-   * @param success 删除成功执行方法
-   * @param errorCode 执行失败时的错误码,可以为null
    * @param <S> the service
    * @param <T> the type parameter
    * @param <R> the type parameter
+   * @param runnable 执行删除操作
+   * @param success 删除成功执行方法
+   * @param errorCode 执行失败时的错误码,可以为null
+   * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<String>> delete(
@@ -356,13 +358,14 @@ public final class ControllerHelper {
   /**
    * 执行删除,包含返回值.
    *
+   * @param <S> the service
+   * @param <T> the type parameter
+   * @param <R> the type parameter
    * @param result 执行删除操作后的结果
    * @param function 返回结果处理,如参为删除返回结果<br>
    *     注意: 批量删除时,如果返回个数与实际个数不同(即只删除了部分记录)
    * @param errorCode 执行失败时的错误码,可以为null
-   * @param <S> the service
-   * @param <T> the type parameter
-   * @param <R> the type parameter
+   * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
       ResponseEntity<Rs<String>> delete(
@@ -413,8 +416,9 @@ public final class ControllerHelper {
   }
 
   /**
-   * 将 {@link List} 转换为 {@link Page}. @param <T> the type parameter
+   * 将 {@link List} 转换为 {@link Page}.
    *
+   * @param <T> the type parameter
    * @param <R> the type parameter
    * @param page the page
    * @return the response entity
@@ -424,8 +428,9 @@ public final class ControllerHelper {
   }
 
   /**
-   * 将 {@link List} 转换为 {@link Page}. @param <T> the type parameter
+   * 将 {@link List} 转换为 {@link Page}
    *
+   * @param <T> the type parameter
    * @param <R> the type parameter
    * @param page the page
    * @param function the function

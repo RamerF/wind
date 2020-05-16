@@ -21,7 +21,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * 创建一个空的条件,包含表信息.
    *
    * @return the Condition
-   * @see Condition#of(QueryColumn)
+   * @see Condition#of(QueryColumn) Condition#of(QueryColumn)
    */
   Condition<T> condition();
 
@@ -99,7 +99,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   <V> Condition<T> notIn(boolean condition, IConsumer<T, V> field, Collection<V> values);
 
   /**
-   * 连表条件. @param <R> the type parameter
+   * 连表条件.
    *
    * @param <R> the type parameter
    * @param <Q> the type parameter
@@ -114,7 +114,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
       final IFunction<R, ?> field2);
 
   /**
-   * 连表条件. @param <R> the type parameter
+   * 连表条件.
    *
    * @param <R> the type parameter
    * @param <Q> the type parameter
@@ -358,6 +358,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   /**
    * Is null condition.
    *
+   * @param <V> the type parameter
    * @param field the field
    * @return the condition
    */
@@ -366,6 +367,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   /**
    * Is null condition.
    *
+   * @param <V> the type parameter
    * @param condition the condition
    * @param field the field
    * @return the condition
@@ -375,6 +377,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   /**
    * Is not null condition.
    *
+   * @param <V> the type parameter
    * @param field the field
    * @return the condition
    */
@@ -383,6 +386,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   /**
    * Is not null condition.
    *
+   * @param <V> the type parameter
    * @param condition the condition
    * @param field the field
    * @return the condition

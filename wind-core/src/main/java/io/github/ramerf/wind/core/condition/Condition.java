@@ -551,13 +551,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     EQUAL("="),
     /** != */
     NOT_EQUAL("!="),
-    /** > */
+    /** &gt; */
     GREATER(">"),
-    /** >= */
+    /** &gt;= */
     GE(">="),
-    /** < */
+    /** &lt; */
     LESS("<"),
-    /** <= */
+    /** &lt;= */
     LE("<="),
     LIKE_PLAIN(" LIKE %s "),
     /** LIKE %criteria% */
@@ -585,13 +585,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     IN(" IN (%s)"),
     /** NOT IN () */
     NOT_IN(" NOT IN (%s)"),
-    /** >ANY() */
+    /** &gt;ANY() */
     GREATER_ANY(" >ANY(%s)"),
-    /** >=ANY() */
+    /** &gt;=ANY() */
     GE_ANY(" >=ANY(%s)"),
-    /** <ANY() */
+    /** &lt;ANY() */
     LESS_ANY(" <ANY(%s)"),
-    /** <=ANY() */
+    /** &lt;=ANY() */
     LE_ANY(" <=ANY(%s)");
 
     private final String operator;

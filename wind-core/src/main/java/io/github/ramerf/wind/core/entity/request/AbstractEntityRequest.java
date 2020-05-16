@@ -16,8 +16,9 @@ import static io.github.ramerf.wind.core.util.BeanUtils.initial;
 /**
  * API请求抽象类.
  *
+ * @param <T> the type parameter
  * @author Tang Xiaofeng
- * @since 2019/12/6
+ * @since 2019 /12/6
  */
 @Slf4j
 @Data
@@ -52,6 +53,8 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    * 获取Request实体对应的的PoJo对象. <br>
    * 注意: 使用该方法,需要Request继承的AbstractEntity具有PoJo泛型.<br>
    * 例如: public class DemoProductRequest extends AbstractEntityRequest&lt;DemoProductPoJo&gt;
+   *
+   * @return the t
    */
   @SuppressWarnings({"unchecked"})
   public T poJo() {

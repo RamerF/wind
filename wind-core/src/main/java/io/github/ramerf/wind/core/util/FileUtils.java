@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * 文件工具类.
  *
  * @author Tang Xiaofeng
- * @since 2020/2/29
+ * @since 2020 /2/29
  */
 @Slf4j
 public class FileUtils {
@@ -26,9 +26,11 @@ public class FileUtils {
   /**
    * 将字节数组转换为临时文件并在执行额外操作后自动删除.
    *
+   * @param <T> the type parameter
    * @param bys 字节数组
    * @param suffix 文件后缀,如: jpg,默认为tmp
    * @param consumer 文件名
+   * @return the t
    */
   @SuppressWarnings("ResultOfMethodCallIgnored")
   public static <T> T writeTmpOps(byte[] bys, final String suffix, Function<File, T> consumer) {

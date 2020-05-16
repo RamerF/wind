@@ -48,7 +48,7 @@ public interface ResultHandler<T, E> {
     private String columnName;
     /** 列别名. */
     private String columnAlia;
-    /** 表名: @Entity#name > 类名(驼封转下划线). */
+    /** 表名: @Entity#name &gt; 类名(驼封转下划线). */
     private String tableName;
     /** 表别名. */
     private String tableAlia;

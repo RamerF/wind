@@ -120,7 +120,13 @@ public final class BeanUtils {
         .collect(toList());
   }
 
-  /** 获取所有(包含父类)private属性. */
+  /**
+   * 获取所有(包含父类)private属性.
+   *
+   * @param clazz the clazz
+   * @param fields the fields
+   * @return the list
+   */
   public static List<Field> retrievePrivateFields(
       @Nonnull final Class<?> clazz, @Nonnull final List<Field> fields) {
     return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
@@ -141,6 +147,12 @@ public final class BeanUtils {
     return fields;
   }
 
+  /**
+   * Gets write methods.
+   *
+   * @param clazz the clazz
+   * @return the write methods
+   */
   public static List<Method> getWriteMethods(final Class<?> clazz) {
     return Optional.ofNullable(WRITE_METHOD_MAP.get(clazz))
         .map(Reference::get)
@@ -160,6 +172,12 @@ public final class BeanUtils {
             });
   }
 
+  /**
+   * Gets generic type.
+   *
+   * @param beanFunction the bean function
+   * @return the generic type
+   */
   public static java.lang.reflect.Type getGenericType(final BeanFunction beanFunction) {
     final SerializedLambda lambda = LambdaUtils.serializedLambda(beanFunction);
     try {
@@ -261,6 +279,7 @@ public final class BeanUtils {
   /**
    * 获取指定包下,指定接口/类的子类.
    *
+   * @param <T> the type parameter
    * @param packagePatterns 支持多个包名分隔符: ",; \t\n"
    * @param assignableType 父接口/类
    * @return 所有子类 set
@@ -301,7 +320,7 @@ public final class BeanUtils {
    *
    * <pre>
    *  BeanUtils.invoke(null, String.class.getMethods()[0], "string")
-   *         .ifPresent(e -> log.info(" BeanUtils.main:调用失败处理[{}]", e.getClass()));
+   *         .ifPresent(e -&gt; log.info(" BeanUtils.main:调用失败处理[{}]", e.getClass()));
    * </pre>
    *
    * @param obj the obj
@@ -326,7 +345,7 @@ public final class BeanUtils {
    * 用法:
    *
    * <pre>
-   *  BeanUtils.invoke(obj, field, e -> throw e);
+   *  BeanUtils.invoke(obj, field, e -&gt; throw e);
    * </pre>
    *
    * @param obj the obj
@@ -381,6 +400,7 @@ public final class BeanUtils {
   }
 }
 
+/** The type Ts. */
 @SuppressWarnings("unused")
 class Ts extends AbstractEntityPoJo {
   @Column(name = "alia")

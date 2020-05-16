@@ -111,7 +111,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    *
    * @param function the function
    * @return the query column
-   * @see #sum(IFunction, String)
+   * @see #sum(IFunction, String) #sum(IFunction, String)
    */
   public QueryColumn<T> sum(final IFunction<T, ?> function) {
     return sum(function, null);
@@ -130,6 +130,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    * </pre>
    *
    * @param function the function
+   * @param alia the alia
    * @return the query column
    */
   public QueryColumn<T> sum(final IFunction<T, ?> function, final String alia) {

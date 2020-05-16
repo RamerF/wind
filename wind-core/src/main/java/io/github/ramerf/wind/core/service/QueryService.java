@@ -89,7 +89,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    *
    * @param query 指定查询字段
    * @param condition 查询条件
-   * @return {@link T}
+   * @return T
    */
   default T getOne(Consumer<QueryColumn<T>> query, Consumer<Condition<T>> condition) {
     return getOne(query, condition, getPoJoClass(this));

@@ -93,6 +93,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * 批量更新.<br>
    * 注意: 该方法会将ts中的值完全覆盖对应的数据.<br>
    *
+   * @param <R> the type parameter
    * @param ts 要更新的数据集
    * @param includeNullProperties the include null properties
    * @return {@link AbstractEntityPoJo}
@@ -118,8 +119,8 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * 如果删除数量不等于id的大小,将执行失败.
    *
    * @param ids the ids
+   * @return 删除记录数 int
    * @throws RuntimeException the runtime exception
-   * @return 删除记录数
    */
   @Transactional(rollbackFor = Exception.class)
   default int deleteBatch(final Collection<Long> ids) throws RuntimeException {

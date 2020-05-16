@@ -84,8 +84,9 @@ public class Query {
   }
 
   /**
-   * 指定查询列. @param queryColumns the query columns
+   * 指定查询列.
    *
+   * @param queryColumns the query columns
    * @return the query
    */
   public Query select(final QueryColumn<?>... queryColumns) {
@@ -98,8 +99,9 @@ public class Query {
   }
 
   /**
-   * 该方法暂时不用. @param conditions the conditions
+   * 该方法暂时不用.
    *
+   * @param conditions the conditions
    * @return the query
    */
   public Query from(final Condition<?>... conditions) {
@@ -108,8 +110,9 @@ public class Query {
   }
 
   /**
-   * 指定查询条件. @param conditions the conditions
+   * 指定查询条件.
    *
+   * @param conditions the conditions
    * @return the query
    */
   public Query where(final Condition<?>... conditions) {
@@ -185,9 +188,9 @@ public class Query {
    *
    * <pre>
    *   初始化:
-   *   final QueryEntityMetaData<DemoProductPoJo> queryEntityMetaData =
+   *   final QueryEntityMetaData&lt;DemoProductPoJo&gt; queryEntityMetaData =
    *         queryColumn.getQueryEntityMetaData();
-   *   final GroupByClause<DemoProductPoJo> clause = queryEntityMetaData.getGroupByClause();
+   *   final GroupByClause&lt;DemoProductPoJo&gt; clause = queryEntityMetaData.getGroupByClause();
    *   使用:
    *   groupBy(clause.col(DemoProductPoJo::getName))
    * </pre>
@@ -206,8 +209,9 @@ public class Query {
   }
 
   /**
-   * 查询单条记录. @param <R> the type parameter
+   * 查询单条记录.
    *
+   * @param <R> the type parameter
    * @param clazz the clazz
    * @return the r
    */
@@ -246,8 +250,9 @@ public class Query {
   }
 
   /**
-   * 查询列表数据. @param <R> the type parameter
+   * 查询列表数据.
    *
+   * @param <R> the type parameter
    * @param clazz the clazz
    * @return the list
    */
@@ -279,8 +284,9 @@ public class Query {
   }
 
   /**
-   * 分页查询列表数据. @param <R> the type parameter
+   * 分页查询列表数据.
    *
+   * @param <R> the type parameter
    * @param clazz the clazz
    * @param pageable the pageable
    * @return the list
@@ -424,9 +430,11 @@ public class Query {
   /**
    * 自定义sql查询列表.
    *
+   * @param <T> the type parameter
    * @param <R> the type parameter
    * @param sql the sql
-   * @param clazz the clazz
+   * @param poJoClazz the clazz
+   * @param respClazz the clazz
    * @param args the args
    * @return the list
    */
@@ -450,9 +458,7 @@ public class Query {
   /**
    * 自定义sql查询count.
    *
-   * @param <R> the type parameter
    * @param sql the sql
-   * @param clazz the clazz
    * @param args the args
    * @return the list
    */
