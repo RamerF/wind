@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.demo.config;
 
+import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
 import io.github.ramerf.wind.core.util.SnowflakeIdWorker;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,11 @@ public class CommonBean {
   @Bean
   public SnowflakeIdWorker snowflakeIdWorker() {
     return new SnowflakeIdWorker();
+  }
+
+  @Bean
+  public InterEnumSerializer interEnumSerializer() {
+    return InterEnum::value;
   }
 
   @Bean

@@ -1,7 +1,8 @@
 package io.github.ramerf.wind.core.util;
 
 import java.util.*;
-import java.util.function.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.springframework.lang.Nullable;
@@ -61,10 +62,9 @@ public class CollectionUtils {
    * @param collection the collection
    * @param consumer the consumer
    */
-  public static void doIfNonEmpty(
-      @Nullable Collection<?> collection, @Nonnull Consumer<Collection<?>> consumer) {
+  public static void doIfNonEmpty(@Nullable Collection<?> collection, @Nonnull Runnable runnable) {
     if (nonEmpty(collection)) {
-      consumer.accept(collection);
+      runnable.run();
     }
   }
 

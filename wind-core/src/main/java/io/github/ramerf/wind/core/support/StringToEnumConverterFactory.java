@@ -9,10 +9,16 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.util.Assert;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+/**
+ * 字符串转枚举.
+ *
+ * @author Tang Xiaofeng
+ * @since 2020/3/28
+ */
 public final class StringToEnumConverterFactory implements ConverterFactory<String, InterEnum> {
 
   @Override
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public <T extends InterEnum> Converter<String, T> getConverter(@Nonnull Class<T> targetType) {
     Class<?> enumType = targetType;
     while (!enumType.isEnum()) {
@@ -37,9 +43,9 @@ public final class StringToEnumConverterFactory implements ConverterFactory<Stri
         // It's an empty enum identifier: reset the enum value to null.
         return null;
       }
-      final Integer value;
+      final int value;
       try {
-        value = Integer.valueOf(source.trim());
+        value = Integer.parseInt(source.trim());
       } catch (NumberFormatException e) {
         throw CommonException.of(
             ResultCode.API_PARAM_INVALID.desc(

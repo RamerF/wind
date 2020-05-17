@@ -455,7 +455,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     return String.join(Constant.DEFAULT_SPLIT_SPACE, conditionSql);
   }
 
-  private void appendLogicNotDelete() {
+  private synchronized void appendLogicNotDelete() {
     conditionSql.add(
         (conditionSql.size() > 0 ? AND.operator : "")
             .concat(queryEntityMetaData.getTableAlia())

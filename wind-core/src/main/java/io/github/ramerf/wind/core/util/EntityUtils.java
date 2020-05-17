@@ -48,7 +48,9 @@ public final class EntityUtils {
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
             .collect(toList());
-    log.debug("getAllColumnFields:[{}]", fields);
+    if (log.isTraceEnabled()) {
+      log.trace("getAllColumnFields:[{}]", fields);
+    }
     return fields;
   }
 

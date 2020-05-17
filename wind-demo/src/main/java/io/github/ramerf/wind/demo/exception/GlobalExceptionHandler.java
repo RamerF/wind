@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.demo.exception;
 
 import com.alibaba.fastjson.JSONException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -63,9 +64,15 @@ public class GlobalExceptionHandler {
       return Rs.notPresent(fieldName);
     } else if (exception instanceof HttpMessageNotReadableException) {
       // 请求体为空或请求体解析失败
-      if (exception.getCause() instanceof JSONException) {
+      final Throwable cause = exception.getCause();
+      if (cause instanceof JSONException) {
         handleError(request, (JSONException) exception.getCause());
         return Rs.wrongFormat("json");
+      }
+      // 主要用于处理对象中枚举的反序列化
+      if (cause instanceof InvalidFormatException) {
+        return Rs.invalid(
+            ((InvalidFormatException) exception.getCause()).getPath().get(0).getFieldName());
       }
       handleError(request, exception);
       return Rs.notPresent("请求体");

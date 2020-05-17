@@ -131,31 +131,6 @@ public class Update {
   }
 
   /**
-   * 条件删除,不允许条件为空.
-   *
-   * @return 删除记录数
-   */
-  public int delete() {
-    final List<Object> values = condition.getValues();
-    // 仅包含逻辑未删除条件
-    if (values.size() <= 1) {
-      throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
-    }
-    final String sql = "update %s set %s=%s where %s";
-    final String updateString =
-        String.format(
-            sql,
-            tableName,
-            StringUtils.camelToUnderline(logicDeleteField),
-            logicDeleted,
-            condition.getString());
-    if (log.isDebugEnabled()) {
-      SqlHelper.printSqlWithVal(updateString, values);
-    }
-    return JDBC_TEMPLATE.update(updateString, values.toArray(new Object[0]));
-  }
-
-  /**
    * 保存,值不为null的字段.
    *
    * @param <T> the type parameter
@@ -211,10 +186,11 @@ public class Update {
           setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
           setParameterConsumer(index, field, BeanUtils.invoke(t, field, null), list);
         });
-    // 更新id更新
-    where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
-    final String conditionString = condition.getString();
+    // 没有更新条件时,根据id更新
     final List<Object> values = condition.getValues();
+    if (values.size() <= 1) {
+      where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+    }
     values.forEach(
         value ->
             list.add(
@@ -226,7 +202,8 @@ public class Update {
                   }
                 }));
     final String sql = "UPDATE %s SET %s WHERE %s";
-    final String execSql = String.format(sql, tableName, setBuilder.toString(), conditionString);
+    final String execSql =
+        String.format(sql, tableName, setBuilder.toString(), condition.getString());
     if (log.isDebugEnabled()) {
       SqlHelper.printSqlWithVal(execSql, values);
     }
@@ -244,6 +221,31 @@ public class Update {
       return 0;
     }
     throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+  }
+
+  /**
+   * 条件删除,不允许条件为空.
+   *
+   * @return 删除记录数
+   */
+  public int delete() {
+    final List<Object> values = condition.getValues();
+    // 仅包含逻辑未删除条件
+    if (values.size() <= 1) {
+      throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
+    }
+    final String sql = "update %s set %s=%s where %s";
+    final String updateString =
+        String.format(
+            sql,
+            tableName,
+            StringUtils.camelToUnderline(logicDeleteField),
+            logicDeleted,
+            condition.getString());
+    if (log.isDebugEnabled()) {
+      SqlHelper.printSqlWithVal(updateString, values);
+    }
+    return JDBC_TEMPLATE.update(updateString, values.toArray(new Object[0]));
   }
 
   private void setParameterConsumer(
