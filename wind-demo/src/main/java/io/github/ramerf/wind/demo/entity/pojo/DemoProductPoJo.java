@@ -64,6 +64,8 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
   @Column(name = "non_match_column")
   private String column;
 
+  private List<Integer> intArr;
+
   public enum Type implements InterEnum {
     /** 商品类别 */
     PHONE(0, "手机"),

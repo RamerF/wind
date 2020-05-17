@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
+import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,7 +23,7 @@ public class EnumUtils {
    * @param value the value
    * @return the string
    */
-  public static <T extends Enum<?>, R> String desc(Class<T> clazz, final R value) {
+  public static <T extends InterEnum, R> String desc(Class<T> clazz, final R value) {
     return map(clazz).get(value);
   }
 
@@ -59,7 +60,7 @@ public class EnumUtils {
    * @return the map
    */
   @SuppressWarnings("unchecked")
-  public static <T extends Enum<?>, R> Map<R, String> map(Class<T> clazz) {
+  public static <T extends InterEnum, R> Map<R, String> map(Class<T> clazz) {
     return Stream.of(clazz.getEnumConstants())
         .collect(
             Collectors.toMap(
@@ -88,7 +89,7 @@ public class EnumUtils {
    * @return the list
    */
   @SuppressWarnings("unchecked")
-  public static <T extends Enum<?>, R> List<R> values(Class<T> clazz) {
+  public static <T extends InterEnum, R> List<R> values(Class<T> clazz) {
     return Stream.of(clazz.getEnumConstants())
         .map(
             o -> {
@@ -112,7 +113,7 @@ public class EnumUtils {
    * @return true,有效值
    */
   @SuppressWarnings("unchecked")
-  public static <T extends Enum<?>, R> boolean valid(Class<T> clazz, final R v) {
+  public static <T extends InterEnum, R> boolean valid(Class<T> clazz, final R v) {
     return Stream.of(clazz.getEnumConstants())
         .map(
             o -> {
@@ -139,23 +140,25 @@ public class EnumUtils {
     log.info("main:valid[{}]", EnumUtils.valid(Type.class, 2));
   }
 
-  public enum Type {
+  public enum Type implements InterEnum {
     /** 商品类别 */
     PHONE(0, "手机"),
     SPORT(1, "运动");
 
-    private int value;
-    private String desc;
+    private final int value;
+    private final String desc;
 
     Type(int value, String desc) {
       this.value = value;
       this.desc = desc;
     }
 
-    public int value() {
+    @Override
+    public Integer value() {
       return this.value;
     }
 
+    @Override
     public String desc() {
       return this.desc;
     }

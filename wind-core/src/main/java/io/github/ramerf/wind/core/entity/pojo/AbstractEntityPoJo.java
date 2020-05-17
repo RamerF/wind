@@ -21,8 +21,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class AbstractEntityPoJo implements AbstractEntity {
-  public static final String COLUMN_ID = "id";
-
   // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
 
   private Long id;
