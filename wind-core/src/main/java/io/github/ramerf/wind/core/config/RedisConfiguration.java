@@ -29,6 +29,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
   // private RedisConnectionFactory redisConnectionFactory;
 
   @Bean
+  @Override
   public KeyGenerator keyGenerator() {
     // 在没有指定缓存Key的情况下，key生成策略
     return (target, method, params) -> {

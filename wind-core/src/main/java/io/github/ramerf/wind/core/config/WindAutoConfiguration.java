@@ -5,6 +5,8 @@ import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
+import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -16,7 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Mybatis turbo 初始化配置.
+ * 初始化配置.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/28
@@ -35,27 +37,43 @@ public class WindAutoConfiguration implements ApplicationContextAware {
   @Override
   public void setApplicationContext(@Nonnull final ApplicationContext applicationContext)
       throws BeansException {
-    final WindProperty windProperty = applicationContext.getBean(WindProperty.class);
+    final WindConfiguration configuration = applicationContext.getBean(WindConfiguration.class);
     // 初始化分布式主键
-    SnowflakeIdWorker.setWorkerId(windProperty.getWorkId());
-    SnowflakeIdWorker.setDatacenterId(windProperty.getDataCenterId());
+    SnowflakeIdWorker.setWorkerId(configuration.getSnowflakeProp().getWorkerId());
+    SnowflakeIdWorker.setDatacenterId(configuration.getSnowflakeProp().getDataCenterId());
     // 初始化实体类
     applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
         .findFirst()
         .map(Object::getClass)
-        .map(o -> o.getAnnotation(SpringBootApplication.class))
-        .ifPresent(o -> initEntityInfo(o, windProperty));
+        .ifPresent(o -> initEntityInfo(o, configuration));
   }
 
-  private void initEntityInfo(
-      final SpringBootApplication application, final WindProperty property) {
-    String parent = String.join(",", application.scanBasePackages());
-    final String entityPackage =
-        StringUtils.nonEmpty(parent) ? parent : property.getEntityPackage();
+  private void initEntityInfo(final Class<?> clazz, final WindConfiguration configuration) {
+    final SpringBootApplication application = clazz.getAnnotation(SpringBootApplication.class);
+    String scanBasePackages;
+    String entityPackage;
+    if (StringUtils.nonEmpty(configuration.getEntityPackage())) {
+      entityPackage = configuration.getEntityPackage();
+    } else if (Objects.nonNull(application)
+        && StringUtils.nonEmpty(
+            scanBasePackages = String.join(",", application.scanBasePackages()))) {
+      entityPackage = scanBasePackages;
+    } else {
+      entityPackage = clazz.getPackage().getName();
+    }
     log.info("initEntityInfo:init entity info[{}]", entityPackage);
     try {
-      BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class)
-          .forEach(EntityHelper::initEntity);
+      final Set<Class<? extends AbstractEntityPoJo>> entities =
+          BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);
+      if (entities.size() < 1) {
+        log.error(
+            String.format(
+                "no entity with @Entity annotation found in path: %s, correct your configuration:wind.entity-package",
+                entityPackage));
+      }
+      // 下面这行确保查询指定公共列时lambda可以使用AbstractEntityPoJo指定.如: AbstractEntityPoJo::getId
+      entities.add(AbstractEntityPoJo.class);
+      entities.forEach(EntityHelper::initEntity);
     } catch (IOException e) {
       log.warn("initEntityInfo:fail to init entity info[{}]", e.getMessage());
     }

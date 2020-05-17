@@ -4,9 +4,8 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.util.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
@@ -21,12 +20,8 @@ public class EntityHelper {
       new ConcurrentHashMap<>();
 
   public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
-    final Field[] fields = clazz.getDeclaredFields();
     Map<String, String> map = new HashMap<>(10);
-    Arrays.stream(fields)
-        .filter(field -> !Modifier.isStatic(field.getModifiers()))
-        .filter(field -> !Modifier.isTransient(field.getModifiers()))
-        .filter(field -> !Modifier.isPublic(field.getModifiers()))
+    EntityUtils.getAllColumnFields(clazz)
         .forEach(
             field -> {
               final Column columnAnnotation = field.getAnnotation(Column.class);
@@ -40,7 +35,9 @@ public class EntityHelper {
   }
 
   public static String getColumn(BeanFunction function) {
-    log.info("getColumn:[{}]", FIELD_COLUMN_MAP);
+    if (log.isDebugEnabled()) {
+      log.debug("getColumn:[{}]", FIELD_COLUMN_MAP);
+    }
     return FIELD_COLUMN_MAP
         .get(LambdaUtils.getActualTypePath(function))
         .get(BeanUtils.methodToProperty(LambdaUtils.getMethodName(function)));
@@ -48,7 +45,7 @@ public class EntityHelper {
 
   public static void main(String[] args) {
     initEntity(AbstractEntityPoJo.class);
-    IFunction<AbstractEntityPoJo, Long> function = AbstractEntityPoJo::getCompanyId;
+    IFunction<AbstractEntityPoJo, Long> function = AbstractEntityPoJo::getCreateId;
     log.info("main:[{}]", getColumn(function));
   }
 }

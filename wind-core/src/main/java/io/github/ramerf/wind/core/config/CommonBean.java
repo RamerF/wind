@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,10 +20,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Slf4j
 @Configuration("w_c_cb")
 public class CommonBean {
-  @SuppressWarnings("DuplicatedCode")
   @Bean
   @Order(3)
   @ConditionalOnProperty(name = "spring.redis.host", matchIfMissing = true)
+  @SuppressWarnings({"DuplicatedCode"})
   public RedisTemplate<String, Object> getRedisTemplate(
       LettuceConnectionFactory connectionFactory) {
     RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
@@ -47,9 +46,10 @@ public class CommonBean {
     return redisTemplate;
   }
 
-  @Order(5)
-  @Autowired
-  public void initRedisCacheRedisTemplate(final RedisTemplate<String, Object> redisTemplate) {
-    RedisCache.setRedisTemplate(redisTemplate);
-  }
+  //  @Order(5)
+  //  @Autowired
+  //  public void initRedisCacheRedisTemplate(final RedisTemplate<String, Object> redisTemplate) {
+  // 后期需要加上redis缓存
+  //    RedisCache.setRedisTemplate(redisTemplate);
+  //  }
 }

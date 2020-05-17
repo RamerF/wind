@@ -12,49 +12,46 @@
     <packaging>pom</packaging>
 
     <groupId>io.github.ramerf</groupId>
-    <artifactId>ratel-wind</artifactId>
-    <name>ratel-wind</name>
-    <version>3.1.0-SNAPSHOT</version>
+    <artifactId>wind</artifactId>
+    <name>wind</name>
+    <version>3.2.0-RELEASE</version>
     <modules>
         <module>wind-core</module>
         <module>wind-annotation</module>
-        <module>wind-test</module>
+        <module>wind-demo</module>
     </modules>
-    <distributionManagement>
-        <repository>
-            <id>rdc-releases</id>
-            <url>https://repo.rdc.aliyun.com/repository/116112-release-hDoj2s/</url>
-        </repository>
-        <snapshotRepository>
-            <id>rdc-snapshots</id>
-            <url>https://repo.rdc.aliyun.com/repository/116112-snapshot-bI11jn/</url>
-        </snapshotRepository>
-    </distributionManagement>
+    <url>http://maven.apache.org</url>
+    <description>springboot web at once.</description>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>ramer</name>
+            <email>1390635973@qq.com</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection>https://github.com/ramerf/wind.git</connection>
+        <developerConnection>https://github.com/ramerf/wind.git</developerConnection>
+        <url>https://github.com/ramerf/wind</url>
+    </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jackson.version>2.9.8</jackson.version>
+        <jackson.version>2.11.0</jackson.version>
         <lombok.version>1.18.10</lombok.version>
         <fastjson.version>1.2.67</fastjson.version>
         <javax.inject.version>1</javax.inject.version>
-        <mybatis-plus.version>3.3.0</mybatis-plus.version>
         <springfox-swagger.version>2.9.2</springfox-swagger.version>
-        <mybatis-spring-boot.version>2.1.0</mybatis-spring-boot.version>
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <wind-annotation.version>3.1.0-SNAPSHOT</wind-annotation.version>
+        <wind-annotation.version>3.2.0-RELEASE</wind-annotation.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <!-- mybatis的支持 -->
-        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>${mybatis-spring-boot.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
@@ -89,11 +86,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>${mybatis-plus.version}</version>
         </dependency>
         <!-- springfox-swagger2 -->
         <dependency>
@@ -154,20 +146,132 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <profiles>
+        <profile>
+            <id>rdc-release</id>
+            <distributionManagement>
+                <repository>
+                    <id>rdc-releases</id>
+                    <url>https://repo.rdc.aliyun.com/repository/116112-release-hDoj2s/</url>
+                </repository>
+                <snapshotRepository>
+                    <id>rdc-snapshots</id>
+                    <url>https://repo.rdc.aliyun.com/repository/116112-snapshot-bI11jn/</url>
+                </snapshotRepository>
+            </distributionManagement>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <additionalOptions>
+                                        <additionalOption>-Xdoclint:none</additionalOption>
+                                    </additionalOptions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <configuration>
+                            <executable>C:/Program Files (x86)/GNU/GnuPG/gpg.exe</executable>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>signArtifact</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>sonatype-release</id>
+            <distributionManagement>
+                <repository>
+                    <id>sonatype</id>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+                </repository>
+                <snapshotRepository>
+                    <id>sonatype</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+            </distributionManagement>
+            <build>
+
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <additionalOptions>
+                                        <additionalOption>-Xdoclint:none</additionalOption>
+                                    </additionalOptions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>signArtifact</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

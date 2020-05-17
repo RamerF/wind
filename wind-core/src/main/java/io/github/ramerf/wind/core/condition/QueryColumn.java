@@ -4,8 +4,6 @@ import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -113,7 +111,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    *
    * @param function the function
    * @return the query column
-   * @see #sum(IFunction, String)
+   * @see #sum(IFunction, String) #sum(IFunction, String)
    */
   public QueryColumn<T> sum(final IFunction<T, ?> function) {
     return sum(function, null);
@@ -132,6 +130,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    * </pre>
    *
    * @param function the function
+   * @param alia the alia
    * @return the query column
    */
   public QueryColumn<T> sum(final IFunction<T, ?> function, final String alia) {
@@ -227,16 +226,5 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
             : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
     // 待测试
     return queryName.concat(AS.operator()).concat(alia);
-  }
-
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   */
-  public static void main(String[] args) {
-    final QueryColumn<AbstractEntityPoJo> field =
-        QueryColumnFactory.getInstance(AbstractEntityPoJo.class);
-    System.out.println(field.col(AbstractEntityPoJo::getCompanyId).getString());
   }
 }

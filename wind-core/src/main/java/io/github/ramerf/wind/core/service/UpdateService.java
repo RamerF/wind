@@ -1,21 +1,17 @@
 package io.github.ramerf.wind.core.service;
 
-import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import io.github.ramerf.wind.core.condition.ICondition;
-import io.github.ramerf.wind.core.condition.Update;
-import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.util.EntityUtils;
-import io.github.ramerf.wind.core.util.SnowflakeIdWorker;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import io.github.ramerf.wind.core.entity.response.ResultCode;
+import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 /**
  * The interface Update service.
@@ -24,7 +20,6 @@ import org.springframework.util.CollectionUtils;
  * @author Tang Xiaofeng
  * @since 2020 /1/5
  */
-@SuppressWarnings("rawtypes")
 public interface UpdateService<T extends AbstractEntityPoJo> extends InterService<T> {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(UpdateService.class);
@@ -37,19 +32,13 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws RuntimeException 创建失败时,抛异常
    * @see DataAccessException
    */
-  default T create(T t) throws RuntimeException {
+  default long create(T t) throws RuntimeException {
     textFilter(t, t);
-    final Date now = new Date();
-    log.info("create:新增数据时间[{}]", now);
-    if (Objects.isNull(t.getCreateTime())) {
-      t.setCreateTime(now);
+    final int row = getUpdate().create(t);
+    if (row != 1) {
+      throw CommonException.of(ResultCode.ERROR);
     }
-    if (Objects.isNull(t.getUpdateTime())) {
-      t.setUpdateTime(now);
-    }
-    t.setId(AppContextInject.getBean(SnowflakeIdWorker.class).nextId());
-    getRepository().insert(t);
-    return t;
+    return t.getId();
   }
 
   /**
@@ -60,63 +49,11 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws RuntimeException the runtime exception
    */
   @Transactional(rollbackFor = Exception.class)
-  default List<T> createBatch(List<T> ts) throws RuntimeException {
+  default int createBatch(List<T> ts) throws RuntimeException {
     if (CollectionUtils.isEmpty(ts)) {
-      return Collections.emptyList();
+      return 0;
     }
-    // TODO TXF 更新为最新的批量插入
-
-    /// 可能会参考以下代码
-    //    final SnowflakeIdWorker idWorker = AppContextInject.getBean(SnowflakeIdWorker.class);
-    //    final Date now = new Date();
-    //    log.info("create:新增数据时间[{}]", now);
-    //    ts.forEach(
-    //        t -> {
-    //          textFilter(t, t);
-    //          if (Objects.isNull(t.getCreateTime())) {
-    //            t.setCreateTime(now);
-    //          }
-    //          if (Objects.isNull(t.getUpdateTime())) {
-    //            t.setUpdateTime(now);
-    //          }
-    //          t.setId(idWorker.nextId());
-    //        });
-    //    final long count = AppContextInject.getBean(Update.class).create(ts);
-    //    log.info(
-    //        "createBatch:[{},{},{},{}]",
-    //        count,
-    //        ts.size(),
-    //        count == ts.size(),
-    //        Objects.equals(count, ts.size()));
-    //    if (count != ts.size()) {
-    //      throw CommonException.of(ResultCode.API_FAIL_EXEC_ADD);
-    //    }
-
-    ts.forEach(t -> textFilter(t, t));
-    String sqlStatement = sqlStatement(SqlMethod.INSERT_ONE);
-    int size = ts.size();
-    final SnowflakeIdWorker idWorker = AppContextInject.getBean(SnowflakeIdWorker.class);
-    final Date now = new Date();
-    executeBatch(
-        sqlSession -> {
-          AtomicInteger i = new AtomicInteger(1);
-          ts.forEach(
-              t -> {
-                if (Objects.isNull(t.getCreateTime())) {
-                  t.setCreateTime(now);
-                }
-                if (Objects.isNull(t.getUpdateTime())) {
-                  t.setUpdateTime(now);
-                }
-                t.setId(idWorker.nextId());
-                sqlSession.insert(sqlStatement, t);
-                if ((i.get() % BATCH_SIZE == 0) || i.get() == size) {
-                  sqlSession.flushStatements();
-                }
-                i.getAndIncrement();
-              });
-        });
-    return ts;
+    return CollectionUtils.isEmpty(ts) ? 0 : getUpdate().createBatch(ts);
   }
 
   /**
@@ -130,7 +67,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    */
   default long updateBatch(@Nonnull final T t, @Nonnull final Consumer<ICondition<T>> consumer)
       throws RuntimeException {
-//    return getUpdate(true).where(consumer).update(t, false);
+    //    return getUpdate(true).where(consumer).update(t, false);
     return 0;
   }
 
@@ -145,7 +82,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    */
   default long updateBatchAll(@Nonnull final T t, @Nonnull final Consumer<ICondition<T>> consumer)
       throws RuntimeException {
-//    return getUpdate(true).where(consumer).update(t, true);
+    //    return getUpdate(true).where(consumer).update(t, true);
     return 0;
   }
 
@@ -163,6 +100,6 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @see DataAccessException
    */
   default long delete(Consumer<ICondition<T>> consumer) throws RuntimeException {
-    return Update.getInstance().from(EntityUtils.getPoJoClass(this)).where(consumer).delete();
+    return getUpdate().where(consumer).delete();
   }
 }

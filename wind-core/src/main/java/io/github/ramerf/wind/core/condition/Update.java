@@ -1,17 +1,16 @@
 package io.github.ramerf.wind.core.condition;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
-import io.github.ramerf.wind.core.repository.AbstractBaseRepository;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
@@ -20,7 +19,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -35,9 +33,9 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@SuppressWarnings("unused")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Update {
-  @Resource private AbstractBaseRepository repository;
   private Condition<?> condition;
   private String tableName;
 
@@ -101,7 +99,14 @@ public class Update {
   }
 
   public <T extends AbstractEntityPoJo> int create(@Nonnull final T t) {
-    t.setCreateTime(new Date());
+    t.setId(AppContextInject.getBean(SnowflakeIdWorker.class).nextId());
+    final Date now = new Date();
+    if (Objects.isNull(t.getCreateTime())) {
+      t.setCreateTime(now);
+    }
+    if (Objects.isNull(t.getUpdateTime())) {
+      t.setUpdateTime(now);
+    }
     final List<Field> fields = EntityUtils.getNonNullColumnFields(t);
     // 插入列
     final StringBuilder columns = new StringBuilder();
@@ -157,7 +162,7 @@ public class Update {
    * @param ts the ts
    * @return the long
    */
-  public <T extends AbstractEntity> long createBatch(List<T> ts) {
+  public <T extends AbstractEntity> int createBatch(List<T> ts) {
     //    return createBatch(ts, false);
     return 0;
   }
@@ -200,19 +205,14 @@ public class Update {
     }
     final AtomicInteger index = new AtomicInteger();
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
-    // 过滤非数据库字段,当前使用的是mybatis-plus的注解,后期考虑切换自定义注解
-    fields.stream()
-        .filter(
-            field ->
-                Optional.ofNullable(field.getAnnotation(TableField.class))
-                    .map(TableField::exist)
-                    .orElse(true))
-        .forEach(
-            field -> {
-              final String column = EntityUtils.fieldToColumn(field);
-              setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
-              setParameterConsumer(index, field, BeanUtils.invoke(t, field, null), list);
-            });
+    fields.forEach(
+        field -> {
+          final String column = EntityUtils.fieldToColumn(field);
+          setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
+          setParameterConsumer(index, field, BeanUtils.invoke(t, field, null), list);
+        });
+    // 更新id更新
+    where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     final String conditionString = condition.getString();
     final List<Object> values = condition.getValues();
     values.forEach(
@@ -231,6 +231,19 @@ public class Update {
       SqlHelper.printSqlWithVal(execSql, values);
     }
     return JDBC_TEMPLATE.update(execSql, ps -> list.forEach(val -> val.accept(ps)));
+  }
+
+  public <T extends AbstractEntityPoJo> int updateBatch(
+      @Nonnull final List<T> ts, final boolean includeNull) {
+    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+  }
+
+  public <R extends AbstractEntityRequest<?>> int updateBatchRequest(
+      @Nonnull final List<R> ts, final boolean includeNull) {
+    if (CollectionUtils.isEmpty(ts)) {
+      return 0;
+    }
+    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
   }
 
   private void setParameterConsumer(

@@ -1,12 +1,10 @@
 package io.github.ramerf.wind.core.statement;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.wind.core.condition.Predicate.SqlOperator;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.SqlHelper;
-import io.github.ramerf.wind.core.util.CollectionUtils;
-import io.github.ramerf.wind.core.util.StringUtils;
+import io.github.ramerf.wind.core.util.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +27,7 @@ public class InsertStatement {
   }
 
   public <T extends AbstractEntity> InsertColumn insert(Class<T> clazz) {
-    return insert(
-        Optional.ofNullable(clazz.getAnnotation(TableName.class))
-            .map(TableName::value)
-            .orElse(StringUtils.camelToUnderline(clazz.getSimpleName())));
+    return insert(EntityUtils.getTableName(clazz));
   }
 
   public InsertColumn insert(final String tableName) {
@@ -88,7 +83,9 @@ public class InsertStatement {
           throw CommonException.of("值不能为空,请调用value方法设置值");
         }
         return SqlOperator.BRACKET_FORMAT.format(
-            rowValues.stream().map(SqlHelper::toPreFormatSqlVal).collect(Collectors.joining(SEMICOLON)));
+            rowValues.stream()
+                .map(SqlHelper::toPreFormatSqlVal)
+                .collect(Collectors.joining(SEMICOLON)));
       }
 
       public String getInsertStr() {
@@ -135,7 +132,9 @@ public class InsertStatement {
             throw CommonException.of("值不能为空,请调用value方法设置值");
           }
           return SqlOperator.BRACKET_FORMAT.format(
-              values.stream().map(SqlHelper::toPreFormatSqlVal).collect(Collectors.joining(SEMICOLON)));
+              values.stream()
+                  .map(SqlHelper::toPreFormatSqlVal)
+                  .collect(Collectors.joining(SEMICOLON)));
         }
       }
     }

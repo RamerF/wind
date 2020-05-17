@@ -15,6 +15,7 @@ import lombok.*;
 @AllArgsConstructor
 public abstract class AbstractEntityResponse implements AbstractEntity {
   //  @JsonSerialize(using = LongJsonSerializer.class)
+
   private Long id;
 
   private Date createTime;

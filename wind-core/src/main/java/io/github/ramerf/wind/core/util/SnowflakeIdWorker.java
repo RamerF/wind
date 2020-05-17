@@ -141,7 +141,11 @@ public class SnowflakeIdWorker {
   }
 
   // ==============================Test=============================================
-  /** 测试 */
+  /**
+   * 测试 .
+   *
+   * @param args the args
+   */
   public static void main(String[] args) {
     SnowflakeIdWorker idWorker = new SnowflakeIdWorker(0, 0);
     for (int i = 0; i < 1000; i++) {

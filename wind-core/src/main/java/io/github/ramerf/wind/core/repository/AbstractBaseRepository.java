@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 /**
  * @author Tang Xiaofeng
- * @since 2019/11/13
+ * @since 2020/4/20
  */
 @Repository
 public interface AbstractBaseRepository extends BaseRepository<AbstractEntity, Long> {}

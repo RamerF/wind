@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.util;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.BaseService;
@@ -35,7 +34,7 @@ public final class EntityUtils {
       new ConcurrentHashMap<>();
 
   /**
-   * 获取对象所有(<code>private && !static && !transient</code>)保存到数据库的属性.<br>
+   * 获取对象所有(private &amp;&amp; !static &amp;&amp; !transient)保存到数据库的属性.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
@@ -54,8 +53,10 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有(<code>private && !static && !transient</code>)保存到数据库且值不为null的属性.<br>
+   * 获取对象所有(private &amp;&amp; !static &amp;&amp; !transient)保存到数据库且值不为null的属性.<br>
    *
+   * @param <T> the type parameter
+   * @param t the t
    * @return the non null Field
    */
   public static <T> List<Field> getNonNullColumnFields(@Nonnull final T t) {
@@ -71,8 +72,10 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有(<code>private && !static && !transient</code>)保存到数据库且值为null的属性.<br>
+   * 获取对象所有(private &amp;&amp; !static &amp;&amp; !transient)保存到数据库且值为null的属性.<br>
    *
+   * @param <T> the type parameter
+   * @param t the t
    * @return the non null field
    */
   public static <T> List<Field> getNullColumnFields(@Nonnull final T t) {
@@ -88,14 +91,15 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有(<code>private && !static && !transient</code>)属性对应的数据库列名.<br>
+   * 获取对象所有(private &amp;&amp; !static &amp;&amp; !transient)属性对应的数据库列名.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
-   * @see Column#name()
-   * @see StringUtils#camelToUnderline(String)
-   * @see Field#getName()
-   * @return string
+   * @param obj the obj
+   * @return string all columns
+   * @see Column#name() Column#name()
+   * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
+   * @see Field#getName() Field#getName()
    */
   public static List<String> getAllColumns(@Nonnull final Class<?> obj) {
     final List<String> columns =
@@ -105,14 +109,16 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有非空(<code>private && !static && !transient</code>)属性对应的数据库列名.<br>
+   * 获取对象所有非空(private &amp;&amp; !static &amp;&amp; !transient)属性对应的数据库列名.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
-   * @see Column#name()
-   * @see StringUtils#camelToUnderline(String)
-   * @see Field#getName()
-   * @return string
+   * @param <T> the type parameter
+   * @param t the t
+   * @return string non null columns
+   * @see Column#name() Column#name()
+   * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
+   * @see Field#getName() Field#getName()
    */
   public static <T> List<String> getNonNullColumns(@Nonnull final T t) {
     final List<String> columns =
@@ -122,15 +128,17 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有非空(<code>private && !static && !transient</code>)属性对应的数据库列名,以逗号分割.<br>
+   * 获取对象所有非空(private &amp;&amp; !static &amp;&amp; !transient)属性对应的数据库列名,以逗号分割.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
-   * @see Column#name()
-   * @see StringUtils#camelToUnderline(String)
-   * @see Field#getName()
-   * @see #getNonNullColumns(Object)
-   * @return string
+   * @param <T> the type parameter
+   * @param t the t
+   * @return string non null column
+   * @see Column#name() Column#name()
+   * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
+   * @see Field#getName() Field#getName()
+   * @see #getNonNullColumns(Object) #getNonNullColumns(Object)
    */
   public static <T> String getNonNullColumn(@Nonnull final T t) {
     final String nonNullColumn = String.join(",", getNonNullColumns(t));
@@ -143,10 +151,11 @@ public final class EntityUtils {
    * 默认值为{@link Column#name()};如果前者为空,值为<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
-   * @see Column#name()
-   * @see StringUtils#camelToUnderline(String)
-   * @see Field#getName()
-   * @return string
+   * @param field the field
+   * @return string string
+   * @see Column#name() Column#name()
+   * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
+   * @see Field#getName() Field#getName()
    */
   public static String fieldToColumn(@Nonnull final Field field) {
     String column = null;
@@ -160,23 +169,18 @@ public final class EntityUtils {
   }
 
   /**
-   * 表名: @Entity > @TableName > 类名(驼封转下划线)
+   * 表名: @Entity &gt; @TableName &gt; 类名(驼封转下划线)
    *
-   * @param clazz the clazz
    * @param <T> the type t
+   * @param clazz the clazz
    * @return the table name
    */
   public static <T> String getTableName(final Class<T> clazz) {
-    final Entity annotEntity = clazz.getAnnotation(Entity.class);
-    final TableName annotTableName = clazz.getAnnotation(TableName.class);
-    // 表名: @Entity > @TableName > 类名(驼封转下划线)
-    if (Objects.nonNull(annotEntity)) {
-      return annotEntity.name();
-    } else if (Objects.nonNull(annotTableName)) {
-      return annotTableName.value();
-    } else {
-      return StringUtils.camelToUnderline(clazz.getSimpleName());
-    }
+    final Entity entity = clazz.getAnnotation(Entity.class);
+    // 表名: @Entity#name > 类名(驼封转下划线)
+    return Objects.nonNull(entity) && StringUtils.nonEmpty(entity.name())
+        ? entity.name()
+        : StringUtils.camelToUnderline(clazz.getSimpleName());
   }
   /**
    * 获取Service泛型参数poJo.

@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.factory;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.QueryEntityMetaData;
 import io.github.ramerf.wind.core.config.AppContextInject;
@@ -8,9 +7,9 @@ import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.util.EntityUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * @author Tang Xiaofeng
@@ -46,10 +45,7 @@ public class QueryColumnFactory {
     final QueryEntityMetaData<T> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
     queryEntityMetaData.setClazz(clazz);
     if (StringUtils.isEmpty(tableName)) {
-      tableName =
-          Optional.ofNullable(clazz.getAnnotation(TableName.class))
-              .map(TableName::value)
-              .orElse(StringUtils.camelToUnderline(clazz.getSimpleName()));
+      tableName = EntityUtils.getTableName(clazz);
     }
     queryEntityMetaData.setTableName(tableName);
     tableAlia = StringUtils.isEmpty(tableAlia) ? tableName : tableAlia;

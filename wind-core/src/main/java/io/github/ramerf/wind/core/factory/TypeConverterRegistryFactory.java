@@ -40,10 +40,7 @@ public class TypeConverterRegistryFactory {
   }
 
   /**
-   * 添加类型转换器.使用方式:
-   *
-   * <pre>
-   * </pre>
+   * 添加类型转换器.
    *
    * @param converters the {@link TypeConverter}
    * @see TypeConverter
@@ -85,6 +82,7 @@ public class TypeConverterRegistryFactory {
    *
    * <p>valueType {@link ValueType}
    *
+   * @param valueType the value type
    * @return the type converter
    * @see TypeConverter
    */

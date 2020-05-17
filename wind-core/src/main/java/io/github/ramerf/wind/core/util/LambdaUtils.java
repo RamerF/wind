@@ -10,8 +10,10 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * The type Lambda utils.
+ *
  * @author Tang Xiaofeng
- * @since 2019/12/26
+ * @since 2019 /12/26
  */
 public final class LambdaUtils {
   /** SerializedLambda 反序列化缓存 */
@@ -22,6 +24,7 @@ public final class LambdaUtils {
    * 获取lambda表达式对应的方法引用类名.
    *
    * @param implClass {@link SerializedLambda#getImplClass()}
+   * @return the actual type
    */
   public static String getActualType(final String implClass) {
     return implClass.substring(implClass.lastIndexOf("/") + 1);
@@ -31,7 +34,8 @@ public final class LambdaUtils {
    * 获取lambda表达式对应的方法引用类名全路径.
    *
    * @param function the IFunction
-   * @see #serializedLambda(BeanFunction)
+   * @return the actual type path
+   * @see #serializedLambda(BeanFunction) #serializedLambda(BeanFunction)
    */
   public static String getActualTypePath(final BeanFunction function) {
     final SerializedLambda lambda = serializedLambda(function);
@@ -42,7 +46,8 @@ public final class LambdaUtils {
    * 获取lambda表达式对应的方法引用类名全路径.
    *
    * @param implClass {@link SerializedLambda#getImplClass()}
-   * @see #serializedLambda(BeanFunction)
+   * @return the actual type path
+   * @see #serializedLambda(BeanFunction) #serializedLambda(BeanFunction)
    */
   public static String getActualTypePath(final String implClass) {
     return implClass.replaceAll("/", ".");
@@ -52,8 +57,8 @@ public final class LambdaUtils {
    * 获取lambda表达式对应的方法名.
    *
    * @param function 需要解析的 lambda 对象
-   * @return 返回解析后的结果
-   * @see LambdaUtils#serializedLambda(BeanFunction)
+   * @return 返回解析后的结果 method name
+   * @see LambdaUtils#serializedLambda(BeanFunction) LambdaUtils#serializedLambda(BeanFunction)
    */
   public static String getMethodName(BeanFunction function) {
     Class<?> clazz = function.getClass();
@@ -68,6 +73,12 @@ public final class LambdaUtils {
             });
   }
 
+  /**
+   * Serialized lambda serialized lambda.
+   *
+   * @param lambda the lambda
+   * @return the serialized lambda
+   */
   public static SerializedLambda serializedLambda(BeanFunction lambda) {
     if (!lambda.getClass().isSynthetic()) {
       throw CommonException.of("不支持非lambda表达式");
@@ -104,6 +115,11 @@ public final class LambdaUtils {
     }
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   */
   public static void main(String[] args) {
     IFunction<AbstractEntityPoJo, Long> function = AbstractEntityPoJo::getId;
     IConsumer<AbstractEntityPoJo, Long> consumer = AbstractEntityPoJo::setId;
