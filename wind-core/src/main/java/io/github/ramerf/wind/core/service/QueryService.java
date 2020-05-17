@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
@@ -26,7 +27,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
   Logger log = LoggerFactory.getLogger(QueryService.class);
 
   /**
-   * 条件is_delete=false的总记录数.
+   * 总记录数(逻辑未删除).
    *
    * @return long long
    */
@@ -36,7 +37,17 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
   }
 
   /**
-   * 给定条件,执行count 指定列.
+   * 给定条件count(1).
+   *
+   * @param condition the condition
+   * @return long long
+   */
+  default long count(Consumer<Condition<T>> condition) {
+    return count(null, condition);
+  }
+
+  /**
+   * 给定条件count指定列.
    *
    * @param query the query
    * @param condition the condition
@@ -50,13 +61,15 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
   }
 
   /**
-   * 给定条件,执行count(1).
+   * Gets by id.
    *
-   * @param condition the condition
-   * @return long long
+   * @param id the id
+   * @return the T
    */
-  default long count(Consumer<Condition<T>> condition) {
-    return count(null, condition);
+  default T getById(final long id) {
+    final QueryColumn<T> queryColumn = getQueryColumn();
+    final Condition<T> condition = queryColumn.getCondition().eq(AbstractEntityPoJo::setId, id);
+    return getQuery().select(queryColumn).where(condition).fetchOne(getPoJoClass(this));
   }
 
   /**
@@ -136,6 +149,21 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     final Condition<T> condition = queryColumn.getCondition();
     consumer.accept(condition);
     return getQuery().select(queryColumn).where(condition).fetchOne(clazz);
+  }
+
+  /**
+   * List by ids list.
+   *
+   * @param ids the ids
+   * @return the list
+   */
+  default List<T> listByIds(final Collection<Long> ids) {
+    if (CollectionUtils.isEmpty(ids)) {
+      return Collections.emptyList();
+    }
+    final QueryColumn<T> queryColumn = getQueryColumn();
+    final Condition<T> condition = queryColumn.getCondition().in(AbstractEntityPoJo::setId, ids);
+    return getQuery().select(queryColumn).where(condition).fetchAll(getPoJoClass(this));
   }
 
   /**
