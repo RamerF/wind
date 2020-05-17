@@ -32,9 +32,6 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
   @ApiModelProperty(value = "主键ID", example = "235455")
   private Long id;
 
-  @ApiModelProperty(value = "公司ID", example = "132455")
-  private Long companyId;
-
   @ApiModelProperty(value = "修改人ID既当前操作人ID", example = "3235455")
   private Long updateId;
 
