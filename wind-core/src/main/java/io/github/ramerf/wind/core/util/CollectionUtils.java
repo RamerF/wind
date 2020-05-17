@@ -60,7 +60,7 @@ public class CollectionUtils {
    * Do if non empty.
    *
    * @param collection the collection
-   * @param consumer the consumer
+   * @param runnable the consumer
    */
   public static void doIfNonEmpty(@Nullable Collection<?> collection, @Nonnull Runnable runnable) {
     if (nonEmpty(collection)) {
