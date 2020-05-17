@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.handler;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -49,7 +48,7 @@ public interface ResultHandler<T, E> {
     private String columnName;
     /** 列别名. */
     private String columnAlia;
-    /** 表名(注解{@link TableName}指定的名称;不存在时为类名下划线分割). */
+    /** 表名: @Entity#name &gt; 类名(驼封转下划线). */
     private String tableName;
     /** 表别名. */
     private String tableAlia;
@@ -97,17 +96,12 @@ public interface ResultHandler<T, E> {
                   () -> {
                     final String actualTypePath = LambdaUtils.getActualTypePath(implClass);
                     final Class<Object> clazz = BeanUtils.getClazz(actualTypePath);
-                    final Entity annotEntity = clazz.getAnnotation(Entity.class);
-                    final TableName annotTableName = clazz.getAnnotation(TableName.class);
-                    final String tableName;
-                    // 表名: @Entity > @TableName > 类名(驼封转下划线)
-                    if (Objects.nonNull(annotEntity)) {
-                      tableName = annotEntity.name();
-                    } else if (Objects.nonNull(annotTableName)) {
-                      tableName = annotTableName.value();
-                    } else {
-                      tableName = StringUtils.camelToUnderline(actualType);
-                    }
+                    final Entity entity = clazz.getAnnotation(Entity.class);
+                    // 表名: @Entity#name > 类名(驼封转下划线)
+                    final String tableName =
+                        Objects.nonNull(entity) && StringUtils.nonEmpty(entity.name())
+                            ? entity.name()
+                            : StringUtils.camelToUnderline(actualType);
                     tableNameMap.put(implClass, new WeakReference<>(tableName));
                     return tableName;
                   }));

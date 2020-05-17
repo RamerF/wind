@@ -19,8 +19,6 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.reflection.ReflectionException;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -122,7 +120,13 @@ public final class BeanUtils {
         .collect(toList());
   }
 
-  /** 获取所有(包含父类)private属性. */
+  /**
+   * 获取所有(包含父类)private属性.
+   *
+   * @param clazz the clazz
+   * @param fields the fields
+   * @return the list
+   */
   public static List<Field> retrievePrivateFields(
       @Nonnull final Class<?> clazz, @Nonnull final List<Field> fields) {
     return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
@@ -143,6 +147,12 @@ public final class BeanUtils {
     return fields;
   }
 
+  /**
+   * Gets write methods.
+   *
+   * @param clazz the clazz
+   * @return the write methods
+   */
   public static List<Method> getWriteMethods(final Class<?> clazz) {
     return Optional.ofNullable(WRITE_METHOD_MAP.get(clazz))
         .map(Reference::get)
@@ -162,6 +172,12 @@ public final class BeanUtils {
             });
   }
 
+  /**
+   * Gets generic type.
+   *
+   * @param beanFunction the bean function
+   * @return the generic type
+   */
   public static java.lang.reflect.Type getGenericType(final BeanFunction beanFunction) {
     final SerializedLambda lambda = LambdaUtils.serializedLambda(beanFunction);
     try {
@@ -223,6 +239,8 @@ public final class BeanUtils {
       classPath = classPath.replaceAll("/", ".");
     }
     try {
+      // 后期需要改成多个加载器,参考: org.apache.ibatis.io.ClassLoaderWrapper#classForName(java.lang.String,
+      // java.lang.ClassLoader[])
       return (Class<T>) Class.forName(classPath);
     } catch (Exception e) {
       log.warn("initial:[{}]", e.getMessage());
@@ -237,17 +255,20 @@ public final class BeanUtils {
    * @param name the name
    * @return the string
    */
-  @SuppressWarnings("all")
   public static String methodToProperty(String name) {
-    if (name.startsWith("is")) {
+    final String is = "is";
+    final String get = "get";
+    final String set = "set";
+    if (name.startsWith(is)) {
       name = name.substring(2);
-    } else if (name.startsWith("get") || name.startsWith("set")) {
-      name = name.substring(3);
     } else {
-      throw new ReflectionException(
-          "Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
+      if (name.startsWith(get) || name.startsWith(set)) {
+        name = name.substring(3);
+      } else {
+        throw new IllegalArgumentException(
+            "Error parsing property name '" + name + "'.  Didn't start with 'is', 'get' or 'set'.");
+      }
     }
-
     if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
       name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
     }
@@ -258,12 +279,12 @@ public final class BeanUtils {
   /**
    * 获取指定包下,指定接口/类的子类.
    *
+   * @param <T> the type parameter
    * @param packagePatterns 支持多个包名分隔符: ",; \t\n"
    * @param assignableType 父接口/类
    * @return 所有子类 set
    * @throws IOException the IOException
    */
-  @SuppressWarnings("unchecked")
   public static <T> Set<Class<? extends T>> scanClasses(
       String packagePatterns, Class<T> assignableType) throws IOException {
     Set<Class<? extends T>> classes = new HashSet<>();
@@ -281,7 +302,7 @@ public final class BeanUtils {
         try {
           ClassMetadata classMetadata =
               new CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
-          Class<T> clazz = (Class<T>) Resources.classForName(classMetadata.getClassName());
+          Class<T> clazz = BeanUtils.getClazz(classMetadata.getClassName());
           if (assignableType == null || assignableType.isAssignableFrom(clazz)) {
             classes.add(clazz);
           }
@@ -299,7 +320,7 @@ public final class BeanUtils {
    *
    * <pre>
    *  BeanUtils.invoke(null, String.class.getMethods()[0], "string")
-   *         .ifPresent(e -> log.info(" BeanUtils.main:调用失败处理[{}]", e.getClass()));
+   *         .ifPresent(e -&gt; log.info(" BeanUtils.main:调用失败处理[{}]", e.getClass()));
    * </pre>
    *
    * @param obj the obj
@@ -324,7 +345,7 @@ public final class BeanUtils {
    * 用法:
    *
    * <pre>
-   *  BeanUtils.invoke(obj, field, e -> throw e);
+   *  BeanUtils.invoke(obj, field, e -&gt; throw e);
    * </pre>
    *
    * @param obj the obj
@@ -379,6 +400,7 @@ public final class BeanUtils {
   }
 }
 
+/** The type Ts. */
 @SuppressWarnings("unused")
 class Ts extends AbstractEntityPoJo {
   @Column(name = "alia")

@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.entity.enums;
 
-import com.baomidou.mybatisplus.core.enums.IEnum;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.EnumUtils;
@@ -10,14 +9,30 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public interface InterEnum extends IEnum<Integer>, Serializable {
+/** The interface Inter enum. */
+public interface InterEnum extends Serializable {
+  /** The constant log. */
   Logger log = LoggerFactory.getLogger(InterEnum.class);
 
+  /**
+   * Value integer.
+   *
+   * @return the integer
+   */
   Integer value();
 
+  /**
+   * Desc string.
+   *
+   * @return the string
+   */
   String desc();
 
-  @Override
+  /**
+   * Gets value.
+   *
+   * @return the value
+   */
   default Integer getValue() {
     return value();
   }
@@ -25,6 +40,7 @@ public interface InterEnum extends IEnum<Integer>, Serializable {
   /**
    * 通过枚举值获取枚举实例
    *
+   * @param <T> the type parameter
    * @param enumType 枚举类
    * @param value 枚举值
    * @param allowNull 是否允许获取到的枚举实例为null<br>
@@ -42,7 +58,15 @@ public interface InterEnum extends IEnum<Integer>, Serializable {
     return t;
   }
 
-  /** @see InterEnum#of(Class, Integer, boolean) */
+  /**
+   * Of t.
+   *
+   * @param <T> the type parameter
+   * @param enumType the enum type
+   * @param value the value
+   * @return the t
+   * @see InterEnum#of(Class, Integer, boolean) InterEnum#of(Class, Integer, boolean)
+   */
   static <T extends InterEnum> T of(Class<T> enumType, final Integer value) {
     return of(enumType, value, true);
   }

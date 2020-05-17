@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.util.Objects;
 
 /**
- * BigDecimal->Double转换.
+ * BigDecimal-&gt;Double转换.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4

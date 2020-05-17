@@ -12,21 +12,22 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 基本类型结果转换,注意该类使用valueOf转换值,如果没有该方法将会报错.
  *
+ * @param <E> the type parameter
  * @author Tang Xiaofeng
- * @since 2019/12/27
+ * @since 2019 /12/27
  */
 @Slf4j
 public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
 
+  /**
+   * Instantiates a new Primitive result handler.
+   *
+   * @param clazz the clazz
+   */
   public PrimitiveResultHandler(@Nonnull final Class<E> clazz) {
     super(clazz, null, false);
   }
 
-  /**
-   * {@inheritDoc}<br>
-   *
-   * @throws NoSuchMethodException
-   */
   @Override
   @SuppressWarnings("unchecked")
   public E handle(Map<String, Object> map) {

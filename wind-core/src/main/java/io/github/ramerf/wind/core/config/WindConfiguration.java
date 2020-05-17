@@ -1,7 +1,9 @@
 package io.github.ramerf.wind.core.config;
 
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -10,14 +12,18 @@ import org.springframework.context.annotation.Configuration;
  */
 @Data
 @Configuration
+@ConfigurationProperties("wind")
 public class WindConfiguration {
+  private String logicDeleteField = "isDelete";
 
-  @Value("${mybatis-plus.global-config.db-config.service-delete-field:isDelete}")
-  private String logicDeleteField;
+  private boolean logicNotDelete = false;
 
-  @Value("${mybatis-plus.global-config.db-config.service-not-delete-value:false}")
-  private boolean logicNotDelete;
+  private boolean logicDeleted = true;
+  /**
+   * entity所在包路径,多个以,分割.<br>
+   * 如果没有配置该值,使用{@link SpringBootApplication#scanBasePackages()}
+   */
+  private String entityPackage = "";
 
-  @Value("${mybatis-plus.global-config.db-config.service-delete-value:true}")
-  private boolean logicDeleted;
+  @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
 }
