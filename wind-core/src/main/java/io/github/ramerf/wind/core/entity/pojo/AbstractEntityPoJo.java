@@ -24,8 +24,6 @@ public class AbstractEntityPoJo implements AbstractEntity {
   // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
 
   private Long id;
-  private Long createId;
-  private Long updateId;
   @Builder.Default private Boolean isDelete = Boolean.FALSE;
 
   /** 创建时间 */

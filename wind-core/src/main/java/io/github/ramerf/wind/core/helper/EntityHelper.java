@@ -4,8 +4,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.util.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +44,7 @@ public class EntityHelper {
 
   public static void main(String[] args) {
     initEntity(AbstractEntityPoJo.class);
-    IFunction<AbstractEntityPoJo, Long> function = AbstractEntityPoJo::getCreateId;
+    IFunction<AbstractEntityPoJo, Date> function = AbstractEntityPoJo::getCreateTime;
     log.info("main:[{}]", getColumn(function));
   }
 }
