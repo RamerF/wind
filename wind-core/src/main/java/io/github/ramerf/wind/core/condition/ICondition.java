@@ -247,48 +247,6 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   <V> Condition<T> like(boolean condition, IConsumer<T, V> field, V value);
 
   /**
-   * Like left condition.
-   *
-   * @param <V> the type parameter
-   * @param field the field
-   * @param value the value
-   * @return the condition
-   */
-  <V> Condition<T> likeLeft(IConsumer<T, V> field, V value);
-
-  /**
-   * Like left condition.
-   *
-   * @param <V> the type parameter
-   * @param condition the condition
-   * @param field the field
-   * @param value the value
-   * @return the condition
-   */
-  <V> Condition<T> likeLeft(boolean condition, IConsumer<T, V> field, V value);
-
-  /**
-   * Like right condition.
-   *
-   * @param <V> the type parameter
-   * @param field the field
-   * @param value the value
-   * @return the condition
-   */
-  <V> Condition<T> likeRight(IConsumer<T, V> field, V value);
-
-  /**
-   * Like right condition.
-   *
-   * @param <V> the type parameter
-   * @param condition the condition
-   * @param field the field
-   * @param value the value
-   * @return the condition
-   */
-  <V> Condition<T> likeRight(boolean condition, IConsumer<T, V> field, V value);
-
-  /**
    * Not like condition.
    *
    * @param <V> the type parameter

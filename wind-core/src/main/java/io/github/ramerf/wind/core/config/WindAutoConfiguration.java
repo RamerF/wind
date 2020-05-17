@@ -39,7 +39,7 @@ public class WindAutoConfiguration implements ApplicationContextAware {
       throws BeansException {
     final WindConfiguration configuration = applicationContext.getBean(WindConfiguration.class);
     // 初始化分布式主键
-    SnowflakeIdWorker.setWorkerId(configuration.getSnowflakeProp().getWorkId());
+    SnowflakeIdWorker.setWorkerId(configuration.getSnowflakeProp().getWorkerId());
     SnowflakeIdWorker.setDatacenterId(configuration.getSnowflakeProp().getDataCenterId());
     // 初始化实体类
     applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()

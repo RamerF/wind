@@ -25,5 +25,5 @@ public class WindConfiguration {
    */
   private String entityPackage = "";
 
-  @NestedConfigurationProperty private SnowflakeProp snowflakeProp;
+  @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
 }

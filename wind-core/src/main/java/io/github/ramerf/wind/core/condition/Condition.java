@@ -36,8 +36,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   /** where后的字符串,参数占位符为 ?. */
   private final List<String> conditionSql = new LinkedList<>();
   /** 占位符对应的值. */
-  private final List<Object> values = new LinkedList<>();
-
   private final List<ValueType> valueTypes = new LinkedList<>();
 
   private boolean containLogicNotDelete = false;
@@ -71,7 +69,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
-      values.add(value);
       valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
@@ -93,7 +90,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.NOT_EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
-      values.add(value);
       valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
@@ -115,7 +111,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.GREATER.operator)
               .concat(toPreFormatSqlVal(value)));
-      values.add(value);
       valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
@@ -137,7 +132,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.GE.operator)
               .concat(toPreFormatSqlVal(value)));
-      values.add(value);
       valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
@@ -159,7 +153,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.LESS.operator)
               .concat(toPreFormatSqlVal(value)));
-      values.add(value);
       valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
@@ -181,7 +174,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(EntityHelper.getColumn(field))
               .concat(MatchPattern.LE.operator)
               .concat(toPreFormatSqlVal(value)));
-      values.add(value);
       valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
@@ -202,49 +194,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(EntityHelper.getColumn(field))
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      values.add(PERCENT.operator.concat(String.valueOf(value)).concat(PERCENT.operator));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
-    }
-    return this;
-  }
-
-  @Override
-  public <V> Condition<T> likeLeft(@Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    return likeLeft(true, field, value);
-  }
-
-  @Override
-  public <V> Condition<T> likeLeft(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
-              .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      values.add(PERCENT.operator.concat(String.valueOf(value)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
-    }
-    return this;
-  }
-
-  @Override
-  public <V> Condition<T> likeRight(@Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    return likeRight(true, field, value);
-  }
-
-  @Override
-  public <V> Condition<T> likeRight(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
-              .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
-              .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      values.add(String.valueOf(value).concat(PERCENT.operator));
       valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
@@ -265,7 +214,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(DOT.operator)
               .concat(EntityHelper.getColumn(field))
               .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      values.add(PERCENT.operator.concat(String.valueOf(value)).concat(PERCENT.operator));
       valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
     }
     return this;
@@ -294,8 +242,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                       MatchPattern.BETWEEN.operator,
                       toPreFormatSqlVal(start),
                       toPreFormatSqlVal(end))));
-      values.add(start);
-      values.add(end);
       valueTypes.add(ValueType.of(start, BeanUtils.getGenericType(field)));
       valueTypes.add(ValueType.of(end, BeanUtils.getGenericType(field)));
     }
@@ -323,8 +269,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(
                   String.format(
                       NOT_BETWEEN.operator, toPreFormatSqlVal(start), toPreFormatSqlVal(end))));
-      values.add(start);
-      values.add(end);
       valueTypes.add(ValueType.of(start, BeanUtils.getGenericType(field)));
       valueTypes.add(ValueType.of(end, BeanUtils.getGenericType(field)));
     }
@@ -390,11 +334,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(
-          value -> {
-            this.values.add(value);
-            valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
-          });
+      values.forEach(value -> valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field))));
     }
     return this;
   }
@@ -422,11 +362,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(
-          value -> {
-            this.values.add(value);
-            valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
-          });
+      values.forEach(value -> valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field))));
     }
     return this;
   }
@@ -489,7 +425,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
-      values.addAll(children.values);
       valueTypes.addAll(children.valueTypes);
     }
     return this;
@@ -506,7 +441,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
               .concat(BRACKET_FORMAT.format(children.getString())));
-      children.values.stream().forEach(values::add);
+      valueTypes.addAll(children.valueTypes);
     }
     return this;
   }
@@ -528,7 +463,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
             .concat(camelToUnderline(logicDeleteField))
             .concat(MatchPattern.EQUAL.operator)
             .concat(toPreFormatSqlVal(logicNotDelete)));
-    values.add(logicNotDelete);
     final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setIsDelete;
     valueTypes.add(ValueType.of(logicNotDelete, BeanUtils.getGenericType(beanFunction)));
   }

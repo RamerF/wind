@@ -79,7 +79,7 @@ public class Query {
    */
   public static Query getInstance() {
     final Query bean = AppContextInject.getBean(Query.class);
-    log.info("getInstance:[{}]", bean);
+    log.debug("getInstance:[{}]", bean);
     return bean;
   }
 

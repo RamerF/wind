@@ -3,6 +3,8 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
+import io.github.ramerf.wind.core.entity.response.ResultCode;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.*;
@@ -183,5 +185,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * @return the repository
    * @throws RuntimeException the runtime exception
    */
-  <U> U getRepository() throws RuntimeException;
+  default <U> U getRepository() throws RuntimeException {
+    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+  }
 }

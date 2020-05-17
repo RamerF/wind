@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 public abstract class AbstractQueryEntity<T extends AbstractEntity> implements QueryEntity<T> {
   protected QueryEntityMetaData<T> queryEntityMetaData = new QueryEntityMetaData<>();
 
-  @Value("${wind.logic-delete-field}")
+  @Value("${wind.logic-delete-field:isDelete}")
   protected String logicDeleteField = "isDelete";
 
   @Value("${wind.logic-not-delete:false}")

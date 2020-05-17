@@ -80,5 +80,5 @@ wind:
   logic-deleted: true
   entity-package: io.github.ramerf.wind..demo.entity.pojo
   snowflake-prop:
-    work-id: 3
+    worker-id: 3
     data-center-id: 2
