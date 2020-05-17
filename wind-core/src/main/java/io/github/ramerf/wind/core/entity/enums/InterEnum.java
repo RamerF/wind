@@ -9,7 +9,12 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** The interface Inter enum. */
+/**
+ * The interface inter enum.
+ *
+ * @author Tang Xiaofeng
+ * @since 2020/3/28
+ */
 public interface InterEnum extends Serializable {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(InterEnum.class);
@@ -27,15 +32,6 @@ public interface InterEnum extends Serializable {
    * @return the string
    */
   String desc();
-
-  /**
-   * Gets value.
-   *
-   * @return the value
-   */
-  default Integer getValue() {
-    return value();
-  }
 
   /**
    * 通过枚举值获取枚举实例

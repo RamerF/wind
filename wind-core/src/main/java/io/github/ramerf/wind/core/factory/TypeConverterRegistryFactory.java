@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.factory;
 
 import io.github.ramerf.wind.core.converter.*;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
+import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.lang.reflect.Type;
 import java.util.*;
 import javax.annotation.Nonnull;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Component
 @SuppressWarnings({"rawtypes", "unused"})
 public class TypeConverterRegistryFactory {
-  private List<TypeConverter> typeConverters = new LinkedList<>();
+  private Set<TypeConverter> typeConverters = new LinkedHashSet<>();
 
   /** Instantiates a new Type converter registry. */
   public TypeConverterRegistryFactory() {
@@ -32,6 +33,7 @@ public class TypeConverterRegistryFactory {
     addTypeConverters(new DateTypeConverter());
     addTypeConverters(new EnumTypeConverter());
     addTypeConverters(new IntegerArrayTypeConverter());
+    addTypeConverters(new ListIntegerArrayTypeConverter());
     addTypeConverters(new ListLongArrayTypeConverter());
     addTypeConverters(new ListStringArrayTypeConverter());
     addTypeConverters(new LongArrayTypeConverter());
@@ -52,10 +54,10 @@ public class TypeConverterRegistryFactory {
   /**
    * Add type converter.
    *
-   * @param converter the converter
+   * @param converters the list of converter
    */
-  public void addTypeConverter(@Nonnull TypeConverter converter) {
-    typeConverters.add(converter);
+  public void addTypeConverter(@Nonnull Set<TypeConverter> converters) {
+    CollectionUtils.doIfNonEmpty(converters, () -> typeConverters.addAll(converters));
   }
 
   /**
@@ -63,7 +65,7 @@ public class TypeConverterRegistryFactory {
    *
    * @param typeConverters the type converters
    */
-  public void setTypeConverters(List<TypeConverter> typeConverters) {
+  public void setTypeConverters(Set<TypeConverter> typeConverters) {
     this.typeConverters = typeConverters;
   }
 
@@ -72,7 +74,7 @@ public class TypeConverterRegistryFactory {
    *
    * @return the type converters
    */
-  public List<TypeConverter> getTypeConverters() {
+  public Set<TypeConverter> getTypeConverters() {
     return typeConverters;
   }
 

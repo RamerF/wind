@@ -17,14 +17,14 @@ import lombok.Getter;
 @SuppressWarnings("unchecked")
 public class TypeConverterHelper {
   public static Object toJavaValue(final ValueType valueType, final Class<?> parameterType) {
-    return Optional.of(AppContextInject.getBean(TypeConverterRegistryFactory.class))
+    return Optional.ofNullable(AppContextInject.getBean(TypeConverterRegistryFactory.class))
         .map(o -> o.getToJavaTypeConverter(valueType))
         .map(converter -> converter.covertFromJdbc(valueType.originVal, parameterType))
         .orElse(valueType.originVal);
   }
 
   public static Object toJdbcValue(final ValueType valueType, final PreparedStatement ps) {
-    return Optional.of(AppContextInject.getBean(TypeConverterRegistryFactory.class))
+    return Optional.ofNullable(AppContextInject.getBean(TypeConverterRegistryFactory.class))
         .map(o -> o.getToJdbcTypeConverter(valueType))
         .map(converter -> converter.convertToJdbc(valueType.originVal, ps))
         .orElse(valueType.originVal);
