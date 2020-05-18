@@ -5,9 +5,9 @@ import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.BaseServiceImpl;
-import io.github.ramerf.wind.demo.entity.pojo.DemoProductPoJo;
-import io.github.ramerf.wind.demo.repository.DemoProductRepository;
-import io.github.ramerf.wind.demo.service.DemoProductService;
+import io.github.ramerf.wind.demo.entity.pojo.Foo;
+import io.github.ramerf.wind.demo.repository.FooRepository;
+import io.github.ramerf.wind.demo.service.FooService;
 import java.util.function.Consumer;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -25,39 +25,39 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
-public class DemoProductServiceImpl implements DemoProductService {
-  @Resource private DemoProductRepository repository;
+public class FooServiceImpl implements FooService {
+  @Resource private FooRepository repository;
 
-  @Resource(name = "demoProductBs")
-  private BaseService<DemoProductPoJo> baseService;
+  @Resource(name = "fooBs")
+  private BaseService<Foo> baseService;
 
   @Override
-  public Page<DemoProductPoJo> page(
-      Consumer<QueryColumn<DemoProductPoJo>> consumer, int page, int size, SortColumn sortColumn) {
-    final Page<DemoProductPoJo> poJoPage = baseService.page(consumer, page, size, sortColumn);
+  public Page<Foo> page(
+      Consumer<QueryColumn<Foo>> consumer, int page, int size, SortColumn sortColumn) {
+    final Page<Foo> poJoPage = baseService.page(consumer, page, size, sortColumn);
     log.info("page:这里可以执行额外操作[{}]", poJoPage);
     return poJoPage;
   }
 
   @Override
-  public DemoProductPoJo enableCache(final long id) {
+  public Foo enableCache(final long id) {
     return getById(id);
   }
 
   @Cacheable(
-      value = "io.github.ramerf.wind.demo.service.impl.DemoProductServiceImpl",
+      value = "io.github.ramerf.wind.demo.service.impl.FooServiceImpl",
       key = "caches[0].name+'('+#id+')'")
   @Override
-  public DemoProductPoJo redisCache(final long id) {
+  public Foo redisCache(final long id) {
     return getById(id);
   }
 
   @Override
   @CacheEvict(
-      value = "io.github.ramerf.wind.demo.service.impl.DemoProductServiceImpl",
+      value = "io.github.ramerf.wind.demo.service.impl.FooServiceImpl",
       key = "caches[0].name+'('+#poJo.id+')'")
   @Transactional(rollbackFor = Exception.class)
-  public void redisCacheClear(final DemoProductPoJo poJo) {
+  public void redisCacheClear(final Foo poJo) {
     update(poJo);
   }
 
@@ -69,8 +69,8 @@ public class DemoProductServiceImpl implements DemoProductService {
     return 0;
   }
 
-  @Bean("demoProductBs")
-  public BaseService<DemoProductPoJo> setBaseService(@Autowired DemoProductRepository repository) {
+  @Bean("fooBs")
+  public BaseService<Foo> setBaseService(@Autowired FooRepository repository) {
     return new BaseServiceImpl<>(repository);
   }
 
