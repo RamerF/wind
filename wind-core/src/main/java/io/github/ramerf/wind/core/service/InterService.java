@@ -4,6 +4,8 @@ import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.executor.Query;
+import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 
 import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;

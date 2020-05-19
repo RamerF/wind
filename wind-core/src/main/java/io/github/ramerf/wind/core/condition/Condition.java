@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
@@ -10,7 +11,10 @@ import io.github.ramerf.wind.core.helper.TypeConverterHelper;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -470,7 +474,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public List<Function<PreparedStatement, Object>> getValues() {
+  public List<Consumer<PreparedStatement>> getValues(final AtomicInteger startIndex) {
     if (!containLogicNotDelete) {
       appendLogicNotDelete();
       containLogicNotDelete = true;
@@ -480,7 +484,22 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
             valueType ->
                 (Function<PreparedStatement, Object>)
                     ps -> TypeConverterHelper.toJdbcValue(valueType, ps))
+        .map(
+            function ->
+                (Consumer<PreparedStatement>)
+                    ps -> {
+                      try {
+                        ps.setObject(startIndex.incrementAndGet(), function.apply(ps));
+                      } catch (SQLException e) {
+                        throw CommonException.of(e);
+                      }
+                    })
         .collect(toCollection(LinkedList::new));
+  }
+
+  @Override
+  public boolean hasCondition() {
+    return valueTypes.size() > 0;
   }
 
   /** 属性匹配模式 */

@@ -1,5 +1,6 @@
-package io.github.ramerf.wind.core.condition;
+package io.github.ramerf.wind.core.executor;
 
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.constant.Constant;
@@ -9,7 +10,7 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.*;
-import java.sql.SQLException;
+import java.sql.PreparedStatement;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -48,7 +49,7 @@ import static java.util.stream.Collectors.toCollection;
 @Component
 @SuppressWarnings("all")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class Query {
+public class Query extends  AbstractExecutor {
   /*
    TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
    思路: 构造OrderByClause,使用sql语法:
@@ -220,16 +221,14 @@ public class Query {
     final String sql = "SELECT %s FROM %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
+    final AtomicInteger startIndex = new AtomicInteger(0);
     final List<Map<String, Object>> result =
         JDBC_TEMPLATE.query(
             queryString,
-            ps -> {
-              conditions.stream()
-                  .flatMap(condition -> condition.getValues().stream())
-                  .map(o -> o.apply(ps))
-                  .collect(toCollection(LinkedList::new))
-                  .toArray(new Object[0]);
-            },
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
             new ColumnMapRowMapper());
 
     if (CollectionUtils.isEmpty(result)) {
@@ -260,16 +259,14 @@ public class Query {
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", queryString);
     }
+    final AtomicInteger startIndex = new AtomicInteger(0);
     final List<Map<String, Object>> list =
         JDBC_TEMPLATE.query(
             queryString,
-            ps -> {
-              conditions.stream()
-                  .flatMap(condition -> condition.getValues().stream())
-                  .map(o -> o.apply(ps))
-                  .collect(toCollection(LinkedList::new))
-                  .toArray(new Object[0]);
-            },
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
             new ColumnMapRowMapper());
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
@@ -317,16 +314,14 @@ public class Query {
             conditionString,
             pageable.getPageSize(),
             pageable.getOffset());
+    final AtomicInteger startIndex = new AtomicInteger(0);
     final List<Map<String, Object>> list =
         JDBC_TEMPLATE.query(
             queryString,
-            ps -> {
-              conditions.stream()
-                  .flatMap(condition -> condition.getValues().stream())
-                  .map(o -> o.apply(ps))
-                  .collect(toCollection(LinkedList::new))
-                  .toArray(new Object[0]);
-            },
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
             new ColumnMapRowMapper());
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", list);
@@ -379,18 +374,16 @@ public class Query {
       log.debug("fetch:[{}]", queryString);
     }
     final long total = fetchCount();
+    final AtomicInteger startIndex = new AtomicInteger(0);
     final List<Map<String, Object>> list =
         total < 1
             ? null
             : JDBC_TEMPLATE.query(
                 queryString,
-                ps -> {
-                  conditions.stream()
-                      .flatMap(condition -> condition.getValues().stream())
-                      .map(o -> o.apply(ps))
-                      .collect(toCollection(LinkedList::new))
-                      .toArray(new Object[0]);
-                },
+                ps ->
+                    conditions.stream()
+                        .flatMap(condition -> condition.getValues(startIndex).stream())
+                        .forEach(o -> o.accept(ps)),
                 new ColumnMapRowMapper());
     // 从1开始
     final int currentPage = pageable.getPageNumber();
@@ -415,28 +408,21 @@ public class Query {
     doIfNonEmpty(afterWhereString.toString(), str -> countString = countString.concat(str));
     final boolean nonEmpty = StringUtils.nonEmpty(countString);
     final String sql =
-        nonEmpty && countString.contains(GROUP_BY.operator)
+        nonEmpty && countString.contains(GROUP_BY.operator())
             ? "SELECT SUM(b.a) FROM (SELECT 1 a FROM %s) b"
             : "SELECT COUNT(1) FROM %s";
     final String queryString = String.format(sql, nonEmpty ? countString : "");
-    final PreparedStatementSetter setter =
-        ps -> {
-          final AtomicInteger index = new AtomicInteger(1);
-          conditions.stream()
-              .flatMap(condition -> condition.getValues().stream())
-              .map(o -> o.apply(ps))
-              .forEach(
-                  value -> {
-                    try {
-                      ps.setObject(index.getAndIncrement(), value);
-                    } catch (SQLException e) {
-                      throw CommonException.of(e);
-                    }
-                  });
-        };
+
+    List<Consumer<PreparedStatement>> list = new LinkedList<>();
+
+    final AtomicInteger index = new AtomicInteger(1);
+    final AtomicInteger startIndex = new AtomicInteger(0);
     return JDBC_TEMPLATE.query(
         queryString,
-        setter,
+        ps ->
+            conditions.stream()
+                .flatMap(condition -> condition.getValues(startIndex).stream())
+                .forEach(o -> o.accept(ps)),
         (ResultSetExtractor<Integer>)
             rs -> {
               while (rs.next()) {

@@ -1,5 +1,7 @@
-package io.github.ramerf.wind.core.condition;
+package io.github.ramerf.wind.core.executor;
 
+import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.condition.ICondition;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
@@ -18,7 +20,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -26,8 +27,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * The type Update.
@@ -39,7 +38,7 @@ import static java.util.stream.Collectors.toList;
 @Component
 @SuppressWarnings("unused")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class Update {
+public class Update extends AbstractExecutor {
   private Condition<?> condition;
   private String tableName;
 
@@ -205,26 +204,18 @@ public class Update {
               setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
               setParameterConsumer(index, field, BeanUtils.invoke(t, field, null), list);
             });
-    final List<Function<PreparedStatement, Object>> values = condition.getValues();
-    // TODO-WARN 这里有bug,值没有包含下面的条件
-    // 没有更新条件时,根据id更新
-    if (values.size() <= 1) {
+    // 没有条件时,默认根据id更新
+    if (!condition.hasCondition()) {
+      if (Objects.isNull(t.getId())) {
+        throw new IllegalArgumentException("id could not be null");
+      }
       where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     }
-    values.forEach(
-        value ->
-            list.add(
-                ps -> {
-                  try {
-                    ps.setObject(index.incrementAndGet(), value.apply(ps));
-                  } catch (SQLException e) {
-                    throw CommonException.of(e);
-                  }
-                }));
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, tableName, setBuilder.toString(), condition.getString());
-    return JDBC_TEMPLATE.update(execSql, ps -> list.forEach(val -> val.accept(ps)));
+    return JDBC_TEMPLATE.update(
+        execSql, ps -> condition.getValues(index).forEach(val -> val.accept(ps)));
   }
 
   /**
@@ -278,9 +269,8 @@ public class Update {
    * @throws DataAccessException 如果执行失败
    */
   public int delete() throws DataAccessException {
-    final List<Function<PreparedStatement, Object>> values = condition.getValues();
     // 仅包含逻辑未删除条件
-    if (values.size() <= 1) {
+    if (!condition.hasCondition()) {
       throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
     }
     final String sql = "update %s set %s=%s where %s";
@@ -292,9 +282,7 @@ public class Update {
             logicDeleted,
             condition.getString());
     return JDBC_TEMPLATE.update(
-        updateString,
-        ps ->
-            values.stream().map(value -> value.apply(ps)).collect(toList()).toArray(new Object[0]));
+        updateString, ps -> condition.getValues(null).forEach(val -> val.accept(ps)));
   }
 
   private void setParameterConsumer(

@@ -85,12 +85,13 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * 获取单个对象.
    *
    * @param <R> 返回对象
-   * @param consumer 查询条件
+   * @param queryConsumer 查询列
    * @param clazz 返回对象
    * @return the ones
    */
-  default <R> R getOne(final Consumer<ICondition<T>> consumer, @Nonnull final Class<R> clazz) {
-    return getOne(null, consumer, clazz);
+  default <R> R getOne(
+      final Consumer<QueryColumn<T>> queryConsumer, @Nonnull final Class<R> clazz) {
+    return getOne(queryConsumer, null, clazz);
   }
 
   /**
@@ -153,12 +154,13 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * 查询clazz列表.
    *
    * @param <R> 返回对象
-   * @param consumer the consumer
+   * @param queryConsumer 查询列
    * @param clazz 返回对象class
    * @return the list
    */
-  default <R> List<R> list(final Consumer<ICondition<T>> consumer, @Nonnull final Class<R> clazz) {
-    return list(null, consumer, clazz);
+  default <R> List<R> list(
+      final Consumer<QueryColumn<T>> queryConsumer, @Nonnull final Class<R> clazz) {
+    return list(queryConsumer, null, clazz);
   }
 
   /**
@@ -283,7 +285,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * Page page.
    *
    * @param <R> the type parameter
-   * @param conditionConsumer 查询条件
+   * @param queryConsumer 查询列
    * @param page 当前页码,从1开始
    * @param size 每页大小
    * @param sortColumn 排序规则{@link SortColumn},null时按update_time倒序
@@ -291,12 +293,12 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the page
    */
   default <R> Page<R> page(
-      final Consumer<ICondition<T>> conditionConsumer,
+      final Consumer<QueryColumn<T>> queryConsumer,
       final int page,
       final int size,
       final SortColumn sortColumn,
       @Nonnull final Class<R> clazz) {
-    return page(null, conditionConsumer, page, size, sortColumn, clazz);
+    return page(queryConsumer, null, page, size, sortColumn, clazz);
   }
 
   /**
@@ -330,7 +332,6 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @param clazz the clazz
    * @return the page
    */
-  @SuppressWarnings("DuplicatedCode")
   default <R> Page<R> page(
       final Consumer<QueryColumn<T>> queryConsumer,
       final Consumer<ICondition<T>> conditionConsumer,
@@ -342,54 +343,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     if (Objects.isNull(pageable)) {
       return new PageImpl<>(Collections.emptyList());
     }
-    final QueryBound<T> queryBound = QueryBound.consume(queryConsumer, null, this);
-    return getQuery()
-        .select(queryBound.queryColumn)
-        .where(queryBound.condition)
-        .fetchPage(clazz, pageable);
-  }
-
-  /**
-   * 查询分页,.
-   *
-   * @param queryConsumer 查询列
-   * @param page 当前页码,从1开始
-   * @param size 每页大小
-   * @param sortColumn 排序规则{@link SortColumn},null时按update_time倒序
-   * @return PoJo分页对象 page
-   * @see #page(Consumer, int, int, SortColumn, Class) #page(Consumer, int, int, SortColumn, Class)
-   */
-  default Page<T> pageAll(
-      final Consumer<QueryColumn<T>> queryConsumer,
-      final int page,
-      final int size,
-      final SortColumn sortColumn) {
-    return pageAll(queryConsumer, page, size, sortColumn, getPoJoClass(this));
-  }
-
-  /**
-   * Page page.
-   *
-   * @param <R> the type parameter
-   * @param queryConsumer 查询列
-   * @param page 当前页码,从1开始
-   * @param size 每页大小
-   * @param sortColumn 排序规则{@link SortColumn},null时按update_time倒序
-   * @param clazz the clazz
-   * @return the page
-   */
-  @SuppressWarnings("DuplicatedCode")
-  default <R> Page<R> pageAll(
-      final Consumer<QueryColumn<T>> queryConsumer,
-      final int page,
-      final int size,
-      final SortColumn sortColumn,
-      @Nonnull final Class<R> clazz) {
-    final PageRequest pageable = pageRequest(page, size, sortColumn);
-    if (Objects.isNull(pageable)) {
-      return new PageImpl<>(Collections.emptyList());
-    }
-    final QueryBound<T> queryBound = QueryBound.consume(queryConsumer, null, this);
+    final QueryBound<T> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
     return getQuery()
         .select(queryBound.queryColumn)
         .where(queryBound.condition)
@@ -425,7 +379,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
         size,
         Objects.nonNull(sortColumn)
             ? sortColumn.getSort()
-            : SortColumn.of().desc(AbstractEntityPoJo::getCreateTime).getSort());
+            : SortColumn.by(AbstractEntityPoJo::getCreateTime, SortColumn.Order.DESC).getSort());
   }
 
   /**

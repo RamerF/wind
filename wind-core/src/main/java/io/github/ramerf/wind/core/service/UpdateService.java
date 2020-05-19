@@ -59,6 +59,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * 更新不为null的字段..
    *
    * @param t the t
+   * @param includeNullProps 即使值为null也保存的属性
    * @return the t
    * @throws RuntimeException the runtime exception
    */
@@ -76,26 +77,11 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws RuntimeException the runtime exception
    */
   default int update(
-      final T t,
       @Nonnull final Consumer<ICondition<T>> consumer,
+      final T t,
       final IFunction<T, ?>... includeNullProps)
       throws RuntimeException {
     return getUpdate().where(consumer).update(t, includeNullProps);
-  }
-
-  /**
-   * 条件更新,<b>更新所有列(即使值为<code>null</code>的)</b>.
-   *
-   * @param t the t
-   * @param consumer the consumer
-   * @return 更新记录数
-   * @throws RuntimeException the runtime exception
-   * @see DataAccessException
-   * @see CommonException
-   */
-  default long updateAll(@Nonnull final T t, @Nonnull final Consumer<ICondition<T>> consumer)
-      throws RuntimeException {
-    return 0;
   }
 
   /**
