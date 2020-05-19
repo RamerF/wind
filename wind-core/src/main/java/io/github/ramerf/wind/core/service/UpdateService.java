@@ -33,7 +33,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果执行失败
    * @throws CommonException 创建记录条数不等于1
    */
-  default long create(final @Nonnull T t, final IFunction<T, ?>... includeNullProps)
+  default long create(@Nonnull final T t, final IFunction<T, ?>... includeNullProps)
       throws RuntimeException {
     textFilter(t, t);
     getUpdate().create(t, includeNullProps);
@@ -63,7 +63,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @return the t
    * @throws RuntimeException the runtime exception
    */
-  default int update(T t, final IFunction<T, ?>... includeNullProps) throws RuntimeException {
+  default int update(final T t, final IFunction<T, ?>... includeNullProps) throws RuntimeException {
     return getUpdate().update(t, includeNullProps);
   }
 

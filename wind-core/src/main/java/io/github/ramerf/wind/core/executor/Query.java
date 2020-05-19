@@ -49,7 +49,7 @@ import static java.util.stream.Collectors.toCollection;
 @Component
 @SuppressWarnings("all")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class Query extends  AbstractExecutor {
+public class Query extends AbstractExecutor {
   /*
    TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
    思路: 构造OrderByClause,使用sql语法:
@@ -385,7 +385,7 @@ public class Query extends  AbstractExecutor {
                         .flatMap(condition -> condition.getValues(startIndex).stream())
                         .forEach(o -> o.accept(ps)),
                 new ColumnMapRowMapper());
-    // 从1开始
+    // 从0开始
     final int currentPage = pageable.getPageNumber();
     // 每页大小
     final int pageSize = pageable.getPageSize();

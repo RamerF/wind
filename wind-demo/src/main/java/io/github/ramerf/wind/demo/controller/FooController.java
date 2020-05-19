@@ -34,12 +34,12 @@ public class FooController {
     return Rs.ok(service.count());
   }
 
-  @GetMapping(value = "/count", params = "2")
+  @GetMapping(value = "/count", params = "type=2")
   public ResponseEntity<Rs<Long>> count2() {
     return Rs.ok(service.count(condition -> condition.like(Foo::setName, "foo")));
   }
 
-  @GetMapping(value = "/count", params = "3")
+  @GetMapping(value = "/count", params = "type=3")
   public ResponseEntity<Rs<Long>> count3() {
     return Rs.ok(
         service.count(
@@ -57,7 +57,7 @@ public class FooController {
     return Rs.ok(service.getOne(condition -> condition.eq(Foo::setId, 1L)));
   }
 
-  @GetMapping(value = "/get-one", params = "2")
+  @GetMapping(value = "/get-one", params = "type=2")
   public ResponseEntity<Rs<FooThinResponse>> getOne2() {
     // 支持返回基本类型
     final Long one = service.getOne(query -> query.col(Foo::getId), Long.class);
@@ -69,7 +69,7 @@ public class FooController {
     return Rs.ok(thinResponse);
   }
 
-  @GetMapping(value = "/get-one", params = "3")
+  @GetMapping(value = "/get-one", params = "type=3")
   public ResponseEntity<Rs<Foo>> getOne3() {
     return Rs.ok(
         service.getOne(
@@ -77,7 +77,7 @@ public class FooController {
             condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
   }
 
-  @GetMapping(value = "/get-one", params = "4")
+  @GetMapping(value = "/get-one", params = "type=4")
   public ResponseEntity<Rs<Long>> getOne4() {
     return Rs.ok(
         service.getOne(
@@ -96,12 +96,12 @@ public class FooController {
     return Rs.ok(service.list(condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
   }
 
-  @GetMapping(value = "/list", params = "2")
+  @GetMapping(value = "/list", params = "type=2")
   public ResponseEntity<Rs<Long>> list2() {
     return Rs.ok(service.list(condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
   }
 
-  @GetMapping(value = "/list", params = "3")
+  @GetMapping(value = "/list", params = "type=3")
   public ResponseEntity<Rs<Long>> list3() {
     return Rs.ok(
         service.list(
@@ -109,7 +109,7 @@ public class FooController {
             condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
   }
 
-  @GetMapping(value = "/list", params = "4")
+  @GetMapping(value = "/list", params = "type=4")
   public ResponseEntity<Rs<List<Long>>> list4() {
     return Rs.ok(
         service.list(
@@ -118,7 +118,7 @@ public class FooController {
             Long.class));
   }
 
-  @GetMapping(value = "/list", params = "5")
+  @GetMapping(value = "/list", params = "type=5")
   public ResponseEntity<Rs<List<Foo>>> list5() {
     return Rs.ok(
         service.list(
@@ -128,7 +128,7 @@ public class FooController {
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
   }
 
-  @GetMapping(value = "/list", params = "6")
+  @GetMapping(value = "/list", params = "type=6")
   public ResponseEntity<Rs<List<Long>>> list6() {
     return Rs.ok(
         service.list(
@@ -145,7 +145,7 @@ public class FooController {
     return Rs.ok(service.listAll(query -> query.col(Foo::getId), Long.class));
   }
 
-  @GetMapping(value = "/listAll", params = "2")
+  @GetMapping(value = "/listAll", params = "type=2")
   public ResponseEntity<Rs<List<Foo>>> listAll2() {
     return Rs.ok(service.listAll(query -> query.col(Foo::getId), Foo.class));
   }
@@ -160,7 +160,7 @@ public class FooController {
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
   }
 
-  @GetMapping(value = "/page", params = "2")
+  @GetMapping(value = "/page", params = "type=2")
   public ResponseEntity<Rs<Page<Long>>> page2() {
     return Rs.ok(
         service.page(
@@ -171,7 +171,7 @@ public class FooController {
             Long.class));
   }
 
-  @GetMapping(value = "/page", params = "3")
+  @GetMapping(value = "/page", params = "type=3")
   public ResponseEntity<Rs<Page<Long>>> page3() {
     return Rs.ok(
         service.page(
@@ -182,7 +182,7 @@ public class FooController {
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
   }
 
-  @GetMapping(value = "/page", params = "4")
+  @GetMapping(value = "/page", params = "type=4")
   public ResponseEntity<Rs<Page<Foo>>> page4() {
     return Rs.ok(
         service.page(
@@ -193,4 +193,7 @@ public class FooController {
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
             Long.class));
   }
+
+  // TODO-WARN 自定义id生成器
+  // 思路: 定义接口,用户实现即可,如果是自增,方法返回null,就实现了,嘿嘿
 }

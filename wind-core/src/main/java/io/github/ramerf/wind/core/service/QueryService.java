@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.data.domain.Sort.Order;
 
-import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
-
 /**
  * 公共查询接口,<b>注意: 所有的方法忽略已删除记录.</b>
  *
@@ -68,7 +66,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
   default T getById(final long id) {
     final QueryColumn<T> queryColumn = getQueryColumn();
     final ICondition<T> condition = queryColumn.getCondition().eq(AbstractEntityPoJo::setId, id);
-    return getQuery().select(queryColumn).where(condition).fetchOne(getPoJoClass(this));
+    return getQuery().select(queryColumn).where(condition).fetchOne(getPoJoClass());
   }
 
   /**
@@ -78,7 +76,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the ones
    */
   default T getOne(final Consumer<ICondition<T>> consumer) {
-    return getOne(null, consumer, getPoJoClass(this));
+    return getOne(null, consumer, getPoJoClass());
   }
 
   /**
@@ -102,7 +100,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return T one
    */
   default T getOne(final Consumer<QueryColumn<T>> query, final Consumer<ICondition<T>> condition) {
-    return getOne(query, condition, getPoJoClass(this));
+    return getOne(query, condition, getPoJoClass());
   }
 
   /**
@@ -137,7 +135,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     return getQuery()
         .select(queryBound.queryColumn)
         .where(queryBound.condition)
-        .fetchAll(getPoJoClass(this));
+        .fetchAll(getPoJoClass());
   }
 
   /**
@@ -147,7 +145,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the list
    */
   default List<T> list(final Consumer<ICondition<T>> consumer) {
-    return list(null, consumer, getPoJoClass(this));
+    return list(null, consumer, getPoJoClass());
   }
 
   /**
@@ -173,7 +171,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
   default List<T> list(
       final Consumer<QueryColumn<T>> queryConsumer,
       final Consumer<ICondition<T>> conditionConsumer) {
-    return list(queryConsumer, conditionConsumer, getPoJoClass(this));
+    return list(queryConsumer, conditionConsumer, getPoJoClass());
   }
 
   /**
@@ -207,7 +205,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       final int page,
       final int size,
       final SortColumn sortColumn) {
-    return list(null, conditionConsumer, page, size, sortColumn, getPoJoClass(this));
+    return list(null, conditionConsumer, page, size, sortColumn, getPoJoClass());
   }
 
   /**
@@ -247,7 +245,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the list
    */
   default List<T> listAll(final Consumer<QueryColumn<T>> queryConsumer) {
-    return listAll(queryConsumer, getPoJoClass(this));
+    return listAll(queryConsumer, getPoJoClass());
   }
 
   /**
@@ -278,7 +276,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       final int page,
       final int size,
       final SortColumn sortColumn) {
-    return page(null, conditionConsumer, page, size, sortColumn, getPoJoClass(this));
+    return page(null, conditionConsumer, page, size, sortColumn, getPoJoClass());
   }
 
   /**
@@ -317,7 +315,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       final int page,
       final int size,
       final SortColumn sortColumn) {
-    return page(queryConsumer, conditionConsumer, page, size, sortColumn, getPoJoClass(this));
+    return page(queryConsumer, conditionConsumer, page, size, sortColumn, getPoJoClass());
   }
 
   /**

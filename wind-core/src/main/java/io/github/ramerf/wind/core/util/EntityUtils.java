@@ -211,7 +211,7 @@ public final class EntityUtils {
     try {
       classes = (Class<T>) Class.forName(arguments[0].getTypeName());
     } catch (ClassNotFoundException ignored) {
-      throw CommonException.of("无法获取父类泛型");
+      throw CommonException.of("cannot get service bound type poJo.");
     }
     SERVICE_POJO_MAP.put(serviceClazz, new WeakReference<>(classes));
     return classes;

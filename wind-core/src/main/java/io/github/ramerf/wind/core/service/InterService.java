@@ -1,14 +1,13 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.condition.*;
+import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
-
-import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
+import io.github.ramerf.wind.core.util.EntityUtils;
 
 /**
  * The interface Inter service.
@@ -34,7 +33,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * @return the query column
    */
   default QueryColumn<T> getQueryColumn() {
-    return QueryColumnFactory.getInstance(getPoJoClass(this));
+    return QueryColumnFactory.getInstance(getPoJoClass());
   }
 
   /**
@@ -63,7 +62,16 @@ public interface InterService<T extends AbstractEntityPoJo> {
    */
   default Update getUpdate(final boolean current) {
     final Update instance = Update.getInstance();
-    return current ? instance.from(getPoJoClass(this)) : instance;
+    return current ? instance.from(getPoJoClass()) : instance;
+  }
+
+  /**
+   * 获取service泛型PoJo.
+   *
+   * @return the po jo class
+   */
+  default Class<T> getPoJoClass() {
+    return EntityUtils.getPoJoClass(this);
   }
 
   /**
