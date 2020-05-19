@@ -49,10 +49,10 @@ public final class ControllerHelper {
     try {
       invoke.create(entity);
       if (Objects.isNull(entity.getId())) {
-        throw CommonException.of(ResultCode.API_FAIL_EXEC_ADD);
+        throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);
       }
     } catch (Exception e) {
-      throw CommonException.of(Objects.nonNull(error) ? error : ResultCode.API_FAIL_EXEC_ADD);
+      throw CommonException.of(Objects.nonNull(error) ? error : ResultCode.API_FAIL_EXEC_CREATE);
     }
   }
 
@@ -91,7 +91,7 @@ public final class ControllerHelper {
    * @param invoke the invoke
    * @param entity the entity
    * @param bindingResult the binding result
-   * @param includeNullProperties the include null properties
+   * @param includeNullPropserties the include null properties
    * @return the response entity
    */
   public static <
@@ -103,8 +103,8 @@ public final class ControllerHelper {
           final S invoke,
           final R entity,
           final BindingResult bindingResult,
-          final String... includeNullProperties) {
-    return createOrUpdate(invoke, entity, bindingResult, true, includeNullProperties);
+          final String... includeNullPropserties) {
+    return createOrUpdate(invoke, entity, bindingResult, true, includeNullPropserties);
   }
 
   /**
@@ -262,7 +262,7 @@ public final class ControllerHelper {
    * @param entity the entity
    * @param id the id
    * @param bindingResult the binding result
-   * @param includeNullProperties the include null properties
+   * @param includeNullPropserties the include null properties
    * @return the response entity
    */
   public static <
@@ -275,35 +275,12 @@ public final class ControllerHelper {
           final R entity,
           final long id,
           final BindingResult bindingResult,
-          final String... includeNullProperties) {
+          final String... includeNullPropserties) {
     if (id < 1) {
       return wrongFormat("id");
     }
     entity.setId(id);
-    return createOrUpdate(invoke, entity, bindingResult, false, includeNullProperties);
-  }
-
-  /**
-   * Update batch response entity.
-   *
-   * @param <S> the type parameter
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param invoke the invoke
-   * @param entities the entities
-   * @param includeNullProperties the include null properties
-   * @return the response entity
-   */
-  public static <
-          S extends BaseService<T>, T extends AbstractEntityPoJo, R extends AbstractEntityRequest>
-      ResponseEntity<Rs<String>> updateBatch(
-          final S invoke, final List<R> entities, final String... includeNullProperties) {
-    try {
-      invoke.updateBatchRequest(entities, includeNullProperties);
-      return ok(ResultCode.API_SUCCESS_EXEC_UPDATE);
-    } catch (Exception e) {
-      return errorResponse(e);
-    }
+    return createOrUpdate(invoke, entity, bindingResult, false, includeNullPropserties);
   }
 
   /**
@@ -527,7 +504,7 @@ public final class ControllerHelper {
           final R entity,
           final BindingResult bindingResult,
           final boolean create,
-          @Nonnull final String... includeNullProperties) {
+          @Nonnull final String... includeNullPropserties) {
     // 处理不同层级调用的情况
     Stream.of(Thread.currentThread().getStackTrace())
         .filter(o -> o.getClassName().contains("controller."))
@@ -535,10 +512,10 @@ public final class ControllerHelper {
         .ifPresent(
             stack ->
                 log.info(
-                    "\n\t{}:[entity:{},includeNullProperties:{}]",
+                    "\n\t{}:[entity:{},includeNullPropserties:{}]",
                     stack,
                     entity,
-                    includeNullProperties));
+                    includeNullPropserties));
     if (Objects.nonNull(bindingResult) && bindingResult.hasErrors()) {
       return fail(collectBindingResult(bindingResult));
     }
@@ -554,12 +531,12 @@ public final class ControllerHelper {
       CommonException.requireNonNull(exist, ResultCode.API_DATA_NOT_EXIST.desc(String.valueOf(id)));
     }
     T domain = initial(getPoJoClass(invoke));
-    final List<String> includeNullProp = Arrays.asList(includeNullProperties);
+    final List<String> includeNullProps = Arrays.asList(includeNullPropserties);
     BeanUtils.copyProperties(
         entity,
         domain,
         getNullProp(entity).stream()
-            .filter(prop -> !includeNullProp.contains(prop))
+            .filter(prop -> !includeNullProps.contains(prop))
             .toArray(String[]::new));
     // 额外处理
     entity.redundantValue(domain);
@@ -574,7 +551,7 @@ public final class ControllerHelper {
                   : ResultCode.API_SUCCESS_EXEC_UPDATE.desc())
           : fail(
               create
-                  ? ResultCode.API_FAIL_EXEC_ADD.desc()
+                  ? ResultCode.API_FAIL_EXEC_CREATE.desc()
                   : ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST.desc());
     } catch (Exception e) {
       return errorResponse(e);

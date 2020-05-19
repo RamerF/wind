@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.demo.service.impl;
 
-import io.github.ramerf.wind.core.condition.QueryColumn;
-import io.github.ramerf.wind.core.condition.SortColumn;
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.BaseServiceImpl;
@@ -9,6 +8,7 @@ import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.repository.FooRepository;
 import io.github.ramerf.wind.demo.service.FooService;
 import java.util.function.Consumer;
+import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +33,11 @@ public class FooServiceImpl implements FooService {
 
   @Override
   public Page<Foo> page(
-      Consumer<QueryColumn<Foo>> consumer, int page, int size, SortColumn sortColumn) {
-    final Page<Foo> poJoPage = baseService.page(consumer, page, size, sortColumn);
+      @Nonnull final Consumer<ICondition<Foo>> conditionConsumer,
+      final int page,
+      final int size,
+      final SortColumn sortColumn) {
+    final Page<Foo> poJoPage = baseService.page(conditionConsumer, page, size, sortColumn);
     log.info("page:这里可以执行额外操作[{}]", poJoPage);
     return poJoPage;
   }

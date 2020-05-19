@@ -38,7 +38,7 @@ public class DemoProductController {
 
   @GetMapping(params = "type=3")
   public ResponseEntity<Rs<Object>> foo3() {
-    return Rs.ok(service.lists(condition -> condition.eq(Foo::setType, Type.PHONE)));
+    return Rs.ok(service.list(condition -> condition.eq(Foo::setType, Type.PHONE)));
   }
 
   @Data

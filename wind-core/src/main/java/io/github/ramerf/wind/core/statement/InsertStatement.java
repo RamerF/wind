@@ -44,7 +44,7 @@ public class InsertStatement {
 
     public InsertValue columns(List<String> rowCols) {
       insertStatement.columnString.append(
-          SqlOperator.BRACKET_FORMAT.format(
+          SqlOperator.PARENTHESIS_FORMAT.format(
               rowCols.stream()
                   .map(StringUtils::camelToUnderline)
                   .collect(Collectors.joining(SEMICOLON))));
@@ -82,7 +82,7 @@ public class InsertStatement {
         if (CollectionUtils.isEmpty(rowValues)) {
           throw CommonException.of("值不能为空,请调用value方法设置值");
         }
-        return SqlOperator.BRACKET_FORMAT.format(
+        return SqlOperator.PARENTHESIS_FORMAT.format(
             rowValues.stream()
                 .map(SqlHelper::toPreFormatSqlVal)
                 .collect(Collectors.joining(SEMICOLON)));
@@ -131,7 +131,7 @@ public class InsertStatement {
           if (Objects.isNull(values)) {
             throw CommonException.of("值不能为空,请调用value方法设置值");
           }
-          return SqlOperator.BRACKET_FORMAT.format(
+          return SqlOperator.PARENTHESIS_FORMAT.format(
               values.stream()
                   .map(SqlHelper::toPreFormatSqlVal)
                   .collect(Collectors.joining(SEMICOLON)));

@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +38,7 @@ public class SortColumn {
    * @return the sort column
    */
   public <T extends AbstractEntity> SortColumn asc(final IFunction<T, ?> function) {
-    return asc(EntityHelper.getColumn(function));
+    return asc(function.getColumn());
   }
 
   /**
@@ -61,7 +60,7 @@ public class SortColumn {
    * @return the sort column
    */
   public <T extends AbstractEntity> SortColumn desc(final IFunction<T, ?> function) {
-    return desc(EntityHelper.getColumn(function));
+    return desc(function.getColumn());
   }
 
   /**

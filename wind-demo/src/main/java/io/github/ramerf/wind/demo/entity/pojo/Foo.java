@@ -2,8 +2,6 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
@@ -23,27 +21,27 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@ApiModel("Foo")
 public class Foo extends AbstractEntityPoJo {
-  @ApiModelProperty(value = "名称", example = "名称")
   private String name;
 
-  @ApiModelProperty(value = "CODE", example = "CODE")
-  private String code;
+  @Column(columnDefinition = "text(255)")
+  private String textString;
 
   /** List&lt;Long&gt; 可对应数据库类型 bigint[] */
-  @ApiModelProperty(value = "sku id 集合", example = "1,2,3")
   @Column(columnDefinition = "bigint[]")
-  private List<Long> skuIds;
+  private List<Long> longList;
 
-  /** String[] 可对应数据库类型 text[]/varchar[] */
-  @ApiModelProperty(value = "测试text数组", example = "'名称1','名称2'")
-  private String[] texts;
+  /** Long[]可对应数据库类型 bigint[] */
+  private Long[] longArr;
 
-  @ApiModelProperty(value = "测试List<String>", example = "'名称1','名称2'")
+  /** List&lt;String&gt; 可对应数据库类型 text[]/varchar[] */
   private List<String> stringList;
 
-  @Column(columnDefinition = "bit[]")
+  /** String[] 可对应数据库类型 text[]/varchar[] */
+  private String[] stringArr;
+
+  /** Bitset 可对应数据库类型 bytea */
+  @Column(columnDefinition = "bytea")
   private BitSet bitSet;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 smallint/int */
@@ -57,7 +55,11 @@ public class Foo extends AbstractEntityPoJo {
   @Column(name = "non_match_column")
   private String column;
 
-  private List<Integer> intArr;
+  /** List&lt;Integer&gt; 可对应数据库类型 int[] */
+  private List<Integer> intList;
+
+  /** Integer[]可对应数据库类型 int[] */
+  private Integer[] intArr;
 
   public enum Type implements InterEnum {
     /** 商品类别 */

@@ -37,5 +37,5 @@ public class AbstractEntityPoJo implements AbstractEntity {
   private Date updateTime;
 
   @Setter(AccessLevel.NONE)
-  private transient String databaseName;
+  private static transient String databaseName;
 }

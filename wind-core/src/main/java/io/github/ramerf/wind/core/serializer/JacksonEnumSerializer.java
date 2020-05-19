@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import java.io.IOException;
-import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
 
 /**
  * 定义枚举的序列化.
@@ -15,6 +16,7 @@ import java.util.Objects;
  * @see InterEnumSerializer#serializer(InterEnum)
  * @see InterEnumSerializer#defaultSerializer(InterEnum) .
  */
+@Slf4j
 public class JacksonEnumSerializer extends JsonSerializer<InterEnum> {
   @Override
   public void serialize(
@@ -22,10 +24,12 @@ public class JacksonEnumSerializer extends JsonSerializer<InterEnum> {
       throws IOException {
     Object object;
     InterEnumSerializer interEnumSerializer;
-    if (Objects.nonNull(
-        interEnumSerializer = AppContextInject.getBean(InterEnumSerializer.class))) {
+    try {
+      interEnumSerializer = AppContextInject.getBean(InterEnumSerializer.class);
       object = interEnumSerializer.serializer(interEnum);
-    } else {
+    } catch (BeansException e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
       interEnumSerializer = obj -> null;
       object = interEnumSerializer.defaultSerializer(interEnum);
     }

@@ -3,8 +3,10 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import javax.annotation.Nonnull;
 
 /**
@@ -409,5 +411,5 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    *
    * @return 占位符对应的值 values
    */
-  List<Object> getValues();
+  List<Function<PreparedStatement, Object>> getValues();
 }

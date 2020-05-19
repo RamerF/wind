@@ -21,24 +21,12 @@ public class AppContextInject implements ApplicationContextAware {
   public static ApplicationContext context;
 
   public static <T> T getBean(final Class<T> requiredType) {
-    try {
-      return context.getBean(requiredType);
-    } catch (BeansException e) {
-      log.warn("getBean:[{}]", e.getMessage());
-      log.error(e.getMessage(), e);
-      return null;
-    }
+    return context.getBean(requiredType);
   }
 
   @SuppressWarnings("unchecked")
   public static <T> T getBean(final String beanName) {
-    try {
-      return (T) context.getBean(beanName);
-    } catch (BeansException e) {
-      log.warn("getBean:[{}]", e.getMessage());
-      log.error(e.getMessage(), e);
-      return null;
-    }
+    return (T) context.getBean(beanName);
   }
 
   @Override

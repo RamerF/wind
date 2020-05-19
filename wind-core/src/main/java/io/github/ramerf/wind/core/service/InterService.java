@@ -5,8 +5,6 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
 
@@ -19,8 +17,6 @@ import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface InterService<T extends AbstractEntityPoJo> {
-  /** The constant log. */
-  Logger log = LoggerFactory.getLogger(InterService.class);
 
   /**
    * 过滤某些属性可能包含的特殊字符.

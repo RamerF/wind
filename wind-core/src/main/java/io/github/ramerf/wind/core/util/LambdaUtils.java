@@ -8,6 +8,7 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The type Lambda utils.
@@ -15,89 +16,79 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Tang Xiaofeng
  * @since 2019 /12/26
  */
+@Slf4j
 public final class LambdaUtils {
   /** SerializedLambda 反序列化缓存 */
   private static final Map<Class<?>, WeakReference<SerializedLambda>> LAMBDA_MAP =
       new ConcurrentHashMap<>();
 
   /**
-   * 获取lambda表达式对应的方法引用类名.
-   *
-   * @param implClass {@link SerializedLambda#getImplClass()}
-   * @return the actual type
-   */
-  public static String getActualType(final String implClass) {
-    return implClass.substring(implClass.lastIndexOf("/") + 1);
-  }
-
-  /**
-   * 获取lambda表达式对应的方法引用类名全路径.
-   *
-   * @param function the IFunction
-   * @return the actual type path
-   * @see #serializedLambda(BeanFunction) #serializedLambda(BeanFunction)
-   */
-  public static String getActualTypePath(final BeanFunction function) {
-    final SerializedLambda lambda = serializedLambda(function);
-    return lambda.getImplClass().replaceAll("/", ".");
-  }
-
-  /**
-   * 获取lambda表达式对应的方法引用类名全路径.
-   *
-   * @param implClass {@link SerializedLambda#getImplClass()}
-   * @return the actual type path
-   * @see #serializedLambda(BeanFunction) #serializedLambda(BeanFunction)
-   */
-  public static String getActualTypePath(final String implClass) {
-    return implClass.replaceAll("/", ".");
-  }
-
-  /**
    * 获取lambda表达式对应的方法名.
    *
-   * @param function 需要解析的 lambda 对象
+   * @param beanFunction 需要解析的 lambda 对象
    * @return 返回解析后的结果 method name
    * @see LambdaUtils#serializedLambda(BeanFunction) LambdaUtils#serializedLambda(BeanFunction)
    */
-  public static String getMethodName(BeanFunction function) {
-    Class<?> clazz = function.getClass();
-    return Optional.ofNullable(LAMBDA_MAP.get(clazz))
-        .map(WeakReference::get)
-        .map(SerializedLambda::getImplMethodName)
-        .orElseGet(
-            () -> {
-              SerializedLambda lambda = serializedLambda(function);
-              LAMBDA_MAP.put(clazz, new WeakReference<>(lambda));
-              return lambda.getImplMethodName();
-            });
+  public static String getMethodName(BeanFunction beanFunction) {
+    return serializedLambda(beanFunction).getImplMethodName();
   }
 
   /**
-   * Serialized lambda serialized lambda.
+   * 获取lambda表达式对应的方法引用类名全路径.
    *
-   * @param lambda the lambda
-   * @return the serialized lambda
+   * @param beanFunction 需要解析的 lambda 对象
+   * @return 返回解析后的结果 method name
+   * @see LambdaUtils#serializedLambda(BeanFunction) LambdaUtils#serializedLambda(BeanFunction)
    */
-  public static SerializedLambda serializedLambda(BeanFunction lambda) {
-    if (!lambda.getClass().isSynthetic()) {
+  public static String getImplClassFullPath(BeanFunction beanFunction) {
+    return serializedLambda(beanFunction).getImplClass().replaceAll("/", ".");
+  }
+
+  /**
+   * 获取lambda表达式对应的方法引用类名.
+   *
+   * @param beanFunction 需要解析的 lambda 对象
+   * @return 返回解析后的结果 method name
+   * @see LambdaUtils#serializedLambda(BeanFunction) LambdaUtils#serializedLambda(BeanFunction)
+   */
+  public static String getImplClassName(BeanFunction beanFunction) {
+    final String implClass = serializedLambda(beanFunction).getImplClass().replaceAll("/", ".");
+    return implClass.substring(implClass.lastIndexOf(".") + 1);
+  }
+
+  /**
+   * Serialized beanFunction serialized beanFunction.
+   *
+   * @param beanFunction the beanFunction
+   * @return the serialized beanFunction
+   */
+  public static SerializedLambda serializedLambda(BeanFunction beanFunction) {
+    if (!beanFunction.getClass().isSynthetic()) {
       throw CommonException.of("不支持非lambda表达式");
     }
-    try (ObjectInputStream objectInputStream =
-        new ObjectInputStream(new ByteArrayInputStream(serialize(lambda))) {
-          @Override
-          protected Class<?> resolveClass(ObjectStreamClass objectStreamClass)
-              throws IOException, ClassNotFoundException {
-            Class<?> clazz = super.resolveClass(objectStreamClass);
-            return clazz == java.lang.invoke.SerializedLambda.class
-                ? SerializedLambda.class
-                : clazz;
-          }
-        }) {
-      return (SerializedLambda) objectInputStream.readObject();
-    } catch (ClassNotFoundException | IOException e) {
-      throw CommonException.of(e);
-    }
+    return Optional.ofNullable(LAMBDA_MAP.get(beanFunction.getClass()))
+        .map(WeakReference::get)
+        .orElseGet(
+            () -> {
+              try (ObjectInputStream objectInputStream =
+                  new ObjectInputStream(new ByteArrayInputStream(serialize(beanFunction))) {
+                    @Override
+                    protected Class<?> resolveClass(ObjectStreamClass objectStreamClass)
+                        throws IOException, ClassNotFoundException {
+                      Class<?> clazz = super.resolveClass(objectStreamClass);
+                      return clazz == java.lang.invoke.SerializedLambda.class
+                          ? SerializedLambda.class
+                          : clazz;
+                    }
+                  }) {
+                final SerializedLambda serializedLambda =
+                    (SerializedLambda) objectInputStream.readObject();
+                LAMBDA_MAP.put(beanFunction.getClass(), new WeakReference<>(serializedLambda));
+                return serializedLambda;
+              } catch (ClassNotFoundException | IOException e) {
+                throw CommonException.of(e);
+              }
+            });
   }
 
   private static byte[] serialize(BeanFunction lambda) {
@@ -123,12 +114,7 @@ public final class LambdaUtils {
   public static void main(String[] args) {
     IFunction<AbstractEntityPoJo, Long> function = AbstractEntityPoJo::getId;
     IConsumer<AbstractEntityPoJo, Long> consumer = AbstractEntityPoJo::setId;
-    System.out.println("main:" + getMethodName(function));
-    System.out.println(
-        "main:getActualTypePath:"
-            + getActualTypePath(serializedLambda(function).getInstantiatedMethodType()));
-    System.out.println(
-        "main:getActualTypePath:"
-            + getActualTypePath(serializedLambda(consumer).getInstantiatedMethodType()));
+    log.info("main:getMethodName[{}]", getMethodName(function));
+    log.info("main:getActualTypePath:[{}]" + getImplClassFullPath(consumer));
   }
 }
