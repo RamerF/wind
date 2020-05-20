@@ -51,8 +51,8 @@ public class EntityHelper {
    * @return the column
    */
   public static String getColumn(BeanFunction function) {
-    if (log.isDebugEnabled()) {
-      log.debug("getColumn:[{}]", FIELD_COLUMN_MAP);
+    if (log.isTraceEnabled()) {
+      log.trace("getColumn:[{}]", FIELD_COLUMN_MAP);
     }
     final Map<String, String> fieldColumnMap =
         FIELD_COLUMN_MAP.get(function.getImplClassFullPath());

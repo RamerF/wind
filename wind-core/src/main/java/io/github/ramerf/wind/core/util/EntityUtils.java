@@ -69,7 +69,9 @@ public final class EntityUtils {
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
             .filter(field -> Objects.nonNull(BeanUtils.invoke(t, field, null)))
             .collect(toList());
-    log.debug("getNonNullColumnFields:[{}]", fields);
+    if (log.isTraceEnabled()) {
+      log.debug("getNonNullColumnFields:[{}]", fields);
+    }
     return fields;
   }
 

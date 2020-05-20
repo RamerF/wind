@@ -193,7 +193,4 @@ public class FooController {
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
             Long.class));
   }
-
-  // TODO-WARN 自定义id生成器
-  // 思路: 定义接口,用户实现即可,如果是自增,方法返回null,就实现了,嘿嘿
 }

@@ -489,7 +489,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                 (Consumer<PreparedStatement>)
                     ps -> {
                       try {
-                        ps.setObject(startIndex.incrementAndGet(), function.apply(ps));
+                        ps.setObject(startIndex.getAndIncrement(), function.apply(ps));
                       } catch (SQLException e) {
                         throw CommonException.of(e);
                       }

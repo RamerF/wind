@@ -221,7 +221,7 @@ public class Query extends AbstractExecutor {
     final String sql = "SELECT %s FROM %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
-    final AtomicInteger startIndex = new AtomicInteger(0);
+    final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> result =
         JDBC_TEMPLATE.query(
             queryString,
@@ -259,7 +259,7 @@ public class Query extends AbstractExecutor {
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", queryString);
     }
-    final AtomicInteger startIndex = new AtomicInteger(0);
+    final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> list =
         JDBC_TEMPLATE.query(
             queryString,
@@ -314,7 +314,7 @@ public class Query extends AbstractExecutor {
             conditionString,
             pageable.getPageSize(),
             pageable.getOffset());
-    final AtomicInteger startIndex = new AtomicInteger(0);
+    final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> list =
         JDBC_TEMPLATE.query(
             queryString,
@@ -374,7 +374,7 @@ public class Query extends AbstractExecutor {
       log.debug("fetch:[{}]", queryString);
     }
     final long total = fetchCount();
-    final AtomicInteger startIndex = new AtomicInteger(0);
+    final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> list =
         total < 1
             ? null
@@ -416,7 +416,7 @@ public class Query extends AbstractExecutor {
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
 
     final AtomicInteger index = new AtomicInteger(1);
-    final AtomicInteger startIndex = new AtomicInteger(0);
+    final AtomicInteger startIndex = new AtomicInteger(1);
     return JDBC_TEMPLATE.query(
         queryString,
         ps ->

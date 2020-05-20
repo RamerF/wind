@@ -43,6 +43,8 @@ import org.springframework.stereotype.Component;
 @SuppressWarnings("unused")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Update extends AbstractExecutor {
+
+  private Class<?> clazz;
   private Condition<?> condition;
   private String tableName;
 
@@ -89,6 +91,7 @@ public class Update extends AbstractExecutor {
     }
     this.tableName = StringUtils.nonEmpty(tableName) ? tableName : EntityUtils.getTableName(clazz);
     this.condition = QueryColumnFactory.getInstance(clazz).getCondition();
+    this.clazz = clazz;
     return this;
   }
 
@@ -107,7 +110,7 @@ public class Update extends AbstractExecutor {
   }
 
   /**
-   * Create int.
+   * 创建,默认不保存值为null的列.
    *
    * @param <T> the type parameter
    * @param t the t
@@ -131,7 +134,7 @@ public class Update extends AbstractExecutor {
     // values中的?占位符
     final StringBuilder valueMarks = new StringBuilder();
     List<Object> values = new LinkedList<>();
-    final AtomicInteger index = new AtomicInteger(0);
+    final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
     getSavingFields(t, includeNullProps)
         .forEach(
@@ -177,6 +180,8 @@ public class Update extends AbstractExecutor {
     }
     // 取第一条记录获取批量保存sql
     final T t = ts.get(0);
+    final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
+    ts.forEach(o -> o.setId(idGenerator.nextId(t)));
     final Set<Field> savingFields = getSavingFields(t, includeNullProps);
     // 插入列
     final StringBuilder columns = new StringBuilder();
@@ -192,10 +197,11 @@ public class Update extends AbstractExecutor {
         });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
-    final int batchSize = 100;
+    int createRow = 0;
+    final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
     int total = ts.size();
-    final int execCount = total / batchSize + total % batchSize != 0 ? 1 : 0;
-    for (int j = 0; j <= execCount; j++) {
+    final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
+    for (int j = 0; j < execCount; j++) {
       final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
       final int[] batchUpdate =
           JDBC_TEMPLATE.batchUpdate(
@@ -204,46 +210,36 @@ public class Update extends AbstractExecutor {
                 @Override
                 public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                   final AtomicInteger index = new AtomicInteger(1);
+                  final T obj = execList.get(i);
+                  obj.setCreateTime(new Date());
                   savingFields.forEach(
-                      field ->
-                          setArgsValue(
-                              index, field, BeanUtils.invoke(execList.get(i), field, null), ps));
+                      field -> setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
                 }
 
                 @Override
                 public int getBatchSize() {
-                  return ts.size();
+                  return execList.size();
                 }
               });
-      log.info("createBatch:[{}]", batchUpdate);
+      createRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
     }
-    return 0;
-  }
-
-  @SuppressWarnings("unchecked")
-  private <T extends AbstractEntity> Set<Field> getSavingFields(
-      final T t, final IFunction<T, ?>... includeNullProps) {
-    final Set<Field> savingFields = new HashSet<>(EntityUtils.getNonNullColumnFields(t));
-    if (Objects.nonNull(includeNullProps) && includeNullProps.length > 0) {
-      Arrays.stream(includeNullProps).forEach(prop -> savingFields.add(prop.getField()));
-    }
-    return savingFields;
+    return createRow;
   }
 
   /**
-   * 保存所有字段,包含null.
+   * 更新,默认根据id更新且不更新值为null的列.
    *
    * @param <T> the type parameter
    * @param t the t
    * @param includeNullProps 即使值为null也保存的属性
    * @return the long
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   public <T extends AbstractEntityPoJo> int update(
       @Nonnull final T t, final IFunction<T, ?>... includeNullProps) {
     t.setUpdateTime(new Date());
     final StringBuilder setBuilder = new StringBuilder();
-    final AtomicInteger index = new AtomicInteger();
+    final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
     getSavingFields(t, includeNullProps)
         .forEach(
@@ -267,31 +263,69 @@ public class Update extends AbstractExecutor {
   }
 
   /**
-   * Update batch int.
+   * 批量更新,根据id更新.
    *
    * @param <T> the type parameter
    * @param ts the ts
    * @param includeNullProps 即使值为null也保存的属性
    * @return the int
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   public <T extends AbstractEntityPoJo> int updateBatch(
       @Nonnull final List<T> ts, final IFunction<T, ?>... includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
       return 0;
     }
-    AtomicInteger count = new AtomicInteger(0);
-    ts.forEach(
-        t -> {
-          try {
-            update(t, includeNullProps);
-            count.getAndIncrement();
-          } catch (Exception e) {
-            log.warn(e.getMessage());
-            log.error(e.getMessage(), e);
-          }
-        });
-    return count.get();
+    // 取第一条记录获取批量更新sql
+    final T t = ts.get(0);
+    final Set<Field> savingFields = getSavingFields(t, includeNullProps);
+    final StringBuilder setBuilder = new StringBuilder();
+    final AtomicInteger index = new AtomicInteger();
+    List<Consumer<PreparedStatement>> list = new LinkedList<>();
+    savingFields.forEach(
+        field ->
+            setBuilder.append(
+                String.format(
+                    setBuilder.length() > 0 ? ",%s=?" : "%s=?", EntityUtils.fieldToColumn(field))));
+    if (Objects.isNull(t.getId())) {
+      throw new IllegalArgumentException("id could not be null");
+    }
+    // 保证占位符对应
+    where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+    final String sql = "UPDATE %s SET %s WHERE %s";
+    final String execSql =
+        String.format(sql, tableName, setBuilder.toString(), condition.getString());
+    int updateRow = 0;
+    final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
+    int total = ts.size();
+    final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
+    for (int j = 0; j < execCount; j++) {
+      final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
+      final int[] batchUpdate =
+          JDBC_TEMPLATE.batchUpdate(
+              execSql,
+              new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(@Nonnull final PreparedStatement ps, final int i) {
+                  final AtomicInteger index = new AtomicInteger(1);
+                  final T obj = execList.get(i);
+                  obj.setUpdateTime(new Date());
+                  savingFields.forEach(
+                      field -> setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
+                  Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
+                      .eq(T::setId, obj.getId())
+                      .getValues(index)
+                      .forEach(val -> val.accept(ps));
+                }
+
+                @Override
+                public int getBatchSize() {
+                  return execList.size();
+                }
+              });
+      updateRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
+    }
+    return updateRow;
   }
 
   /**
@@ -333,7 +367,32 @@ public class Update extends AbstractExecutor {
         updateString, ps -> condition.getValues(null).forEach(val -> val.accept(ps)));
   }
 
-  /** 获取参数值对应的{@link PreparedStatement#setObject(int, Object)} */
+  /**
+   * 获取要保存的属性.
+   *
+   * @param t 需要保存的对象
+   * @param includeNullProps 即使值为null也需要保存的属性
+   * @param <T> the type parameter
+   * @return 要保存的属性
+   */
+  @SuppressWarnings("unchecked")
+  private <T extends AbstractEntity> Set<Field> getSavingFields(
+      final T t, final IFunction<T, ?>... includeNullProps) {
+    final Set<Field> savingFields = new HashSet<>(EntityUtils.getNonNullColumnFields(t));
+    if (Objects.nonNull(includeNullProps) && includeNullProps.length > 0) {
+      Arrays.stream(includeNullProps).forEach(prop -> savingFields.add(prop.getField()));
+    }
+    return savingFields;
+  }
+
+  /**
+   * 获取参数值对应的{@link PreparedStatement#setObject(int, Object)}.
+   *
+   * @param index 起始索引
+   * @param field 对应字段
+   * @param originValue 原始值
+   * @param list 设置参数值的consumer集合
+   */
   private void getArgsValueSetConsumer(
       AtomicInteger index,
       Field field,
@@ -351,7 +410,7 @@ public class Update extends AbstractExecutor {
                   originValue,
                   value);
             }
-            ps.setObject(index.incrementAndGet(), value);
+            ps.setObject(index.getAndIncrement(), value);
           } catch (SQLException e) {
             throw CommonException.of(e);
           }
@@ -359,16 +418,19 @@ public class Update extends AbstractExecutor {
     list.add(function);
   }
 
-  /** 获取参数值. */
+  /**
+   * 设置参数值.
+   *
+   * @param index 起始索引
+   * @param field 对应字段
+   * @param originValue 原始值
+   * @param ps the {@link PreparedStatement}
+   */
   private void setArgsValue(
       AtomicInteger index, Field field, Object originValue, PreparedStatement ps) {
     final Object value = TypeConverterHelper.toJdbcValue(ValueType.of(originValue, field), ps);
     if (log.isTraceEnabled()) {
-      log.trace(
-          "setParameterConsumer:[index:{},originValue:{},value:{}]",
-          index.get(),
-          originValue,
-          value);
+      log.trace("setArgsValue:[index:{},originValue:{},value:{}]", index.get(), originValue, value);
     }
     try {
       ps.setObject(index.getAndIncrement(), value);
