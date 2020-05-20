@@ -2,7 +2,6 @@ package io.github.ramerf.wind.demo.config;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
-import io.github.ramerf.wind.core.util.SnowflakeIdWorker;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +16,10 @@ import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
+ * 通用bean定义.
+ *
  * @author Tang Xiaofeng
- * @since 2019/12/6
+ * @since 2019 /12/6
  */
 @Slf4j
 @EnableSwagger2
@@ -27,16 +28,28 @@ public class CommonBean {
   @Value("${spring.swagger.enable:false}")
   private boolean enableSwagger;
 
-  @Bean
-  public SnowflakeIdWorker snowflakeIdWorker() {
-    return new SnowflakeIdWorker();
-  }
+  /// 自定义id生成策略,下方为数据库自增写法
+  //  @Bean
+  //  @ConditionalOnMissingBean(IdGenerator.class)
+  //  public IdGenerator snowflakeIdWorker() {
+  //    return o -> null;
+  //  }
 
+  /**
+   * 自定义枚举的序列化格式.
+   *
+   * @return the inter enum serializer
+   */
   @Bean
   public InterEnumSerializer interEnumSerializer() {
     return InterEnum::value;
   }
 
+  /**
+   * Api docket.
+   *
+   * @return the docket
+   */
   @Bean
   public Docket api() {
     ParameterBuilder parameterBuilder = new ParameterBuilder();

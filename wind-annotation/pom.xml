@@ -5,13 +5,13 @@
     <parent>
         <artifactId>wind</artifactId>
         <groupId>io.github.ramerf</groupId>
-        <version>3.3.0-RELEASE</version>
+        <version>3.4.0-RELEASE</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>wind-annotation</artifactId>
     <name>wind-annotation</name>
-    <version>3.3.0-RELEASE</version>
+    <version>3.4.0-RELEASE</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

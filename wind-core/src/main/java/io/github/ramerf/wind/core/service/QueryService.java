@@ -13,7 +13,13 @@ import org.springframework.data.domain.*;
 import org.springframework.data.domain.Sort.Order;
 
 /**
- * 公共查询接口,<b>注意: 所有的方法忽略已删除记录.</b>
+ * 公共查询接口.
+ *
+ * <pre>
+ * <h2>
+ *   <font color="yellow">注意: 所有的方法忽略已删除记录<code>{@link AbstractEntityPoJo#getIsDelete()}=false.</code></font>
+ * </h2>
+ * </pre>
  *
  * @param <T> the type parameter
  * @author Tang Xiaofeng

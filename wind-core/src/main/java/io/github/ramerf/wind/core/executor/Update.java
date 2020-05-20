@@ -13,10 +13,11 @@ import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
+import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Date;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -25,7 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
 /**
@@ -114,7 +118,7 @@ public class Update extends AbstractExecutor {
   @SafeVarargs
   public final <T extends AbstractEntityPoJo> void create(
       @Nonnull final T t, final IFunction<T, ?>... includeNullProps) throws DataAccessException {
-    t.setId(AppContextInject.getBean(SnowflakeIdWorker.class).nextId());
+    t.setId(AppContextInject.getBean(IdGenerator.class).nextId(t));
     final Date now = new Date();
     if (Objects.isNull(t.getCreateTime())) {
       t.setCreateTime(now);
@@ -127,7 +131,7 @@ public class Update extends AbstractExecutor {
     // values中的?占位符
     final StringBuilder valueMarks = new StringBuilder();
     List<Object> values = new LinkedList<>();
-    final AtomicInteger index = new AtomicInteger();
+    final AtomicInteger index = new AtomicInteger(0);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
     getSavingFields(t, includeNullProps)
         .forEach(
@@ -135,11 +139,24 @@ public class Update extends AbstractExecutor {
               final String column = EntityUtils.fieldToColumn(field);
               columns.append(columns.length() > 0 ? ",".concat(column) : column);
               valueMarks.append(valueMarks.length() > 0 ? ",?" : "?");
-              setParameterConsumer(index, field, BeanUtils.invoke(t, field, null), list);
+              getArgsValueSetConsumer(index, field, BeanUtils.invoke(t, field, null), list);
             });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
-    if (JDBC_TEMPLATE.update(execSql, ps -> list.forEach(val -> val.accept(ps))) != 1) {
+    KeyHolder keyHolder = new GeneratedKeyHolder();
+    final int update =
+        JDBC_TEMPLATE.update(
+            con -> {
+              final PreparedStatement ps =
+                  con.prepareStatement(execSql, Statement.RETURN_GENERATED_KEYS);
+              list.forEach(val -> val.accept(ps));
+              return ps;
+            },
+            keyHolder);
+    if (Objects.isNull(t.getId())) {
+      t.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+    }
+    if (update != 1) {
       throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);
     }
   }
@@ -158,18 +175,49 @@ public class Update extends AbstractExecutor {
     if (CollectionUtils.isEmpty(ts)) {
       return 0;
     }
-    final AtomicInteger count = new AtomicInteger(0);
-    ts.forEach(
-        t -> {
-          try {
-            create(ts.get(0), includeNullProps);
-            count.incrementAndGet();
-          } catch (Exception e) {
-            log.warn(e.getMessage());
-            log.error(e.getMessage(), e);
-          }
+    // 取第一条记录获取批量保存sql
+    final T t = ts.get(0);
+    final Set<Field> savingFields = getSavingFields(t, includeNullProps);
+    // 插入列
+    final StringBuilder columns = new StringBuilder();
+    // values中的?占位符
+    final StringBuilder valueMarks = new StringBuilder();
+    List<Object> values = new LinkedList<>();
+    List<Consumer<PreparedStatement>> list = new LinkedList<>();
+    savingFields.forEach(
+        field -> {
+          final String column = EntityUtils.fieldToColumn(field);
+          columns.append(columns.length() > 0 ? ",".concat(column) : column);
+          valueMarks.append(valueMarks.length() > 0 ? ",?" : "?");
         });
-    return count.get();
+    final String sql = "INSERT INTO %s(%s) VALUES(%s)";
+    final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
+    final int batchSize = 100;
+    int total = ts.size();
+    final int execCount = total / batchSize + total % batchSize != 0 ? 1 : 0;
+    for (int j = 0; j <= execCount; j++) {
+      final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
+      final int[] batchUpdate =
+          JDBC_TEMPLATE.batchUpdate(
+              execSql,
+              new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(@Nonnull final PreparedStatement ps, final int i) {
+                  final AtomicInteger index = new AtomicInteger(1);
+                  savingFields.forEach(
+                      field ->
+                          setArgsValue(
+                              index, field, BeanUtils.invoke(execList.get(i), field, null), ps));
+                }
+
+                @Override
+                public int getBatchSize() {
+                  return ts.size();
+                }
+              });
+      log.info("createBatch:[{}]", batchUpdate);
+    }
+    return 0;
   }
 
   @SuppressWarnings("unchecked")
@@ -202,7 +250,7 @@ public class Update extends AbstractExecutor {
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
               setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
-              setParameterConsumer(index, field, BeanUtils.invoke(t, field, null), list);
+              getArgsValueSetConsumer(index, field, BeanUtils.invoke(t, field, null), list);
             });
     // 没有条件时,默认根据id更新
     if (!condition.hasCondition()) {
@@ -285,16 +333,19 @@ public class Update extends AbstractExecutor {
         updateString, ps -> condition.getValues(null).forEach(val -> val.accept(ps)));
   }
 
-  private void setParameterConsumer(
-      AtomicInteger index, Field field, Object val, List<Consumer<PreparedStatement>> list) {
-    final Object originValue = val;
+  /** 获取参数值对应的{@link PreparedStatement#setObject(int, Object)} */
+  private void getArgsValueSetConsumer(
+      AtomicInteger index,
+      Field field,
+      Object originValue,
+      List<Consumer<PreparedStatement>> list) {
     Consumer<PreparedStatement> function =
         ps -> {
           try {
             final Object value =
                 TypeConverterHelper.toJdbcValue(ValueType.of(originValue, field), ps);
             if (log.isDebugEnabled()) {
-              log.info(
+              log.debug(
                   "setParameterConsumer:[index:{},originValue:{},value:{}]",
                   index.get(),
                   originValue,
@@ -306,6 +357,26 @@ public class Update extends AbstractExecutor {
           }
         };
     list.add(function);
+  }
+
+  /** 获取参数值. */
+  private void setArgsValue(
+      AtomicInteger index, Field field, Object originValue, PreparedStatement ps) {
+    final Object value = TypeConverterHelper.toJdbcValue(ValueType.of(originValue, field), ps);
+    if (log.isTraceEnabled()) {
+      log.trace(
+          "setParameterConsumer:[index:{},originValue:{},value:{}]",
+          index.get(),
+          originValue,
+          value);
+    }
+    try {
+      ps.setObject(index.getAndIncrement(), value);
+    } catch (SQLException e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+      throw CommonException.of(e.getMessage(), e);
+    }
   }
 
   /**

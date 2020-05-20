@@ -1,13 +1,15 @@
-package io.github.ramerf.wind.core.util;
+package io.github.ramerf.wind.core.support;
 
 /**
+ * 雪花分布式id生成算法.
+ *
  * @author Tang Xiaofeng
  * @since 2019/11/12
  */
 @SuppressWarnings("all")
 public class SnowflakeIdWorker {
-  /** 开始时间截 (2018-06-26) */
-  private final long startEpoch = 1529942400000L;
+  /** 开始时间截 (2020-05-20 00:00:00) */
+  private final long startEpoch = 1589904000000L;
 
   /** 机器id所占的位数 */
   private final long workerIdBits = 4L;

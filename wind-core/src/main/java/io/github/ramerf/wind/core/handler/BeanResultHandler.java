@@ -8,7 +8,6 @@ import java.lang.reflect.Method;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,13 +66,5 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
                           .orElse(null)));
     }
     return obj;
-  }
-
-  @Override
-  public List<E> handle(List<Map<String, Object>> maps) {
-    if (CollectionUtils.isEmpty(maps)) {
-      return Collections.emptyList();
-    }
-    return maps.stream().map(this::handle).collect(Collectors.toList());
   }
 }

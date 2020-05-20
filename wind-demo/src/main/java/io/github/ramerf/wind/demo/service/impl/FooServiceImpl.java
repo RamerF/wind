@@ -1,13 +1,11 @@
 package io.github.ramerf.wind.demo.service.impl;
 
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.BaseServiceImpl;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.repository.FooRepository;
 import io.github.ramerf.wind.demo.service.FooService;
-import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,15 +27,15 @@ public class FooServiceImpl implements FooService {
 
   @Resource(name = "fooBs")
   private BaseService<Foo> baseService;
-
-  @Override
-  public long create(@Nonnull Foo foo, IFunction<Foo, ?>... includeNullProps)
-      throws RuntimeException {
-    log.info("create:[{}]", foo);
-    final long id = baseService.create(foo, includeNullProps);
-    log.info("create:这里可以执行额外操作[{}]", id);
-    return id;
-  }
+  //
+  //  @Override
+  //  public long create(@Nonnull Foo foo, IFunction<Foo, ?>... includeNullProps)
+  //      throws RuntimeException {
+  //    log.info("create:[{}]", foo);
+  //    final long id = baseService.create(foo, includeNullProps);
+  //    log.info("create:这里可以执行额外操作[{}]", id);
+  //    return id;
+  //  }
 
   @Override
   public Foo enableCache(final long id) {
