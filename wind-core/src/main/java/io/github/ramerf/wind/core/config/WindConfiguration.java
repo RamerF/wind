@@ -31,7 +31,7 @@ public class WindConfiguration {
   private String entityPackage = "";
 
   /** 批量操作时,每次处理的大小. */
-  private int batchSize = 50;
+  private int batchSize = 150;
 
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
 }
