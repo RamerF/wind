@@ -14,6 +14,7 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @ApiModel(value = "Foo只包含部分属性")
 public class FooThinResponse extends AbstractEntityResponse {

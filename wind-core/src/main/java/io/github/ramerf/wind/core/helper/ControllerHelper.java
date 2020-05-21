@@ -6,11 +6,15 @@ import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import io.github.ramerf.wind.core.util.PageUtils;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +36,7 @@ import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
  * @since 2019 /12/26
  */
 @Slf4j
-@SuppressWarnings({"unused", "rawtypes"})
+@SuppressWarnings({"unused", "rawtypes", "unchecked"})
 public final class ControllerHelper {
   /**
    * 执行创建.
@@ -91,7 +95,7 @@ public final class ControllerHelper {
    * @param invoke the invoke
    * @param entity the entity
    * @param bindingResult the binding result
-   * @param includeNullPropserties the include null properties
+   * @param includeNullProps 即使值为null也保存的属性
    * @return the response entity
    */
   public static <
@@ -103,8 +107,8 @@ public final class ControllerHelper {
           final S invoke,
           final R entity,
           final BindingResult bindingResult,
-          final String... includeNullPropserties) {
-    return createOrUpdate(invoke, entity, bindingResult, true, includeNullPropserties);
+          final IFunction<T, ?>... includeNullProps) {
+    return createOrUpdate(invoke, entity, bindingResult, true, includeNullProps);
   }
 
   /**
@@ -181,7 +185,8 @@ public final class ControllerHelper {
     }
     entity.setId(id);
     try {
-      return invoke.update(entity) < 1
+      final Optional<Integer> update = invoke.update(entity);
+      return update.isPresent()
           ? notExist(String.valueOf(id))
           : ok(json().put("id", entity.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
     } catch (Exception e) {
@@ -243,7 +248,8 @@ public final class ControllerHelper {
           final ResultCode successCode,
           final ResultCode errorCode) {
     try {
-      return invoke.update(entity) < 1
+      final Optional<Integer> update = invoke.update(entity);
+      return update.isPresent()
           ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
           : Objects.nonNull(successCode) ? ok(entity.getId(), successCode) : ok();
     } catch (Exception e) {
@@ -262,7 +268,7 @@ public final class ControllerHelper {
    * @param entity the entity
    * @param id the id
    * @param bindingResult the binding result
-   * @param includeNullPropserties the include null properties
+   * @param includeNullProps 即使值为null也更新的属性
    * @return the response entity
    */
   public static <
@@ -275,12 +281,12 @@ public final class ControllerHelper {
           final R entity,
           final long id,
           final BindingResult bindingResult,
-          final String... includeNullPropserties) {
+          final IFunction<T, ?>... includeNullProps) {
     if (id < 1) {
       return wrongFormat("id");
     }
     entity.setId(id);
-    return createOrUpdate(invoke, entity, bindingResult, false, includeNullPropserties);
+    return createOrUpdate(invoke, entity, bindingResult, false, includeNullProps);
   }
 
   /**
@@ -368,9 +374,9 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<String>> deleteBatch(final S invoke, final List<Long> ids) {
+      ResponseEntity<Rs<String>> deleteByIds(final S invoke, final List<Long> ids) {
     try {
-      invoke.deleteBatch(ids);
+      invoke.deleteByIds(ids);
     } catch (Exception e) {
       return errorResponse(e);
     }
@@ -488,12 +494,12 @@ public final class ControllerHelper {
    *
    * @param invoke 服务层实现类.
    * @param entity 要更新的request {@link AbstractEntityRequest} 对象.
-   * @param create 是否是创建.
    * @param bindingResult 校验器校验结果.
+   * @param create 是否是创建.
+   * @param includeNullProps 即使值为null也保存的属性
    * @param <T> 服务层实现类.
    * @return {@link ResponseEntity}
    */
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private static <
           S extends BaseService<T>,
           T extends AbstractEntityPoJo,
@@ -504,18 +510,20 @@ public final class ControllerHelper {
           final R entity,
           final BindingResult bindingResult,
           final boolean create,
-          @Nonnull final String... includeNullPropserties) {
-    // 处理不同层级调用的情况
-    Stream.of(Thread.currentThread().getStackTrace())
-        .filter(o -> o.getClassName().contains("controller."))
-        .findFirst()
-        .ifPresent(
-            stack ->
-                log.info(
-                    "\n\t{}:[entity:{},includeNullPropserties:{}]",
-                    stack,
-                    entity,
-                    includeNullPropserties));
+          @Nonnull final IFunction<T, ?>... includeNullProps) {
+    final List<String> includeNulls =
+        Arrays.stream(includeNullProps)
+            .map(BeanFunction::getField)
+            .map(Field::getName)
+            .collect(Collectors.toList());
+    if (log.isDebugEnabled()) {
+      // 打印参数,处理不同层级调用的情况
+      Stream.of(Thread.currentThread().getStackTrace())
+          .filter(o -> o.getClassName().contains("controller."))
+          .findFirst()
+          .ifPresent(
+              stack -> log.info("\n\t{}:[entity:{},includeNulls:{}]", stack, entity, includeNulls));
+    }
     if (Objects.nonNull(bindingResult) && bindingResult.hasErrors()) {
       return fail(collectBindingResult(bindingResult));
     }
@@ -531,19 +539,18 @@ public final class ControllerHelper {
       CommonException.requireNonNull(exist, ResultCode.API_DATA_NOT_EXIST.desc(String.valueOf(id)));
     }
     T domain = initial(getPoJoClass(invoke));
-    final List<String> includeNullProps = Arrays.asList(includeNullPropserties);
     BeanUtils.copyProperties(
         entity,
         domain,
         getNullProp(entity).stream()
-            .filter(prop -> !includeNullProps.contains(prop))
+            .filter(prop -> !includeNulls.contains(prop))
             .toArray(String[]::new));
     // 额外处理
     entity.redundantValue(domain);
+    log.debug("createOrUpdate:[{}]", domain);
     try {
-      log.info("createOrUpdate:[{}]", domain);
-      long row = create ? invoke.create(domain) : invoke.update(domain);
-      return row == 1
+      long affectRow = create ? invoke.create(domain) > 0 ? 1 : 0 : invoke.update(domain).orElse(0);
+      return affectRow == 1
           ? ok(
               json().put("id", domain.getId()),
               create

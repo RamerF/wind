@@ -47,6 +47,7 @@ public class WindAutoConfiguration implements ApplicationContextAware {
   public TypeConverterRegistryFactory typeConverterRegistryFactory() {
     final TypeConverterRegistryFactory factory = new TypeConverterRegistryFactory();
     factory.addTypeConverter(typeConverters);
+    factory.registerDefaultTypeConverters();
     return factory;
   }
 

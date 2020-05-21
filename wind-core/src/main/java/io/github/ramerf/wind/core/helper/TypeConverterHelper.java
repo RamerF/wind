@@ -1,13 +1,16 @@
 package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.config.AppContextInject;
+import io.github.ramerf.wind.core.converter.TypeConverter;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
+import java.util.Objects;
 import java.util.Optional;
 import javax.persistence.Column;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The type Type converter helper.
@@ -16,10 +19,22 @@ import lombok.Getter;
  * @since 2020/5/12
  */
 @SuppressWarnings("unchecked")
+@Slf4j
 public class TypeConverterHelper {
+  @SuppressWarnings("rawtypes")
   public static Object toJavaValue(final ValueType valueType, final Class<?> parameterType) {
     return Optional.of(AppContextInject.getBean(TypeConverterRegistryFactory.class))
-        .map(o -> o.getToJavaTypeConverter(valueType))
+        .map(
+            o -> {
+              final TypeConverter converter = o.getToJavaTypeConverter(valueType);
+              if (log.isTraceEnabled()) {
+                log.trace(
+                    "toJavaValue:match converter[converter:{},field:{}]",
+                    Objects.isNull(converter) ? null : converter.getClass().getSimpleName(),
+                    valueType.originVal);
+              }
+              return converter;
+            })
         .map(converter -> converter.covertFromJdbc(valueType.originVal, parameterType))
         .orElse(valueType.originVal);
   }

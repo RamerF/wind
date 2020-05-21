@@ -79,9 +79,7 @@ public class Query extends AbstractExecutor {
    * @return the instance
    */
   public static Query getInstance() {
-    final Query bean = AppContextInject.getBean(Query.class);
-    log.debug("getInstance:[{}]", bean);
-    return bean;
+    return AppContextInject.getBean(Query.class);
   }
 
   /**

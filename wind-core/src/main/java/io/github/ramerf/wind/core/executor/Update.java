@@ -271,10 +271,10 @@ public class Update extends AbstractExecutor {
    * @return the int
    */
   @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public <T extends AbstractEntityPoJo> int updateBatch(
+  public <T extends AbstractEntityPoJo> Optional<Integer> updateBatch(
       @Nonnull final List<T> ts, final IFunction<T, ?>... includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
-      return 0;
+      return Optional.empty();
     }
     // 取第一条记录获取批量更新sql
     final T t = ts.get(0);
@@ -325,7 +325,7 @@ public class Update extends AbstractExecutor {
               });
       updateRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
     }
-    return updateRow;
+    return updateRow == ts.size() ? Optional.empty() : Optional.of(updateRow);
   }
 
   /**
@@ -351,7 +351,7 @@ public class Update extends AbstractExecutor {
    * @throws DataAccessException 如果执行失败
    */
   public int delete() throws DataAccessException {
-    // 仅包含逻辑未删除条件
+    // 不包含删除条件,抛异常
     if (!condition.hasCondition()) {
       throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
     }
@@ -364,7 +364,8 @@ public class Update extends AbstractExecutor {
             logicDeleted,
             condition.getString());
     return JDBC_TEMPLATE.update(
-        updateString, ps -> condition.getValues(null).forEach(val -> val.accept(ps)));
+        updateString,
+        ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
   }
 
   /**

@@ -59,30 +59,30 @@ public class CommonException extends RuntimeException {
 
   private CommonException(final String message) {
     super(message);
-    log.error("CommonException:[{}]", message);
+    log.info("CommonException:[{}]", message);
   }
 
   private CommonException(@Nonnull final ResultCode resultCode) {
     super(resultCode.desc());
     this.resultCode = resultCode;
-    log.error("CommonException:[code:{},desc:{}]", resultCode.code(), resultCode.desc());
+    log.info("CommonException:[code:{},desc:{}]", resultCode.code(), resultCode.desc());
   }
 
   private CommonException() {
     super(ResultCode.ERROR.desc());
     final ResultCode error = ResultCode.ERROR;
     this.resultCode = error;
-    log.error("CommonException:[code:{},desc:{}]", error.code(), error.desc());
+    log.info("CommonException:[code:{},desc:{}]", error.code(), error.desc());
   }
 
   private CommonException(final String message, final Throwable cause) {
     super(message, cause);
-    log.error(message, cause);
+    log.info(message, cause);
   }
 
   private CommonException(final Throwable cause) {
     super(cause);
-    log.error(cause.getMessage(), cause);
+    log.info(cause.getMessage(), cause);
   }
 
   protected CommonException(
@@ -91,6 +91,6 @@ public class CommonException extends RuntimeException {
       final boolean enableSuppression,
       final boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
-    log.error(cause.getMessage(), cause);
+    log.info(cause.getMessage(), cause);
   }
 }
