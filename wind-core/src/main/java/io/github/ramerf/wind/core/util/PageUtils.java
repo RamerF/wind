@@ -105,13 +105,13 @@ public class PageUtils {
    * @param <T> the type parameter
    * @param list the list
    * @param total 总数
-   * @param page 当前页,从1开始
+   * @param page 当前页,从0开始
    * @param size 每页大小
    * @return the page
    */
   public static <T> Page<T> toPage(
       final List<T> list, final long total, final int page, final int size) {
-    return new PageImpl<>(list, PageRequest.of(page - 1, size), total);
+    return new PageImpl<>(list, PageRequest.of(page, size), total);
   }
 
   /**

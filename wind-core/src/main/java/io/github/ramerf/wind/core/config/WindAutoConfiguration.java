@@ -6,14 +6,15 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
+import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.support.StringToEnumConverterFactory;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
 import java.util.*;
 import javax.annotation.Nonnull;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.ApplicationContext;
@@ -33,8 +34,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WindAutoConfiguration implements ApplicationContextAware {
 
-  @Resource
-  @SuppressWarnings("rawtypes")
+  @Autowired(required = false)
+  @SuppressWarnings({"rawtypes", "SpringJavaAutowiredFieldsWarningInspection"})
   private final Set<TypeConverter> typeConverters = new LinkedHashSet<>();
 
   /**
@@ -46,6 +47,7 @@ public class WindAutoConfiguration implements ApplicationContextAware {
   public TypeConverterRegistryFactory typeConverterRegistryFactory() {
     final TypeConverterRegistryFactory factory = new TypeConverterRegistryFactory();
     factory.addTypeConverter(typeConverters);
+    factory.registerDefaultTypeConverters();
     return factory;
   }
 

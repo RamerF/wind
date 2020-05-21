@@ -6,11 +6,15 @@ import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import io.github.ramerf.wind.core.util.PageUtils;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -32,27 +36,23 @@ import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
  * @since 2019 /12/26
  */
 @Slf4j
-@SuppressWarnings({"unused", "rawtypes"})
+@SuppressWarnings({"unused", "rawtypes", "unchecked"})
 public final class ControllerHelper {
   /**
    * 执行创建.
    *
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    * @param error 执行失败时的错误码,可以为null
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R> void create(
-      final S invoke, final T entity, final ResultCode error) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
+      ResponseEntity<Rs<Object>> create(final S invoke, final T entity, final ResultCode error) {
     try {
-      invoke.create(entity);
-      if (Objects.isNull(entity.getId())) {
-        throw CommonException.of(ResultCode.API_FAIL_EXEC_ADD);
-      }
+      return Rs.ok(invoke.create(entity));
     } catch (Exception e) {
-      throw CommonException.of(Objects.nonNull(error) ? error : ResultCode.API_FAIL_EXEC_ADD);
+      return Rs.fail(Objects.nonNull(error) ? error : ResultCode.API_FAIL_EXEC_CREATE);
     }
   }
 
@@ -61,14 +61,13 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    * @param bindingResult the binding result
    * @return the response entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<R>> create(
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
+      ResponseEntity<Rs<Object>> create(
           final S invoke, final T entity, final BindingResult bindingResult) {
     log.info("create:[{}]", entity);
     if (bindingResult.hasErrors()) {
@@ -91,7 +90,7 @@ public final class ControllerHelper {
    * @param invoke the invoke
    * @param entity the entity
    * @param bindingResult the binding result
-   * @param includeNullProperties the include null properties
+   * @param includeNullProps 即使值为null也保存的属性
    * @return the response entity
    */
   public static <
@@ -103,8 +102,8 @@ public final class ControllerHelper {
           final S invoke,
           final R entity,
           final BindingResult bindingResult,
-          final String... includeNullProperties) {
-    return createOrUpdate(invoke, entity, bindingResult, true, includeNullProperties);
+          final IFunction<T, ?>... includeNullProps) {
+    return createOrUpdate(invoke, entity, bindingResult, true, includeNullProps);
   }
 
   /**
@@ -112,14 +111,13 @@ public final class ControllerHelper {
    *
    * @param <S> the type parameter
    * @param <T> the type parameter
-   * @param <R> the type parameter
    * @param invoke the service
    * @param id the id
    * @return the entity
    * @see #detail(BaseService, long, Function) #detail(BaseService, long, Function)
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<R>> detail(final S invoke, final long id) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
+      ResponseEntity<Rs<Object>> detail(final S invoke, final long id) {
     return detail(invoke, id, null);
   }
 
@@ -145,11 +143,11 @@ public final class ControllerHelper {
   }
 
   /**
-   * 转换分页对象.将Page domain对象转换为 Page 任意对象,并封装为页面响应对象.
+   * 转换分页对象.将Page PoJo对象转换为 Page 任意对象,并封装为页面响应对象.
    *
-   * @param <T> domain对象
+   * @param <T> poJo对象
    * @param <R> the type parameter
-   * @param page {@link Page} domain对象
+   * @param page {@link Page} poJo对象
    * @param function 转换函数表达式
    * @return {@link ResponseEntity}
    */
@@ -181,7 +179,8 @@ public final class ControllerHelper {
     }
     entity.setId(id);
     try {
-      return invoke.update(entity) < 1
+      final Optional<Integer> update = invoke.update(entity);
+      return update.isPresent()
           ? notExist(String.valueOf(id))
           : ok(json().put("id", entity.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
     } catch (Exception e) {
@@ -202,7 +201,7 @@ public final class ControllerHelper {
    *     AbstractEntityPoJo, ResultCode, ResultCode)
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<Long>> update(final S invoke, final T entity) {
+      ResponseEntity<Rs<String>> update(final S invoke, final T entity) {
     return update(invoke, entity, null, null);
   }
 
@@ -211,16 +210,15 @@ public final class ControllerHelper {
    *
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    * @param errorCode 执行失败时的错误码,可以为null
    * @return the response entity
-   * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode) #update(BaseService,
-   *     AbstractEntityPoJo, ResultCode, ResultCode)
+   * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode)
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<Long>> update(final S invoke, final T entity, final ResultCode errorCode) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
+      ResponseEntity<Rs<String>> update(
+          final S invoke, final T entity, final ResultCode errorCode) {
     return update(invoke, entity, null, errorCode);
   }
 
@@ -229,21 +227,21 @@ public final class ControllerHelper {
    *
    * @param <S> the service
    * @param <T> the type parameter
-   * @param <R> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    * @param successCode 执行成功时的响应码,可以为null
    * @param errorCode 执行失败时的错误码,可以为null
    * @return the response entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<Long>> update(
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
+      ResponseEntity<Rs<String>> update(
           final S invoke,
           final T entity,
           final ResultCode successCode,
           final ResultCode errorCode) {
     try {
-      return invoke.update(entity) < 1
+      final Optional<Integer> update = invoke.update(entity);
+      return update.isPresent()
           ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
           : Objects.nonNull(successCode) ? ok(entity.getId(), successCode) : ok();
     } catch (Exception e) {
@@ -257,53 +255,26 @@ public final class ControllerHelper {
    * @param <S> the type parameter
    * @param <T> the type parameter
    * @param <R> the type parameter
-   * @param <P> the type parameter
    * @param invoke the invoke
    * @param entity the entity
    * @param id the id
    * @param bindingResult the binding result
-   * @param includeNullProperties the include null properties
-   * @return the response entity
-   */
-  public static <
-          S extends BaseService<T>,
-          T extends AbstractEntityPoJo,
-          R extends AbstractEntityRequest,
-          P>
-      ResponseEntity<Rs<P>> update(
-          final S invoke,
-          final R entity,
-          final long id,
-          final BindingResult bindingResult,
-          final String... includeNullProperties) {
-    if (id < 1) {
-      return wrongFormat("id");
-    }
-    entity.setId(id);
-    return createOrUpdate(invoke, entity, bindingResult, false, includeNullProperties);
-  }
-
-  /**
-   * Update batch response entity.
-   *
-   * @param <S> the type parameter
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param invoke the invoke
-   * @param entities the entities
-   * @param includeNullProperties the include null properties
+   * @param includeNullProps 即使值为null也更新的属性
    * @return the response entity
    */
   public static <
           S extends BaseService<T>, T extends AbstractEntityPoJo, R extends AbstractEntityRequest>
-      ResponseEntity<Rs<String>> updateBatch(
-          final S invoke, final List<R> entities, final String... includeNullProperties) {
-    try {
-      invoke.updateBatchRequest(entities, includeNullProperties);
-      return ok(ResultCode.API_SUCCESS_EXEC_UPDATE);
-    } catch (Exception e) {
-      return errorResponse(e);
+      ResponseEntity<Rs<Object>> update(
+          final S invoke,
+          final R entity,
+          final long id,
+          final BindingResult bindingResult,
+          final IFunction<T, ?>... includeNullProps) {
+    if (id < 1) {
+      return wrongFormat("id");
     }
+    entity.setId(id);
+    return createOrUpdate(invoke, entity, bindingResult, false, includeNullProps);
   }
 
   /**
@@ -362,8 +333,7 @@ public final class ControllerHelper {
    * @param <T> the type parameter
    * @param <R> the type parameter
    * @param result 执行删除操作后的结果
-   * @param function 返回结果处理,如参为删除返回结果<br>
-   *     注意: 批量删除时,如果返回个数与实际个数不同(即只删除了部分记录)
+   * @param function 返回结果处理,入参为删除返回结果
    * @param errorCode 执行失败时的错误码,可以为null
    * @return the response entity
    */
@@ -391,9 +361,9 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<String>> deleteBatch(final S invoke, final List<Long> ids) {
+      ResponseEntity<Rs<String>> deleteByIds(final S invoke, final List<Long> ids) {
     try {
-      invoke.deleteBatch(ids);
+      invoke.deleteByIds(ids);
     } catch (Exception e) {
       return errorResponse(e);
     }
@@ -401,18 +371,18 @@ public final class ControllerHelper {
   }
 
   /**
-   * 转换集合对象.将List domain对象转换为 List 任意对象,并封装为页面响应对象.
+   * 转换集合对象.将List poJo对象转换为 List 任意对象,并封装为页面响应对象.
    *
-   * @param <T> domain对象
+   * @param <T> poJo对象
    * @param <E> 任意对象(通常是response|poJo对象)
-   * @param lists List domain对象
+   * @param list List poJo对象
    * @param function 转换函数表达式
    * @param filterFunction 过滤函数表达式
    * @return {@link ResponseEntity}
    */
-  <T extends AbstractEntity, E> ResponseEntity<Rs<List<E>>> list(
-      final List<T> lists, final Function<T, E> function, final Predicate<E> filterFunction) {
-    return ok(CollectionUtils.toList(lists, function, filterFunction));
+  public static <T extends AbstractEntity, E> ResponseEntity<Rs<List<E>>> list(
+      final List<T> list, final Function<T, E> function, final Predicate<E> filterFunction) {
+    return ok(CollectionUtils.toList(list, function, filterFunction));
   }
 
   /**
@@ -420,11 +390,11 @@ public final class ControllerHelper {
    *
    * @param <T> the type parameter
    * @param <R> the type parameter
-   * @param page the page
+   * @param list the list
    * @return the response entity
    */
-  public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(final List<T> page) {
-    return ok(PageUtils.toPage(page));
+  public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(final List<T> list) {
+    return ok(PageUtils.toPage(list));
   }
 
   /**
@@ -440,34 +410,6 @@ public final class ControllerHelper {
   public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(
       final List<T> page, final Function<T, R> function, final Predicate<R> filterFunction) {
     return ok(PageUtils.toPage(page, function, filterFunction));
-  }
-
-  /**
-   * Execute response entity.
-   *
-   * @param <R> the type parameter
-   * @param result the result
-   * @return the response entity
-   */
-  public static <R> ResponseEntity<Rs<R>> execute(final R result) {
-    return ok(result);
-  }
-
-  /**
-   * Execute response entity.
-   *
-   * @param <R> the type parameter
-   * @param result the result
-   * @param bindingResult the binding result
-   * @return the response entity
-   */
-  public static <R> ResponseEntity<Rs<R>> execute(
-      final R result, final BindingResult bindingResult) {
-
-    if (Objects.nonNull(bindingResult) && bindingResult.hasErrors()) {
-      return fail(collectBindingResult(bindingResult));
-    }
-    return ok(ResultCode.SUCCESS);
   }
 
   /**
@@ -511,12 +453,12 @@ public final class ControllerHelper {
    *
    * @param invoke 服务层实现类.
    * @param entity 要更新的request {@link AbstractEntityRequest} 对象.
-   * @param create 是否是创建.
    * @param bindingResult 校验器校验结果.
+   * @param create 是否是创建.
+   * @param includeNullProps 即使值为null也保存的属性
    * @param <T> 服务层实现类.
    * @return {@link ResponseEntity}
    */
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private static <
           S extends BaseService<T>,
           T extends AbstractEntityPoJo,
@@ -527,18 +469,20 @@ public final class ControllerHelper {
           final R entity,
           final BindingResult bindingResult,
           final boolean create,
-          @Nonnull final String... includeNullProperties) {
-    // 处理不同层级调用的情况
-    Stream.of(Thread.currentThread().getStackTrace())
-        .filter(o -> o.getClassName().contains("controller."))
-        .findFirst()
-        .ifPresent(
-            stack ->
-                log.info(
-                    "\n\t{}:[entity:{},includeNullProperties:{}]",
-                    stack,
-                    entity,
-                    includeNullProperties));
+          @Nonnull final IFunction<T, ?>... includeNullProps) {
+    final List<String> includeNulls =
+        Arrays.stream(includeNullProps)
+            .map(BeanFunction::getField)
+            .map(Field::getName)
+            .collect(Collectors.toList());
+    if (log.isDebugEnabled()) {
+      // 打印参数,处理不同层级调用的情况
+      Stream.of(Thread.currentThread().getStackTrace())
+          .filter(o -> o.getClassName().contains("controller."))
+          .findFirst()
+          .ifPresent(
+              stack -> log.info("\n\t{}:[entity:{},includeNulls:{}]", stack, entity, includeNulls));
+    }
     if (Objects.nonNull(bindingResult) && bindingResult.hasErrors()) {
       return fail(collectBindingResult(bindingResult));
     }
@@ -553,28 +497,27 @@ public final class ControllerHelper {
       final T exist = invoke.getById(id);
       CommonException.requireNonNull(exist, ResultCode.API_DATA_NOT_EXIST.desc(String.valueOf(id)));
     }
-    T domain = initial(getPoJoClass(invoke));
-    final List<String> includeNullProp = Arrays.asList(includeNullProperties);
+    T poJo = initial(getPoJoClass(invoke));
     BeanUtils.copyProperties(
         entity,
-        domain,
+        poJo,
         getNullProp(entity).stream()
-            .filter(prop -> !includeNullProp.contains(prop))
+            .filter(prop -> !includeNulls.contains(prop))
             .toArray(String[]::new));
     // 额外处理
-    entity.redundantValue(domain);
+    entity.redundantValue(poJo);
+    log.debug("createOrUpdate:[{}]", poJo);
     try {
-      log.info("createOrUpdate:[{}]", domain);
-      long row = create ? invoke.create(domain) : invoke.update(domain);
-      return row == 1
+      long affectRow = create ? invoke.create(poJo) > 0 ? 1 : 0 : invoke.update(poJo).orElse(0);
+      return affectRow == 1
           ? ok(
-              json().put("id", domain.getId()),
+              json().put("id", poJo.getId()),
               create
                   ? ResultCode.API_SUCCESS_EXEC_CREATE.desc()
                   : ResultCode.API_SUCCESS_EXEC_UPDATE.desc())
           : fail(
               create
-                  ? ResultCode.API_FAIL_EXEC_ADD.desc()
+                  ? ResultCode.API_FAIL_EXEC_CREATE.desc()
                   : ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST.desc());
     } catch (Exception e) {
       return errorResponse(e);

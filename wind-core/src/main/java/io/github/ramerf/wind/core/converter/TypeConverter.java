@@ -1,11 +1,13 @@
 package io.github.ramerf.wind.core.converter;
 
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.sql.PreparedStatement;
+import java.sql.Types;
 import java.util.*;
+import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,10 +33,11 @@ public interface TypeConverter<T, V> {
    * Java对象值转换为数据库值.
    *
    * @param t Java对象实例
+   * @param field the field
    * @param ps {@link PreparedStatement}
    * @return 数据库值 v
    */
-  Object convertToJdbc(final T t, final PreparedStatement ps);
+  Object convertToJdbc(final T t, final Field field, @Nonnull final PreparedStatement ps);
 
   /**
    * 数据库值转换为Java对象值
@@ -72,6 +75,21 @@ public interface TypeConverter<T, V> {
   default Type getJdbcClass() {
     return getParamTypeClass()[1];
   }
+
+  /**
+   * 获取jdbcType.<br>
+   *
+   * <pre>
+   *    示例:
+   *    return EntityHelper.getJdbcTypeName(field, "varchar");
+   *  </pre>
+   *
+   * @param field the field
+   * @return jdbcType名称
+   * @see Types
+   * @see EntityHelper#getJdbcTypeName(Field, String)
+   */
+  String getJdbcType(@Nonnull final Field field);
 
   /**
    * 获取泛型参数.

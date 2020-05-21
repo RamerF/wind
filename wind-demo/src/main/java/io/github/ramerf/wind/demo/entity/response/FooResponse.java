@@ -1,9 +1,8 @@
 package io.github.ramerf.wind.demo.entity.response;
 
 import io.github.ramerf.wind.core.entity.response.AbstractEntityResponse;
-import io.github.ramerf.wind.demo.entity.pojo.DemoProductPoJo;
-import io.github.ramerf.wind.demo.entity.pojo.DemoProductPoJo.State;
-import io.github.ramerf.wind.demo.entity.pojo.DemoProductPoJo.Type;
+import io.github.ramerf.wind.demo.entity.pojo.Foo;
+import io.github.ramerf.wind.demo.entity.pojo.Foo.Type;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.*;
@@ -11,7 +10,7 @@ import lombok.*;
 import org.springframework.beans.BeanUtils;
 
 /**
- * 商品.
+ * Foo.
  *
  * @author Tang Xiaofeng
  * @since 2019/12/17
@@ -20,8 +19,8 @@ import org.springframework.beans.BeanUtils;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ApiModel(value = "商品")
-public class DemoProductResponse extends AbstractEntityResponse {
+@ApiModel(value = "foo")
+public class FooResponse extends AbstractEntityResponse {
 
   @ApiModelProperty(value = "String", example = "示例值")
   private String name;
@@ -42,15 +41,12 @@ public class DemoProductResponse extends AbstractEntityResponse {
 
   private Type type;
 
-  private State state;
-
-  public static DemoProductResponse of(final DemoProductPoJo product) {
-    if (Objects.isNull(product)) {
+  public static FooResponse of(final Foo foo) {
+    if (Objects.isNull(foo)) {
       return null;
     }
-    DemoProductResponse poJo = new DemoProductResponse();
-    // TODO-WARN: 将 Domain 对象转换成 Response 对象
-    BeanUtils.copyProperties(product, poJo);
+    FooResponse poJo = new FooResponse();
+    BeanUtils.copyProperties(foo, poJo);
     return poJo;
   }
 }

@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.util.SnowflakeIdWorker;
+import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import lombok.Getter;
 import lombok.Setter;
 

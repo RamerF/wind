@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2019/11/13
  */
 @Slf4j
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CommonException extends RuntimeException {
   private ResultCode resultCode;
 
@@ -59,30 +59,30 @@ public class CommonException extends RuntimeException {
 
   private CommonException(final String message) {
     super(message);
-    log.error("[{}]", message);
+    log.info("CommonException:[{}]", message);
   }
 
   private CommonException(@Nonnull final ResultCode resultCode) {
     super(resultCode.desc());
     this.resultCode = resultCode;
-    log.error("[{}:{}]", resultCode.code(), resultCode.desc());
+    log.info("CommonException:[code:{},desc:{}]", resultCode.code(), resultCode.desc());
   }
 
   private CommonException() {
     super(ResultCode.ERROR.desc());
     final ResultCode error = ResultCode.ERROR;
     this.resultCode = error;
-    log.error("[{}:{}]", error.code(), error.desc());
+    log.info("CommonException:[code:{},desc:{}]", error.code(), error.desc());
   }
 
   private CommonException(final String message, final Throwable cause) {
     super(message, cause);
-    log.error(message, cause);
+    log.info(message, cause);
   }
 
   private CommonException(final Throwable cause) {
     super(cause);
-    log.error(cause.getMessage(), cause);
+    log.info(cause.getMessage(), cause);
   }
 
   protected CommonException(
@@ -91,15 +91,6 @@ public class CommonException extends RuntimeException {
       final boolean enableSuppression,
       final boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
-    log.error(cause.getMessage(), cause);
+    log.info(cause.getMessage(), cause);
   }
-  /// TODO-ZRH: 可以考虑子类实现
-  //  /**
-  //   * 异常构造函数会调用 fillInStackTrace() 构建整个调用栈，消耗较大
-  //   * 而 CommonException 都是已知问题手动抛出,可使用log.err, 无需使用调用栈信息，覆盖此方法用于提升性能
-  //   */
-  //  @Override
-  //  public Throwable fillInStackTrace() {
-  //    return this;
-  //  }
 }

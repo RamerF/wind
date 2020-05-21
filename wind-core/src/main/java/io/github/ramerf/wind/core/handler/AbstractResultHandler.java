@@ -2,10 +2,12 @@ package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.util.BeanUtils;
+import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import static java.util.stream.Collectors.toMap;
@@ -84,5 +86,10 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
    * @return List the list of clazz
    */
   @Override
-  public abstract List<E> handle(List<T> ts);
+  public List<E> handle(List<T> ts) {
+    if (CollectionUtils.isEmpty(ts)) {
+      return Collections.emptyList();
+    }
+    return ts.stream().map(this::handle).collect(Collectors.toList());
+  }
 }

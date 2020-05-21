@@ -1,7 +1,10 @@
 package io.github.ramerf.wind.core.converter;
 
+import io.github.ramerf.wind.core.helper.EntityHelper;
+import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
+import javax.annotation.Nonnull;
 
 /**
  * java:List&lt;Long&gt; &lt;-&gt; jdbc:Long[].
@@ -11,10 +14,11 @@ import java.util.*;
  */
 public class ListLongArrayTypeConverter implements TypeConverter<List<Long>, Long[]> {
   @Override
-  public Object convertToJdbc(List<Long> javaVal, final PreparedStatement ps) {
+  public Object convertToJdbc(
+      List<Long> javaVal, final Field field, @Nonnull final PreparedStatement ps) {
     try {
       final Connection connection = ps.getConnection();
-      return connection.createArrayOf("bigint", javaVal.toArray());
+      return connection.createArrayOf(getJdbcType(field), javaVal.toArray());
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -24,5 +28,10 @@ public class ListLongArrayTypeConverter implements TypeConverter<List<Long>, Lon
   @Override
   public List<Long> covertFromJdbc(final Long[] jdbcVal, final Class<? extends List<Long>> clazz) {
     return Objects.nonNull(jdbcVal) ? Arrays.asList(jdbcVal) : new ArrayList<>();
+  }
+
+  @Override
+  public String getJdbcType(@Nonnull final Field field) {
+    return EntityHelper.getJdbcTypeName(field, "bigint");
   }
 }

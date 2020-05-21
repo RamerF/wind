@@ -3,19 +3,21 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>wind</artifactId>
-        <groupId>io.github.ramerf</groupId>
-        <version>3.3.0-RELEASE</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.0.8.RELEASE</version>
+        <relativePath/>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wind-demo</artifactId>
     <name>wind-demo</name>
-    <version>3.3.0-RELEASE</version>
+    <version>3.4.0-RELEASE</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <druid.version>1.1.22</druid.version>
-        <wind-core.version>3.3.0-RELEASE</wind-core.version>
+        <wind-core.version>3.4.0-RELEASE</wind-core.version>
+        <lombok.version>1.18.10</lombok.version>
     </properties>
     <dependencies>
         <dependency>
@@ -26,6 +28,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
         <!-- postgresql 驱动 -->
         <dependency>

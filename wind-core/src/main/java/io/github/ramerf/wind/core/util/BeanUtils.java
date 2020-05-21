@@ -3,13 +3,12 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.condition.QueryEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.function.*;
 import java.beans.FeatureDescriptor;
 import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
@@ -47,6 +46,9 @@ public final class BeanUtils {
       new ConcurrentHashMap<>();
   /** 对象的写入方法. */
   private static final Map<Class<?>, WeakReference<List<Method>>> WRITE_METHOD_MAP =
+      new ConcurrentHashMap<>();
+  /** lambda和对应的Field. */
+  private static final Map<BeanFunction, WeakReference<Field>> LAMBDA_FIELD_MAP =
       new ConcurrentHashMap<>();
 
   /**
@@ -172,24 +174,6 @@ public final class BeanUtils {
             });
   }
 
-  /**
-   * Gets generic type.
-   *
-   * @param beanFunction the bean function
-   * @return the generic type
-   */
-  public static java.lang.reflect.Type getGenericType(final BeanFunction beanFunction) {
-    final SerializedLambda lambda = LambdaUtils.serializedLambda(beanFunction);
-    try {
-      return getClazz(lambda.getImplClass())
-          .getDeclaredField(BeanUtils.methodToProperty(lambda.getImplMethodName()))
-          .getGenericType();
-    } catch (Exception e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
-      throw CommonException.of(e.getMessage(), e);
-    }
-  }
 
   /**
    * 实例化对象 .

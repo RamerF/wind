@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.condition.Query;
-import io.github.ramerf.wind.core.condition.Update;
+import io.github.ramerf.wind.core.executor.Query;
+import io.github.ramerf.wind.core.executor.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;

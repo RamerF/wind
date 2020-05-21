@@ -1,13 +1,15 @@
 package io.github.ramerf.wind.demo.entity.request;
 
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
+import io.github.ramerf.wind.demo.entity.pojo.Foo;
+import io.github.ramerf.wind.demo.entity.pojo.Foo.Type;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import javax.validation.constraints.NotEmpty;
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
 
 /**
- * 商品.
+ * Foo.
  *
  * @author Tang Xiaofeng
  * @since 2019/12/17
@@ -15,12 +17,15 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@ApiModel("商品查询请求对象")
-public class DemoProductQueryRequest extends AbstractEntityRequest {
+@ApiModel("Foo")
+public class FooRequest extends AbstractEntityRequest<Foo> {
+  public static final int NAME_MAX_LENGTH = 50;
 
-  //  @Length(min = 1, max = 5, message = "名称 长度在1-5之间")
-  @NotEmpty(message = "名称 不能为空")
+  @Length(max = 50)
   @ApiModelProperty(value = "String", example = "示例值")
   private String name;
+
+  private Type type;
 }
