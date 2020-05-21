@@ -2,8 +2,6 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
@@ -16,46 +14,39 @@ import lombok.experimental.SuperBuilder;
  * @author Tang Xiaofeng
  * @since 2019/12/16
  */
-@Entity(name = "demo_product")
+@Entity(name = "foo")
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@ApiModel("示例商品")
-public class DemoProductPoJo extends AbstractEntityPoJo {
-  @ApiModelProperty(value = "名称", example = "名称")
+public class Foo extends AbstractEntityPoJo {
   private String name;
 
-  @ApiModelProperty(value = "CODE", example = "CODE")
-  private String code;
-
-  @Column(name = "demo_product_category_id", columnDefinition = "bigint")
-  @ApiModelProperty(value = "商品分类id", example = "1")
-  private Long demoProductCategoryId;
+  @Column(columnDefinition = "text(255)")
+  private String textString;
 
   /** List&lt;Long&gt; 可对应数据库类型 bigint[] */
-  @ApiModelProperty(value = "sku id 集合", example = "1,2,3")
   @Column(columnDefinition = "bigint[]")
-  private List<Long> skuIds;
+  private List<Long> longList;
 
-  /** String[] 可对应数据库类型 text[]/varchar[] */
-  @ApiModelProperty(value = "测试text数组", example = "'名称1','名称2'")
-  private String[] texts;
+  /** Long[]可对应数据库类型 bigint[] */
+  private Long[] longArr;
 
-  @ApiModelProperty(value = "测试List<String>", example = "'名称1','名称2'")
+  /** List&lt;String&gt; 可对应数据库类型 text[]/varchar[] */
   private List<String> stringList;
 
-  @Column(columnDefinition = "bit[]")
+  /** String[] 可对应数据库类型 text[]/varchar[] */
+  private String[] stringArr;
+
+  /** Bitset 可对应数据库类型 bytea */
+  @Column(columnDefinition = "bytea")
   private BitSet bitSet;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 smallint/int */
   @Column(columnDefinition = "smallint")
   private Type type;
-
-  @Column(columnDefinition = "smallint")
-  private State state;
 
   @Column(columnDefinition = "double")
   private BigDecimal bigDecimal;
@@ -64,7 +55,11 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
   @Column(name = "non_match_column")
   private String column;
 
-  private List<Integer> intArr;
+  /** List&lt;Integer&gt; 可对应数据库类型 int[] */
+  private List<Integer> intList;
+
+  /** Integer[]可对应数据库类型 int[] */
+  private Integer[] intArr;
 
   public enum Type implements InterEnum {
     /** 商品类别 */
@@ -75,31 +70,6 @@ public class DemoProductPoJo extends AbstractEntityPoJo {
     private final String desc;
 
     Type(int value, String desc) {
-      this.value = value;
-      this.desc = desc;
-    }
-
-    @Override
-    public Integer value() {
-      return this.value;
-    }
-
-    @Override
-    public String desc() {
-      return this.desc;
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public enum State implements InterEnum {
-    /** 商品类别 */
-    UP_SHELVES(0, "上架"),
-    DOWN_SHELVES(1, "下架");
-
-    private final int value;
-    private final String desc;
-
-    State(int value, String desc) {
       this.value = value;
       this.desc = desc;
     }

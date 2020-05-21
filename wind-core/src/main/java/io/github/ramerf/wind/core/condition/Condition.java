@@ -3,13 +3,19 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.helper.*;
+import io.github.ramerf.wind.core.helper.SqlHelper;
+import io.github.ramerf.wind.core.helper.TypeConverterHelper;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
-import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.ToString;
@@ -66,10 +72,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
@@ -87,10 +93,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.NOT_EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
@@ -108,10 +114,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.GREATER.operator)
               .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
@@ -129,10 +135,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.GE.operator)
               .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
@@ -150,10 +156,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.LESS.operator)
               .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
@@ -171,10 +177,10 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.LE.operator)
               .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
@@ -192,9 +198,9 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
@@ -212,9 +218,9 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
@@ -236,14 +242,14 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(
                   String.format(
                       MatchPattern.BETWEEN.operator,
                       toPreFormatSqlVal(start),
                       toPreFormatSqlVal(end))));
-      valueTypes.add(ValueType.of(start, BeanUtils.getGenericType(field)));
-      valueTypes.add(ValueType.of(end, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(start, field));
+      valueTypes.add(ValueType.of(end, field));
     }
     return this;
   }
@@ -265,12 +271,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(
                   String.format(
                       NOT_BETWEEN.operator, toPreFormatSqlVal(start), toPreFormatSqlVal(end))));
-      valueTypes.add(ValueType.of(start, BeanUtils.getGenericType(field)));
-      valueTypes.add(ValueType.of(end, BeanUtils.getGenericType(field)));
+      valueTypes.add(ValueType.of(start, field));
+      valueTypes.add(ValueType.of(end, field));
     }
     return this;
   }
@@ -287,7 +293,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.IS_NULL.operator));
     }
     return this;
@@ -305,7 +311,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.IS_NOT_NULL.operator));
     }
     return this;
@@ -327,14 +333,14 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(
                   String.format(
                       MatchPattern.IN.operator,
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(value -> valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field))));
+      values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
     }
     return this;
   }
@@ -355,14 +361,14 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(
                   String.format(
                       NOT_IN.operator,
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(value -> valueTypes.add(ValueType.of(value, BeanUtils.getGenericType(field))));
+      values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
     }
     return this;
   }
@@ -386,11 +392,11 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field))
+              .concat(field.getColumn())
               .concat(MatchPattern.EQUAL.operator)
               .concat(queryColumn.queryEntityMetaData.getTableAlia())
               .concat(DOT.operator)
-              .concat(EntityHelper.getColumn(field2)));
+              .concat(field2.getColumn()));
     }
     return this;
   }
@@ -408,7 +414,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       final String childConditionsSql = childConditions.getString();
       if (StringUtils.nonEmpty(childConditionsSql)) {
-        conditionSql.add(BRACKET_FORMAT.format(childConditionsSql));
+        conditionSql.add(PARENTHESIS_FORMAT.format(childConditionsSql));
       }
     }
     return this;
@@ -424,7 +430,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(BRACKET_FORMAT.format(children.getString())));
+              .concat(PARENTHESIS_FORMAT.format(children.getString())));
       valueTypes.addAll(children.valueTypes);
     }
     return this;
@@ -440,7 +446,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(BRACKET_FORMAT.format(children.getString())));
+              .concat(PARENTHESIS_FORMAT.format(children.getString())));
       valueTypes.addAll(children.valueTypes);
     }
     return this;
@@ -464,18 +470,36 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
             .concat(MatchPattern.EQUAL.operator)
             .concat(toPreFormatSqlVal(logicNotDelete)));
     final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setIsDelete;
-    valueTypes.add(ValueType.of(logicNotDelete, BeanUtils.getGenericType(beanFunction)));
+    valueTypes.add(ValueType.of(logicNotDelete, beanFunction));
   }
 
   @Override
-  public List<Object> getValues() {
+  public List<Consumer<PreparedStatement>> getValues(final AtomicInteger startIndex) {
     if (!containLogicNotDelete) {
       appendLogicNotDelete();
       containLogicNotDelete = true;
     }
     return valueTypes.stream()
-        .map(valueType -> TypeConverterHelper.toJdbcValue(valueType, null))
+        .map(
+            valueType ->
+                (Function<PreparedStatement, Object>)
+                    ps -> TypeConverterHelper.toJdbcValue(valueType, ps))
+        .map(
+            function ->
+                (Consumer<PreparedStatement>)
+                    ps -> {
+                      try {
+                        ps.setObject(startIndex.getAndIncrement(), function.apply(ps));
+                      } catch (SQLException e) {
+                        throw CommonException.of(e);
+                      }
+                    })
         .collect(toCollection(LinkedList::new));
+  }
+
+  @Override
+  public boolean hasCondition() {
+    return valueTypes.size() > 0;
   }
 
   /** 属性匹配模式 */

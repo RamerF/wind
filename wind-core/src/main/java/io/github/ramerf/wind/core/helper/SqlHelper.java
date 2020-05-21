@@ -1,13 +1,8 @@
 package io.github.ramerf.wind.core.helper;
 
-import io.github.ramerf.wind.core.converter.EnumTypeConverter;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import java.lang.ref.WeakReference;
 import java.time.LocalDateTime;
 import java.util.*;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
@@ -20,9 +15,6 @@ import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
  */
 @Slf4j
 public class SqlHelper {
-  @SuppressWarnings("unused")
-  private static final Map<Class<? extends AbstractEntity>, WeakReference<String>>
-      QUERY_CLAZZ_FIELD = new HashMap<>();
 
   /**
    * 将值转换成sql值,始终返回?.
@@ -35,7 +27,7 @@ public class SqlHelper {
   }
 
   /**
-   * 将值转换成Sql字符串.目前仅支持 <code>null,String,Date,List,Collection,InterEnum,[]</code>
+   * 将值转换成Sql字符串,仅用于调试.
    *
    * @param value the value
    * @return the string
@@ -46,8 +38,9 @@ public class SqlHelper {
     }
     if (value instanceof String) {
       String val = ((String) value);
-      if (val.contains("'")) {
-        val = val.replaceAll("'", "''");
+      final String quote = "'";
+      if (val.contains(quote)) {
+        val = val.replaceAll(quote, "''");
       }
       return QUOTE_FORMAT.format(val);
     }
@@ -76,9 +69,6 @@ public class SqlHelper {
               .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
               .orElse(value.toString());
     }
-    if (InterEnum.class.isAssignableFrom(value.getClass())) {
-      return new EnumTypeConverter().convertToJdbc((InterEnum) value, null).toString();
-    }
     if (value.getClass().isArray()) {
       if (value instanceof String[]) {
         return QUOTE_FORMAT.format(
@@ -98,23 +88,6 @@ public class SqlHelper {
       return QUOTE_FORMAT.format(LEFT_BRACE.operator().concat(str).concat(RIGHT_BRACE.operator()));
     }
     return String.valueOf(value);
-  }
-
-  /**
-   * 打印包含值的sql语句,仅用于调试.<br>
-   * 关于: @SneakyThrows,不考虑性能,不想关心失败情况
-   *
-   * @param sql the sql
-   * @param values the values
-   */
-  @SneakyThrows
-  public static void printSqlWithVal(final String sql, final List<Object> values) {
-    String sqlWithVal = sql;
-    int index = 0;
-    while (index < values.size()) {
-      sqlWithVal = sqlWithVal.replaceFirst("\\?", SqlHelper.toSqlString(values.get(index++)));
-    }
-    log.debug("printSqlWithVal:[{}]", sqlWithVal);
   }
 
   /**

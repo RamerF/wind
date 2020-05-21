@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.function.BeanFunction;
-import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -57,24 +56,24 @@ public interface ResultHandler<T, E> {
 
     private QueryAlia() {}
 
-    /** {@link java.lang.invoke.SerializedLambda#getInstantiatedMethodType()}:tableAlia */
-    private static Map<String, WeakReference<String>> tableAliaMap = new HashMap<>();
-    /** {@link java.lang.invoke.SerializedLambda#getInstantiatedMethodType()}:tableName */
-    private static Map<String, WeakReference<String>> tableNameMap = new HashMap<>();
+    /** {@link BeanFunction#getImplClassFullPath()} :tableName */
+    private static Map<String, WeakReference<String>> TABLE_NAME_MAP = new HashMap<>();
 
     public static QueryAlia of(BeanFunction function, final String alia, String tableAlia) {
       return of(function, alia, tableAlia, null);
     }
 
     public static QueryAlia of(
-        BeanFunction function, final String alia, String tableAlia, final SqlFunction sqlFunction) {
+        BeanFunction function,
+        final String alia,
+        final String tableAlia,
+        final SqlFunction sqlFunction) {
       final QueryAlia queryAlia = new QueryAlia();
 
-      final SerializedLambda lambda = LambdaUtils.serializedLambda(function);
-      final String fieldName = BeanUtils.methodToProperty(lambda.getImplMethodName());
+      final String fieldName = function.getField().getName();
       queryAlia.setFieldName(fieldName);
 
-      final String columnName = EntityHelper.getColumn(function);
+      final String columnName = function.getColumn();
       queryAlia.setColumnName(columnName);
       /*
        别名逻辑:
@@ -87,37 +86,25 @@ public interface ResultHandler<T, E> {
               ? alia
               : columnName.equals(fieldName) ? columnName : underlineField);
 
-      final String implClass = lambda.getImplClass();
-      final String actualType = LambdaUtils.getActualType(implClass);
-      queryAlia.setTableName(
-          Optional.ofNullable(tableNameMap.get(implClass))
+      final String classFullPath = function.getImplClassFullPath();
+      final String className = function.getImplClassName();
+      final String tableName =
+          Optional.ofNullable(TABLE_NAME_MAP.get(classFullPath))
               .map(Reference::get)
               .orElseGet(
                   () -> {
-                    final String actualTypePath = LambdaUtils.getActualTypePath(implClass);
-                    final Class<Object> clazz = BeanUtils.getClazz(actualTypePath);
+                    final Class<Object> clazz = BeanUtils.getClazz(function.getImplClassFullPath());
                     final Entity entity = clazz.getAnnotation(Entity.class);
                     // 表名: @Entity#name > 类名(驼封转下划线)
-                    final String tableName =
+                    final String name =
                         Objects.nonNull(entity) && StringUtils.nonEmpty(entity.name())
                             ? entity.name()
-                            : StringUtils.camelToUnderline(actualType);
-                    tableNameMap.put(implClass, new WeakReference<>(tableName));
-                    return tableName;
-                  }));
-      if (StringUtils.isEmpty(tableAlia)) {
-        tableAlia =
-            Optional.ofNullable(tableAliaMap.get(implClass))
-                .map(Reference::get)
-                .orElseGet(
-                    () -> {
-                      final String type = StringUtils.camelToUnderline(actualType);
-                      tableAliaMap.put(implClass, new WeakReference<>(type));
-                      return type;
-                    });
-      }
-
-      queryAlia.setTableAlia(tableAlia);
+                            : StringUtils.camelToUnderline(className);
+                    TABLE_NAME_MAP.put(classFullPath, new WeakReference<>(name));
+                    return name;
+                  });
+      queryAlia.setTableName(tableName);
+      queryAlia.setTableAlia(StringUtils.isEmpty(tableAlia) ? tableName : tableAlia);
       queryAlia.setSqlFunction(sqlFunction);
       return queryAlia;
     }

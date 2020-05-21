@@ -1,5 +1,6 @@
-package io.github.ramerf.wind.core.condition;
+package io.github.ramerf.wind.core.executor;
 
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.constant.Constant;
@@ -9,7 +10,9 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.*;
+import java.sql.PreparedStatement;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.*;
 import javax.annotation.Nonnull;
@@ -18,17 +21,28 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.*;
 import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
-import static io.github.ramerf.wind.core.helper.SqlHelper.printSqlWithVal;
 import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
 
 /**
+ * 通用查询操作对象.获取实例:<br>
+ *
+ * <pre>
+ *     // 方式1:
+ *     <code>@Resource private Provider&lt;Query&gt; queryProvider;</code>
+ *     // 方式2:
+ *     <code>@Resource private ObjectProvider&lt;Query&gt; queryProvider;</code>
+ *     final Query query = queryProvider.get();
+ *     // 方式3:
+ *     <code>@Resource private PrototypeBean prototypeBean;</code>
+ *     final Query query = prototypeBean.query();
+ *   </pre>
+ *
  * 构建 SQL.所有的条件字符串构造,需要改为对象<br>
  * 如: OrdrByClause... <br>
  * TODO: 查询缓存
@@ -48,7 +62,7 @@ import static java.util.stream.Collectors.toList;
 @Component
 @SuppressWarnings("all")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class Query {
+public class Query extends AbstractExecutor {
   /*
    TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
    思路: 构造OrderByClause,使用sql语法:
@@ -57,7 +71,7 @@ public class Query {
    3. orderby case when id=? then min_number else max_number end
   */
   private List<QueryColumn<?>> queryColumns;
-  private List<Condition<?>> conditions;
+  private List<ICondition<?>> conditions;
   private String queryString;
   private String conditionString;
   private String countString;
@@ -78,9 +92,7 @@ public class Query {
    * @return the instance
    */
   public static Query getInstance() {
-    final Query bean = AppContextInject.getBean(Query.class);
-    log.debug("getInstance:[{}]", bean);
-    return bean;
+    return AppContextInject.getBean(Query.class);
   }
 
   /**
@@ -104,7 +116,7 @@ public class Query {
    * @param conditions the conditions
    * @return the query
    */
-  public Query from(final Condition<?>... conditions) {
+  public Query from(final ICondition<?>... conditions) {
     // TODO-WARN: from方法
     throw CommonException.of("方法未实现");
   }
@@ -115,11 +127,11 @@ public class Query {
    * @param conditions the conditions
    * @return the query
    */
-  public Query where(final Condition<?>... conditions) {
+  public Query where(final ICondition<?>... conditions) {
     this.conditions = new LinkedList<>(Arrays.asList(conditions));
     String conditionString =
         this.conditions.stream()
-            .map(Condition::getString)
+            .map(ICondition::getString)
             .collect(Collectors.joining(AND.operator()));
 
     if (conditionString.endsWith(AND.operator())) {
@@ -128,7 +140,7 @@ public class Query {
     }
     this.conditionString =
         this.conditions.stream()
-            .map(o -> o.queryEntityMetaData.getFromTable())
+            .map(o -> o.getQueryEntityMetaData().getFromTable())
             .collect(Collectors.joining(SEMICOLON.operator()));
     // TODO-WARN 修复orderBy从这里下手
     // 每个条件带表别名
@@ -166,7 +178,7 @@ public class Query {
             : new LinkedList<>();
     String conditionString =
         this.conditions.stream()
-            .map(Condition::getString)
+            .map(ICondition::getString)
             .collect(Collectors.joining(AND.operator()));
 
     if (conditionString.endsWith(AND.operator())) {
@@ -175,7 +187,7 @@ public class Query {
     }
     this.conditionString =
         this.conditions.stream()
-            .map(o -> o.queryEntityMetaData.getFromTable())
+            .map(o -> o.getQueryEntityMetaData().getFromTable())
             .collect(Collectors.joining(SEMICOLON.operator()));
     if (StringUtils.nonEmpty(conditionString)) {
       this.conditionString = this.conditionString.concat(WHERE.operator()).concat(conditionString);
@@ -220,22 +232,16 @@ public class Query {
     final String sql = "SELECT %s FROM %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
-    if (log.isDebugEnabled()) {
-      printSqlWithVal(
-          queryString,
-          conditions.stream()
-              .flatMap(cond -> cond.getValues().stream())
-              .collect(toCollection(LinkedList::new)));
-    }
-    final Object[] args =
-        conditions.stream()
-            .flatMap(cond -> cond.getValues().stream())
-            .collect(toCollection(LinkedList::new))
-            .toArray(new Object[0]);
-    if (log.isDebugEnabled()) {
-      printSqlWithVal(queryString, Arrays.asList(args));
-    }
-    final List<Map<String, Object>> result = JDBC_TEMPLATE.queryForList(queryString, args);
+    final AtomicInteger startIndex = new AtomicInteger(1);
+    final List<Map<String, Object>> result =
+        JDBC_TEMPLATE.query(
+            queryString,
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
+            new ColumnMapRowMapper());
+
     if (CollectionUtils.isEmpty(result)) {
       return null;
     }
@@ -264,15 +270,15 @@ public class Query {
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", queryString);
     }
-    final Object[] args =
-        conditions.stream()
-            .flatMap(cond -> cond.getValues().stream())
-            .collect(toList())
-            .toArray(new Object[0]);
-    if (log.isDebugEnabled()) {
-      printSqlWithVal(queryString, Arrays.asList(args));
-    }
-    final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(queryString, args);
+    final AtomicInteger startIndex = new AtomicInteger(1);
+    final List<Map<String, Object>> list =
+        JDBC_TEMPLATE.query(
+            queryString,
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
+            new ColumnMapRowMapper());
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
@@ -319,15 +325,15 @@ public class Query {
             conditionString,
             pageable.getPageSize(),
             pageable.getOffset());
-    final Object[] args =
-        conditions.stream()
-            .flatMap(cond -> cond.getValues().stream())
-            .collect(toList())
-            .toArray(new Object[0]);
-    if (log.isDebugEnabled()) {
-      printSqlWithVal(queryString, Arrays.asList(args));
-    }
-    final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(queryString, args);
+    final AtomicInteger startIndex = new AtomicInteger(1);
+    final List<Map<String, Object>> list =
+        JDBC_TEMPLATE.query(
+            queryString,
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
+            new ColumnMapRowMapper());
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", list);
     }
@@ -379,17 +385,18 @@ public class Query {
       log.debug("fetch:[{}]", queryString);
     }
     final long total = fetchCount();
-    final Object[] args =
-        conditions.stream()
-            .flatMap(cond -> cond.getValues().stream())
-            .collect(toList())
-            .toArray(new Object[0]);
-    if (log.isDebugEnabled()) {
-      printSqlWithVal(queryString, Arrays.asList(args));
-    }
+    final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> list =
-        total < 1 ? null : JDBC_TEMPLATE.queryForList(queryString, args);
-    // 从1开始
+        total < 1
+            ? null
+            : JDBC_TEMPLATE.query(
+                queryString,
+                ps ->
+                    conditions.stream()
+                        .flatMap(condition -> condition.getValues(startIndex).stream())
+                        .forEach(o -> o.accept(ps)),
+                new ColumnMapRowMapper());
+    // 从0开始
     final int currentPage = pageable.getPageNumber();
     // 每页大小
     final int pageSize = pageable.getPageSize();
@@ -412,19 +419,28 @@ public class Query {
     doIfNonEmpty(afterWhereString.toString(), str -> countString = countString.concat(str));
     final boolean nonEmpty = StringUtils.nonEmpty(countString);
     final String sql =
-        nonEmpty && countString.contains(GROUP_BY.operator)
+        nonEmpty && countString.contains(GROUP_BY.operator())
             ? "SELECT SUM(b.a) FROM (SELECT 1 a FROM %s) b"
             : "SELECT COUNT(1) FROM %s";
     final String queryString = String.format(sql, nonEmpty ? countString : "");
-    final Object[] args =
-        conditions.stream()
-            .flatMap(cond -> cond.getValues().stream())
-            .collect(toList())
-            .toArray(new Object[0]);
-    if (log.isDebugEnabled()) {
-      printSqlWithVal(queryString, Arrays.asList(args));
-    }
-    return JDBC_TEMPLATE.queryForObject(queryString, args, Long.class);
+
+    List<Consumer<PreparedStatement>> list = new LinkedList<>();
+
+    final AtomicInteger index = new AtomicInteger(1);
+    final AtomicInteger startIndex = new AtomicInteger(1);
+    return JDBC_TEMPLATE.query(
+        queryString,
+        ps ->
+            conditions.stream()
+                .flatMap(condition -> condition.getValues(startIndex).stream())
+                .forEach(o -> o.accept(ps)),
+        (ResultSetExtractor<Integer>)
+            rs -> {
+              while (rs.next()) {
+                return rs.getInt(1);
+              }
+              return 0;
+            });
   }
 
   /**
@@ -440,9 +456,6 @@ public class Query {
    */
   public <T extends AbstractEntityPoJo, R> List<R> fetchBySql(
       final String sql, final Class<T> poJoClazz, final Class<R> respClazz, final Object... args) {
-    if (log.isDebugEnabled()) {
-      printSqlWithVal(sql, Arrays.asList(args));
-    }
     final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(sql, args);
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
@@ -463,9 +476,6 @@ public class Query {
    * @return the list
    */
   public long countBySql(final String sql, final Object... args) {
-    if (log.isDebugEnabled()) {
-      printSqlWithVal(sql, Arrays.asList(args));
-    }
     return JDBC_TEMPLATE.queryForObject(sql, args, Long.class);
   }
 }

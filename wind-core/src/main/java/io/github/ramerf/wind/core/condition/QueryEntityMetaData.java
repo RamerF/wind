@@ -15,13 +15,10 @@ import lombok.*;
  */
 public class QueryEntityMetaData<T extends AbstractEntity> extends EntityMetaData<T> {
   /** 查询字段. */
-  @Getter
-  protected List<QueryAlia> queryAlias = new ArrayList<>();
+  @Getter protected List<QueryAlia> queryAlias = new ArrayList<>();
 
   /** 对应sql语句from后的table字符串. */
-  @Getter(AccessLevel.PROTECTED)
-  @Setter
-  protected String fromTable;
+  @Getter @Setter protected String fromTable;
 
   /**
    * 获取group by条件.

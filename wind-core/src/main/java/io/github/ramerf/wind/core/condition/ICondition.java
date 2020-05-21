@@ -3,8 +3,11 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 
 /**
@@ -21,7 +24,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * 创建一个空的条件,包含表信息.
    *
    * @return the Condition
-   * @see Condition#of(QueryColumn) Condition#of(QueryColumn)
+   * @see Condition#of(QueryColumn) Condition#of(QueryColumn)Condition#of(QueryColumn)
    */
   Condition<T> condition();
 
@@ -407,7 +410,15 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   /**
    * 获取占位符值.<br>
    *
+   * @param startIndex 填充参数的起始索引,null时从0开始
    * @return 占位符对应的值 values
    */
-  List<Object> getValues();
+  List<Consumer<PreparedStatement>> getValues(final AtomicInteger startIndex);
+
+  /**
+   * 是否包含条件.
+   *
+   * @return the boolean
+   */
+  boolean hasCondition();
 }

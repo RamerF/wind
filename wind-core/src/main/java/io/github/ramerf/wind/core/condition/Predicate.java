@@ -34,15 +34,20 @@ public interface Predicate<T extends AbstractEntity> extends QueryEntity<T> {
     QUOTE("'"),
     QUOTE_FORMAT("'%s'"),
 
-    /** 圆括号. */
-    LEFT_BRACKET("("),
-    RIGHT_BRACKET(")"),
-    BRACKET_FORMAT("(%s)"),
+    /** 圆括号(小括号). */
+    LEFT_PARENTHESIS("("),
+    RIGHT_PARENTHESIS(")"),
+    PARENTHESIS_FORMAT("(%s)"),
 
-    /** 花括号. */
+    /** 花括号(大括号). */
     LEFT_BRACE("{"),
     RIGHT_BRACE("}"),
     BRACE_FORMAT("{%s}"),
+
+    /** 方括号(中括号) */
+    LEFT_SQUARE_BRACKETS("["),
+    RIGHT_SQUARE_BRACKETS("["),
+    SQUARE_BRACKETS_FORMAT("[%s]"),
 
     INSERT_INTO("INSERT INTO "),
 

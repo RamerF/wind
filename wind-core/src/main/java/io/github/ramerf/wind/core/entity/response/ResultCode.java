@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.entity.response;
 
-import lombok.Data;
+import lombok.ToString;
 
 /**
  * 返回结果码,名称前缀为模块简拼.
@@ -8,7 +8,7 @@ import lombok.Data;
  * @author Tang Xiaofeng
  * @since 2019/12/5
  */
-@Data
+@ToString
 @SuppressWarnings("all")
 public class ResultCode {
   // 凭证
@@ -34,8 +34,8 @@ public class ResultCode {
   public static final ResultCode API_SUCCESS_EXEC_DELETE = of("E1102", "删除成功");
   // 操作失败提示
   public static final ResultCode API_FAIL_EXEC = of("E1201", "操作失败,数据格式有误");
-  public static final ResultCode API_FAIL_EXEC_ADD = of("E1201", "添加失败,数据格式有误");
-  public static final ResultCode API_FAIL_EXEC_ADD_EXIST = of("E1202", "添加失败,数据已存在");
+  public static final ResultCode API_FAIL_EXEC_CREATE = of("E1201", "添加失败,数据格式有误");
+  public static final ResultCode API_FAIL_EXEC_CREATE_EXIST = of("E1202", "添加失败,数据已存在");
   public static final ResultCode API_FAIL_EXEC_UPDATE = of("E1203", "更新失败,数据格式有误");
   public static final ResultCode API_FAIL_EXEC_UPDATE_NOT_EXIST = of("E1204", "更新失败,记录不存在");
   public static final ResultCode API_FAIL_EXEC_DELETE = of("E1205", "删除失败");

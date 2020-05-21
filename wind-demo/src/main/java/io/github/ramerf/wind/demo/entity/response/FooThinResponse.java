@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 
 /**
- * 商品.
+ * Foo.
  *
  * @author Tang Xiaofeng
  * @since 2019/12/17
@@ -14,9 +14,10 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@ApiModel(value = "商品只包含部分属性")
-public class DemoProductThinResponse extends AbstractEntityResponse {
+@ApiModel(value = "Foo只包含部分属性")
+public class FooThinResponse extends AbstractEntityResponse {
 
   @ApiModelProperty(value = "String", example = "示例值")
   private String name;

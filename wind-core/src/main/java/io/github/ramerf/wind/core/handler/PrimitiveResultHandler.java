@@ -3,9 +3,8 @@ package io.github.ramerf.wind.core.handler;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,14 +67,6 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
       }
     }
     return (E) value;
-  }
-
-  @Override
-  public List<E> handle(List<Map<String, Object>> maps) {
-    if (CollectionUtils.isEmpty(maps)) {
-      return Collections.emptyList();
-    }
-    return maps.stream().map(this::handle).collect(Collectors.toList());
   }
 
   /** null转换为基本类型零值. */

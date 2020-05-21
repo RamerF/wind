@@ -19,15 +19,14 @@ import org.springframework.stereotype.Component;
 @Component
 @SuppressWarnings({"rawtypes", "unused"})
 public class TypeConverterRegistryFactory {
-  private Set<TypeConverter> typeConverters = new LinkedHashSet<>();
+  private Set<TypeConverter> typeConverters =
+      new TreeSet<>(((o1, o2) -> Objects.equals(o1.getClass(), o2.getClass()) ? 0 : 1));
 
   /** Instantiates a new Type converter registry. */
-  public TypeConverterRegistryFactory() {
-    initDefaultTypeConverters();
-  }
+  public TypeConverterRegistryFactory() {}
 
-  /** 初始化默认的类型转换器. */
-  private void initDefaultTypeConverters() {
+  /** 注册默认的类型转换器,在添加自定义转换器之后添加这些,保持自定义的转换器优先级更高. */
+  public void registerDefaultTypeConverters() {
     addTypeConverters(new BigDecimalTypeConverter());
     addTypeConverters(new BitSetTypeConverter());
     addTypeConverters(new DateTypeConverter());

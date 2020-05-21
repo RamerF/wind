@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.demo.service;
 
 import io.github.ramerf.wind.core.service.BaseService;
-import io.github.ramerf.wind.demo.entity.pojo.DemoProductPoJo;
+import io.github.ramerf.wind.demo.entity.pojo.Foo;
 
 /**
  * The interface Demo product service.
@@ -10,7 +10,7 @@ import io.github.ramerf.wind.demo.entity.pojo.DemoProductPoJo;
  * @since 2019 /12/17
  */
 @SuppressWarnings("unused")
-public interface DemoProductService extends BaseService<DemoProductPoJo> {
+public interface FooService extends BaseService<Foo> {
 
   /**
    * Enable cache demo product po jo.
@@ -18,7 +18,7 @@ public interface DemoProductService extends BaseService<DemoProductPoJo> {
    * @param id the id
    * @return the demo product po jo
    */
-  DemoProductPoJo enableCache(final long id);
+  Foo enableCache(final long id);
 
   /**
    * Redis cache demo product po jo.
@@ -26,14 +26,14 @@ public interface DemoProductService extends BaseService<DemoProductPoJo> {
    * @param id the id
    * @return the demo product po jo
    */
-  DemoProductPoJo redisCache(final long id);
+  Foo redisCache(final long id);
 
   /**
    * Redis cache clear demo product po jo.
    *
    * @param poJo the po jo
    */
-  void redisCacheClear(DemoProductPoJo poJo);
+  void redisCacheClear(Foo poJo);
 
   /** Delete no result. */
   void deleteNoResult();

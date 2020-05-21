@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.condition.Query;
+import io.github.ramerf.wind.core.executor.Query;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -21,24 +21,12 @@ public class AppContextInject implements ApplicationContextAware {
   public static ApplicationContext context;
 
   public static <T> T getBean(final Class<T> requiredType) {
-    try {
-      return context.getBean(requiredType);
-    } catch (BeansException e) {
-      log.warn("getBean:[{}]", e.getMessage());
-      log.error(e.getMessage(), e);
-      return null;
-    }
+    return context.getBean(requiredType);
   }
 
   @SuppressWarnings("unchecked")
   public static <T> T getBean(final String beanName) {
-    try {
-      return (T) context.getBean(beanName);
-    } catch (BeansException e) {
-      log.warn("getBean:[{}]", e.getMessage());
-      log.error(e.getMessage(), e);
-      return null;
-    }
+    return (T) context.getBean(beanName);
   }
 
   @Override
