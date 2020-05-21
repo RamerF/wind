@@ -6,6 +6,7 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.swagger.annotations.ApiModelProperty;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Optional;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -43,19 +44,30 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
   /**
    * 获取Request实体对应的的PoJo对象. <br>
    * 注意: 使用该方法,需要Request继承的AbstractEntity具有PoJo泛型.<br>
-   * 例如: public class DemoProductRequest extends AbstractEntityRequest&lt;DemoProductPoJo&gt;
+   * 例如: public class FooRequest extends AbstractEntityRequest&lt;Foo&gt;
    *
    * @return the t
    */
-  @SuppressWarnings({"unchecked"})
   public T poJo() {
+    return poJo(null);
+  }
+
+  /**
+   * 获取Request实体对应的的PoJo对象. <br>
+   * 注意: 使用该方法,需要Request继承的AbstractEntity具有PoJo泛型.<br>
+   * 例如: public class FooRequest extends AbstractEntityRequest&lt;Foo&gt;
+   *
+   * @return the t
+   */
+  public T poJo(final Long id) {
     final Type genericSuperclass = this.getClass().getGenericSuperclass();
     if (!(genericSuperclass instanceof ParameterizedType)) {
       throw CommonException.of("无法获取pojo对象,请修改request类,添加pojo泛型");
     }
-    final Object poJo =
+    final T poJo =
         initial(((ParameterizedType) genericSuperclass).getActualTypeArguments()[0].getTypeName());
     BeanUtils.copyProperties(this, poJo);
-    return (T) poJo;
+    Optional.ofNullable(id).ifPresent(o -> poJo.setId(id));
+    return poJo;
   }
 }

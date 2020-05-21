@@ -33,7 +33,18 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
 /**
- * The type Update.
+ * 通用写入操作对象.获取实例:<br>
+ *
+ * <pre>
+ *     // 方式1:
+ *     <code>@Resource private Provider&lt;Update&gt; updateProvider;</code>
+ *     // 方式2:
+ *     <code>@Resource private ObjectProvider&lt;Query&gt; updateProvider;</code>
+ *     final Update update = updateProvider.get();
+ *     // 方式3:
+ *     <code>@Resource private PrototypeBean prototypeBean;</code>
+ *     final Update update = prototypeBean.update();
+ *   </pre>
  *
  * @author Tang Xiaofeng
  * @since 2020 /1/13
@@ -42,7 +53,7 @@ import org.springframework.stereotype.Component;
 @Component
 @SuppressWarnings("unused")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class Update extends AbstractExecutor {
+public final class Update extends AbstractExecutor {
 
   private Class<?> clazz;
   private Condition<?> condition;
@@ -172,8 +183,8 @@ public class Update extends AbstractExecutor {
    * @param includeNullProps 即使值为null也保存的属性
    * @return 保存成功数
    */
-  @SuppressWarnings("unchecked")
-  public <T extends AbstractEntityPoJo> int createBatch(
+  @SafeVarargs
+  public final <T extends AbstractEntityPoJo> int createBatch(
       final List<T> ts, @Nonnull final IFunction<T, ?>... includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
       return 0;
@@ -232,10 +243,11 @@ public class Update extends AbstractExecutor {
    * @param <T> the type parameter
    * @param t the t
    * @param includeNullProps 即使值为null也保存的属性
-   * @return the long
+   * @return 受影响记录数
    */
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public <T extends AbstractEntityPoJo> int update(
+  @SafeVarargs
+  @SuppressWarnings("DuplicatedCode")
+  public final <T extends AbstractEntityPoJo> int update(
       @Nonnull final T t, final IFunction<T, ?>... includeNullProps) {
     t.setUpdateTime(new Date());
     final StringBuilder setBuilder = new StringBuilder();
@@ -270,8 +282,9 @@ public class Update extends AbstractExecutor {
    * @param includeNullProps 即使值为null也保存的属性
    * @return the int
    */
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public <T extends AbstractEntityPoJo> Optional<Integer> updateBatch(
+  @SafeVarargs
+  @SuppressWarnings("DuplicatedCode")
+  public final <T extends AbstractEntityPoJo> Optional<Integer> updateBatch(
       @Nonnull final List<T> ts, final IFunction<T, ?>... includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
@@ -306,6 +319,7 @@ public class Update extends AbstractExecutor {
               execSql,
               new BatchPreparedStatementSetter() {
                 @Override
+                @SuppressWarnings("unchecked")
                 public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                   final AtomicInteger index = new AtomicInteger(1);
                   final T obj = execList.get(i);
@@ -376,8 +390,8 @@ public class Update extends AbstractExecutor {
    * @param <T> the type parameter
    * @return 要保存的属性
    */
-  @SuppressWarnings("unchecked")
-  private <T extends AbstractEntity> Set<Field> getSavingFields(
+  @SafeVarargs
+  private final <T extends AbstractEntity> Set<Field> getSavingFields(
       final T t, final IFunction<T, ?>... includeNullProps) {
     final Set<Field> savingFields = new HashSet<>(EntityUtils.getNonNullColumnFields(t));
     if (Objects.nonNull(includeNullProps) && includeNullProps.length > 0) {

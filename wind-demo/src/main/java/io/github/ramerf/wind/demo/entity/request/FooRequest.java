@@ -5,7 +5,6 @@ import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.pojo.Foo.Type;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.List;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
@@ -27,9 +26,6 @@ public class FooRequest extends AbstractEntityRequest<Foo> {
   @Length(max = 50)
   @ApiModelProperty(value = "String", example = "示例值")
   private String name;
-
-  @ApiModelProperty(value = "List", example = "示例值")
-  private List<Long> skuIds;
 
   private Type type;
 }

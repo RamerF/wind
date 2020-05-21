@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.entity.response;
 
-import lombok.Data;
+import lombok.ToString;
 
 /**
  * 返回结果码,名称前缀为模块简拼.
@@ -8,7 +8,7 @@ import lombok.Data;
  * @author Tang Xiaofeng
  * @since 2019/12/5
  */
-@Data
+@ToString
 @SuppressWarnings("all")
 public class ResultCode {
   // 凭证

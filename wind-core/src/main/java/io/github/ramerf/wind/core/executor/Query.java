@@ -30,6 +30,19 @@ import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
 import static java.util.stream.Collectors.toCollection;
 
 /**
+ * 通用查询操作对象.获取实例:<br>
+ *
+ * <pre>
+ *     // 方式1:
+ *     <code>@Resource private Provider&lt;Query&gt; queryProvider;</code>
+ *     // 方式2:
+ *     <code>@Resource private ObjectProvider&lt;Query&gt; queryProvider;</code>
+ *     final Query query = queryProvider.get();
+ *     // 方式3:
+ *     <code>@Resource private PrototypeBean prototypeBean;</code>
+ *     final Query query = prototypeBean.query();
+ *   </pre>
+ *
  * 构建 SQL.所有的条件字符串构造,需要改为对象<br>
  * 如: OrdrByClause... <br>
  * TODO: 查询缓存

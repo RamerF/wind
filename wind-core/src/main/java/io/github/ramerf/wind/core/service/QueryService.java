@@ -410,6 +410,15 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     protected ICondition<T> condition;
     protected InterService<T> service;
 
+    /**
+     * 填充{@code queryConsumer} 和 {@code conditionConsumer}.
+     *
+     * @param queryConsumer 查询列
+     * @param conditionConsumer 查询条件
+     * @param service {@code BaseService}
+     * @param <T> the type parameter
+     * @return {@code QueryBound}
+     */
     public static <T extends AbstractEntityPoJo> QueryBound<T> consume(
         final Consumer<QueryColumn<T>> queryConsumer,
         final Consumer<ICondition<T>> conditionConsumer,

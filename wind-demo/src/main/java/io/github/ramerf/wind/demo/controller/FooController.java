@@ -2,23 +2,25 @@ package io.github.ramerf.wind.demo.controller;
 
 import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.condition.SortColumn.Order;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.entity.response.Rs;
+import io.github.ramerf.wind.core.helper.ControllerHelper;
+import io.github.ramerf.wind.core.util.StringUtils;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
-import io.github.ramerf.wind.demo.entity.pojo.Foo.Type;
-import io.github.ramerf.wind.demo.entity.response.FooThinResponse;
+import io.github.ramerf.wind.demo.entity.request.FooRequest;
+import io.github.ramerf.wind.demo.entity.response.FooResponse;
+import io.github.ramerf.wind.demo.entity.response.ResCode;
 import io.github.ramerf.wind.demo.service.FooService;
 import io.swagger.annotations.Api;
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.stream.LongStream;
+import io.swagger.annotations.ApiOperation;
+import java.util.List;
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * 该类用于辅助测试.
@@ -28,385 +30,190 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 @RestController
-@RequestMapping("/test")
-@Api(tags = "测试专用")
+@RequestMapping("/controller")
+@SuppressWarnings("unchecked")
+@Api(tags = "controller层方法使用示例")
 public class FooController {
   @Resource private FooService service;
 
-  @GetMapping("/count")
-  public ResponseEntity<Rs<Long>> count() {
-    return Rs.ok(service.count());
-  }
-
-  @GetMapping(value = "/count", params = "type=2")
-  public ResponseEntity<Rs<Long>> count2() {
-    return Rs.ok(service.count(condition -> condition.like(Foo::setName, "foo")));
-  }
-
-  @GetMapping(value = "/count", params = "type=3")
-  public ResponseEntity<Rs<Long>> count3() {
-    return Rs.ok(
-        service.count(
-            query -> query.col(AbstractEntityPoJo::getId),
-            condition -> condition.like(Foo::setName, "foo")));
-  }
-
-  @GetMapping("/get-by-id")
-  public ResponseEntity<Rs<Foo>> getById() {
-    return Rs.ok(service.getById(1L));
-  }
-
-  @GetMapping("/get-one")
-  public ResponseEntity<Rs<Foo>> getOne() {
-    return Rs.ok(service.getOne(condition -> condition.eq(Foo::setId, 1L)));
-  }
-
-  @GetMapping(value = "/get-one", params = "type=2")
-  public ResponseEntity<Rs<FooThinResponse>> getOne2() {
-    // 支持返回基本类型
-    final Long one =
-        service.getOne(
-            query -> query.col(Foo::getId).getCondition().eq(Foo::setId, 1L), Long.class);
-    log.info("getOne2:[{}]", one);
-    // 返回自定义对象
-    final FooThinResponse thinResponse =
-        service.getOne(
-            query ->
-                query
-                    .col(Foo::getId)
-                    .col(Foo::getName)
-                    .col(Foo::getCreateTime)
-                    .getCondition()
-                    .eq(Foo::setId, 1L),
-            FooThinResponse.class);
-    log.info("getOne2:[{}]", thinResponse);
-    return Rs.ok(thinResponse);
-  }
-
-  @GetMapping(value = "/get-one", params = "type=3")
-  public ResponseEntity<Rs<Foo>> getOne3() {
-    return Rs.ok(
-        service.getOne(
-            query ->
-                query
-                    .col(Foo::getId)
-                    .col(Foo::getName)
-                    .col(Foo::getCreateTime)
-                    .col(Foo::getUpdateTime),
-            condition -> condition.eq(Foo::setId, 1L)));
-  }
-
-  @GetMapping(value = "/get-one", params = "type=4")
-  public ResponseEntity<Rs<Long>> getOne4() {
-    return Rs.ok(
-        service.getOne(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            Long.class));
-  }
-
-  @GetMapping("/list-by-ids")
-  public ResponseEntity<Rs<List<Foo>>> listByIds() {
-    return Rs.ok(service.listByIds(Arrays.asList(1L, 2L, 3L)));
-  }
-
-  @GetMapping("/list")
-  public ResponseEntity<Rs<Long>> list() {
-    return Rs.ok(service.list(condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
-  }
-
-  @GetMapping(value = "/list", params = "type=2")
-  public ResponseEntity<Rs<Long>> list2() {
-    return Rs.ok(service.list(condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
-  }
-
-  @GetMapping(value = "/list", params = "type=3")
-  public ResponseEntity<Rs<Long>> list3() {
-    return Rs.ok(
-        service.list(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
-  }
-
-  @GetMapping(value = "/list", params = "type=4")
-  public ResponseEntity<Rs<List<Long>>> list4() {
-    return Rs.ok(
-        service.list(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            Long.class));
-  }
-
-  @GetMapping(value = "/list", params = "type=5")
-  public ResponseEntity<Rs<List<Foo>>> list5() {
-    return Rs.ok(
-        service.list(
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
-  }
-
-  @GetMapping(value = "/list", params = "type=6")
-  public ResponseEntity<Rs<List<Long>>> list6() {
-    return Rs.ok(
-        service.list(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
-            Long.class));
-  }
-
-  @GetMapping(value = "/listAll")
-  public ResponseEntity<Rs<List<Long>>> listAll() {
-    return Rs.ok(service.listAll(query -> query.col(Foo::getId), Long.class));
-  }
-
-  @GetMapping(value = "/listAll", params = "type=2")
-  public ResponseEntity<Rs<List<Foo>>> listAll2() {
-    return Rs.ok(service.listAll(query -> query.col(Foo::getId), Foo.class));
-  }
-
-  @GetMapping(value = "/page")
-  public ResponseEntity<Rs<Page<Foo>>> page() {
-    return Rs.ok(
-        service.page(
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
-  }
-
-  @GetMapping(value = "/page", params = "type=2")
-  public ResponseEntity<Rs<Page<Long>>> page2() {
-    return Rs.ok(
-        service.page(
-            query -> query.col(Foo::getId),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
-            Long.class));
-  }
-
-  @GetMapping(value = "/page", params = "type=3")
-  public ResponseEntity<Rs<Page<Long>>> page3() {
-    return Rs.ok(
-        service.page(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
-  }
-
-  @GetMapping(value = "/page", params = "type=4")
-  public ResponseEntity<Rs<Page<Foo>>> page4() {
-    return Rs.ok(
-        service.page(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
-            Long.class));
-  }
-
-  @PostMapping(value = "/create")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public ResponseEntity<Rs<Long>> create() {
-    return Rs.ok(
-        service.create(
-            Foo.builder()
-                .name("demo")
-                .textString("text")
-                .bigDecimal(BigDecimal.valueOf(100))
-                .type(Type.SPORT)
-                .intList(Arrays.asList(1, 3, 5))
-                .intArr(new Integer[] {1, 4, 7})
-                .longList(Arrays.asList(2L, 4L, 6L))
-                .longArr(new Long[] {1L, 3L, 5L})
-                // .stringList(Arrays.asList("3", "a", "6", "b"))
-                .stringArr(new String[] {"2", "a", "b"})
-                .column("non_match_column")
-                .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build()));
+  @PostMapping("/create")
+  @ApiOperation("创建,创建poJo,自定义错误信息")
+  public ResponseEntity<Rs<Object>> create(
+      @Valid @RequestBody final FooRequest fooRequest, final BindingResult bindingResult) {
+    if (bindingResult.hasErrors()) {
+      return Rs.fail(ControllerHelper.collectBindingResult(bindingResult));
+    }
+    return ControllerHelper.create(service, fooRequest.poJo(), ResultCode.ERROR);
   }
 
   @PostMapping(value = "/create", params = "type=2")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public ResponseEntity<Rs<Long>> create2() {
-    return Rs.ok(
-        service.create(
-            Foo.builder()
-                .name("demo")
-                .textString("text")
-                .bigDecimal(BigDecimal.valueOf(100))
-                .type(Type.SPORT)
-                .intList(Arrays.asList(1, 3, 5))
-                .intArr(new Integer[] {1, 4, 7})
-                .longList(Arrays.asList(2L, 4L, 6L))
-                .longArr(new Long[] {1L, 3L, 5L})
-                // .stringList(Arrays.asList("3", "a", "6", "b"))
-                .stringArr(new String[] {"2", "a", "b"})
-                .column("non_match_column")
-                .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build(),
-            Foo::getName,
-            Foo::getStringList));
+  @ApiOperation("创建,创建poJo")
+  public ResponseEntity<Rs<Object>> create2(
+      @Valid @RequestBody final FooRequest fooRequest, final BindingResult bindingResult) {
+    return ControllerHelper.create(service, fooRequest.poJo(), bindingResult);
   }
 
-  @PostMapping(value = "/createBatch")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public ResponseEntity<Rs<Long>> createBatch() {
-    final List<Foo> list =
-        LongStream.range(0, 100)
-            .mapToObj(
-                i ->
-                    Foo.builder()
-                        // .id(1234123L)
-                        .name("demo" + i)
-                        .textString("text" + i)
-                        .bigDecimal(BigDecimal.valueOf(100 + i))
-                        .type(Type.SPORT)
-                        .intList(Arrays.asList(1, 3, 5))
-                        .intArr(new Integer[] {1, 4, 7})
-                        .longList(Arrays.asList(2L, 4L, 6L))
-                        .longArr(new Long[] {1L, 3L, 5L})
-                        .stringList(Arrays.asList("3", "a", "6", "b"))
-                        .stringArr(new String[] {"2", "a", "b"})
-                        .column("non_match_column")
-                        .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                        .build())
-            .collect(toList());
-    long start = System.currentTimeMillis();
-    /// 默认不保存值为null的属性
-    // final int batch = service.createBatch(list);
-    final int batch = service.createBatch(list, Foo::getName, Foo::getStringList);
-    log.info("createBatch:[total:{},time elapse:{}]", batch, (System.currentTimeMillis() - start));
-    return Rs.ok(batch);
+  @PostMapping(value = "/create", params = "type=3")
+  @ApiOperation("创建,指定保存null属性")
+  public ResponseEntity<Rs<Object>> create3(
+      @Valid @RequestBody final FooRequest fooRequest, final BindingResult bindingResult) {
+    return ControllerHelper.create(
+        service, fooRequest, bindingResult, Foo::getTextString, Foo::getName);
   }
 
-  @PostMapping(value = "/update")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public ResponseEntity<Rs<Long>> update() {
-    return Rs.ok(
-        service.update(
-            Foo.builder()
-                .id(1L)
-                .name("demo")
-                .textString("text")
-                .bigDecimal(BigDecimal.valueOf(100))
-                .type(Type.SPORT)
-                .intList(Arrays.asList(1, 3, 5))
-                .intArr(new Integer[] {1, 4, 7})
-                .longList(Arrays.asList(2L, 4L, 6L))
-                .longArr(new Long[] {1L, 3L, 5L})
-                // .stringList(Arrays.asList("3", "a", "6", "b"))
-                .stringArr(new String[] {"2", "a", "b"})
-                .column("non_match_column")
-                .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build(),
-            Foo::getName,
-            Foo::getStringList));
+  @GetMapping(value = "/detail/{id}")
+  @ApiOperation("查询,根据id获取详情")
+  public ResponseEntity<Rs<Object>> detail(@PathVariable("id") final long id) {
+    return ControllerHelper.detail(service, id);
   }
 
-  @PostMapping(value = "/update", params = "type=2")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public ResponseEntity<Rs<Long>> update2() {
-    return Rs.ok(
-        service.update(
-            condition -> condition.eq(Foo::setId, 1L).isNotNull(Foo::setCreateTime),
-            Foo.builder()
-                .name("demo")
-                .textString("text")
-                .bigDecimal(BigDecimal.valueOf(100))
-                .type(Type.SPORT)
-                .intList(Arrays.asList(1, 3, 5))
-                .intArr(new Integer[] {1, 4, 7})
-                .longList(Arrays.asList(2L, 4L, 6L))
-                .longArr(new Long[] {1L, 3L, 5L})
-                // .stringList(Arrays.asList("3", "a", "6", "b"))
-                .stringArr(new String[] {"2", "a", "b"})
-                .column("non_match_column")
-                .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build(),
-            Foo::getName,
-            Foo::getStringList));
+  @GetMapping(value = "/detail/{id}", params = "type=2")
+  @ApiOperation("查询,根据id获取详情,并转换为response")
+  public ResponseEntity<Rs<FooResponse>> detail2(@PathVariable("id") final long id) {
+    /// 🤔🤔🤔🤔🤔🤔😉
+    // ControllerHelper.detail(
+    //     service,
+    //     id,
+    //     foo -> {
+    //       // foo为方法service.getById的返回值,可以在这里组装业务返回对象
+    //       log.info("detail2:[{}]", foo);
+    //       return foo;
+    //     });
+    return ControllerHelper.detail(service, id, FooResponse::of);
   }
 
-  @PostMapping(value = "/updateBatch")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
-  public ResponseEntity<Rs<Long>> updateBatch() {
-    final List<Foo> list =
-        LongStream.range(0, 100)
-            .mapToObj(
-                i ->
-                    Foo.builder()
-                        .id(i)
-                        .name("demo" + i)
-                        .textString("text" + i)
-                        .bigDecimal(BigDecimal.valueOf(100 + i))
-                        .type(Type.SPORT)
-                        .intList(Arrays.asList(1, 3, 5))
-                        .intArr(new Integer[] {1, 4, 7})
-                        .longList(Arrays.asList(2L, 4L, 6L))
-                        .longArr(new Long[] {1L, 3L, 5L})
-                        .stringList(Arrays.asList("3", "a", "6", "b"))
-                        .stringArr(new String[] {"2", "a", "b"})
-                        .column("non_match_column")
-                        .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                        .build())
-            .collect(toList());
-    long start = System.currentTimeMillis();
-    /// 默认不更新值为null的属性
-    // final int batch = service.updateBatch(list);
-    service
-        .updateBatch(list, Foo::getName, Foo::getStringList)
-        // 只有当list不为空且更新记录数和list的大小不同时,才会执行下方的代码,入参为实际受影响的行数
-        .ifPresent(affectRow -> log.info("updateBatch:affectRow[{}]", affectRow));
-    log.info(
-        "updateBatch:[total:{},time elapse:{}]", list.size(), (System.currentTimeMillis() - start));
-    return Rs.ok();
+  @GetMapping(value = "/list")
+  @ApiOperation("查询,列表查询,支持转换和过滤")
+  public ResponseEntity<Rs<List<FooResponse>>> list() {
+    // page需要自己调用分页查询,仅提供相关的对象转换方法
+    final List<Foo> list = service.list(condition -> condition.eq(Foo::setName, "foo"));
+    return ControllerHelper.list(list, FooResponse::of, foo -> StringUtils.nonEmpty(foo.getName()));
   }
 
-  @GetMapping(value = "/delete")
-  public ResponseEntity<Rs<Long>> delete() {
-    service.delete(1L);
-    /// 如果实际受影响的行数不等于1,可以执行额外操作
-    // service
-    //     .delete(1L)
-    //     .ifPresent(
-    //         e -> {
-    //           // 执行额外操作,或者仅仅抛出遗产
-    //           log.info("delete:[{}]", e.getMessage());
-    //         });
-    // 或者直接抛出异常
-    // service
-    //     .delete(1L)
-    //     .ifPresent(
-    //         e -> {
-    //           throw e;
-    //         });
-    // 抛出自定义异常
-    // service.delete(1L).orElseThrow(() -> CommonException.of(ResultCode.ERROR));
-    return Rs.ok();
+  @GetMapping(value = "/page")
+  @ApiOperation("查询,分页")
+  public ResponseEntity<Rs<Page<FooResponse>>> page() {
+    // page需要自己调用分页查询,仅提供相关的对象转换方法
+    final Page<Foo> page =
+        service.page(
+            condition -> condition.eq(Foo::setName, "foo"),
+            1,
+            10,
+            SortColumn.by(Foo::getUpdateTime, Order.DESC));
+    return ControllerHelper.page(page, FooResponse::of);
   }
 
-  @GetMapping(value = "/delete", params = "type=2")
-  public ResponseEntity<Rs<Long>> delete2() {
-    final long affectRow = service.delete(condition -> condition.eq(Foo::setId, 1L));
-    log.info("delete2:[{}]", affectRow);
-    return Rs.ok(affectRow);
+  @GetMapping(value = "/page", params = "type=2")
+  @ApiOperation("查询,列表查询,转换为分页对象")
+  public ResponseEntity<Rs<Page<FooResponse>>> page2() {
+    // page需要自己调用分页查询,仅提供相关的对象转换方法
+    final List<Foo> list = service.list(condition -> condition.eq(Foo::setName, "foo"));
+    return ControllerHelper.page(list, FooResponse::of, foo -> StringUtils.nonEmpty(foo.getName()));
   }
 
-  @GetMapping(value = "/deleteByIds")
-  public ResponseEntity<Rs<Long>> deleteByIds() {
-    service
-        .deleteByIds(Arrays.asList(1L, 2L, 3L, 4L))
-        // 只有当ids不为空且删除记录数和ids的大小不同时,才会执行下方的代码,入参为实际受影响的行数
-        .ifPresent(affectRow -> log.info("deleteByIds:[{}]", affectRow));
-    return Rs.ok();
+  @PostMapping(value = "/update/{id}")
+  @ApiOperation("更新,更新request")
+  public ResponseEntity<Rs<String>> update(
+      @PathVariable("id") final long id,
+      @RequestBody FooRequest fooRequest,
+      final BindingResult bindingResult) {
+    // 收集校验错误信息
+    if (bindingResult.hasErrors()) {
+      return Rs.fail(ControllerHelper.collectFirstBindingResult(bindingResult));
+    }
+    // 获取对应的poJo,处理其它业务逻辑
+    final Foo foo = fooRequest.poJo(id);
+    return ControllerHelper.update(service, foo, id, bindingResult);
+  }
+
+  @PostMapping(value = "/update/{id}", params = "type=2")
+  @ApiOperation("更新,直接更新PoJo")
+  public ResponseEntity<Rs<String>> update2(
+      @PathVariable("id") final long id,
+      @RequestBody FooRequest fooRequest,
+      final BindingResult bindingResult) {
+    // 收集校验错误信息
+    if (bindingResult.hasErrors()) {
+      return Rs.fail(ControllerHelper.collectFirstBindingResult(bindingResult));
+    }
+    // 获取对应的poJo,处理其它业务逻辑
+    final Foo foo = fooRequest.poJo(id);
+    return ControllerHelper.update(service, foo);
+  }
+
+  @PostMapping(value = "/update/{id}", params = "type=3")
+  @ApiOperation("更新,直接更新PoJo,自定义执行失败时的返回信息")
+  public ResponseEntity<Rs<String>> update3(
+      @PathVariable("id") final long id,
+      @RequestBody FooRequest fooRequest,
+      final BindingResult bindingResult) {
+    // 收集校验错误信息
+    if (bindingResult.hasErrors()) {
+      return Rs.fail(ControllerHelper.collectFirstBindingResult(bindingResult));
+    }
+    // 获取对应的poJo,处理其它业务逻辑
+    final Foo foo = fooRequest.poJo(id);
+    return ControllerHelper.update(service, foo, ResCode.FOO_FAIL_UPDATE);
+  }
+
+  @PostMapping(value = "/update/{id}", params = "type=4")
+  @ApiOperation("更新,直接更新PoJo,自定义执行成功和失败时的返回信息")
+  public ResponseEntity<Rs<String>> update4(
+      @PathVariable("id") final long id,
+      @RequestBody FooRequest fooRequest,
+      final BindingResult bindingResult) {
+    // 收集校验错误信息
+    if (bindingResult.hasErrors()) {
+      return Rs.fail(ControllerHelper.collectFirstBindingResult(bindingResult));
+    }
+    // 获取对应的poJo,处理其它业务逻辑
+    final Foo foo = fooRequest.poJo(id);
+    return ControllerHelper.update(
+        service, foo, ResCode.FOO_SUCCESS_UPDATE, ResCode.FOO_FAIL_UPDATE);
+  }
+
+  @PostMapping(value = "/update/{id}", params = "type=5")
+  @ApiOperation("更新,指定保存列")
+  public ResponseEntity<Rs<Object>> update5(
+      @PathVariable("id") final long id,
+      @RequestBody FooRequest fooRequest,
+      final BindingResult bindingResult) {
+    return ControllerHelper.update(service, fooRequest, id, bindingResult, Foo::getName);
+  }
+
+  @PostMapping(value = "/delete/{id}")
+  @ApiOperation("删除,根据id删除")
+  public ResponseEntity<Rs<Object>> delete(@PathVariable("id") final long id) {
+    return ControllerHelper.delete(service, id);
+  }
+
+  @PostMapping(value = "/delete/{id}", params = "type=2")
+  @ApiOperation("删除,自定义删除,不带返回值")
+  public ResponseEntity<Rs<String>> delete2(@PathVariable("id") final long id) {
+    return ControllerHelper.delete(
+        () -> service.delete(id),
+        () -> {
+          // 这里处理业务逻辑,成功时的返回信息
+          return Rs.ok(ResCode.FOO_SUCCESS_DELETE);
+        },
+        ResCode.FOO_FAIL_DELETE);
+  }
+
+  @PostMapping(value = "/delete/{id}", params = "type=3")
+  @ApiOperation("删除,自定义删除,带返回值")
+  public ResponseEntity<Rs<String>> delete3(@PathVariable("id") final long id) {
+    return ControllerHelper.delete(
+        service.delete(condition -> condition.eq(Foo::setId, id)),
+        result -> {
+          // 这里处理业务逻辑,成功时的返回信息
+          return Rs.ok(ResCode.FOO_SUCCESS_DELETE);
+        },
+        ResCode.FOO_FAIL_DELETE);
+  }
+
+  @PostMapping(value = "/deleteByIds")
+  @ApiOperation("删除,根据id批量删除")
+  public ResponseEntity<Rs<String>> deleteByIds(@RequestParam("ids") final List<Long> ids) {
+    return ControllerHelper.deleteByIds(service, ids);
   }
 }
