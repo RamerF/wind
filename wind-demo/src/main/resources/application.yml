@@ -79,7 +79,7 @@ wind:
   logic-not-delete: false
   # 逻辑已删除值(默认为 true)
   logic-deleted: true
-  entity-package: io.github.ramerf.wind..demo.entity.pojo
+  entity-package: io.github.ramerf.wind.demo.entity.pojo
   batch-size: 500
   snowflake-prop:
     worker-id: 3
