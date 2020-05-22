@@ -30,7 +30,7 @@ public class CommonBean {
   private boolean enableSwagger;
 
   @Bean
-  public IdGenerator snowflakeIdWorker() {
+  public IdGenerator autoIncrementGenerator() {
     // 自定义id生成策略,下方为数据库自增写法
     return o -> null;
   }
