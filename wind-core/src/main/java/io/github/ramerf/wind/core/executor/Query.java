@@ -79,12 +79,7 @@ public class Query extends AbstractExecutor {
   /** 暂时用于where之后的函数(group by等). */
   private final StringBuilder afterWhereString = new StringBuilder();
 
-  private static JdbcTemplate JDBC_TEMPLATE;
-
-  /** Instantiates a new Query. */
-  public Query() {
-    Query.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
-  }
+  public static JdbcTemplate JDBC_TEMPLATE;
 
   /**
    * Gets instance.

@@ -14,7 +14,7 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>wind</artifactId>
     <name>wind</name>
-    <version>3.5.0-RELEASE</version>
+    <version>3.6.0-RELEASE</version>
     <modules>
         <module>wind-core</module>
         <module>wind-annotation</module>
@@ -48,7 +48,7 @@
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <wind-annotation.version>3.5.0-RELEASE</wind-annotation.version>
+        <wind-annotation.version>3.6.0-RELEASE</wind-annotation.version>
     </properties>
     <dependencies>
         <dependency>
@@ -147,70 +147,6 @@
     </dependencyManagement>
     <profiles>
         <profile>
-            <id>rdc-release</id>
-            <distributionManagement>
-                <repository>
-                    <id>rdc-releases</id>
-                    <url>https://repo.rdc.aliyun.com/repository/116112-release-hDoj2s/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>rdc-snapshots</id>
-                    <url>https://repo.rdc.aliyun.com/repository/116112-snapshot-bI11jn/</url>
-                </snapshotRepository>
-            </distributionManagement>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.1.1</version>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <additionalOptions>
-                                        <additionalOption>-Xdoclint:none</additionalOption>
-                                    </additionalOptions>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
-                        <configuration>
-                            <executable>C:/Program Files (x86)/GNU/GnuPG/gpg.exe</executable>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>signArtifact</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
             <id>sonatype-release</id>
             <distributionManagement>
                 <repository>
@@ -223,7 +159,6 @@
                 </snapshotRepository>
             </distributionManagement>
             <build>
-
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -271,6 +206,9 @@
                     </plugin>
                 </plugins>
             </build>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
     </profiles>
 </project>

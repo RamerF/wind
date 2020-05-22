@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 从高到地低 OFF 、 FATAL 、 ERROR 、 WARN 、 INFO 、 DEBUG 、 TRACE 、 ALL -->
 <configuration>
     <contextName>${APP_NAME}</contextName>
     <springProperty name="APP_NAME" scope="context" source="spring.application.name"/>
@@ -14,9 +13,6 @@
         </encoder>
     </appender>
 
-    <logger name="com.apache.ibatis" level="TRACE" additivity="false">
-        <appender-ref ref="STDOUT"/>
-    </logger>
     <logger name="java.sql.Connection" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
@@ -29,19 +25,19 @@
     <logger name="io.github.ramerf" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
-    <logger name="com.alibaba.nacos.client.naming.updater" level="ERROR" additivity="false">
-        <appender-ref ref="STDOUT"/>
-    </logger>
-    <logger name="com.alibaba.nacos.naming.beat.sender" level="ERROR" additivity="false">
-        <appender-ref ref="STDOUT"/>
-    </logger>
     <logger name="org.springframework.jdbc.core.JdbcTemplate" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
     <logger name="org.springframework.jdbc.core.StatementCreatorUtils" level="TRACE" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
-    <springProfile name="dev,default,test,local">
+    <springProfile name="local,default,dev,test">
+        <root>
+            <level value="DEBUG"/>
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </springProfile>
+    <springProfile name="pre,prod">
         <root>
             <level value="INFO"/>
             <appender-ref ref="STDOUT"/>

@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.support;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
  * @since 2020 /5/20
  */
 @Component
+@ConditionalOnMissingBean(IdGenerator.class)
 public class SnowflakeIdGenerator implements IdGenerator {
   private final SnowflakeIdWorker snowflakeIdWorker = new SnowflakeIdWorker();
 

@@ -65,11 +65,15 @@ public final class Update extends AbstractExecutor {
   @SuppressWarnings("FieldCanBeLocal")
   private boolean logicDeleted;
 
-  private static JdbcTemplate JDBC_TEMPLATE;
+  public static JdbcTemplate JDBC_TEMPLATE;
 
-  /** Instantiates a new Update. */
-  Update() {
-    Update.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
+  /**
+   * Gets instance.
+   *
+   * @return the instance
+   */
+  public static Update getInstance() {
+    return AppContextInject.getBean(Update.class);
   }
 
   /**
@@ -168,9 +172,9 @@ public final class Update extends AbstractExecutor {
             },
             keyHolder);
     if (Objects.isNull(t.getId())) {
-      t.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+      t.setId((Long) Objects.requireNonNull(keyHolder.getKeys()).get("id"));
     }
-    if (update != 1) {
+    if (update != 1 || Objects.isNull(t.getId())) {
       throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);
     }
   }
@@ -271,7 +275,11 @@ public final class Update extends AbstractExecutor {
     final String execSql =
         String.format(sql, tableName, setBuilder.toString(), condition.getString());
     return JDBC_TEMPLATE.update(
-        execSql, ps -> condition.getValues(index).forEach(val -> val.accept(ps)));
+        execSql,
+        ps -> {
+          list.forEach(consumer -> consumer.accept(ps));
+          condition.getValues(index).forEach(val -> val.accept(ps));
+        });
   }
 
   /**
@@ -369,13 +377,14 @@ public final class Update extends AbstractExecutor {
     if (!condition.hasCondition()) {
       throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
     }
-    final String sql = "update %s set %s=%s where %s";
+    final String sql = "update %s set %s=%s,update_time='%s' where %s";
     final String updateString =
         String.format(
             sql,
             tableName,
             StringUtils.camelToUnderline(logicDeleteField),
             logicDeleted,
+            new Date(),
             condition.getString());
     return JDBC_TEMPLATE.update(
         updateString,
@@ -454,14 +463,5 @@ public final class Update extends AbstractExecutor {
       log.error(e.getMessage(), e);
       throw CommonException.of(e.getMessage(), e);
     }
-  }
-
-  /**
-   * Gets instance.
-   *
-   * @return the instance
-   */
-  public static Update getInstance() {
-    return AppContextInject.getBean(Update.class);
   }
 }

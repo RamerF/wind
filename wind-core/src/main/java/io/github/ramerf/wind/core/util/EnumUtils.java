@@ -141,7 +141,7 @@ public class EnumUtils {
   }
 
   public enum Type implements InterEnum {
-    /** 商品类别 */
+    /** 类别 */
     PHONE(0, "手机"),
     SPORT(1, "运动");
 
