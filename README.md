@@ -1,143 +1,187 @@
 ﻿# wind
 
 ---
-基于spring-boot的快速开发框架.
+基于spring-boot的快速开发框架,可与Mybatis/Hibernate共存.
 
 ### 特性
  - 查询支持返回指定列,返回基本类型(Long/BigDecimal等)
  - lambda方式构造条件,支持类型推断
  - 基于jdbc-template
  - service层切入,repository层依然可以使用其它持久化框架
-
+ - 自定义枚举序列化
+ - 自定义ID生成策略
+ - controller(ControllerHelper),service,repository(Query/Update)三层无耦合,每层都可独立使用
+ 
 ### 开始使用
  1. 引入jar包:
     ```xml
     <dependency>
         <groupId>io.github.ramerf</groupId>
         <artifactId>wind-core</artifactId>
-        <version>3.5.0-RELEASE</version>
+        <version>3.6.0-RELEASE</version>
     </dependency>
     ```
- 2. 新建 pojo 实体`DemoProductPoJo`继承于`AbstractEntityPoJo`
+ 2. 新建 pojo 实体`Foo`继承于`AbstractEntityPoJo`
     ```java
-    public class DemoProductPoJo extends AbstractEntityPoJo{}
+    public class Foo extends AbstractEntityPoJo{}
     ```
- 3. 新建 service `DemoProductService`继承于`BaseService`
+ 3. 新建 service `FooService`继承于`BaseService`
     ```java
-    public interface DemoProductService extends BaseService<DemoProductPoJo> {}
+    public interface FooService extends BaseService<FooPoJo> {}
     ```
- 4. 注入`DemoProduceService`即可使用.
-   
+ 4. 新建serviceImpl `FooServiceImpl`
+    ```java
+    @Service
+    public class FooServiceImpl implements FooService {} 
+    ```
+ 5. 注入`FooService`即可使用.
 
-### 功能
-#### controller层
- - [X] 新增: 新增PoJo,Request
- - [X] 查询: 通过id获取详情(该方法会查询所有字段,支持转换为任意对象)
- - [X] 更新: 更新PoJo,不带校验器
- - [X] 更新: 更新PoJo,带校验器
- - [X] 更新: 更新Request
- - [X] 更新: 批量更新Request
- - [X] 删除: 通过id删除
- - [X] 删除: 通过id集合批量删除
- - [X] 删除: 包含返回值,自定义返回信息
- - [X] 删除: 不包含返回值,自定义返回信息
- - [X] 工具: 转换并过滤list
- - [X] 工具: 转换list为page对象
- - [X] 工具: 转换并过滤list为page对象
- - [X] 工具: 获取校验信息的第一条错误信息
- - [X] 工具: 获取校验信息的所有错误信息
- - [X] 工具: Controller枚举参数校验
-#### service层
- - [X] 单表通用增删改查,分页查询
- - [X] 单表批量增删改
- - [X] 单表查询指定字段,支持分页
- - [X] 多表通用查询,支持分页
- - [X] 多表查询指定字段,支持分页
- - [X] 单表查询某页列表数据,结果不分页
- - [X] 分布式缓存支持
-#### query/update层
- - [X] 单表通用增删改查,分页查询
- - [X] 单表批量增删改
- - [X] 单表查询指定字段,支持分页
- - [X] 多表通用查询,支持分页
- - [X] 多表查询指定字段,支持分页
- - [ ] 分页查询:包含指定数据且在首位
- - [ ] 单表查询常用统计函数支持
- - [ ] 多表查询常用统计函数支持
- - [X] 分布式缓存支持
-#### entity层
- - [X] request转pojo
-#### 代码生成器
- - [X] 单表通用增删改查
-#### 功能计划
- - [ ] 查询缓存支持
- - [ ] 逐步弃用BaseService#ExtraProp查询方式,前提:查询缓存支持
+### 方法示例
+## `wind-demo`模块提供所有方法的使用示例
+## controller层
+```java
+@Resource private FooService service;
 
-### v1.0.0-SNAPSHOT 2020-02-25
- - 新增
-    1. 单表通用增删改查,分页查询
-    2. 单表批量增删改
-    3. 单表查询指定字段,支持分页
-    4. 多表通用查询,支持分页
-    5. 多表查询指定字段,支持分页
-    6. Controller枚举参数校验支持
-### v1.0.0-SNAPSHOT 2020-03-04
- - 新增: 
-    - entity三层支持枚举,request支持自动校验
-### v1.0.0-SNAPSHOT 2020-03-13
- - 新增
-    - controller层 更新: 更新PoJo,不带校验器
-    - service层 查询: 单表查询某页列表数据,结果不分页
-### v1.0.0-SNAPSHOT 2020-03-17
- - 新增
-    - controller层 更新: 创建PoJo,不带校验器
-### v1.0.0-SNAPSHOT 2020-03-24
- - 新增
-    - AppContextInject通过Bean名称获取Bean
-    - 分布式缓存支持
-    - 分布式缓存DEMO
- - 更新
-    - Page转换工具类独立出来
- - 修复
-    - Mybatis自定义转换器Integer[]/Long[] <-> List\<Integer>/List\<Long>的不确定性导致查询/保存数据丢失.
-    - Conditions条件notIn语法错误
-    - 修复BeanResultHandler当返回数据的枚举值为null时会执行失败
-### v1.0.0-SNAPSHOT 2020-04-02
- - 新增
-    - ControllerHelper新增两个删除方法
-### v1.0.0-SNAPSHOT 2020-04-05
- - 新增
-    - 类型转换器List<Long> <-> Long[]
-    - 类型转换器List<String> <-> String[]
-    - 非单例Bean管理器
- - 优化   
-    - 现在查询字段通过返回对象推断,减少了传输数据
- - 重构
-    - 类型转换器现在兼容性更好了
- - 修复
-    - 修复了一个潜在的bug,该bug会导致Query类在并发环境下一定概率抛异常执行失败
- - 更新
-    - 修正ApplicationContext注入方式,更新说明文档
- - 其它更新
-### v2.0.0-SNAPSHOT 2020-04-14
- - 新增
-    - 查询方法支持返回基本类型
-    - CollectionUtils新增两个toPage方法
-    - 条件删除
-    - DEMO
- - 重构
-    - 重构service方法签名,现在使用更方便了
-### v2.0.2-SNAPSHOT 2020-04-27
- - 新增
-    - service层count支持条件(暂不支持列)
-    - service查询,支持返回基本类型数组
-    
-### v2.0.2-SNAPSHOT 2020-05-05
- - 重构
-    - 项目名称+结构
- - 新增
-    - 包注释
-    - 测试项目
-    - 部分函数支持(待测试)
-#### 进行中
- - [ ] 批量新增性能优化,待测试
+@GetMapping(value = "/detail/{id}", params = "type=2")
+@ApiOperation("查询,根据id获取详情,并转换为response")
+public ResponseEntity<Rs<FooResponse>> detail2(@PathVariable("id") final long id) {
+    return ControllerHelper.detail(service, id, FooResponse::of);
+}
+
+@GetMapping(value = "/list")
+@ApiOperation("查询,列表查询,支持转换和过滤")
+public ResponseEntity<Rs<List<FooResponse>>> list() {
+    final List<Foo> list = service.list(condition -> condition.like(Foo::setName, "foo"));
+    return ControllerHelper.list(list, FooResponse::of, foo -> StringUtils.nonEmpty(foo.getName()));
+}
+
+@GetMapping(value = "/page")
+@ApiOperation("查询,分页")
+public ResponseEntity<Rs<Page<FooResponse>>> page() {
+    // page需要自己调用分页查询,仅提供相关的对象转换方法
+    final Page<Foo> page =
+        service.page(
+            condition -> condition.eq(Foo::setName, "foo"),
+            1,
+            10,
+            SortColumn.by(Foo::getUpdateTime, Order.DESC).desc(Foo::getId));
+    return ControllerHelper.page(page, FooResponse::of);
+}
+```
+## service层
+```java
+@Resource private FooService service;
+
+@GetMapping(value = "/get-one", params = "type=2")
+@ApiOperation("查询,单条查询,指定条件返回自定义对象,支持返回基本类型")
+public ResponseEntity<Rs<FooThinResponse>> getOne2() {
+    // 支持返回基本类型
+    final Long one =
+        service.getOne(
+            query -> query.col(Foo::getId),
+            condition -> condition.eq(Foo::setId, 1L),
+            Long.class);
+    log.info("getOne2:[{}]", one);
+    // 返回自定义对象
+    final FooThinResponse thinResponse =
+        service.getOne(
+            query ->
+                query
+                    .col(Foo::getId)
+                    .col(Foo::getName)
+                    .col(Foo::getCreateTime),
+            condition -> condition.eq(Foo::setId, 1L),
+            FooThinResponse.class);
+    log.info("getOne2:[{}]", thinResponse);
+    return Rs.ok(thinResponse);
+}
+
+@PostMapping(value = "/create", params = "type=2")
+@SuppressWarnings({"unchecked", "DuplicatedCode"})
+@ApiOperation("创建,指定保存值为null的属性")
+public ResponseEntity<Rs<Long>> create2() {
+    return Rs.ok(
+        service.create(
+            Foo.builder()
+                .name("demo")
+                .textString("text")
+                .bigDecimal(BigDecimal.valueOf(100))
+                .type(Type.SPORT)
+                .intList(Arrays.asList(1, 3, 5))
+                .intArr(new Integer[] {1, 4, 7})
+                .longList(Arrays.asList(2L, 4L, 6L))
+                .longArr(new Long[] {1L, 3L, 5L})
+                // .stringList(Arrays.asList("3", "a", "6", "b"))
+                .stringArr(new String[] {"2", "a", "b"})
+                .column("non_match_column")
+                .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
+                .build(),
+            Foo::getName,
+            Foo::getStringList));
+}
+
+```
+## repository层(Query/Update)
+支持任意表
+```java
+@Resource private PrototypeBean prototypeBean;
+
+@GetMapping
+@ApiOperation("使用Query")
+public ResponseEntity<Rs<Object>> query() {
+    // 获取查询列和查询条件对象
+    final QueryColumn<Foo> queryColumn = QueryColumnFactory.getInstance(Foo.class);
+    final Condition<Foo> condition = queryColumn.getCondition();
+    // 指定查询列
+    queryColumn.col(Foo::getId);
+    // 指定查询条件
+    condition.eq(Foo::setId, 1L);
+    // 动态条件,第一个参数为false时,不会包含该条件
+    condition.eq(false, Foo::setId, 2L);
+    return Rs.ok(prototypeBean.query().select(queryColumn).where(condition).fetchAll(Long.class));
+}
+
+@GetMapping
+@ApiOperation("使用Update")
+public ResponseEntity<Rs<Object>> update() {
+    final Foo foo = Foo.builder().name("name").build();
+    final int affectRow =
+        prototypeBean
+            .update()
+            .from(Foo.class)
+            .where((Consumer<ICondition<Foo>>) condition -> condition.eq(Foo::setId, 1L))
+            .update(foo);
+    return Rs.ok(affectRow);
+}
+
+```
+
+## 自定义枚举序列化
+ - 默认枚举序列化为非线性key:value格式
+    ```json
+    {
+        "value": "值",
+        "desc": "中文描述"
+    }
+    ```
+ - 自定义
+    ```java
+    /**
+    * 自定义枚举的序列化格式,只返回value.
+    *
+    * @return the inter enum serializer
+    */
+    @Bean
+    public InterEnumSerializer interEnumSerializer() {
+        return InterEnum::value;
+    }
+    ```
+
+## 自定义ID生成策略
+```java
+@Bean
+public IdGenerator snowflakeIdWorker() {
+    // 自定义id生成策略,下方为数据库自增写法
+    return o -> null;
+}
+```

@@ -86,7 +86,7 @@ public class FooController {
   @ApiOperation("查询,列表查询,支持转换和过滤")
   public ResponseEntity<Rs<List<FooResponse>>> list() {
     // page需要自己调用分页查询,仅提供相关的对象转换方法
-    final List<Foo> list = service.list(condition -> condition.eq(Foo::setName, "foo"));
+    final List<Foo> list = service.list(condition -> condition.like(Foo::setName, "foo"));
     return ControllerHelper.list(list, FooResponse::of, foo -> StringUtils.nonEmpty(foo.getName()));
   }
 
