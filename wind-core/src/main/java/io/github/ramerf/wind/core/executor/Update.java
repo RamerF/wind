@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -31,6 +32,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 通用写入操作对象.获取实例:<br>
@@ -51,25 +53,33 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "unchecked", "ConstantConditions"})
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public final class Update extends AbstractExecutor {
+public class Update extends AbstractExecutor {
 
   private Class<?> clazz;
   private Condition<?> condition;
   private String tableName;
 
-  @SuppressWarnings("FieldCanBeLocal")
-  private String logicDeleteField;
+  @Resource private WindConfiguration configuration;
 
-  @SuppressWarnings("FieldCanBeLocal")
-  private boolean logicDeleted;
+  /**
+   * Instantiates a new Update.
+   *
+   * @param jdbcTemplate the jdbc template
+   */
+  Update(final JdbcTemplate jdbcTemplate) {
+    super.setJdbcTemplate(jdbcTemplate);
+    setJdbcTemplate(jdbcTemplate);
+  }
 
-  private static JdbcTemplate JDBC_TEMPLATE;
-
-  /** Instantiates a new Update. */
-  Update() {
-    Update.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
+  /**
+   * Gets instance.
+   *
+   * @return the instance
+   */
+  public static Update getInstance() {
+    return AppContextInject.getBean(Update.class);
   }
 
   /**
@@ -94,9 +104,6 @@ public final class Update extends AbstractExecutor {
   }
 
   private <T extends AbstractEntityPoJo> Update from(final Class<T> clazz, final String tableName) {
-    final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
-    logicDeleteField = configuration.getLogicDeleteField();
-    logicDeleted = configuration.isLogicDeleted();
     if (Objects.isNull(clazz) && StringUtils.isEmpty(tableName)) {
       throw CommonException.of("[clazz,tableName]不能同时为空");
     }
@@ -127,10 +134,9 @@ public final class Update extends AbstractExecutor {
    * @param t the t
    * @param includeNullProps 即使值为null也保存的属性
    * @throws DataAccessException 如果执行失败
-   * @throws CommonException 创建记录条数不等于1
    */
-  @SafeVarargs
-  public final <T extends AbstractEntityPoJo> void create(
+  @Transactional(rollbackFor = Exception.class)
+  public <T extends AbstractEntityPoJo> void create(
       @Nonnull final T t, final IFunction<T, ?>... includeNullProps) throws DataAccessException {
     t.setId(AppContextInject.getBean(IdGenerator.class).nextId(t));
     final Date now = new Date();
@@ -159,18 +165,19 @@ public final class Update extends AbstractExecutor {
     final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
     KeyHolder keyHolder = new GeneratedKeyHolder();
     final int update =
-        JDBC_TEMPLATE.update(
-            con -> {
-              final PreparedStatement ps =
-                  con.prepareStatement(execSql, Statement.RETURN_GENERATED_KEYS);
-              list.forEach(val -> val.accept(ps));
-              return ps;
-            },
-            keyHolder);
+        getJdbcTemplate()
+            .update(
+                connection -> {
+                  final PreparedStatement ps =
+                      connection.prepareStatement(execSql, Statement.RETURN_GENERATED_KEYS);
+                  list.forEach(val -> val.accept(ps));
+                  return ps;
+                },
+                keyHolder);
     if (Objects.isNull(t.getId())) {
-      t.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+      t.setId((Long) Objects.requireNonNull(keyHolder.getKeys()).get("id"));
     }
-    if (update != 1) {
+    if (update != 1 || Objects.isNull(t.getId())) {
       throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);
     }
   }
@@ -181,7 +188,7 @@ public final class Update extends AbstractExecutor {
    * @param <T> the type parameter
    * @param ts the ts
    * @param includeNullProps 即使值为null也保存的属性
-   * @return 保存成功数
+   * @return 保存成功数 int
    */
   @SafeVarargs
   public final <T extends AbstractEntityPoJo> int createBatch(
@@ -209,29 +216,31 @@ public final class Update extends AbstractExecutor {
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
     int createRow = 0;
-    final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
+    final int batchSize = configuration.getBatchSize();
     int total = ts.size();
     final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
     for (int j = 0; j < execCount; j++) {
       final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
       final int[] batchUpdate =
-          JDBC_TEMPLATE.batchUpdate(
-              execSql,
-              new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(@Nonnull final PreparedStatement ps, final int i) {
-                  final AtomicInteger index = new AtomicInteger(1);
-                  final T obj = execList.get(i);
-                  obj.setCreateTime(new Date());
-                  savingFields.forEach(
-                      field -> setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
-                }
+          getJdbcTemplate()
+              .batchUpdate(
+                  execSql,
+                  new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(@Nonnull final PreparedStatement ps, final int i) {
+                      final AtomicInteger index = new AtomicInteger(1);
+                      final T obj = execList.get(i);
+                      obj.setCreateTime(new Date());
+                      savingFields.forEach(
+                          field ->
+                              setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
+                    }
 
-                @Override
-                public int getBatchSize() {
-                  return execList.size();
-                }
-              });
+                    @Override
+                    public int getBatchSize() {
+                      return execList.size();
+                    }
+                  });
       createRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
     }
     return createRow;
@@ -243,7 +252,7 @@ public final class Update extends AbstractExecutor {
    * @param <T> the type parameter
    * @param t the t
    * @param includeNullProps 即使值为null也保存的属性
-   * @return 受影响记录数
+   * @return 受影响记录数 int
    */
   @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
@@ -270,8 +279,8 @@ public final class Update extends AbstractExecutor {
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, tableName, setBuilder.toString(), condition.getString());
-    return JDBC_TEMPLATE.update(
-        execSql, ps -> condition.getValues(index).forEach(val -> val.accept(ps)));
+    return getJdbcTemplate()
+        .update(execSql, ps -> condition.getValues(index).forEach(val -> val.accept(ps)));
   }
 
   /**
@@ -309,34 +318,36 @@ public final class Update extends AbstractExecutor {
     final String execSql =
         String.format(sql, tableName, setBuilder.toString(), condition.getString());
     int updateRow = 0;
-    final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
+    final int batchSize = configuration.getBatchSize();
     int total = ts.size();
     final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
     for (int j = 0; j < execCount; j++) {
       final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
       final int[] batchUpdate =
-          JDBC_TEMPLATE.batchUpdate(
-              execSql,
-              new BatchPreparedStatementSetter() {
-                @Override
-                @SuppressWarnings("unchecked")
-                public void setValues(@Nonnull final PreparedStatement ps, final int i) {
-                  final AtomicInteger index = new AtomicInteger(1);
-                  final T obj = execList.get(i);
-                  obj.setUpdateTime(new Date());
-                  savingFields.forEach(
-                      field -> setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
-                  Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
-                      .eq(T::setId, obj.getId())
-                      .getValues(index)
-                      .forEach(val -> val.accept(ps));
-                }
+          getJdbcTemplate()
+              .batchUpdate(
+                  execSql,
+                  new BatchPreparedStatementSetter() {
+                    @Override
+                    @SuppressWarnings("unchecked")
+                    public void setValues(@Nonnull final PreparedStatement ps, final int i) {
+                      final AtomicInteger index = new AtomicInteger(1);
+                      final T obj = execList.get(i);
+                      obj.setUpdateTime(new Date());
+                      savingFields.forEach(
+                          field ->
+                              setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
+                      Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
+                          .eq(T::setId, obj.getId())
+                          .getValues(index)
+                          .forEach(val -> val.accept(ps));
+                    }
 
-                @Override
-                public int getBatchSize() {
-                  return execList.size();
-                }
-              });
+                    @Override
+                    public int getBatchSize() {
+                      return execList.size();
+                    }
+                  });
       updateRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
     }
     return updateRow == ts.size() ? Optional.empty() : Optional.of(updateRow);
@@ -374,12 +385,13 @@ public final class Update extends AbstractExecutor {
         String.format(
             sql,
             tableName,
-            StringUtils.camelToUnderline(logicDeleteField),
-            logicDeleted,
+            StringUtils.camelToUnderline(configuration.getLogicDeleteField()),
+            configuration.isLogicDeleted(),
             condition.getString());
-    return JDBC_TEMPLATE.update(
-        updateString,
-        ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
+    return getJdbcTemplate()
+        .update(
+            updateString,
+            ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
   }
 
   /**
@@ -454,14 +466,5 @@ public final class Update extends AbstractExecutor {
       log.error(e.getMessage(), e);
       throw CommonException.of(e.getMessage(), e);
     }
-  }
-
-  /**
-   * Gets instance.
-   *
-   * @return the instance
-   */
-  public static Update getInstance() {
-    return AppContextInject.getBean(Update.class);
   }
 }

@@ -28,8 +28,7 @@ public class JacksonEnumSerializer extends JsonSerializer<InterEnum> {
       interEnumSerializer = AppContextInject.getBean(InterEnumSerializer.class);
       object = interEnumSerializer.serializer(interEnum);
     } catch (BeansException e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
+      log.debug("serialize:[No InterEnumSerializer defined,use default.]");
       interEnumSerializer = obj -> null;
       object = interEnumSerializer.defaultSerializer(interEnum);
     }
