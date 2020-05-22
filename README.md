@@ -178,9 +178,10 @@ public ResponseEntity<Rs<Object>> update() {
     ```
 
 ## 自定义ID生成策略
+默认使用分布式id雪花算法
 ```java
 @Bean
-public IdGenerator snowflakeIdWorker() {
+public IdGenerator autoIncrementGenerator() {
     // 自定义id生成策略,下方为数据库自增写法
     return o -> null;
 }
