@@ -79,14 +79,7 @@ public class Query extends AbstractExecutor {
   /** 暂时用于where之后的函数(group by等). */
   private final StringBuilder afterWhereString = new StringBuilder();
 
-  /**
-   * Instantiates a new Query.
-   *
-   * @param jdbcTemplate the jdbc template
-   */
-  public Query(final JdbcTemplate jdbcTemplate) {
-    setJdbcTemplate(jdbcTemplate);
-  }
+  public static JdbcTemplate JDBC_TEMPLATE;
 
   /**
    * Gets instance.
@@ -118,7 +111,6 @@ public class Query extends AbstractExecutor {
    * @param conditions the conditions
    * @return the query
    */
-  @Deprecated
   public Query from(final ICondition<?>... conditions) {
     // TODO-WARN: from方法
     throw CommonException.of("方法未实现");
@@ -237,14 +229,13 @@ public class Query extends AbstractExecutor {
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
     final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> result =
-        getJdbcTemplate()
-            .query(
-                queryString,
-                ps ->
-                    conditions.stream()
-                        .flatMap(condition -> condition.getValues(startIndex).stream())
-                        .forEach(o -> o.accept(ps)),
-                new ColumnMapRowMapper());
+        JDBC_TEMPLATE.query(
+            queryString,
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
+            new ColumnMapRowMapper());
 
     if (CollectionUtils.isEmpty(result)) {
       return null;
@@ -276,14 +267,13 @@ public class Query extends AbstractExecutor {
     }
     final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> list =
-        getJdbcTemplate()
-            .query(
-                queryString,
-                ps ->
-                    conditions.stream()
-                        .flatMap(condition -> condition.getValues(startIndex).stream())
-                        .forEach(o -> o.accept(ps)),
-                new ColumnMapRowMapper());
+        JDBC_TEMPLATE.query(
+            queryString,
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
+            new ColumnMapRowMapper());
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
@@ -332,14 +322,13 @@ public class Query extends AbstractExecutor {
             pageable.getOffset());
     final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> list =
-        getJdbcTemplate()
-            .query(
-                queryString,
-                ps ->
-                    conditions.stream()
-                        .flatMap(condition -> condition.getValues(startIndex).stream())
-                        .forEach(o -> o.accept(ps)),
-                new ColumnMapRowMapper());
+        JDBC_TEMPLATE.query(
+            queryString,
+            ps ->
+                conditions.stream()
+                    .flatMap(condition -> condition.getValues(startIndex).stream())
+                    .forEach(o -> o.accept(ps)),
+            new ColumnMapRowMapper());
     if (log.isDebugEnabled()) {
       log.debug("fetch:[{}]", list);
     }
@@ -395,14 +384,13 @@ public class Query extends AbstractExecutor {
     final List<Map<String, Object>> list =
         total < 1
             ? null
-            : getJdbcTemplate()
-                .query(
-                    queryString,
-                    ps ->
-                        conditions.stream()
-                            .flatMap(condition -> condition.getValues(startIndex).stream())
-                            .forEach(o -> o.accept(ps)),
-                    new ColumnMapRowMapper());
+            : JDBC_TEMPLATE.query(
+                queryString,
+                ps ->
+                    conditions.stream()
+                        .flatMap(condition -> condition.getValues(startIndex).stream())
+                        .forEach(o -> o.accept(ps)),
+                new ColumnMapRowMapper());
     // 从0开始
     final int currentPage = pageable.getPageNumber();
     // 每页大小
@@ -435,20 +423,19 @@ public class Query extends AbstractExecutor {
 
     final AtomicInteger index = new AtomicInteger(1);
     final AtomicInteger startIndex = new AtomicInteger(1);
-    return getJdbcTemplate()
-        .query(
-            queryString,
-            ps ->
-                conditions.stream()
-                    .flatMap(condition -> condition.getValues(startIndex).stream())
-                    .forEach(o -> o.accept(ps)),
-            (ResultSetExtractor<Integer>)
-                rs -> {
-                  while (rs.next()) {
-                    return rs.getInt(1);
-                  }
-                  return 0;
-                });
+    return JDBC_TEMPLATE.query(
+        queryString,
+        ps ->
+            conditions.stream()
+                .flatMap(condition -> condition.getValues(startIndex).stream())
+                .forEach(o -> o.accept(ps)),
+        (ResultSetExtractor<Integer>)
+            rs -> {
+              while (rs.next()) {
+                return rs.getInt(1);
+              }
+              return 0;
+            });
   }
 
   /**
@@ -464,7 +451,7 @@ public class Query extends AbstractExecutor {
    */
   public <T extends AbstractEntityPoJo, R> List<R> fetchBySql(
       final String sql, final Class<T> poJoClazz, final Class<R> respClazz, final Object... args) {
-    final List<Map<String, Object>> list = getJdbcTemplate().queryForList(sql, args);
+    final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(sql, args);
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
@@ -484,6 +471,6 @@ public class Query extends AbstractExecutor {
    * @return the list
    */
   public long countBySql(final String sql, final Object... args) {
-    return getJdbcTemplate().queryForObject(sql, args, Long.class);
+    return JDBC_TEMPLATE.queryForObject(sql, args, Long.class);
   }
 }
