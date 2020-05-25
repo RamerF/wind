@@ -90,8 +90,7 @@ public class WindAutoConfiguration implements ApplicationContextAware {
     SnowflakeIdWorker.setWorkerId(configuration.getSnowflakeProp().getWorkerId());
     SnowflakeIdWorker.setDatacenterId(configuration.getSnowflakeProp().getDataCenterId());
     // 初始化Query/Update
-    Update.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
-    Query.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
+    Query.JDBC_TEMPLATE = Update.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
     // 初始化实体类
     applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
         .findFirst()

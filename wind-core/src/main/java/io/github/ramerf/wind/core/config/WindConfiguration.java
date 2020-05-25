@@ -24,11 +24,21 @@ public class WindConfiguration {
 
   /** 逻辑已删除值. */
   private boolean logicDeleted = true;
+
   /**
    * entity所在包路径,多个以,分割.<br>
    * 如果没有配置该值,使用{@link SpringBootApplication#scanBasePackages()}
    */
   private String entityPackage = "";
+
+  /**
+   * 枚举所在包路径,多个以,分割.<br>
+   * 如果没有配置该值,使用{@link SpringBootApplication#scanBasePackages()}
+   */
+  private String enumPackage = "";
+
+  /**是否自定义*/
+  private boolean customEnumDeserializer = false;
 
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 150;
