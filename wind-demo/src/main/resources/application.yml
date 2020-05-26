@@ -79,8 +79,13 @@ wind:
   logic-not-delete: false
   # 逻辑已删除值(默认为 true)
   logic-deleted: true
+  # entity所在包路径,多个以,分割
   entity-package: io.github.ramerf.wind.demo.entity.pojo
+  # 批量操作时,每次处理的大小
   batch-size: 500
+  # 是否自定义枚举反序列化.设置为true时,可能需要编写枚举反序列化代码
+  custom-enum-deserializer: false
+  # 用于分布式id雪花算法
   snowflake-prop:
     worker-id: 3
     data-center-id: 2

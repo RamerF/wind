@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.ramerf.wind.core.converter.TypeConverter;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
@@ -7,6 +9,7 @@ import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.support.StringToEnumConverterFactory;
@@ -15,6 +18,7 @@ import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.IOException;
 import java.util.*;
 import javax.annotation.Nonnull;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +30,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.util.Assert;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -37,6 +42,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Slf4j
 @Configuration
 public class WindAutoConfiguration implements ApplicationContextAware {
+  @Resource private ObjectMapper objectMapper;
 
   @Autowired(required = false)
   @SuppressWarnings({"rawtypes", "SpringJavaAutowiredFieldsWarningInspection"})
@@ -90,13 +96,17 @@ public class WindAutoConfiguration implements ApplicationContextAware {
     SnowflakeIdWorker.setWorkerId(configuration.getSnowflakeProp().getWorkerId());
     SnowflakeIdWorker.setDatacenterId(configuration.getSnowflakeProp().getDataCenterId());
     // 初始化Query/Update
-    Update.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
-    Query.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
+    Query.JDBC_TEMPLATE = Update.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
     // 初始化实体类
-    applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
-        .findFirst()
-        .map(Object::getClass)
-        .ifPresent(o -> initEntityInfo(o, configuration));
+    final Class<?> bootClass =
+        applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
+            .findFirst()
+            .map(Object::getClass)
+            .orElse(null);
+    Assert.notNull(bootClass, "No class annotate with @SpringBootApplication.");
+    initEntityInfo(bootClass, configuration);
+    // 初始化枚举反序列化器
+    registerEnumDeserializer(bootClass, configuration);
   }
 
   private void initEntityInfo(final Class<?> clazz, final WindConfiguration configuration) {
@@ -127,6 +137,40 @@ public class WindAutoConfiguration implements ApplicationContextAware {
       entities.forEach(EntityHelper::initEntity);
     } catch (IOException e) {
       log.warn("initEntityInfo:fail to init entity info[{}]", e.getMessage());
+    }
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private void registerEnumDeserializer(
+      final Class<?> clazz, final WindConfiguration configuration) {
+    if (configuration.isCustomEnumDeserializer()) {
+      return;
+    }
+    // 注册默认枚举反序列化器
+    final SpringBootApplication application = clazz.getAnnotation(SpringBootApplication.class);
+    String scanBasePackages;
+    String enumPackage;
+    if (StringUtils.nonEmpty(configuration.getEnumPackage())) {
+      enumPackage = configuration.getEnumPackage();
+    } else if (Objects.nonNull(application)
+        && StringUtils.nonEmpty(
+            scanBasePackages = String.join(",", application.scanBasePackages()))) {
+      enumPackage = scanBasePackages;
+    } else {
+      enumPackage = clazz.getPackage().getName();
+    }
+    log.info("registerEnumDeserializer:register enum deserializer[{}]", enumPackage);
+    try {
+      final Set<Class<? extends InterEnum>> classes =
+          BeanUtils.scanClasses(enumPackage, InterEnum.class);
+      classes.forEach(
+          o -> {
+            SimpleModule module = new SimpleModule();
+            module.addDeserializer(o, new JacksonEnumDeserializer(o));
+            objectMapper.registerModule(module);
+          });
+    } catch (IOException e) {
+      log.warn("initEntityInfo:fail to register enum deserializer[{}]", e.getMessage());
     }
   }
 }

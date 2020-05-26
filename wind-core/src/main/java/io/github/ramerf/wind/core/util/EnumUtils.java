@@ -37,18 +37,20 @@ public class EnumUtils {
    * @return t t
    */
   public static <T, R> T of(Class<T> clazz, final R value) {
-    return Stream.of(clazz.getEnumConstants())
-        .filter(
-            o -> {
-              try {
-                return Objects.equals(clazz.getDeclaredMethod("value").invoke(o), value);
-              } catch (Exception e) {
-                e.printStackTrace();
-              }
-              return false;
-            })
-        .findFirst()
-        .orElse(null);
+    return Objects.isNull(value)
+        ? null
+        : Stream.of(clazz.getEnumConstants())
+            .filter(
+                o -> {
+                  try {
+                    return Objects.equals(clazz.getDeclaredMethod("value").invoke(o), value);
+                  } catch (Exception e) {
+                    e.printStackTrace();
+                  }
+                  return false;
+                })
+            .findFirst()
+            .orElse(null);
   }
 
   /**
