@@ -1,12 +1,14 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
+import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.*;
@@ -62,7 +64,7 @@ import static java.util.stream.Collectors.toCollection;
 @Component
 @SuppressWarnings("all")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class Query extends AbstractExecutor {
+public class Query {
   /*
    TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
    思路: 构造OrderByClause,使用sql语法:
@@ -79,7 +81,7 @@ public class Query extends AbstractExecutor {
   /** 暂时用于where之后的函数(group by等). */
   private final StringBuilder afterWhereString = new StringBuilder();
 
-  public static JdbcTemplate JDBC_TEMPLATE;
+  public static Executor executor;
 
   /**
    * Gets instance.
@@ -229,14 +231,13 @@ public class Query extends AbstractExecutor {
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
     final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> result =
-        JDBC_TEMPLATE.query(
-            queryString,
+        executor.query(
+            SqlParam.of(queryString, clazz, conditions),
             ps ->
                 conditions.stream()
                     .flatMap(condition -> condition.getValues(startIndex).stream())
                     .forEach(o -> o.accept(ps)),
             new ColumnMapRowMapper());
-
     if (CollectionUtils.isEmpty(result)) {
       return null;
     }
@@ -267,8 +268,8 @@ public class Query extends AbstractExecutor {
     }
     final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> list =
-        JDBC_TEMPLATE.query(
-            queryString,
+        executor.query(
+            SqlParam.of(queryString, clazz, conditions),
             ps ->
                 conditions.stream()
                     .flatMap(condition -> condition.getValues(startIndex).stream())
@@ -322,8 +323,8 @@ public class Query extends AbstractExecutor {
             pageable.getOffset());
     final AtomicInteger startIndex = new AtomicInteger(1);
     final List<Map<String, Object>> list =
-        JDBC_TEMPLATE.query(
-            queryString,
+        executor.query(
+            SqlParam.of(queryString, clazz, conditions),
             ps ->
                 conditions.stream()
                     .flatMap(condition -> condition.getValues(startIndex).stream())
@@ -384,8 +385,8 @@ public class Query extends AbstractExecutor {
     final List<Map<String, Object>> list =
         total < 1
             ? null
-            : JDBC_TEMPLATE.query(
-                queryString,
+            : executor.query(
+                SqlParam.of(queryString, clazz, conditions),
                 ps ->
                     conditions.stream()
                         .flatMap(condition -> condition.getValues(startIndex).stream())
@@ -423,8 +424,8 @@ public class Query extends AbstractExecutor {
 
     final AtomicInteger index = new AtomicInteger(1);
     final AtomicInteger startIndex = new AtomicInteger(1);
-    return JDBC_TEMPLATE.query(
-        queryString,
+    return executor.query(
+        SqlParam.of(queryString, SqlAggregateFunction.COUNT, conditions),
         ps ->
             conditions.stream()
                 .flatMap(condition -> condition.getValues(startIndex).stream())
@@ -450,8 +451,9 @@ public class Query extends AbstractExecutor {
    * @return the list
    */
   public <T extends AbstractEntityPoJo, R> List<R> fetchBySql(
-      final String sql, final Class<T> poJoClazz, final Class<R> respClazz, final Object... args) {
-    final List<Map<String, Object>> list = JDBC_TEMPLATE.queryForList(sql, args);
+      final String sql, final Class<R> respClazz, final Object... args) {
+    final List<Map<String, Object>> list =
+        executor.queryForList(SqlParam.of(sql, respClazz, conditions), args);
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
@@ -471,6 +473,7 @@ public class Query extends AbstractExecutor {
    * @return the list
    */
   public long countBySql(final String sql, final Object... args) {
-    return JDBC_TEMPLATE.queryForObject(sql, args, Long.class);
+    return executor.queryForObject(
+        SqlParam.of(sql, SqlAggregateFunction.COUNT, conditions), args, Long.class);
   }
 }

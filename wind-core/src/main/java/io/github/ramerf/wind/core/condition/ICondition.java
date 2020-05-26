@@ -24,7 +24,8 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * 创建一个空的条件,包含表信息.
    *
    * @return the Condition
-   * @see Condition#of(QueryColumn) Condition#of(QueryColumn)Condition#of(QueryColumn)
+   * @see Condition#of(QueryColumn)
+   *     Condition#of(QueryColumn)Condition#of(QueryColumn)Condition#of(QueryColumn)
    */
   Condition<T> condition();
 
@@ -414,6 +415,13 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @return 占位符对应的值 values
    */
   List<Consumer<PreparedStatement>> getValues(final AtomicInteger startIndex);
+
+  /**
+   * 获取所有原始值.
+   *
+   * @return the value string
+   */
+  List<Object> getOriginValues();
 
   /**
    * 是否包含条件.

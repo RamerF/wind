@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.ramerf.wind.core.converter.TypeConverter;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.executor.Query;
-import io.github.ramerf.wind.core.executor.Update;
+import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
@@ -29,7 +28,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -96,7 +94,7 @@ public class WindAutoConfiguration implements ApplicationContextAware {
     SnowflakeIdWorker.setWorkerId(configuration.getSnowflakeProp().getWorkerId());
     SnowflakeIdWorker.setDatacenterId(configuration.getSnowflakeProp().getDataCenterId());
     // 初始化Query/Update
-    Query.JDBC_TEMPLATE = Update.JDBC_TEMPLATE = AppContextInject.getBean(JdbcTemplate.class);
+    Query.executor = Update.executor = AppContextInject.getBean(JdbcTemplateExecutor.class);
     // 初始化实体类
     final Class<?> bootClass =
         applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()

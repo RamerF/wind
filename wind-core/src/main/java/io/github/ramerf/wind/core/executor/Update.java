@@ -27,7 +27,6 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
@@ -53,7 +52,7 @@ import org.springframework.stereotype.Component;
 @Component
 @SuppressWarnings("unused")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public final class Update extends AbstractExecutor {
+public final class Update {
 
   private Class<?> clazz;
   private Condition<?> condition;
@@ -65,7 +64,7 @@ public final class Update extends AbstractExecutor {
   @SuppressWarnings("FieldCanBeLocal")
   private boolean logicDeleted;
 
-  public static JdbcTemplate JDBC_TEMPLATE;
+  public static Executor executor;
 
   /**
    * Gets instance.
@@ -163,7 +162,8 @@ public final class Update extends AbstractExecutor {
     final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
     KeyHolder keyHolder = new GeneratedKeyHolder();
     final int update =
-        JDBC_TEMPLATE.update(
+        executor.update(
+            clazz,
             con -> {
               final PreparedStatement ps =
                   con.prepareStatement(execSql, Statement.RETURN_GENERATED_KEYS);
@@ -219,7 +219,8 @@ public final class Update extends AbstractExecutor {
     for (int j = 0; j < execCount; j++) {
       final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
       final int[] batchUpdate =
-          JDBC_TEMPLATE.batchUpdate(
+          executor.batchUpdate(
+              clazz,
               execSql,
               new BatchPreparedStatementSetter() {
                 @Override
@@ -274,7 +275,8 @@ public final class Update extends AbstractExecutor {
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, tableName, setBuilder.toString(), condition.getString());
-    return JDBC_TEMPLATE.update(
+    return executor.update(
+        clazz,
         execSql,
         ps -> {
           list.forEach(consumer -> consumer.accept(ps));
@@ -323,7 +325,8 @@ public final class Update extends AbstractExecutor {
     for (int j = 0; j < execCount; j++) {
       final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
       final int[] batchUpdate =
-          JDBC_TEMPLATE.batchUpdate(
+          executor.batchUpdate(
+              clazz,
               execSql,
               new BatchPreparedStatementSetter() {
                 @Override
@@ -386,7 +389,8 @@ public final class Update extends AbstractExecutor {
             logicDeleted,
             new Date(),
             condition.getString());
-    return JDBC_TEMPLATE.update(
+    return executor.update(
+        clazz,
         updateString,
         ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
   }

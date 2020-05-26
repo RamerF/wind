@@ -5,8 +5,7 @@ import java.time.Duration;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.cache.annotation.CachingConfigurerSupport;
-import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.annotation.*;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,8 +15,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 /**
+ * 自定义Spring redis cache.
+ *
  * @author Tang Xiaofeng
  * @since 2020/03/24
+ * @see Cacheable
+ * @see CacheEvict
+ * @see EnableCaching
  */
 @Slf4j
 @Configuration

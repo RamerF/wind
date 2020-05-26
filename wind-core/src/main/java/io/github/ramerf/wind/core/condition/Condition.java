@@ -498,6 +498,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
+  public List<Object> getOriginValues() {
+    return valueTypes.stream()
+        .map(ValueType::getOriginVal)
+        .collect(Collectors.toCollection(LinkedList::new));
+  }
+
+  @Override
   public boolean hasCondition() {
     return valueTypes.size() > 0;
   }

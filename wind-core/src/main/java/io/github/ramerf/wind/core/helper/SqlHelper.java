@@ -27,7 +27,7 @@ public class SqlHelper {
   }
 
   /**
-   * 将值转换成Sql字符串,仅用于调试.
+   * 将值转换成Sql字符串,仅用于<code>RedisCache</code> key前缀生成.
    *
    * @param value the value
    * @return the string
