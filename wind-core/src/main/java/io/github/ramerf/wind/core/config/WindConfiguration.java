@@ -37,7 +37,7 @@ public class WindConfiguration {
    */
   private String enumPackage = "";
 
-  /**是否自定义*/
+  /** 是否自定义枚举反序列化.设置为true时,可能需要编写枚举反序列化代码. */
   private boolean customEnumDeserializer = false;
 
   /** 批量操作时,每次处理的大小. */
