@@ -22,6 +22,7 @@ import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.ApplicationContext;
@@ -116,11 +117,15 @@ public class WindAutoConfiguration implements ApplicationContextAware {
             + " _       __    ____    _   __    ____ \n"
             + "| |     / /   /  _/   / | / /   / __ \\\n"
             + "| | /| / /    / /    /  |/ /   / / / /\n"
-            + "| |/ |/ /   _/ /_   / /|  /   / /_/ / \n"
-            + "|__/|__/   /___/   /_/ |_/   /_____/  \n"
-            + " :: wind :: (v"
-            + WindVersion.getVersion()
-            + ")\n");
+            + "| |/ |/ /   _/ /_   / /|  /   / /_/ /\n"
+            + "|__/|__/   /___/   /_/ |_/   /_____/");
+    System.out.println(
+        AnsiOutput.toString(
+            AnsiColor.GREEN,
+            " :: wind ::",
+            AnsiColor.DEFAULT,
+            " (v" + WindVersion.getVersion() + ")\n",
+            AnsiStyle.FAINT));
   }
 
   private void initEntityInfo(final Class<?> clazz, final WindConfiguration configuration) {
