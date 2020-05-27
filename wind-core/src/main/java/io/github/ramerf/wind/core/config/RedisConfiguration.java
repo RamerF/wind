@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.cache.annotation.*;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
@@ -25,13 +26,10 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
  */
 @Slf4j
 @Configuration
-@AutoConfigureAfter(value = RedisTemplate.class)
 @EnableCaching
+@AutoConfigureAfter(value = RedisTemplate.class)
+@ConditionalOnBean(RedisTemplate.class)
 public class RedisConfiguration extends CachingConfigurerSupport {
-
-  // @Autowired
-  // private RedisConnectionFactory redisConnectionFactory;
-
   @Bean
   @Override
   public KeyGenerator keyGenerator() {
@@ -44,8 +42,8 @@ public class RedisConfiguration extends CachingConfigurerSupport {
     };
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   @Bean
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public RedisCacheManager redisCacheManager(RedisTemplate redisTemplate) {
     // spring cache注解序列化配置
     RedisCacheConfiguration redisCacheConfiguration =

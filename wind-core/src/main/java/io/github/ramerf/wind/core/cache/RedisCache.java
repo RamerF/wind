@@ -1,6 +1,9 @@
 package io.github.ramerf.wind.core.cache;
 
-import java.lang.reflect.Method;
+import io.github.ramerf.wind.core.executor.Executor.SqlParam;
+import io.github.ramerf.wind.core.helper.SqlHelper;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +17,16 @@ import org.slf4j.LoggerFactory;
 public interface RedisCache {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(RedisCache.class);
+
+  /**
+   * 自定义key前缀.
+   *
+   * @param clazz the pojo
+   * @return the string
+   */
+  default String getKeyPrefix(@Nonnull final Class<?> clazz) {
+    return "";
+  }
 
   /**
    * 放入redis.
@@ -36,19 +49,26 @@ public interface RedisCache {
    *
    * @param key the key
    */
-  void clear(String key);
+  void clear(@Nonnull String key);
 
   /**
    * 指定缓存key前缀.
    *
-   * @param target the target
-   * @param method the method
-   * @param params the params
+   * @param sqlParam the sql param
    * @return the string
+   * @see SqlParam
    */
-  default String generateKey(
-      @Nonnull final Object target, @Nonnull final Method method, @Nonnull Object... params) {
-    log.info("generateKey:[target:{},method:{},params:{}]", target, method.getName(), params);
-    return null;
+  default String generateKey(@Nonnull final SqlParam sqlParam) {
+    return getKeyPrefix(sqlParam.getClazz())
+        + sqlParam.getClazz().getName()
+        + ":"
+        + sqlParam.getSql()
+        + ":"
+        + (Objects.nonNull(sqlParam.getAggregateFunction())
+            ? sqlParam.getAggregateFunction().name()
+            : sqlParam.getConditions().stream()
+                .flatMap(o -> o.getOriginValues().stream())
+                .map(SqlHelper::toSqlString)
+                .collect(Collectors.joining()));
   }
 }

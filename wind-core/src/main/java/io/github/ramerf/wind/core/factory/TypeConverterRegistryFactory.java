@@ -56,7 +56,7 @@ public class TypeConverterRegistryFactory {
    * @param converters the list of converter
    */
   public void addTypeConverter(@Nonnull Set<TypeConverter> converters) {
-    CollectionUtils.doIfNonEmpty(converters, () -> typeConverters.addAll(converters));
+    CollectionUtils.doIfNonEmpty(converters, o -> typeConverters.addAll(converters));
   }
 
   /**

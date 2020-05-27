@@ -445,7 +445,6 @@ public class Query {
    * @param <T> the type parameter
    * @param <R> the type parameter
    * @param sql the sql
-   * @param poJoClazz the clazz
    * @param respClazz the clazz
    * @param args the args
    * @return the list

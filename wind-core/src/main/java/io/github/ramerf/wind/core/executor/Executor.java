@@ -5,6 +5,7 @@ import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import lombok.Getter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.KeyHolder;
@@ -49,6 +50,7 @@ public interface Executor {
       throws DataAccessException;
 
   /** 主要用于缓存的key生成. */
+    @Getter
   class SqlParam {
     protected String sql;
     protected Class<?> clazz;

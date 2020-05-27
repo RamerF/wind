@@ -1,13 +1,12 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.cache.RedisCache;
-import io.github.ramerf.wind.core.helper.SqlHelper;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.KeyHolder;
@@ -24,7 +23,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class JdbcTemplateExecutor implements Executor {
   @Resource private JdbcTemplate jdbcTemplate;
-  @Resource private RedisCache redisCache;
+
+  @Autowired(required = false)
+  private RedisCache redisCache;
 
   @Override
   public <T> T queryForObject(
@@ -55,7 +56,6 @@ public class JdbcTemplateExecutor implements Executor {
       final PreparedStatementSetter pss,
       final RowMapper<T> rowMapper)
       throws DataAccessException {
-    log.info("query:[{}]", sqlParam);
     return cacheIfAbsent(sqlParam, () -> jdbcTemplate.query(sqlParam.sql, pss, rowMapper));
   }
 
@@ -84,32 +84,36 @@ public class JdbcTemplateExecutor implements Executor {
 
   @SuppressWarnings("unchecked")
   private <T> T cacheIfAbsent(@Nonnull final SqlParam sqlParam, Supplier<T> supplier) {
-    final String key = getRedisCacheKey(sqlParam);
+    // 未开启缓存
+    if (Objects.isNull(redisCache)) {
+      return supplier.get();
+    }
+    final String key = redisCache.generateKey(sqlParam);
     final Object exist = redisCache.get(key);
     if (Objects.nonNull(exist)) {
-      log.info("query:[Hit cache.]");
+      if (log.isDebugEnabled()) {
+        log.debug("cacheIfAbsent:Hit cache[{}]", key);
+      }
       return (T) exist;
     }
     final T t = supplier.get();
+    if (log.isDebugEnabled()) {
+      log.debug("cacheIfAbsent:Put cache[{}]", key);
+    }
     redisCache.put(key, t);
     return t;
   }
 
-  private String getRedisCacheKey(@Nonnull final SqlParam sqlParam) {
-    return sqlParam.clazz
-        + ":"
-        + sqlParam.sql
-        + ":"
-        + (Objects.nonNull(sqlParam.aggregateFunction)
-            ? sqlParam.aggregateFunction.name()
-            : sqlParam.conditions.stream()
-                .flatMap(o -> o.getOriginValues().stream())
-                .map(SqlHelper::toSqlString)
-                .collect(Collectors.joining()));
-  }
-
   private <T> T execAndClear(@Nonnull final Class<?> clazz, Supplier<T> supplier) {
-    redisCache.clear(clazz.getSimpleName());
+    // 未开启缓存
+    if (Objects.isNull(redisCache)) {
+      return supplier.get();
+    }
+    final String key = redisCache.getKeyPrefix(clazz) + clazz.getName();
+    if (log.isDebugEnabled()) {
+      log.debug("execAndClear:Clear cache[{}]", key);
+    }
+    redisCache.clear(key);
     return supplier.get();
   }
 }
