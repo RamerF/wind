@@ -6,7 +6,7 @@ import io.github.ramerf.wind.core.support.IdGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.*;
@@ -26,8 +26,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 @Configuration("config_common_bean")
 public class CommonBean {
-  @Value("${spring.swagger.enable:false}")
-  private boolean enableSwagger;
 
   @Bean
   public IdGenerator autoIncrementGenerator() {
@@ -51,6 +49,7 @@ public class CommonBean {
    * @return the docket
    */
   @Bean
+  @ConditionalOnProperty(value = "spring.swagger.enable", havingValue = "true")
   public Docket api() {
     ParameterBuilder parameterBuilder = new ParameterBuilder();
     List<Parameter> parameters = new ArrayList<>();
@@ -64,7 +63,7 @@ public class CommonBean {
     parameters.add(parameterBuilder.build());
     return new Docket(DocumentationType.SWAGGER_2)
         .apiInfo(apiInfo())
-        .enable(enableSwagger)
+        .enable(true)
         .select()
         .apis(RequestHandlerSelectors.basePackage("io.github.ramerf.wind.demo"))
         .paths(PathSelectors.any())

@@ -423,17 +423,17 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
         final Consumer<QueryColumn<T>> queryConsumer,
         final Consumer<ICondition<T>> conditionConsumer,
         final InterService<T> service) {
-      QueryBound<T> obj = new QueryBound<>();
-      obj.queryConsumer = queryConsumer;
-      obj.conditionConsumer = conditionConsumer;
-      obj.service = service;
+      QueryBound<T> queryBound = new QueryBound<>();
+      queryBound.queryConsumer = queryConsumer;
+      queryBound.conditionConsumer = conditionConsumer;
+      queryBound.service = service;
       final QueryColumn<T> queryColumn = service.getQueryColumn();
       Optional.ofNullable(queryConsumer).ifPresent(o -> o.accept(queryColumn));
       final ICondition<T> condition = queryColumn.getCondition();
       Optional.ofNullable(conditionConsumer).ifPresent(o -> o.accept(condition));
-      obj.queryColumn = queryColumn;
-      obj.condition = condition;
-      return obj;
+      queryBound.queryColumn = queryColumn;
+      queryBound.condition = condition;
+      return queryBound;
     }
   }
 }

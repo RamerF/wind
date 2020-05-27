@@ -1,11 +1,11 @@
 package io.github.ramerf.wind.core.cache;
 
-import io.github.ramerf.wind.core.config.RedisCacheConfiguration;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@ConditionalOnBean(RedisCacheConfiguration.class)
+@DependsOn("redisCacheRedisTemplate")
 public class DefaultRedisCache implements RedisCache {
   @Resource(name = "redisCacheRedisTemplate")
   private RedisTemplate<String, Object> redisTemplate;
@@ -30,7 +30,7 @@ public class DefaultRedisCache implements RedisCache {
 
   @Override
   public void put(final String key, final Object value) {
-    getOperations().set(key, value);
+    getOperations().set(key, value, 10, TimeUnit.MINUTES);
   }
 
   @Override

@@ -6,13 +6,11 @@ import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.*;
-import java.sql.PreparedStatement;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -23,7 +21,6 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.jdbc.core.*;
 import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
@@ -229,26 +226,14 @@ public class Query {
     final String sql = "SELECT %s FROM %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
-    final AtomicInteger startIndex = new AtomicInteger(1);
-    final List<Map<String, Object>> result =
-        executor.query(
-            SqlParam.of(queryString, clazz, conditions),
-            ps ->
-                conditions.stream()
-                    .flatMap(condition -> condition.getValues(startIndex).stream())
-                    .forEach(o -> o.accept(ps)),
-            new ColumnMapRowMapper());
-    if (CollectionUtils.isEmpty(result)) {
-      return null;
-    }
-    if (result.size() > 1) {
-      throw CommonException.of(ResultCode.API_TOO_MANY_RESULTS);
-    }
-    ResultHandler<Map<String, Object>, R> resultHandler =
-        BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler<>(clazz)
-            : new BeanResultHandler<>(clazz, queryColumns);
-    return resultHandler.handle(result.get(0));
+    return executor.fetchOne(
+        SqlParam.builder()
+            .sql(queryString)
+            .clazz(clazz)
+            .conditions(conditions)
+            .queryColumns(queryColumns)
+            .startIndex(new AtomicInteger(1))
+            .build());
   }
 
   /**
@@ -263,26 +248,18 @@ public class Query {
     final String sql = "SELECT %s FROM %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
-    if (log.isDebugEnabled()) {
-      log.debug("fetch:[{}]", queryString);
+    if (log.isTraceEnabled()) {
+      log.trace("fetch:[{}]", queryString);
     }
-    final AtomicInteger startIndex = new AtomicInteger(1);
-    final List<Map<String, Object>> list =
-        executor.query(
-            SqlParam.of(queryString, clazz, conditions),
-            ps ->
-                conditions.stream()
-                    .flatMap(condition -> condition.getValues(startIndex).stream())
-                    .forEach(o -> o.accept(ps)),
-            new ColumnMapRowMapper());
-    if (CollectionUtils.isEmpty(list)) {
-      return Collections.emptyList();
-    }
-    ResultHandler<Map<String, Object>, R> resultHandler =
-        BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler<>(clazz)
-            : new BeanResultHandler<>(clazz, queryColumns);
-    return resultHandler.handle(list);
+    return executor.fetchAll(
+        SqlParam.builder()
+            .sql(queryString)
+            .clazz(clazz)
+            .conditions(conditions)
+            .queryColumns(queryColumns)
+            .startIndex(new AtomicInteger(1))
+            .build(),
+        clazz);
   }
 
   /**
@@ -295,7 +272,6 @@ public class Query {
    */
   public <R> List<R> fetchAll(final Class<R> clazz, final PageRequest pageable) {
     doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
-
     // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
     orderByString =
@@ -309,10 +285,9 @@ public class Query {
     if (StringUtils.nonEmpty(orderByString)) {
       conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
     }
-    if (log.isDebugEnabled()) {
-      log.debug("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
+    if (log.isTraceEnabled()) {
+      log.trace("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
     }
-
     final String sql = "SELECT %s FROM %s LIMIT %s OFFSET %s";
     final String queryString =
         String.format(
@@ -321,23 +296,14 @@ public class Query {
             conditionString,
             pageable.getPageSize(),
             pageable.getOffset());
-    final AtomicInteger startIndex = new AtomicInteger(1);
-    final List<Map<String, Object>> list =
-        executor.query(
-            SqlParam.of(queryString, clazz, conditions),
-            ps ->
-                conditions.stream()
-                    .flatMap(condition -> condition.getValues(startIndex).stream())
-                    .forEach(o -> o.accept(ps)),
-            new ColumnMapRowMapper());
-    if (log.isDebugEnabled()) {
-      log.debug("fetch:[{}]", list);
-    }
-    ResultHandler<Map<String, Object>, R> resultHandler =
-        BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler<>(clazz)
-            : new BeanResultHandler<>(clazz, queryColumns);
-    return resultHandler.handle(list);
+    return executor.fetchAll(
+        SqlParam.builder()
+            .sql(queryString)
+            .clazz(clazz)
+            .conditions(conditions)
+            .queryColumns(queryColumns)
+            .startIndex(new AtomicInteger(1))
+            .build());
   }
 
   /**
@@ -365,8 +331,8 @@ public class Query {
     if (StringUtils.nonEmpty(orderByString)) {
       conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
     }
-    if (log.isDebugEnabled()) {
-      log.debug("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
+    if (log.isTraceEnabled()) {
+      log.trace("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
     }
 
     final String sql = "SELECT %s FROM %s LIMIT %s OFFSET %s";
@@ -377,33 +343,19 @@ public class Query {
             conditionString,
             pageable.getPageSize(),
             pageable.getOffset());
-    if (log.isDebugEnabled()) {
-      log.debug("fetch:[{}]", queryString);
+    if (log.isTraceEnabled()) {
+      log.trace("fetch:[{}]", queryString);
     }
-    final long total = fetchCount();
-    final AtomicInteger startIndex = new AtomicInteger(1);
-    final List<Map<String, Object>> list =
-        total < 1
-            ? null
-            : executor.query(
-                SqlParam.of(queryString, clazz, conditions),
-                ps ->
-                    conditions.stream()
-                        .flatMap(condition -> condition.getValues(startIndex).stream())
-                        .forEach(o -> o.accept(ps)),
-                new ColumnMapRowMapper());
-    // 从0开始
-    final int currentPage = pageable.getPageNumber();
-    // 每页大小
-    final int pageSize = pageable.getPageSize();
-    if (CollectionUtils.isEmpty(list)) {
-      return PageUtils.toPage(Collections.emptyList(), 0, currentPage, pageSize);
-    }
-    ResultHandler resultHandler =
-        BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-            ? new PrimitiveResultHandler<>(clazz)
-            : new BeanResultHandler<>(clazz, queryColumns);
-    return PageUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
+    return executor.fetchPage(
+        SqlParam.builder()
+            .sql(queryString)
+            .clazz(clazz)
+            .conditions(conditions)
+            .queryColumns(queryColumns)
+            .startIndex(new AtomicInteger(1))
+            .build(),
+        fetchCount(),
+        pageable);
   }
 
   /**
@@ -418,25 +370,13 @@ public class Query {
         nonEmpty && countString.contains(GROUP_BY.operator())
             ? "SELECT SUM(b.a) FROM (SELECT 1 a FROM %s) b"
             : "SELECT COUNT(1) FROM %s";
-    final String queryString = String.format(sql, nonEmpty ? countString : "");
-
-    List<Consumer<PreparedStatement>> list = new LinkedList<>();
-
-    final AtomicInteger index = new AtomicInteger(1);
-    final AtomicInteger startIndex = new AtomicInteger(1);
-    return executor.query(
-        SqlParam.of(queryString, SqlAggregateFunction.COUNT, conditions),
-        ps ->
-            conditions.stream()
-                .flatMap(condition -> condition.getValues(startIndex).stream())
-                .forEach(o -> o.accept(ps)),
-        (ResultSetExtractor<Integer>)
-            rs -> {
-              while (rs.next()) {
-                return rs.getInt(1);
-              }
-              return 0;
-            });
+    return executor.fetchCount(
+        SqlParam.builder()
+            .sql(queryString)
+            .aggregateFunction(SqlAggregateFunction.COUNT)
+            .conditions(conditions)
+            .startIndex(new AtomicInteger(1))
+            .build());
   }
 
   /**
@@ -452,7 +392,8 @@ public class Query {
   public <T extends AbstractEntityPoJo, R> List<R> fetchBySql(
       final String sql, final Class<R> respClazz, final Object... args) {
     final List<Map<String, Object>> list =
-        executor.queryForList(SqlParam.of(sql, respClazz, conditions), args);
+        executor.queryForList(
+            SqlParam.builder().sql(sql).clazz(respClazz).conditions(conditions).build(), args);
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
@@ -473,6 +414,12 @@ public class Query {
    */
   public long countBySql(final String sql, final Object... args) {
     return executor.queryForObject(
-        SqlParam.of(sql, SqlAggregateFunction.COUNT, conditions), args, Long.class);
+        SqlParam.builder()
+            .sql(sql)
+            .aggregateFunction(SqlAggregateFunction.COUNT)
+            .conditions(conditions)
+            .build(),
+        args,
+        Long.class);
   }
 }

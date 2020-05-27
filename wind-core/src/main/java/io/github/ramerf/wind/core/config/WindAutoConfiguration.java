@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import io.github.ramerf.wind.core.WindVersion;
 import io.github.ramerf.wind.core.converter.TypeConverter;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
@@ -89,6 +90,8 @@ public class WindAutoConfiguration implements ApplicationContextAware {
   @Override
   public void setApplicationContext(@Nonnull final ApplicationContext applicationContext)
       throws BeansException {
+    // 打印banner
+    printBanner();
     final WindConfiguration configuration = applicationContext.getBean(WindConfiguration.class);
     // 初始化分布式主键
     SnowflakeIdWorker.setWorkerId(configuration.getSnowflakeProp().getWorkerId());
@@ -105,6 +108,19 @@ public class WindAutoConfiguration implements ApplicationContextAware {
     initEntityInfo(bootClass, configuration);
     // 初始化枚举反序列化器
     registerEnumDeserializer(bootClass, configuration);
+  }
+
+  private void printBanner() {
+    System.out.println(
+        "\n"
+            + " _       __    ____    _   __    ____ \n"
+            + "| |     / /   /  _/   / | / /   / __ \\\n"
+            + "| | /| / /    / /    /  |/ /   / / / /\n"
+            + "| |/ |/ /   _/ /_   / /|  /   / /_/ / \n"
+            + "|__/|__/   /___/   /_/ |_/   /_____/  \n"
+            + " :: wind :: (v"
+            + WindVersion.getVersion()
+            + ")\n");
   }
 
   private void initEntityInfo(final Class<?> clazz, final WindConfiguration configuration) {

@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -23,8 +22,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  */
 @Slf4j
 @Configuration
+@ConditionalOnClass(RedisTemplate.class)
 @ConditionalOnProperty(name = "spring.redis.host")
-@ConditionalOnBean(RedisTemplate.class)
 public class RedisCacheConfiguration {
   private final LettuceConnectionFactory connectionFactory;
 
