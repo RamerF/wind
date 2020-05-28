@@ -10,6 +10,8 @@
  - service层切入,repository层依然可以使用其它持久化框架
  - 自定义枚举序列化
  - 自定义ID生成策略
+ - 默认开启频繁请求拦截
+ - 默认开启redis分布式缓存
  - controller(ControllerHelper),service,repository(Query/Update)三层无耦合,每层都可独立使用
  
 ### 开始使用
@@ -185,4 +187,23 @@ public IdGenerator autoIncrementGenerator() {
     // 自定义id生成策略,下方为数据库自增写法
     return o -> null;
 }
+```
+
+## 频繁请求拦截
+```yaml
+wind:
+  frequency-request-intercept:
+    # 默认开启
+    enable: true
+    # 请求最小时差,单位ms,默认150ms
+    time: 200
+```
+
+## redis分布式缓存
+```yaml
+  redis-cache:
+    # 默认开启
+    enable: true
+    # 前缀
+    key-prefix: io.github.ramerf.wind
 ```
