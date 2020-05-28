@@ -5,6 +5,8 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -19,6 +21,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @DependsOn("redisCacheRedisTemplate")
+@ConditionalOnClass(RedisTemplate.class)
+@ConditionalOnProperty(name = "spring.redis.host")
 public class DefaultRedisCache implements RedisCache {
   @Resource(name = "redisCacheRedisTemplate")
   private RedisTemplate<String, Object> redisTemplate;
