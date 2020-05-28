@@ -1,12 +1,13 @@
 package io.github.ramerf.wind.core.cache;
 
+import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -22,14 +23,19 @@ import org.springframework.stereotype.Component;
 @Component
 @DependsOn("redisCacheRedisTemplate")
 @ConditionalOnClass(RedisTemplate.class)
-@ConditionalOnProperty(name = "spring.redis.host")
+@ConditionalOnProperty(
+    value = "wind.redis-cache.enable",
+    havingValue = "true",
+    matchIfMissing = true)
 public class DefaultRedisCache implements RedisCache {
   @Resource(name = "redisCacheRedisTemplate")
   private RedisTemplate<String, Object> redisTemplate;
 
+  @Resource private WindConfiguration windConfiguration;
+
   @Override
   public String getKeyPrefix(@Nonnull final Class<?> clazz) {
-    return "io.github.ramerf.wind:";
+    return windConfiguration.getRedisCache().getKeyPrefix();
   }
 
   @Override
@@ -46,6 +52,12 @@ public class DefaultRedisCache implements RedisCache {
   public void clear(@Nonnull final String key) {
     CollectionUtils.doIfNonEmpty(
         redisTemplate.keys(key + "*"), o -> o.forEach(k -> redisTemplate.delete(k)));
+  }
+
+  @Override
+  public boolean isKeyExist(@Nonnull final String key) {
+    final Boolean hasKey = redisTemplate.hasKey(key);
+    return Objects.nonNull(hasKey) && hasKey;
   }
 
   private ValueOperations<String, Object> getOperations() {

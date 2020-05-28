@@ -9,6 +9,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.itercepter.FrequencyRequestInterceptor;
 import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
@@ -21,6 +22,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -31,6 +33,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.util.Assert;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -43,10 +46,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WindAutoConfiguration implements ApplicationContextAware {
   @Resource private ObjectMapper objectMapper;
+  private final FrequencyRequestInterceptor frequencyRequestInterceptor;
+  private final WindConfiguration windConfiguration;
 
   @Autowired(required = false)
   @SuppressWarnings({"rawtypes", "SpringJavaAutowiredFieldsWarningInspection"})
   private final Set<TypeConverter> typeConverters = new LinkedHashSet<>();
+
+  public WindAutoConfiguration(
+      final ObjectProvider<WindConfiguration> windConfiguration,
+      final ObjectProvider<FrequencyRequestInterceptor> frequencyRequestInterceptor) {
+    this.windConfiguration = windConfiguration.getIfAvailable();
+    this.frequencyRequestInterceptor = frequencyRequestInterceptor.getIfAvailable();
+  }
 
   /**
    * Type converter registry factory type converter registry factory.
@@ -74,6 +86,15 @@ public class WindAutoConfiguration implements ApplicationContextAware {
       public void addFormatters(@Nonnull FormatterRegistry registry) {
         registry.addConverterFactory(new StringToEnumConverterFactory());
       }
+
+      @Override
+      public void addInterceptors(@Nonnull final InterceptorRegistry registry) {
+        // 开启频繁请求拦截
+        if (windConfiguration.getFrequencyRequestIntercept().isEnable()
+            && Objects.nonNull(frequencyRequestInterceptor)) {
+          registry.addInterceptor(frequencyRequestInterceptor);
+        }
+      }
     };
   }
 
@@ -93,10 +114,9 @@ public class WindAutoConfiguration implements ApplicationContextAware {
       throws BeansException {
     // 打印banner
     printBanner();
-    final WindConfiguration configuration = applicationContext.getBean(WindConfiguration.class);
     // 初始化分布式主键
-    SnowflakeIdWorker.setWorkerId(configuration.getSnowflakeProp().getWorkerId());
-    SnowflakeIdWorker.setDatacenterId(configuration.getSnowflakeProp().getDataCenterId());
+    SnowflakeIdWorker.setWorkerId(windConfiguration.getSnowflakeProp().getWorkerId());
+    SnowflakeIdWorker.setDatacenterId(windConfiguration.getSnowflakeProp().getDataCenterId());
     // 初始化Query/Update
     Query.executor = Update.executor = AppContextInject.getBean(JdbcTemplateExecutor.class);
     // 初始化实体类
@@ -106,9 +126,9 @@ public class WindAutoConfiguration implements ApplicationContextAware {
             .map(Object::getClass)
             .orElse(null);
     Assert.notNull(bootClass, "No class annotate with @SpringBootApplication.");
-    initEntityInfo(bootClass, configuration);
+    initEntityInfo(bootClass, windConfiguration);
     // 初始化枚举反序列化器
-    registerEnumDeserializer(bootClass, configuration);
+    registerEnumDeserializer(bootClass, windConfiguration);
   }
 
   private void printBanner() {

@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.cache;
 
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.helper.SqlHelper;
+import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -29,6 +30,20 @@ public interface RedisCache {
   }
 
   /**
+   * 获取key前缀,如果不为空,加上:后缀
+   *
+   * @param clazz 操作的pojo
+   * @return 包含:的key前缀
+   */
+  default String getFixedKeyPrefix(@Nonnull final Class<?> clazz) {
+    String keyPrefix = getKeyPrefix(clazz);
+    // 如果结尾没有包含冒号,加上
+    return StringUtils.isEmpty(keyPrefix)
+        ? ""
+        : keyPrefix.endsWith(":") ? keyPrefix : keyPrefix + ":";
+  }
+
+  /**
    * 放入redis.
    *
    * @param key the key
@@ -52,6 +67,14 @@ public interface RedisCache {
   void clear(@Nonnull String key);
 
   /**
+   * 判断给定的key是否存在.true:存在.
+   *
+   * @param key the key
+   * @return the boolean
+   */
+  boolean isKeyExist(@Nonnull final String key);
+
+  /**
    * 指定缓存key前缀.
    *
    * @param sqlParam the sql param
@@ -59,7 +82,7 @@ public interface RedisCache {
    * @see SqlParam
    */
   default String generateKey(@Nonnull final SqlParam sqlParam) {
-    return getKeyPrefix(sqlParam.getClazz())
+    return getFixedKeyPrefix(sqlParam.getClazz())
         + sqlParam.getClazz().getName()
         + ":"
         + sqlParam.getSql()

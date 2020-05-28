@@ -31,6 +31,7 @@ public class JdbcTemplateExecutor implements Executor {
   @Resource private JdbcTemplate jdbcTemplate;
 
   @Autowired(required = false)
+  @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
   private RedisCache redisCache;
 
   @Override
@@ -231,7 +232,7 @@ public class JdbcTemplateExecutor implements Executor {
     }
     final String key = redisCache.generateKey(sqlParam);
     final Object exist = redisCache.get(key);
-    if (Objects.nonNull(exist)) {
+    if (Objects.nonNull(exist) || redisCache.isKeyExist(key)) {
       if (log.isDebugEnabled()) {
         log.debug("cacheIfAbsent:Hit cache[{}]", key);
       }
@@ -250,7 +251,7 @@ public class JdbcTemplateExecutor implements Executor {
     if (Objects.isNull(redisCache)) {
       return supplier.get();
     }
-    final String key = redisCache.getKeyPrefix(clazz) + clazz.getName();
+    final String key = redisCache.getFixedKeyPrefix(clazz) + clazz.getName();
     if (log.isDebugEnabled()) {
       log.debug("execAndClear:Clear cache[{}]", key);
     }
