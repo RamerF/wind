@@ -243,7 +243,7 @@ public class JdbcTemplateExecutor implements Executor {
     if (log.isDebugEnabled()) {
       log.debug("cacheIfAbsent:Put cache[{}]", key);
     }
-    // 空数据缓存100ms,防止穿透数据库
+    // 空数据缓存100ms,防止穿透数据库,这个数值可能应该允许让用户自定义
     if (Objects.isNull(t)) {
       redisCache.put(key, null, 100, TimeUnit.MILLISECONDS);
     } else {
