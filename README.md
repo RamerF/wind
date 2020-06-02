@@ -10,7 +10,6 @@
  - service层切入,repository层依然可以使用其它持久化框架
  - 自定义枚举序列化
  - 自定义ID生成策略
- - 默认开启频繁请求拦截
  - 默认开启redis分布式缓存
  - controller(ControllerHelper),service,repository(Query/Update)三层无耦合,每层都可独立使用
  
