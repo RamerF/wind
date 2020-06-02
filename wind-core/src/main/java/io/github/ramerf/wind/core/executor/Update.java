@@ -266,7 +266,7 @@ public final class Update {
               getArgsValueSetConsumer(index, field, BeanUtils.invoke(t, field, null), list);
             });
     // 没有条件时,默认根据id更新
-    if (!condition.hasCondition()) {
+    if (condition.isEmpty()) {
       if (Objects.isNull(t.getId())) {
         throw new IllegalArgumentException("id could not be null");
       }
@@ -377,7 +377,7 @@ public final class Update {
    */
   public int delete() throws DataAccessException {
     // 不包含删除条件,抛异常
-    if (!condition.hasCondition()) {
+    if (condition.isEmpty()) {
       throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
     }
     final String sql = "update %s set %s=%s,update_time='%s' where %s";

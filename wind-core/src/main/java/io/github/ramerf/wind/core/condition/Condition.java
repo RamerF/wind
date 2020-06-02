@@ -421,6 +421,21 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
+  public Condition<T> and(@Nonnull Consumer<Condition<T>> consumer) {
+    return and(true, consumer);
+  }
+
+  @Override
+  public Condition<T> and(final boolean condition, @Nonnull Consumer<Condition<T>> consumer) {
+    if (condition) {
+      final Condition<T> children = this.condition();
+      consumer.accept(children);
+      return and(true, children);
+    }
+    return this;
+  }
+
+  @Override
   public Condition<T> and(@Nonnull Condition<T> children) {
     return and(true, children);
   }
@@ -432,6 +447,21 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(PARENTHESIS_FORMAT.format(children.getString())));
       valueTypes.addAll(children.valueTypes);
+    }
+    return this;
+  }
+
+  @Override
+  public Condition<T> or(@Nonnull Consumer<Condition<T>> consumer) {
+    return or(true, consumer);
+  }
+
+  @Override
+  public Condition<T> or(final boolean condition, @Nonnull Consumer<Condition<T>> consumer) {
+    if (condition) {
+      final Condition<T> children = this.condition();
+      consumer.accept(children);
+      return or(true, children);
     }
     return this;
   }
@@ -505,8 +535,8 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public boolean hasCondition() {
-    return valueTypes.size() > 0;
+  public boolean isEmpty() {
+    return valueTypes.size() <= 0;
   }
 
   /** 属性匹配模式 */

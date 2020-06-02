@@ -24,7 +24,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * 创建一个空的条件,包含表信息.
    *
    * @return the Condition
-   * @see Condition#of(QueryColumn)
+   * @see Condition#of(QueryColumn) Condition#of(QueryColumn)
    *     Condition#of(QueryColumn)Condition#of(QueryColumn)Condition#of(QueryColumn)
    */
   Condition<T> condition();
@@ -377,6 +377,23 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   /**
    * And condition.
    *
+   * @param consumer the consumer
+   * @return the condition
+   */
+  Condition<T> and(@Nonnull Consumer<Condition<T>> consumer);
+
+  /**
+   * And condition.
+   *
+   * @param condition the condition
+   * @param consumer the consumer
+   * @return the condition
+   */
+  Condition<T> and(final boolean condition, @Nonnull Consumer<Condition<T>> consumer);
+
+  /**
+   * And condition.
+   *
    * @param children the children
    * @return the condition
    */
@@ -390,6 +407,23 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @return the condition
    */
   Condition<T> and(final boolean condition, @Nonnull final Condition<T> children);
+
+  /**
+   * Or condition.
+   *
+   * @param consumer the consumer
+   * @return the condition
+   */
+  Condition<T> or(@Nonnull Consumer<Condition<T>> consumer);
+
+  /**
+   * Or condition.
+   *
+   * @param condition the condition
+   * @param consumer the consumer
+   * @return the condition
+   */
+  Condition<T> or(final boolean condition, @Nonnull Consumer<Condition<T>> consumer);
 
   /**
    * Or condition.
@@ -424,9 +458,9 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
   List<Object> getOriginValues();
 
   /**
-   * 是否包含条件.
+   * 是否为空,true:不包含任何条件.
    *
    * @return the boolean
    */
-  boolean hasCondition();
+  boolean isEmpty();
 }
