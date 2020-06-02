@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/update")
 @Api(tags = "Update使用示例")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class FooUpdateController {
   @Resource private PrototypeBean prototypeBean;
 

@@ -31,6 +31,7 @@ import static java.util.stream.Collectors.toList;
 @RestController
 @RequestMapping("/service")
 @Api(tags = "service层方法使用示例")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class FooServiceController {
   @Resource private FooService service;
 

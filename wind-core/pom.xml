@@ -5,13 +5,13 @@
     <parent>
         <artifactId>wind</artifactId>
         <groupId>io.github.ramerf</groupId>
-        <version>3.6.0-RELEASE</version>
+        <version>3.7.0-RELEASE</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>wind-core</artifactId>
     <name>wind-core</name>
-    <version>3.6.0-RELEASE</version>
+    <version>3.7.0-RELEASE</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -43,6 +43,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

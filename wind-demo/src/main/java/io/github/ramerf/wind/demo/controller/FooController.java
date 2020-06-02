@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/controller")
 @SuppressWarnings("unchecked")
 @Api(tags = "controller层方法使用示例")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class FooController {
   @Resource private FooService service;
 

@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
-import lombok.Data;
+import lombok.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
@@ -43,5 +43,20 @@ public class WindConfiguration {
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 150;
 
+  /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
+
+  /** Redis分布式缓存配置. */
+  @NestedConfigurationProperty private RedisCache redisCache = new RedisCache();
+
+  /** Redis 缓存配置. */
+  @Setter
+  @Getter
+  public static class RedisCache {
+    /** 是否启用. */
+    private boolean enable = true;
+
+    /** 缓存key前缀. */
+    private String keyPrefix = "io.github.ramerf.wind";
+  }
 }

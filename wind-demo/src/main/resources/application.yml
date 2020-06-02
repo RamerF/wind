@@ -54,8 +54,9 @@ spring:
   redis:
     host: localhost
     port: 6379
+    password: 123456
+    database: 5
     timeout: 6000
-    database: 3
     lettuce:
       pool:
         max-active: 10 # 连接池最大连接数（使用负值表示没有限制）,如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)
@@ -85,6 +86,9 @@ wind:
   batch-size: 500
   # 是否自定义枚举反序列化.设置为true时,可能需要编写枚举反序列化代码
   custom-enum-deserializer: false
+  redis-cache:
+    enable: true
+    key-prefix: io.github.ramerf.wind
   # 用于分布式id雪花算法
   snowflake-prop:
     worker-id: 3

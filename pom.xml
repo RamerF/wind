@@ -14,7 +14,7 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>wind</artifactId>
     <name>wind</name>
-    <version>3.6.0-RELEASE</version>
+    <version>3.7.0-RELEASE</version>
     <modules>
         <module>wind-core</module>
         <module>wind-annotation</module>
@@ -40,7 +40,6 @@
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jackson.version>2.11.0</jackson.version>
         <lombok.version>1.18.10</lombok.version>
         <fastjson.version>1.2.67</fastjson.version>
         <javax.inject.version>1</javax.inject.version>
@@ -48,7 +47,7 @@
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <wind-annotation.version>3.6.0-RELEASE</wind-annotation.version>
+        <wind-annotation.version>3.7.0-RELEASE</wind-annotation.version>
     </properties>
     <dependencies>
         <dependency>
@@ -60,21 +59,6 @@
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>javax.persistence-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.data</groupId>
@@ -97,7 +81,7 @@
             <artifactId>springfox-swagger2</artifactId>
             <version>${springfox-swagger.version}</version>
         </dependency>
-        <!-- Spring Boot 测试组件-->
+        <!-- Spring Boot test-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -119,6 +103,18 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
     </dependencies>
     <dependencyManagement>
@@ -197,7 +193,7 @@
                         <executions>
                             <execution>
                                 <id>signArtifact</id>
-                                <phase>deploy</phase>
+                                <phase>verify</phase>
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
