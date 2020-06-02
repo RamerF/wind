@@ -23,44 +23,150 @@ import org.springframework.lang.Nullable;
  * @since 2020 /5/19
  */
 public interface Executor {
+  /**
+   * Fetch one r.
+   *
+   * @param <R> the type parameter
+   * @param sqlParam the sql param
+   * @return the r
+   * @throws DataAccessException the data access exception
+   */
   <R> R fetchOne(@Nonnull SqlParam sqlParam) throws DataAccessException;
 
+  /**
+   * Fetch all list.
+   *
+   * @param <R> the type parameter
+   * @param sqlParam the sql param
+   * @param clazz the clazz
+   * @return the list
+   * @throws DataAccessException the data access exception
+   */
   <R> List<R> fetchAll(@Nonnull SqlParam sqlParam, Class<R> clazz) throws DataAccessException;
 
+  /**
+   * Fetch all list.
+   *
+   * @param <R> the type parameter
+   * @param sqlParam the sql param
+   * @return the list
+   * @throws DataAccessException the data access exception
+   */
   <R> List<R> fetchAll(@Nonnull SqlParam sqlParam) throws DataAccessException;
 
+  /**
+   * Fetch page page.
+   *
+   * @param <R> the type parameter
+   * @param sqlParam the sql param
+   * @param total the total
+   * @param pageable the pageable
+   * @return the page
+   * @throws DataAccessException the data access exception
+   */
   <R> Page<R> fetchPage(@Nonnull SqlParam sqlParam, long total, PageRequest pageable)
       throws DataAccessException;
 
+  /**
+   * Fetch count long.
+   *
+   * @param sqlParam the sql param
+   * @return the long
+   */
   long fetchCount(@Nonnull SqlParam sqlParam);
 
+  /**
+   * Query for object t.
+   *
+   * @param <T> the type parameter
+   * @param sqlParam the sql param
+   * @param args the args
+   * @param requiredType the required type
+   * @return the t
+   * @throws DataAccessException the data access exception
+   */
   <T> T queryForObject(@Nonnull final SqlParam sqlParam, Object[] args, Class<T> requiredType)
       throws DataAccessException;
 
+  /**
+   * Query for list list.
+   *
+   * @param sqlParam the sql param
+   * @param args the args
+   * @return the list
+   * @throws DataAccessException the data access exception
+   */
   List<Map<String, Object>> queryForList(@Nonnull final SqlParam sqlParam, @Nullable Object... args)
       throws DataAccessException;
 
+  /**
+   * Query t.
+   *
+   * @param <T> the type parameter
+   * @param sqlParam the sql param
+   * @param pss the pss
+   * @param rse the rse
+   * @return the t
+   * @throws DataAccessException the data access exception
+   */
   <T> T query(
       @Nonnull final SqlParam sqlParam,
       @Nullable PreparedStatementSetter pss,
       ResultSetExtractor<T> rse)
       throws DataAccessException;
 
+  /**
+   * Query list.
+   *
+   * @param <T> the type parameter
+   * @param sqlParam the sql param
+   * @param pss the pss
+   * @param rowMapper the row mapper
+   * @return the list
+   * @throws DataAccessException the data access exception
+   */
   <T> List<T> query(
       @Nonnull final SqlParam sqlParam,
       @Nullable PreparedStatementSetter pss,
       RowMapper<T> rowMapper)
       throws DataAccessException;
 
+  /**
+   * Update int.
+   *
+   * @param clazz the clazz
+   * @param psc the psc
+   * @param generatedKeyHolder the generated key holder
+   * @return the int
+   * @throws DataAccessException the data access exception
+   */
   int update(
       @Nonnull final Class<?> clazz,
       final PreparedStatementCreator psc,
       final KeyHolder generatedKeyHolder)
       throws DataAccessException;
 
+  /**
+   * Update int.
+   *
+   * @param clazz the clazz
+   * @param sql the sql
+   * @param pss the pss
+   * @return the int
+   * @throws DataAccessException the data access exception
+   */
   int update(@Nonnull final Class<?> clazz, String sql, @Nullable PreparedStatementSetter pss)
       throws DataAccessException;
 
+  /**
+   * Batch update int [ ].
+   *
+   * @param clazz the clazz
+   * @param sql the sql
+   * @param pss the pss
+   * @return the int [ ]
+   * @throws DataAccessException the data access exception
+   */
   int[] batchUpdate(
       @Nonnull final Class<?> clazz, String sql, final BatchPreparedStatementSetter pss)
       throws DataAccessException;

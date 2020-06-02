@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.util.Assert;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -79,6 +80,17 @@ public class WindAutoConfiguration implements ApplicationContextAware {
       @Override
       public void addFormatters(@Nonnull FormatterRegistry registry) {
         registry.addConverterFactory(new StringToEnumConverterFactory());
+      }
+
+      @Override
+      public void addCorsMappings(@Nonnull CorsRegistry registry) {
+        final long maxAge = 3600L;
+        registry
+            .addMapping("/**")
+            .allowedOrigins("*")
+            .allowedMethods("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE")
+            .allowCredentials(false)
+            .maxAge(maxAge);
       }
     };
   }

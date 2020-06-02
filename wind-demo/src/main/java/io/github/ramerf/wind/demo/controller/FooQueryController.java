@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/query")
 @Api(tags = "Query使用示例")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class FooQueryController {
   @Resource private PrototypeBean prototypeBean;
 

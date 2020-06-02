@@ -10,11 +10,5 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration("wind_core_common_bean")
 public class CommonBean {
-
-  //  @Order(5)
-  //  @Autowired
-  //  public void initRedisCacheRedisTemplate(final RedisTemplate<String, Object> redisTemplate) {
-  // 后期需要加上redis缓存
-  //    RedisCache.setRedisTemplate(redisTemplate);
-  //  }
+  // 定义常用bean
 }
