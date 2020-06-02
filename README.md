@@ -189,16 +189,6 @@ public IdGenerator autoIncrementGenerator() {
 }
 ```
 
-## 频繁请求拦截
-```yaml
-wind:
-  frequency-request-intercept:
-    # 默认开启
-    enable: true
-    # 请求最小时差,单位ms,默认150ms
-    time: 200
-```
-
 ## redis分布式缓存
 ```yaml
   redis-cache:
