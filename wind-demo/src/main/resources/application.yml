@@ -86,9 +86,6 @@ wind:
   batch-size: 500
   # 是否自定义枚举反序列化.设置为true时,可能需要编写枚举反序列化代码
   custom-enum-deserializer: false
-  frequency-request-intercept:
-    enable: true
-    time: 2000
   redis-cache:
     enable: true
     key-prefix: io.github.ramerf.wind

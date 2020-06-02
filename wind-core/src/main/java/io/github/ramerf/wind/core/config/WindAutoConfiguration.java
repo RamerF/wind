@@ -9,7 +9,6 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
-import io.github.ramerf.wind.core.itercepter.FrequencyRequestInterceptor;
 import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
@@ -33,7 +32,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.util.Assert;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -46,18 +44,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WindAutoConfiguration implements ApplicationContextAware {
   @Resource private ObjectMapper objectMapper;
-  private final FrequencyRequestInterceptor frequencyRequestInterceptor;
   private final WindConfiguration windConfiguration;
 
   @Autowired(required = false)
   @SuppressWarnings({"rawtypes", "SpringJavaAutowiredFieldsWarningInspection"})
   private final Set<TypeConverter> typeConverters = new LinkedHashSet<>();
 
-  public WindAutoConfiguration(
-      final ObjectProvider<WindConfiguration> windConfiguration,
-      final ObjectProvider<FrequencyRequestInterceptor> frequencyRequestInterceptor) {
+  public WindAutoConfiguration(final ObjectProvider<WindConfiguration> windConfiguration) {
     this.windConfiguration = windConfiguration.getIfAvailable();
-    this.frequencyRequestInterceptor = frequencyRequestInterceptor.getIfAvailable();
   }
 
   /**
@@ -85,15 +79,6 @@ public class WindAutoConfiguration implements ApplicationContextAware {
       @Override
       public void addFormatters(@Nonnull FormatterRegistry registry) {
         registry.addConverterFactory(new StringToEnumConverterFactory());
-      }
-
-      @Override
-      public void addInterceptors(@Nonnull final InterceptorRegistry registry) {
-        // 开启频繁请求拦截
-        if (windConfiguration.getFrequencyRequestIntercept().isEnable()
-            && Objects.nonNull(frequencyRequestInterceptor)) {
-          registry.addInterceptor(frequencyRequestInterceptor);
-        }
       }
     };
   }

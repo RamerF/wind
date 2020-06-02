@@ -43,26 +43,11 @@ public class WindConfiguration {
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 150;
 
-  /** 频繁请求拦截. */
-  @NestedConfigurationProperty
-  private FrequencyRequestIntercept frequencyRequestIntercept = new FrequencyRequestIntercept();
-
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
 
   /** Redis分布式缓存配置. */
   @NestedConfigurationProperty private RedisCache redisCache = new RedisCache();
-
-  /** 频繁请求拦截. */
-  @Setter
-  @Getter
-  public static class FrequencyRequestIntercept {
-    /** 启用频繁请求拦截. */
-    private boolean enable = true;
-
-    /** 频繁请求拦截时间,单位毫秒(ms). */
-    private long time = 150L;
-  }
 
   /** Redis 缓存配置. */
   @Setter
