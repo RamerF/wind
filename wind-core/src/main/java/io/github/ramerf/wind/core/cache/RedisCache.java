@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -50,6 +51,16 @@ public interface RedisCache {
    * @param value the value
    */
   void put(String key, Object value);
+
+  /**
+   * 放入redis.
+   *
+   * @param key the key
+   * @param value the value
+   * @param timeout 超时时间
+   * @param timeUnit 超时时间单位
+   */
+  void put(String key, Object value, long timeout, TimeUnit timeUnit);
 
   /**
    * 获取对象.

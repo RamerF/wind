@@ -7,7 +7,8 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -41,6 +42,11 @@ public class DefaultRedisCache implements RedisCache {
   @Override
   public void put(final String key, final Object value) {
     getOperations().set(key, value, 10, TimeUnit.MINUTES);
+  }
+
+  @Override
+  public void put(String key, Object value, long timeout, TimeUnit timeUnit) {
+    getOperations().set(key, value, timeout, timeUnit);
   }
 
   @Override

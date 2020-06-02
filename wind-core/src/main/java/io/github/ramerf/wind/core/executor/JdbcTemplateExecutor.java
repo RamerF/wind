@@ -6,6 +6,7 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.util.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
@@ -232,7 +233,7 @@ public class JdbcTemplateExecutor implements Executor {
     }
     final String key = redisCache.generateKey(sqlParam);
     final Object exist = redisCache.get(key);
-    if (Objects.nonNull(exist) || redisCache.isKeyExist(key)) {
+    if (redisCache.isKeyExist(key)) {
       if (log.isDebugEnabled()) {
         log.debug("cacheIfAbsent:Hit cache[{}]", key);
       }
@@ -242,7 +243,12 @@ public class JdbcTemplateExecutor implements Executor {
     if (log.isDebugEnabled()) {
       log.debug("cacheIfAbsent:Put cache[{}]", key);
     }
-    redisCache.put(key, t);
+    // 空数据缓存100ms,防止穿透数据库
+    if (Objects.isNull(t)) {
+      redisCache.put(key, null, 100, TimeUnit.MILLISECONDS);
+    } else {
+      redisCache.put(key, t);
+    }
     return t;
   }
 
