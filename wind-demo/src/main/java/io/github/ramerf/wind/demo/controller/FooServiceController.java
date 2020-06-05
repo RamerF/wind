@@ -71,7 +71,7 @@ public class FooServiceController {
   @GetMapping(value = "/get-one", params = "type=2")
   @ApiOperation("查询,单条查询,指定条件返回自定义对象,支持返回基本类型")
   public ResponseEntity<Rs<FooThinResponse>> getOne2() {
-    // 支持返回基本类型
+    // 支持返回基本类型,支持枚举
     final Long one =
         service.getOne(
             query -> query.col(Foo::getId).getCondition().eq(Foo::setId, 1L), Long.class);
