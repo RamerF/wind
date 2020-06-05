@@ -4,12 +4,13 @@
 基于spring-boot的快速开发框架,可与Mybatis/Hibernate共存.
 
 ### 特性
- - 查询支持返回指定列,返回基本类型(Long/BigDecimal等)
+ - 查询支持返回指定列,返回基本类型(Long/BigDecimal/枚举等)
  - lambda方式构造条件,支持类型推断
  - 基于jdbc-template
  - service层切入,repository层依然可以使用其它持久化框架
  - 自定义枚举序列化
  - 自定义ID生成策略
+ - 自定义结果转换器
  - 默认开启redis分布式缓存
  - controller(ControllerHelper),service,repository(Query/Update)三层无耦合,每层都可独立使用
  
@@ -158,7 +159,7 @@ public ResponseEntity<Rs<Object>> update() {
 ```
 
 ## 自定义枚举序列化
- - 默认枚举序列化为非线性key:value格式
+ - 默认枚举序列化为 key:value 格式
     ```json
     {
         "value": "值",
@@ -195,4 +196,30 @@ public IdGenerator autoIncrementGenerator() {
     enable: true
     # 前缀
     key-prefix: io.github.ramerf.wind
+```
+
+## 可配置项
+```yaml
+wind:
+  # 逻辑删除字段名
+  logic-delete-field: isDelete
+  # 逻辑未删除值(默认为 false)
+  logic-not-delete: false
+  # 逻辑已删除值(默认为 true)
+  logic-deleted: true
+  # entity所在包路径,多个以,分割
+  entity-package: io.github.ramerf.wind.demo.entity.pojo
+  # 批量操作时每次处理的大小,默认为150
+  batch-size: 500
+  # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
+  custom-enum-deserializer: false
+  redis-cache:
+    # 默认开启redis缓存
+    enable: true
+    # redis key前缀
+    key-prefix: io.github.ramerf.wind
+  # 用于分布式id雪花算法
+  snowflake-prop:
+    worker-id: 3
+    data-center-id: 2
 ```
