@@ -197,7 +197,11 @@ public IdGenerator autoIncrementGenerator() {
     # 前缀
     key-prefix: io.github.ramerf.wind
 ```
-
+其它orm框架执行对象写入后,手动清除缓存
+```java
+@Resource private RedisCache redisCache;
+redisCache.clear(Foo.class);
+```
 ## 可配置项
 ```yaml
 wind:
