@@ -48,7 +48,7 @@ public class OoO extends AbstractEntityPoJo {
   @Column(columnDefinition = "smallint")
   private Type type;
 
-  @Column(columnDefinition = "double")
+  @Column(columnDefinition = "numeric(5,2)")
   private BigDecimal bigDecimal;
 
   /** 字段与数据库列不对应时,使用{@link Column#name()}指定数据库字段名. */
