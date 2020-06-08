@@ -168,8 +168,6 @@ public class JdbcTemplateExecutor implements Executor {
                 }));
   }
 
-  /// 上面是新代码,待测试
-
   @Override
   public <T> T queryForObject(
       @Nonnull final SqlParam sqlParam, final Object[] args, final Class<T> requiredType)
@@ -257,11 +255,7 @@ public class JdbcTemplateExecutor implements Executor {
     if (Objects.isNull(redisCache)) {
       return supplier.get();
     }
-    final String key = redisCache.getFixedKeyPrefix(clazz) + clazz.getName();
-    if (log.isDebugEnabled()) {
-      log.debug("execAndClear:Clear cache[{}]", key);
-    }
-    redisCache.clear(key);
+    redisCache.clear(clazz);
     return supplier.get();
   }
 }

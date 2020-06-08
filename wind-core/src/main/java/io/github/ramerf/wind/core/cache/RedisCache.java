@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.cache;
 
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -34,7 +35,7 @@ public interface RedisCache {
    * 获取key前缀,如果不为空,加上:后缀
    *
    * @param clazz 操作的pojo
-   * @return 包含:的key前缀
+   * @return 包含 :的key前缀
    */
   default String getFixedKeyPrefix(@Nonnull final Class<?> clazz) {
     String keyPrefix = getKeyPrefix(clazz);
@@ -76,6 +77,19 @@ public interface RedisCache {
    * @param key the key
    */
   void clear(@Nonnull String key);
+
+  /**
+   * 清除对应key的数据.
+   *
+   * @param clazz {@link AbstractEntityPoJo}
+   */
+  default void clear(@Nonnull final Class<?> clazz) {
+    final String key = getFixedKeyPrefix(clazz) + clazz.getName();
+    if (log.isDebugEnabled()) {
+      log.debug("clear:Clear cache[{}]", key);
+    }
+    clear(key);
+  }
 
   /**
    * 判断给定的key是否存在.true:存在.
