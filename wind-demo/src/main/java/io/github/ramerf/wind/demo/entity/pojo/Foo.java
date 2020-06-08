@@ -24,7 +24,7 @@ import lombok.experimental.SuperBuilder;
 public class Foo extends AbstractEntityPoJo {
   private String name;
 
-  @Column(columnDefinition = "text(255)")
+  @Column(columnDefinition = "text")
   private String textString;
 
   /** List&lt;Long&gt; 可对应数据库类型 bigint[] */
