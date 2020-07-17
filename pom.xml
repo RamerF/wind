@@ -143,6 +143,12 @@
     </dependencyManagement>
     <profiles>
         <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
             <id>sonatype-release</id>
             <distributionManagement>
                 <repository>
@@ -203,7 +209,7 @@
                 </plugins>
             </build>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
         </profile>
     </profiles>

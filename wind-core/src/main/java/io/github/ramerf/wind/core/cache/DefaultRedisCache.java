@@ -24,10 +24,7 @@ import org.springframework.stereotype.Component;
 @Component
 @DependsOn("redisCacheRedisTemplate")
 @ConditionalOnClass(RedisTemplate.class)
-@ConditionalOnProperty(
-    value = "wind.redis-cache.enable",
-    havingValue = "true",
-    matchIfMissing = true)
+@ConditionalOnProperty(value = "wind.redis-cache.enable", havingValue = "true")
 public class DefaultRedisCache implements RedisCache {
   @Resource(name = "redisCacheRedisTemplate")
   private RedisTemplate<String, Object> redisTemplate;

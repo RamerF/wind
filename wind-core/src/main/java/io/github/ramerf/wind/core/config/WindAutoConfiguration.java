@@ -3,37 +3,28 @@ package io.github.ramerf.wind.core.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.ramerf.wind.core.WindVersion;
-import io.github.ramerf.wind.core.converter.TypeConverter;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.*;
-import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
-import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
-import io.github.ramerf.wind.core.support.StringToEnumConverterFactory;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.IOException;
-import java.util.*;
+import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.format.FormatterRegistry;
 import org.springframework.util.Assert;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * 初始化配置.
@@ -43,67 +34,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Slf4j
 @Configuration
+@EnableConfigurationProperties(WindConfiguration.class)
 public class WindAutoConfiguration implements ApplicationContextAware {
   @Resource private ObjectMapper objectMapper;
   private final WindConfiguration windConfiguration;
 
-  @Autowired(required = false)
-  @SuppressWarnings({"rawtypes", "SpringJavaAutowiredFieldsWarningInspection"})
-  private final Set<TypeConverter> typeConverters = new LinkedHashSet<>();
-
-  public WindAutoConfiguration(final ObjectProvider<WindConfiguration> windConfiguration) {
-    this.windConfiguration = windConfiguration.getIfAvailable();
-  }
-
-  /**
-   * Type converter registry factory type converter registry factory.
-   *
-   * @return the type converter registry factory
-   */
-  @Bean
-  public TypeConverterRegistryFactory typeConverterRegistryFactory() {
-    final TypeConverterRegistryFactory factory = new TypeConverterRegistryFactory();
-    factory.addTypeConverter(typeConverters);
-    factory.registerDefaultTypeConverters();
-    return factory;
-  }
-
-  /**
-   * String to enum converter factory mvc configure web mvc configurer.
-   *
-   * @return the web mvc configurer
-   */
-  @Bean
-  public WebMvcConfigurer stringToEnumConverterFactoryMvcConfigure() {
-    // 添加枚举转换器,请求可以传递value整型值
-    return new WebMvcConfigurer() {
-      @Override
-      public void addFormatters(@Nonnull FormatterRegistry registry) {
-        registry.addConverterFactory(new StringToEnumConverterFactory());
-      }
-
-      @Override
-      public void addCorsMappings(@Nonnull CorsRegistry registry) {
-        final long maxAge = 3600L;
-        registry
-            .addMapping("/**")
-            .allowedOrigins("*")
-            .allowedMethods("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE")
-            .allowCredentials(false)
-            .maxAge(maxAge);
-      }
-    };
-  }
-
-  /**
-   * Jackson object mapper customizer jackson 2 object mapper builder customizer.
-   *
-   * @return the jackson 2 object mapper builder customizer
-   */
-  @Bean
-  public Jackson2ObjectMapperBuilderCustomizer jacksonObjectMapperCustomizer() {
-    return objectMapperBuilder ->
-        objectMapperBuilder.serializerByType(InterEnum.class, new JacksonEnumSerializer());
+  public WindAutoConfiguration(final WindConfiguration windConfiguration) {
+    this.windConfiguration = windConfiguration;
   }
 
   @Override
@@ -114,6 +51,7 @@ public class WindAutoConfiguration implements ApplicationContextAware {
     // 初始化分布式主键
     SnowflakeIdWorker.setWorkerId(windConfiguration.getSnowflakeProp().getWorkerId());
     SnowflakeIdWorker.setDatacenterId(windConfiguration.getSnowflakeProp().getDataCenterId());
+    AppContextInject.context = applicationContext;
     // 初始化Query/Update
     Query.executor = Update.executor = AppContextInject.getBean(JdbcTemplateExecutor.class);
     // 初始化实体类

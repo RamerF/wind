@@ -18,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
 
 /**
  * The jdbc template executor.
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Component;
  * @since 2020/5/19
  */
 @Slf4j
-@Component
 public class JdbcTemplateExecutor implements Executor {
   @Resource private JdbcTemplate jdbcTemplate;
 
