@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
@@ -35,7 +34,6 @@ import static java.util.stream.Collectors.toCollection;
  * @since 2019/12/26
  */
 @Slf4j
-@Component
 @ToString
 public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     implements ICondition<T> {

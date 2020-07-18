@@ -88,7 +88,9 @@ public interface RedisCache {
     if (log.isDebugEnabled()) {
       log.debug("clear:Clear cache[{}]", key);
     }
-    clear(key);
+    if (isKeyExist(key)) {
+      clear(key);
+    }
   }
 
   /**

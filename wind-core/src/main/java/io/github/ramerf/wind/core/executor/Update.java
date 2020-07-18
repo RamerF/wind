@@ -23,13 +23,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
 
 /**
  * 通用写入操作对象.获取实例:<br>
@@ -49,9 +46,7 @@ import org.springframework.stereotype.Component;
  * @since 2020 /1/13
  */
 @Slf4j
-@Component
 @SuppressWarnings("unused")
-@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public final class Update {
 
   private Class<?> clazz;

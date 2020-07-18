@@ -18,7 +18,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ansi.*;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -35,9 +37,11 @@ import org.springframework.util.Assert;
 @Slf4j
 @Configuration
 @EnableConfigurationProperties(WindConfiguration.class)
-public class WindAutoConfiguration implements ApplicationContextAware {
+@AutoConfigureAfter({CommonBean.class, PrototypeBean.class})
+public class WindAutoConfiguration implements ApplicationContextAware, InitializingBean {
   @Resource private ObjectMapper objectMapper;
   private final WindConfiguration windConfiguration;
+  private ApplicationContext applicationContext;
 
   public WindAutoConfiguration(final WindConfiguration windConfiguration) {
     this.windConfiguration = windConfiguration;
@@ -46,24 +50,7 @@ public class WindAutoConfiguration implements ApplicationContextAware {
   @Override
   public void setApplicationContext(@Nonnull final ApplicationContext applicationContext)
       throws BeansException {
-    // 打印banner
-    printBanner();
-    // 初始化分布式主键
-    SnowflakeIdWorker.setWorkerId(windConfiguration.getSnowflakeProp().getWorkerId());
-    SnowflakeIdWorker.setDatacenterId(windConfiguration.getSnowflakeProp().getDataCenterId());
-    AppContextInject.context = applicationContext;
-    // 初始化Query/Update
-    Query.executor = Update.executor = AppContextInject.getBean(JdbcTemplateExecutor.class);
-    // 初始化实体类
-    final Class<?> bootClass =
-        applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
-            .findFirst()
-            .map(Object::getClass)
-            .orElse(null);
-    Assert.notNull(bootClass, "No class annotate with @SpringBootApplication.");
-    initEntityInfo(bootClass, windConfiguration);
-    // 初始化枚举反序列化器
-    registerEnumDeserializer(bootClass, windConfiguration);
+    this.applicationContext = applicationContext;
   }
 
   private void printBanner() {
@@ -146,5 +133,27 @@ public class WindAutoConfiguration implements ApplicationContextAware {
     } catch (IOException e) {
       log.warn("initEntityInfo:fail to register enum deserializer[{}]", e.getMessage());
     }
+  }
+
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    // 打印banner
+    printBanner();
+    // 初始化分布式主键
+    SnowflakeIdWorker.setWorkerId(windConfiguration.getSnowflakeProp().getWorkerId());
+    SnowflakeIdWorker.setDatacenterId(windConfiguration.getSnowflakeProp().getDataCenterId());
+    AppContextInject.context = applicationContext;
+    // 初始化Query/Update
+    Query.executor = Update.executor = AppContextInject.getBean(JdbcTemplateExecutor.class);
+    // 初始化实体类
+    final Class<?> bootClass =
+        applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
+            .findFirst()
+            .map(Object::getClass)
+            .orElse(null);
+    Assert.notNull(bootClass, "No class annotate with @SpringBootApplication.");
+    initEntityInfo(bootClass, windConfiguration);
+    // 初始化枚举反序列化器
+    registerEnumDeserializer(bootClass, windConfiguration);
   }
 }

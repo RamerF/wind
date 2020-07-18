@@ -17,11 +17,8 @@ import java.util.function.Consumer;
 import java.util.stream.*;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
@@ -58,9 +55,6 @@ import static java.util.stream.Collectors.toCollection;
  * @since 2019 /12/28
  */
 @Slf4j
-@Component
-@SuppressWarnings("all")
-@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Query {
   /*
    TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位

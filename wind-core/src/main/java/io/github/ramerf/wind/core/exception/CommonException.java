@@ -68,8 +68,7 @@ public class CommonException extends RuntimeException {
 
   private CommonException() {
     super(ResultCode.ERROR.desc());
-    final ResultCode error = ResultCode.ERROR;
-    this.resultCode = error;
+    this.resultCode = ResultCode.ERROR;
   }
 
   private CommonException(final String message, final Throwable cause) {

@@ -7,7 +7,6 @@ import java.lang.reflect.Type;
 import java.util.*;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * 注册类型转换器.
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
  * @since 2020 /3/28
  */
 @Slf4j
-@Component
 @SuppressWarnings({"rawtypes", "unused"})
 public class TypeConverterRegistryFactory {
   private Set<TypeConverter> typeConverters =
