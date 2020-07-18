@@ -13,7 +13,6 @@
  - 自定义结果转换器
  - 查询默认开启redis缓存
  - 对controller(ControllerHelper),service,repository(Query/Update)三层分别进行增强
- - 
 ### 开始使用
  1. 引入jar包:
     ```xml
