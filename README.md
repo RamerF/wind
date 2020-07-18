@@ -1,7 +1,7 @@
 ﻿# wind
 
 ---
-基于spring-boot的快速开发框架,可与Mybatis/Hibernate共存.
+基于spring-boot的快速开发框架,对jdbc-template进行封装,可与Mybatis/Hibernate共存.
 
 ### 特性
  - 查询支持返回指定列,返回基本类型(Long/BigDecimal/枚举等)
@@ -11,16 +11,16 @@
  - 自定义枚举序列化
  - 自定义ID生成策略
  - 自定义结果转换器
- - 默认开启redis分布式缓存
- - controller(ControllerHelper),service,repository(Query/Update)三层无耦合,每层都可独立使用
- 
+ - 查询默认开启redis缓存
+ - 对controller(ControllerHelper),service,repository(Query/Update)三层分别进行增强
+ - 
 ### 开始使用
  1. 引入jar包:
     ```xml
     <dependency>
         <groupId>io.github.ramerf</groupId>
         <artifactId>wind-core</artifactId>
-        <version>3.8.1-RELEASE</version>
+        <version>3.8.2-RELEASE</version>
     </dependency>
     ```
  2. 新建 pojo 实体`Foo`继承于`AbstractEntityPoJo`
@@ -226,4 +226,6 @@ wind:
   snowflake-prop:
     worker-id: 3
     data-center-id: 2
+  # 默认true,当默认mvc配置与当前项目不兼容时设置为false可禁用
+  enable-web-mvc-configurer: false
 ```

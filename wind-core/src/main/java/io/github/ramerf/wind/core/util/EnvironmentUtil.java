@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.util;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.context.*;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -80,7 +80,7 @@ public class EnvironmentUtil implements EnvironmentAware {
    * @param env the env
    * @return the boolean
    */
-  public boolean is(Env env) {
+  public static boolean is(Env env) {
     return env.toString().equalsIgnoreCase(environment.getProperty("spring.profiles.active"));
   }
 

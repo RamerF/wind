@@ -9,6 +9,7 @@ import io.github.ramerf.wind.core.executor.JdbcTemplateExecutor;
 import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.*;
+import io.github.ramerf.wind.core.util.EnvironmentUtil;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -60,6 +61,10 @@ public class CommonBean {
    * @return the web mvc configurer
    */
   @Bean
+  @ConditionalOnProperty(
+      value = "wind.enable-web-mvc-configurer",
+      havingValue = "true",
+      matchIfMissing = true)
   public WebMvcConfigurer stringToEnumConverterFactoryMvcConfigure() {
     // 添加枚举转换器,请求可以传递value整型值
     return new WebMvcConfigurer() {
@@ -109,5 +114,10 @@ public class CommonBean {
   @ConditionalOnMissingBean(IdGenerator.class)
   public IdGenerator snowflakeIdGenerator() {
     return new SnowflakeIdGenerator();
+  }
+
+  @Bean
+  public EnvironmentUtil environmentUtil() {
+    return new EnvironmentUtil();
   }
 }

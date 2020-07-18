@@ -40,7 +40,7 @@ import static java.util.stream.Collectors.toCollection;
  *   </pre>
  *
  * 构建 SQL.所有的条件字符串构造,需要改为对象<br>
- * 如: OrdrByClause... <br>
+ * 如: OrderByClause... <br>
  * TODO: 查询缓存
  *
  * <p>下面是新的实现思路 <br>
@@ -49,7 +49,7 @@ import static java.util.stream.Collectors.toCollection;
  * where {@link SqlFunction} <br>
  * {@link SqlFunction}
  *
- * <p>当{@link QueryAlia#sqlFunction}为null时,退化为普通条件,否则就是函数
+ * <p>当{@link QueryAlia#getSqlFunction()}为null时,退化为普通条件,否则就是函数
  *
  * @author Tang Xiaofeng
  * @since 2019 /12/28
