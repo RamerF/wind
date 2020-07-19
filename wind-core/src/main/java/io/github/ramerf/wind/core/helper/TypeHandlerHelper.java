@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.converter.TypeConverter;
-import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
+import io.github.ramerf.wind.core.factory.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
@@ -13,36 +13,36 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * The type Type converter helper.
+ * The type Type handler helper.
  *
  * @author Tang Xiaofeng
  * @since 2020/5/12
  */
 @SuppressWarnings("unchecked")
 @Slf4j
-public class TypeConverterHelper {
+public class TypeHandlerHelper {
   @SuppressWarnings("rawtypes")
   public static Object toJavaValue(final ValueType valueType, final Class<?> parameterType) {
-    return Optional.of(AppContextInject.getBean(TypeConverterRegistryFactory.class))
+    return Optional.of(AppContextInject.getBean(TypeHandlerRegistryFactory.class))
         .map(
             o -> {
-              final TypeConverter converter = o.getToJavaTypeConverter(valueType);
+              final ITypeHandler typeHandler = o.getToJavaTypeHandler(valueType);
               if (log.isTraceEnabled()) {
                 log.trace(
-                    "toJavaValue:match converter[converter:{},field:{}]",
-                    Objects.isNull(converter) ? null : converter.getClass().getSimpleName(),
+                    "toJavaValue:match typeHandler[typeHandler:{},field:{}]",
+                    Objects.isNull(typeHandler) ? null : typeHandler.getClass().getSimpleName(),
                     valueType.originVal);
               }
-              return converter;
+              return typeHandler;
             })
-        .map(converter -> converter.covertFromJdbc(valueType.originVal, parameterType))
+        .map(typeHandler -> typeHandler.covertFromJdbc(valueType.originVal, parameterType))
         .orElse(valueType.originVal);
   }
 
   public static Object toJdbcValue(final ValueType valueType, final PreparedStatement ps) {
-    return Optional.of(AppContextInject.getBean(TypeConverterRegistryFactory.class))
-        .map(o -> o.getToJdbcTypeConverter(valueType))
-        .map(converter -> converter.convertToJdbc(valueType.originVal, valueType.field, ps))
+    return Optional.of(AppContextInject.getBean(TypeHandlerRegistryFactory.class))
+        .map(o -> o.getToJdbcTypeHandler(valueType))
+        .map(typeHandler -> typeHandler.convertToJdbc(valueType.originVal, valueType.field, ps))
         .orElse(valueType.originVal);
   }
 
@@ -68,7 +68,8 @@ public class TypeConverterHelper {
       return new ValueType(originVal, field.getGenericType(), field);
     }
 
-    public static ValueType of(final Object originVal, final Type genericParameterType, final Field field) {
+    public static ValueType of(
+        final Object originVal, final Type genericParameterType, final Field field) {
       return new ValueType(originVal, genericParameterType, field);
     }
   }

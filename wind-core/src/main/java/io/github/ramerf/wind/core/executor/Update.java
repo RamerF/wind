@@ -11,8 +11,8 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
@@ -425,7 +425,7 @@ public final class Update {
         ps -> {
           try {
             final Object value =
-                TypeConverterHelper.toJdbcValue(ValueType.of(originValue, field), ps);
+                TypeHandlerHelper.toJdbcValue(ValueType.of(originValue, field), ps);
             if (log.isDebugEnabled()) {
               log.debug(
                   "setParameterConsumer:[index:{},originValue:{},value:{}]",
@@ -451,7 +451,7 @@ public final class Update {
    */
   private void setArgsValue(
       AtomicInteger index, Field field, Object originValue, PreparedStatement ps) {
-    final Object value = TypeConverterHelper.toJdbcValue(ValueType.of(originValue, field), ps);
+    final Object value = TypeHandlerHelper.toJdbcValue(ValueType.of(originValue, field), ps);
     if (log.isTraceEnabled()) {
       log.trace("setArgsValue:[index:{},originValue:{},value:{}]", index.get(), originValue, value);
     }

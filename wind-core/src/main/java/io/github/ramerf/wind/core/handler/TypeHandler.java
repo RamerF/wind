@@ -1,5 +1,6 @@
-package io.github.ramerf.wind.core.converter;
+package io.github.ramerf.wind.core.handler;
 
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import java.lang.annotation.*;
 
 /**
@@ -13,5 +14,5 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 public @interface TypeHandler {
   @SuppressWarnings("rawtypes")
-  Class<? extends TypeConverter> value();
+  Class<? extends ITypeHandler> value();
 }

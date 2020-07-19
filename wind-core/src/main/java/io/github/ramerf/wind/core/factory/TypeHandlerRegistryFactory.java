@@ -1,7 +1,8 @@
 package io.github.ramerf.wind.core.factory;
 
-import io.github.ramerf.wind.core.converter.*;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
+import io.github.ramerf.wind.core.handler.*;
+import io.github.ramerf.wind.core.handler.typehandler.*;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -17,63 +18,63 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @SuppressWarnings({"rawtypes", "unused"})
-public class TypeConverterRegistryFactory {
-  private Set<TypeConverter> typeConverters =
+public class TypeHandlerRegistryFactory {
+  private Set<ITypeHandler> typeHandlers =
       new TreeSet<>(((o1, o2) -> Objects.equals(o1.getClass(), o2.getClass()) ? 0 : 1));
 
-  /** Instantiates a new Type converter registry. */
-  public TypeConverterRegistryFactory() {}
+  /** Instantiates a new Type handler registry factory. */
+  public TypeHandlerRegistryFactory() {}
 
   /** 注册默认的类型转换器,在添加自定义转换器之后添加这些,保持自定义的转换器优先级更高. */
-  public void registerDefaultTypeConverters() {
-    addTypeConverters(new BigDecimalTypeConverter());
-    addTypeConverters(new BitSetTypeConverter());
-    addTypeConverters(new DateTypeConverter());
-    addTypeConverters(new EnumTypeConverter());
-    addTypeConverters(new IntegerArrayTypeConverter());
-    addTypeConverters(new ListIntegerArrayTypeConverter());
-    addTypeConverters(new ListLongArrayTypeConverter());
-    addTypeConverters(new ListStringArrayTypeConverter());
-    addTypeConverters(new LongArrayTypeConverter());
-    addTypeConverters(new StringArrayTypeConverter());
-    addTypeConverters(new TimestampTypeConverter());
+  public void registerDefaultTypeHandlers() {
+    addTypeHandlers(new BigDecimalTypeHandler());
+    addTypeHandlers(new BitSetTypeHandler());
+    addTypeHandlers(new DateTypeHandler());
+    addTypeHandlers(new EnumTypeHandler());
+    addTypeHandlers(new IntegerArrayTypeHandler());
+    addTypeHandlers(new ListIntegerArrayTypeHandler());
+    addTypeHandlers(new ListLongArrayTypeHandler());
+    addTypeHandlers(new ListStringArrayTypeHandler());
+    addTypeHandlers(new LongArrayTypeHandler());
+    addTypeHandlers(new StringArrayTypeHandler());
+    addTypeHandlers(new TimestampTypeHandler());
   }
 
   /**
    * 添加类型转换器.
    *
-   * @param converters the {@link TypeConverter}
-   * @see TypeConverter
+   * @param typeHandlers the {@link ITypeHandler}
+   * @see ITypeHandler
    */
-  public void addTypeConverters(@Nonnull TypeConverter... converters) {
-    typeConverters.addAll(Arrays.asList(converters));
+  public void addTypeHandlers(@Nonnull ITypeHandler... typeHandlers) {
+    this.typeHandlers.addAll(Arrays.asList(typeHandlers));
   }
 
   /**
-   * Add type converter.
+   * Add type handler.
    *
-   * @param converters the list of converter
+   * @param typeHandlers the list of handler
    */
-  public void addTypeConverter(@Nonnull Set<TypeConverter> converters) {
-    CollectionUtils.doIfNonEmpty(converters, o -> typeConverters.addAll(converters));
+  public void addTypeHandlers(@Nonnull Set<ITypeHandler> typeHandlers) {
+    CollectionUtils.doIfNonEmpty(typeHandlers, o -> this.typeHandlers.addAll(typeHandlers));
   }
 
   /**
    * 设置类型转换器,将会覆盖默认的类型转换器.
    *
-   * @param typeConverters the type converters
+   * @param typeHandlers the type handler
    */
-  public void setTypeConverters(Set<TypeConverter> typeConverters) {
-    this.typeConverters = typeConverters;
+  public void setTypeHandlers(Set<ITypeHandler> typeHandlers) {
+    this.typeHandlers = typeHandlers;
   }
 
   /**
-   * Gets type converters.
+   * Gets type handler.
    *
-   * @return the type converters
+   * @return the type handler
    */
-  public Set<TypeConverter> getTypeConverters() {
-    return typeConverters;
+  public Set<ITypeHandler> getTypeHandlers() {
+    return typeHandlers;
   }
 
   /**
@@ -83,25 +84,25 @@ public class TypeConverterRegistryFactory {
    * <p>valueType {@link ValueType}
    *
    * @param valueType the value type
-   * @return the type converter
-   * @see TypeConverter
+   * @return the type handler
+   * @see ITypeHandler
    */
   @SuppressWarnings("DuplicatedCode")
-  public TypeConverter getToJavaTypeConverter(final ValueType valueType) {
+  public ITypeHandler getToJavaTypeHandler(final ValueType valueType) {
     final Object value = valueType.getOriginVal();
     if (Objects.isNull(value)) {
       return null;
     }
-    final TypeConverter typeHandler = getHandlerFromAnnotation(valueType);
+    final ITypeHandler typeHandler = getHandlerFromAnnotation(valueType);
     if (typeHandler != null) {
       return typeHandler;
     }
     final Type genericParameterType = valueType.getGenericParameterType();
-    return getTypeConverters().stream()
+    return getTypeHandlers().stream()
         .filter(
-            typeConverter -> {
-              final Type javaClass = typeConverter.getJavaClass();
-              final Type jdbcClass = typeConverter.getJdbcClass();
+            handler -> {
+              final Type javaClass = handler.getJavaClass();
+              final Type jdbcClass = handler.getJdbcClass();
               try {
                 return (Objects.equals(javaClass, genericParameterType)
                         || Class.forName(javaClass.getTypeName())
@@ -122,24 +123,24 @@ public class TypeConverterRegistryFactory {
    * 后面可能会再添加一个Class/Field参数(用于获取字段上的转换器注解)
    *
    * @param valueType {@link ValueType}
-   * @return the type converter
-   * @see TypeConverter
+   * @return the type handler
+   * @see ITypeHandler
    */
   @SuppressWarnings("DuplicatedCode")
-  public TypeConverter getToJdbcTypeConverter(final ValueType valueType) {
+  public ITypeHandler getToJdbcTypeHandler(final ValueType valueType) {
     final Object value = valueType.getOriginVal();
     if (Objects.isNull(value)) {
       return null;
     }
-    final TypeConverter typeHandler = getHandlerFromAnnotation(valueType);
+    final ITypeHandler typeHandler = getHandlerFromAnnotation(valueType);
     if (typeHandler != null) {
       return typeHandler;
     }
     final Type genericParameterType = valueType.getGenericParameterType();
-    return getTypeConverters().stream()
+    return getTypeHandlers().stream()
         .filter(
-            typeConverter -> {
-              final Type javaClass = typeConverter.getJavaClass();
+            handler -> {
+              final Type javaClass = handler.getJavaClass();
               try {
                 return Objects.equals(javaClass, genericParameterType)
                     || Class.forName(javaClass.getTypeName())
@@ -152,7 +153,7 @@ public class TypeConverterRegistryFactory {
         .orElse(null);
   }
 
-  private TypeConverter getHandlerFromAnnotation(final ValueType valueType) {
+  private ITypeHandler getHandlerFromAnnotation(final ValueType valueType) {
     final Field field = valueType.getField();
     final TypeHandler typeHandler = field.getAnnotation(TypeHandler.class);
     if (Objects.nonNull(typeHandler)) {

@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.converter;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class BitSetTypeConverter implements TypeConverter<BitSet, byte[]> {
+public class BitSetTypeHandler implements ITypeHandler<BitSet, byte[]> {
   @Override
   public Object convertToJdbc(
       BitSet javaVal, final Field field, @Nonnull final PreparedStatement ps) {

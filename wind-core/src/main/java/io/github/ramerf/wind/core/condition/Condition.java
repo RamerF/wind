@@ -7,8 +7,8 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -511,7 +511,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
         .map(
             valueType ->
                 (Function<PreparedStatement, Object>)
-                    ps -> TypeConverterHelper.toJdbcValue(valueType, ps))
+                    ps -> TypeHandlerHelper.toJdbcValue(valueType, ps))
         .map(
             function ->
                 (Consumer<PreparedStatement>)

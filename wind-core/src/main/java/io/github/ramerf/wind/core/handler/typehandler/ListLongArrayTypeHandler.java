@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.converter;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.reflect.Field;
@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class ListLongArrayTypeConverter implements TypeConverter<List<Long>, Long[]> {
+public class ListLongArrayTypeHandler implements ITypeHandler<List<Long>, Long[]> {
   @Override
   public Object convertToJdbc(
       List<Long> javaVal, final Field field, @Nonnull final PreparedStatement ps) {

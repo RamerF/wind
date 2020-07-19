@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.converter;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import java.lang.reflect.Field;
@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class EnumTypeConverter implements TypeConverter<InterEnum, Integer> {
+public class EnumTypeHandler implements ITypeHandler<InterEnum, Integer> {
   @Override
   public Integer convertToJdbc(InterEnum interEnum, final Field field, @Nonnull final PreparedStatement ps) {
     return Objects.nonNull(interEnum) ? interEnum.value() : null;

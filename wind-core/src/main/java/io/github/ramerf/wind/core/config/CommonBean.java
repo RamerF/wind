@@ -2,11 +2,11 @@ package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.cache.DefaultRedisCache;
 import io.github.ramerf.wind.core.cache.RedisCache;
-import io.github.ramerf.wind.core.converter.TypeConverter;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.executor.JdbcTemplateExecutor;
-import io.github.ramerf.wind.core.factory.TypeConverterRegistryFactory;
+import io.github.ramerf.wind.core.factory.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.*;
 import io.github.ramerf.wind.core.util.EnvironmentUtil;
@@ -31,7 +31,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * 定义常用bean.
  *
  * @author Tang Xiaofeng
- * @since 2019/12/29
+ * @since 2019 /12/29
  */
 @Slf4j
 @Configuration("wind_core_common_bean")
@@ -40,18 +40,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CommonBean {
   @Autowired(required = false)
   @SuppressWarnings({"rawtypes", "SpringJavaAutowiredFieldsWarningInspection"})
-  private final Set<TypeConverter> typeConverters = new LinkedHashSet<>();
+  private final Set<ITypeHandler> typeHandlers = new LinkedHashSet<>();
 
   /**
-   * Type converter registry factory type converter registry factory.
+   * Type handler registry factory type handler registry factory.
    *
-   * @return the type converter registry factory
+   * @return the type handler registry factory
    */
   @Bean
-  public TypeConverterRegistryFactory typeConverterRegistryFactory() {
-    final TypeConverterRegistryFactory factory = new TypeConverterRegistryFactory();
-    factory.addTypeConverter(typeConverters);
-    factory.registerDefaultTypeConverters();
+  public TypeHandlerRegistryFactory typeHandlerRegistryFactory() {
+    final TypeHandlerRegistryFactory factory = new TypeHandlerRegistryFactory();
+    factory.addTypeHandlers(typeHandlers);
+    factory.registerDefaultTypeHandlers();
     return factory;
   }
 
@@ -97,6 +97,11 @@ public class CommonBean {
         objectMapperBuilder.serializerByType(InterEnum.class, new JacksonEnumSerializer());
   }
 
+  /**
+   * Default redis cache redis cache.
+   *
+   * @return the redis cache
+   */
   @Bean
   @ConditionalOnMissingBean(RedisCache.class)
   @DependsOn("redisCacheRedisTemplate")
@@ -105,17 +110,32 @@ public class CommonBean {
     return new DefaultRedisCache();
   }
 
+  /**
+   * Jdbc template executor executor.
+   *
+   * @return the executor
+   */
   @Bean
   public Executor jdbcTemplateExecutor() {
     return new JdbcTemplateExecutor();
   }
 
+  /**
+   * Snowflake id generator id generator.
+   *
+   * @return the id generator
+   */
   @Bean
   @ConditionalOnMissingBean(IdGenerator.class)
   public IdGenerator snowflakeIdGenerator() {
     return new SnowflakeIdGenerator();
   }
 
+  /**
+   * Environment util environment util.
+   *
+   * @return the environment util
+   */
   @Bean
   public EnvironmentUtil environmentUtil() {
     return new EnvironmentUtil();

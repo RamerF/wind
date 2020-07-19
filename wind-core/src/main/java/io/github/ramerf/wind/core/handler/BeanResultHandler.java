@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -54,7 +54,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       final Class<?> parameterType = method.getParameterTypes()[0];
       final Field field = BeanUtils.getDeclaredField(clazz, fieldName);
       final Object finalValue =
-          TypeConverterHelper.toJavaValue(
+          TypeHandlerHelper.toJavaValue(
               ValueType.of(value, method.getGenericParameterTypes()[0], field), parameterType);
       BeanUtils.invoke(obj, method, finalValue)
           .ifPresent(

@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.converter;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.ref.Reference;
@@ -12,9 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 数据库与Java Bean相互转换.暂时只支持单类双向,如果双向转换不存在一个类中,建议直接弃用. 😀<br>
- * 注意: 可能会考虑使用注解,标记了注解的会使用指定的转换器<br>
- * 用法: @TypeConverter(EnumTypeConverter)
+ * 数据库与Java Bean相互转换.暂时只支持单类双向,如果双向转换不存在一个类中,建议直接弃用.
  *
  * @param <T> Java对象类型
  * @param <V> 数据库值类型
@@ -22,9 +20,9 @@ import org.slf4j.LoggerFactory;
  * @since 2020 /3/4
  */
 @SuppressWarnings({"rawtypes", "unused"})
-public interface TypeConverter<T, V> {
+public interface ITypeHandler<T, V> {
   /** The constant log. */
-  Logger log = LoggerFactory.getLogger(TypeConverter.class);
+  Logger log = LoggerFactory.getLogger(ITypeHandler.class);
 
   /** The constant PARAM_TYPE_CLAZZ. */
   Map<Class<?>, WeakReference<Type[]>> PARAM_TYPE_CLAZZ = new HashMap<>();
@@ -97,7 +95,7 @@ public interface TypeConverter<T, V> {
    * @return the class [ ]
    */
   default Type[] getParamTypeClass() {
-    Class<? extends TypeConverter> clazz = this.getClass();
+    Class<? extends ITypeHandler> clazz = this.getClass();
     Type[] types =
         Optional.ofNullable(PARAM_TYPE_CLAZZ.get(clazz)).map(Reference::get).orElse(new Type[2]);
     if (Objects.nonNull(types[0])) {

@@ -1,7 +1,8 @@
-package io.github.ramerf.wind.core.converter;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -12,14 +13,15 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class DateTypeConverter implements TypeConverter<Date, java.sql.Date> {
+public class TimestampTypeHandler implements ITypeHandler<Date, Timestamp> {
   @Override
-  public Object convertToJdbc(Date javaVal, final Field field, @Nonnull final PreparedStatement ps) {
-    return new java.sql.Timestamp(javaVal.getTime());
+  public Object convertToJdbc(
+      Date javaVal, final Field field, @Nonnull final PreparedStatement ps) {
+    return new java.sql.Date(javaVal.getTime());
   }
 
   @Override
-  public Date covertFromJdbc(final java.sql.Date jdbcVal, final Class<? extends Date> clazz) {
+  public Date covertFromJdbc(final Timestamp jdbcVal, final Class<? extends Date> clazz) {
     return Objects.nonNull(jdbcVal) ? new Date(jdbcVal.getTime()) : null;
   }
 

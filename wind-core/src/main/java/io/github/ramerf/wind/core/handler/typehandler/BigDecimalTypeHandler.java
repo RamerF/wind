@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.converter;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class BigDecimalTypeConverter implements TypeConverter<BigDecimal, Double> {
+public class BigDecimalTypeHandler implements ITypeHandler<BigDecimal, Double> {
   @Override
   public Double convertToJdbc(
       BigDecimal val, final Field field, @Nonnull final PreparedStatement ps) {

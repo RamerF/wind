@@ -1,8 +1,9 @@
-package io.github.ramerf.wind.core.converter;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.reflect.Field;
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 
@@ -12,13 +13,12 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class IntegerArrayTypeConverter implements TypeConverter<Integer[], Integer[]> {
+public class StringArrayTypeHandler implements ITypeHandler<String[], String[]> {
   @Override
   public Object convertToJdbc(
-      Integer[] javaVal, final Field field, @Nonnull final PreparedStatement ps) {
+      String[] javaVal, final Field field, @Nonnull final PreparedStatement ps) {
     try {
-      final Connection connection = ps.getConnection();
-      return connection.createArrayOf(getJdbcType(field), javaVal);
+      return ps.getConnection().createArrayOf(getJdbcType(field), javaVal);
     } catch (SQLException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
@@ -27,12 +27,12 @@ public class IntegerArrayTypeConverter implements TypeConverter<Integer[], Integ
   }
 
   @Override
-  public Integer[] covertFromJdbc(final Integer[] jdbcVal, final Class<? extends Integer[]> clazz) {
+  public String[] covertFromJdbc(final String[] jdbcVal, final Class<? extends String[]> clazz) {
     return jdbcVal;
   }
 
   @Override
   public String getJdbcType(@Nonnull final Field field) {
-    return EntityHelper.getJdbcTypeName(field, "int");
+    return EntityHelper.getJdbcTypeName(field, "varchar");
   }
 }
