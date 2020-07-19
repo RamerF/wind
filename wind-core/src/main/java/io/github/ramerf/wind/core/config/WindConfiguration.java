@@ -4,7 +4,6 @@ import lombok.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * The type Wind configuration.
@@ -13,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
  * @since 2020 /1/14
  */
 @Data
-@Configuration
 @ConfigurationProperties("wind")
 public class WindConfiguration {
   /** 逻辑删除字段. */
@@ -42,6 +40,8 @@ public class WindConfiguration {
 
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 150;
+
+  private boolean enableWebMvcConfigurer = true;
 
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();

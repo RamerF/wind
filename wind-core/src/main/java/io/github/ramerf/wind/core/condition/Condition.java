@@ -7,8 +7,8 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper;
-import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
@@ -35,7 +34,6 @@ import static java.util.stream.Collectors.toCollection;
  * @since 2019/12/26
  */
 @Slf4j
-@Component
 @ToString
 public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     implements ICondition<T> {
@@ -513,7 +511,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
         .map(
             valueType ->
                 (Function<PreparedStatement, Object>)
-                    ps -> TypeConverterHelper.toJdbcValue(valueType, ps))
+                    ps -> TypeHandlerHelper.toJdbcValue(valueType, ps))
         .map(
             function ->
                 (Consumer<PreparedStatement>)

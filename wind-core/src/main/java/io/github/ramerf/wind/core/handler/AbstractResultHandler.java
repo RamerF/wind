@@ -7,6 +7,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
@@ -29,7 +30,7 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
   /** columnAlia:fieldName} */
   Map<String, String> fieldAliaMap;
 
-  private static final Map<Class<?>, WeakReference<List<Method>>> METHODS_MAP = new HashMap<>();
+  private static final Map<Class<?>, WeakReference<List<Method>>> METHODS_MAP = new ConcurrentHashMap<>();
 
   /**
    * Instantiates a new Abstract result handler.

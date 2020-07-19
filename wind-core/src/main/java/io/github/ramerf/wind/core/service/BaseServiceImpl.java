@@ -9,13 +9,13 @@ import io.github.ramerf.wind.core.util.EntityUtils;
  * <pre>
  *   // 定义bean
  *   <code>@Bean("fooBs")</code>
- *   public BaseService<Foo> setBaseService(@Autowired FooRepository repository) {
- *     return new BaseServiceImpl<>(repository, this);
+ *   public BaseService&lt;Foo&gt; setBaseService(@Autowired FooRepository repository) {
+ *     return new BaseServiceImpl&lt;&gt;(repository, this);
  *   }
  *
  *   // 注入
  *   <code>@Resource(name = "fooBs")</code>
- *   private BaseService<Foo> baseService;
+ *   private BaseService&lt;Foo&gt; baseService;
  *
  *   // 通过baseService调用原方法
  *   baseService.create(foo);

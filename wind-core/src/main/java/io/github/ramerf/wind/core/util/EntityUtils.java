@@ -173,7 +173,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 表名: @Entity &gt; @TableName &gt; 类名(驼封转下划线)
+   * 表名: @Entity &gt; 类名(驼封转下划线)
    *
    * @param <T> the type t
    * @param clazz the clazz

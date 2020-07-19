@@ -1,9 +1,9 @@
 package io.github.ramerf.wind.core.util;
 
+import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class EnvironmentUtil implements ApplicationContextAware {
+public class EnvironmentUtil implements EnvironmentAware {
   private static Environment environment = null;
 
   /**
@@ -80,14 +80,13 @@ public class EnvironmentUtil implements ApplicationContextAware {
    * @param env the env
    * @return the boolean
    */
-  public boolean is(Env env) {
+  public static boolean is(Env env) {
     return env.toString().equalsIgnoreCase(environment.getProperty("spring.profiles.active"));
   }
 
   @Override
-  public void setApplicationContext(final ApplicationContext applicationContext)
-      throws BeansException {
-    environment = applicationContext.getBean(Environment.class);
+  public void setEnvironment(@Nonnull final Environment environment) throws BeansException {
+    EnvironmentUtil.environment = environment;
   }
 
   /** The enum Env. */
@@ -98,6 +97,8 @@ public class EnvironmentUtil implements ApplicationContextAware {
     TEST,
     /** Dev env. */
     DEV,
+    /** Pre env. */
+    PRE,
     /** Prod env. */
     PROD
   }

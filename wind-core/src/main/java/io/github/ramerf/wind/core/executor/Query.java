@@ -17,11 +17,8 @@ import java.util.function.Consumer;
 import java.util.stream.*;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Component;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
@@ -43,7 +40,7 @@ import static java.util.stream.Collectors.toCollection;
  *   </pre>
  *
  * 构建 SQL.所有的条件字符串构造,需要改为对象<br>
- * 如: OrdrByClause... <br>
+ * 如: OrderByClause... <br>
  * TODO: 查询缓存
  *
  * <p>下面是新的实现思路 <br>
@@ -52,15 +49,12 @@ import static java.util.stream.Collectors.toCollection;
  * where {@link SqlFunction} <br>
  * {@link SqlFunction}
  *
- * <p>当{@link QueryAlia#sqlFunction}为null时,退化为普通条件,否则就是函数
+ * <p>当{@link QueryAlia#getSqlFunction()}为null时,退化为普通条件,否则就是函数
  *
  * @author Tang Xiaofeng
  * @since 2019 /12/28
  */
 @Slf4j
-@Component
-@SuppressWarnings("all")
-@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Query {
   /*
    TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位

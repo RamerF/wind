@@ -18,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
 
 /**
  * The jdbc template executor.
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Component;
  * @since 2020/5/19
  */
 @Slf4j
-@Component
 public class JdbcTemplateExecutor implements Executor {
   @Resource private JdbcTemplate jdbcTemplate;
 
@@ -168,8 +166,6 @@ public class JdbcTemplateExecutor implements Executor {
                 }));
   }
 
-  /// 上面是新代码,待测试
-
   @Override
   public <T> T queryForObject(
       @Nonnull final SqlParam sqlParam, final Object[] args, final Class<T> requiredType)
@@ -257,11 +253,7 @@ public class JdbcTemplateExecutor implements Executor {
     if (Objects.isNull(redisCache)) {
       return supplier.get();
     }
-    final String key = redisCache.getFixedKeyPrefix(clazz) + clazz.getName();
-    if (log.isDebugEnabled()) {
-      log.debug("execAndClear:Clear cache[{}]", key);
-    }
-    redisCache.clear(key);
+    redisCache.clear(clazz);
     return supplier.get();
   }
 }

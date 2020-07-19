@@ -14,7 +14,7 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>wind</artifactId>
     <name>wind</name>
-    <version>3.8.0-RELEASE</version>
+    <version>3.8.2-RELEASE</version>
     <modules>
         <module>wind-core</module>
         <module>wind-annotation</module>
@@ -47,7 +47,7 @@
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <wind-annotation.version>3.8.0-RELEASE</wind-annotation.version>
+        <wind-annotation.version>3.8.2-RELEASE</wind-annotation.version>
     </properties>
     <dependencies>
         <dependency>
@@ -143,6 +143,12 @@
     </dependencyManagement>
     <profiles>
         <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
             <id>sonatype-release</id>
             <distributionManagement>
                 <repository>
@@ -197,6 +203,13 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <executable>C:\Program Files (x86)\gnupg\bin\gpg.exe</executable>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
