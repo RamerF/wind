@@ -63,7 +63,7 @@ public interface TypeConverter<T, V> {
    *
    * @return the java class
    */
-  default Type getJavaClass() {
+  default @Nonnull Type getJavaClass() {
     return getParamTypeClass()[0];
   }
 
@@ -72,7 +72,7 @@ public interface TypeConverter<T, V> {
    *
    * @return the jdbc class
    */
-  default Type getJdbcClass() {
+  default @Nonnull Type getJdbcClass() {
     return getParamTypeClass()[1];
   }
 

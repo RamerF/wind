@@ -13,7 +13,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
@@ -174,7 +174,6 @@ public final class BeanUtils {
             });
   }
 
-
   /**
    * 实例化对象 .
    *
@@ -258,6 +257,21 @@ public final class BeanUtils {
     }
 
     return name;
+  }
+
+  /**
+   * 执行{@link Class#getField(String)},失败抛出 {@link IllegalArgumentException}.
+   *
+   * @param clazz the clazz
+   * @param name the field name
+   * @return the optional
+   */
+  public static Field getDeclaredField(final Class<?> clazz, final String name) {
+    try {
+      return clazz.getDeclaredField(name);
+    } catch (NoSuchFieldException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   /**
@@ -381,6 +395,7 @@ public final class BeanUtils {
     invoke(null, String.class.getMethods()[0], "string")
         .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
     log.info("main:[{}]", retrievePrivateFields(Ts.class, new ArrayList<>()));
+    log.info("main:[{}]", getDeclaredField(Ts.class, "name"));
   }
 }
 

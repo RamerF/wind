@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.annotation;
+package io.github.ramerf.wind.core.converter;
 
 import java.lang.annotation.*;
 
@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
-public @interface Query {
-  /** 数据库字段名. */
-  String alia();
+public @interface TypeHandler {
+  @SuppressWarnings("rawtypes")
+  Class<? extends TypeConverter> value();
 }

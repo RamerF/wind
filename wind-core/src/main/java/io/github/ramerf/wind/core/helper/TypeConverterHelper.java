@@ -68,8 +68,8 @@ public class TypeConverterHelper {
       return new ValueType(originVal, field.getGenericType(), field);
     }
 
-    public static ValueType of(final Object originVal, final Type genericParameterType) {
-      return new ValueType(originVal, genericParameterType, null);
+    public static ValueType of(final Object originVal, final Type genericParameterType, final Field field) {
+      return new ValueType(originVal, genericParameterType, field);
     }
   }
 }

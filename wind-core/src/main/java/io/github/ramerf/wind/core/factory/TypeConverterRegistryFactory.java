@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.factory;
 import io.github.ramerf.wind.core.converter.*;
 import io.github.ramerf.wind.core.helper.TypeConverterHelper.ValueType;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 import javax.annotation.Nonnull;
@@ -85,10 +86,15 @@ public class TypeConverterRegistryFactory {
    * @return the type converter
    * @see TypeConverter
    */
+  @SuppressWarnings("DuplicatedCode")
   public TypeConverter getToJavaTypeConverter(final ValueType valueType) {
     final Object value = valueType.getOriginVal();
     if (Objects.isNull(value)) {
       return null;
+    }
+    final TypeConverter typeHandler = getHandlerFromAnnotation(valueType);
+    if (typeHandler != null) {
+      return typeHandler;
     }
     final Type genericParameterType = valueType.getGenericParameterType();
     return getTypeConverters().stream()
@@ -99,7 +105,9 @@ public class TypeConverterRegistryFactory {
               try {
                 return (Objects.equals(javaClass, genericParameterType)
                         || Class.forName(javaClass.getTypeName())
-                            .isAssignableFrom(Class.forName(genericParameterType.getTypeName())))
+                            .isAssignableFrom(
+                                Class.forName(
+                                    Objects.requireNonNull(genericParameterType).getTypeName())))
                     && Objects.equals(value.getClass(), jdbcClass);
               } catch (ClassNotFoundException ignored) {
               }
@@ -117,10 +125,15 @@ public class TypeConverterRegistryFactory {
    * @return the type converter
    * @see TypeConverter
    */
+  @SuppressWarnings("DuplicatedCode")
   public TypeConverter getToJdbcTypeConverter(final ValueType valueType) {
     final Object value = valueType.getOriginVal();
     if (Objects.isNull(value)) {
       return null;
+    }
+    final TypeConverter typeHandler = getHandlerFromAnnotation(valueType);
+    if (typeHandler != null) {
+      return typeHandler;
     }
     final Type genericParameterType = valueType.getGenericParameterType();
     return getTypeConverters().stream()
@@ -137,5 +150,18 @@ public class TypeConverterRegistryFactory {
             })
         .findFirst()
         .orElse(null);
+  }
+
+  private TypeConverter getHandlerFromAnnotation(final ValueType valueType) {
+    final Field field = valueType.getField();
+    final TypeHandler typeHandler = field.getAnnotation(TypeHandler.class);
+    if (Objects.nonNull(typeHandler)) {
+      try {
+        return typeHandler.value().newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return null;
   }
 }
