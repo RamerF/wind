@@ -266,12 +266,14 @@ public final class BeanUtils {
    * @param name the field name
    * @return the optional
    */
-  public static Field getDeclaredField(final Class<?> clazz, final String name) {
-    try {
-      return clazz.getDeclaredField(name);
-    } catch (NoSuchFieldException e) {
-      throw new IllegalArgumentException(e);
-    }
+  public static Field getDeclaredField(@Nonnull Class<?> clazz, final String name) {
+    do {
+      try {
+        return clazz.getDeclaredField(name);
+      } catch (NoSuchFieldException ignored) {
+      }
+    } while ((clazz = clazz.getSuperclass()) != null);
+    return null;
   }
 
   /**

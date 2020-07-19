@@ -4,11 +4,14 @@ import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.*;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
+  /** 方法对应的字段. */
+  private static final Map<Method, WeakReference<Field>> METHODS_FIELD_MAP =
+      new ConcurrentHashMap<>();
 
   public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
     super(clazz, queryColumns);
@@ -52,7 +58,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
 
       // 判断数据类型,调用指定的转换器,获取到对应的Java值,如果没有就直接赋值.
       final Class<?> parameterType = method.getParameterTypes()[0];
-      final Field field = BeanUtils.getDeclaredField(clazz, fieldName);
+      final Field field = getField(method, fieldName);
       final Object finalValue =
           TypeHandlerHelper.toJavaValue(
               ValueType.of(value, method.getGenericParameterTypes()[0], field), parameterType);
@@ -69,5 +75,16 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
                           .orElse(null)));
     }
     return obj;
+  }
+
+  private Field getField(final Method method, final String fieldName) {
+    return Optional.ofNullable(METHODS_FIELD_MAP.get(method))
+        .map(Reference::get)
+        .orElseGet(
+            () -> {
+              final Field field = BeanUtils.getDeclaredField(clazz, fieldName);
+              METHODS_FIELD_MAP.put(method, new WeakReference<>(field));
+              return field;
+            });
   }
 }
