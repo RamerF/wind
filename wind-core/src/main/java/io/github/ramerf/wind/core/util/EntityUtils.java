@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.BaseService;
@@ -173,18 +174,29 @@ public final class EntityUtils {
   }
 
   /**
-   * 表名: @Entity &gt; 类名(驼封转下划线)
+   * 表名: {@link TableInfo#name()} &gt; {@link TableInfo#value()} &gt; {@link Entity#name()} &gt;
+   * 类名(驼封转下划线)
    *
    * @param <T> the type t
    * @param clazz the clazz
    * @return the table name
    */
   public static <T> String getTableName(final Class<T> clazz) {
+    final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
+    if (tableInfo != null) {
+      if (StringUtils.nonEmpty(tableInfo.name())) {
+        return tableInfo.name();
+      }
+      if (StringUtils.nonEmpty(tableInfo.value())) {
+        return tableInfo.value();
+      }
+    }
+
     final Entity entity = clazz.getAnnotation(Entity.class);
-    // 表名: @Entity#name > 类名(驼封转下划线)
-    return Objects.nonNull(entity) && StringUtils.nonEmpty(entity.name())
-        ? entity.name()
-        : StringUtils.camelToUnderline(clazz.getSimpleName());
+    if (entity != null && StringUtils.nonEmpty(entity.name())) {
+      return entity.name();
+    }
+    return StringUtils.camelToUnderline(clazz.getSimpleName());
   }
   /**
    * 获取Service泛型参数poJo.

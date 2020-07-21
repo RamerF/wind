@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.factory;
 
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.QueryEntityMetaData;
 import io.github.ramerf.wind.core.config.AppContextInject;
@@ -7,8 +8,7 @@ import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.util.EntityUtils;
-import io.github.ramerf.wind.core.util.StringUtils;
+import io.github.ramerf.wind.core.util.*;
 import java.util.Objects;
 
 /**
@@ -46,6 +46,17 @@ public class QueryColumnFactory {
     queryEntityMetaData.setClazz(clazz);
     if (StringUtils.isEmpty(tableName)) {
       tableName = EntityUtils.getTableName(clazz);
+    }
+    if (clazz != null) {
+      final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
+      if (tableInfo != null) {
+        queryColumn.setEnableLogicDelete(tableInfo.enableLogicDelete());
+        queryColumn.setLogicDeleted(tableInfo.logicDeleted());
+        queryColumn.setLogicNotDelete(tableInfo.logicNotDelete());
+        final String logicDeleteField = tableInfo.logicDeleteField();
+        ObjectUtils.execIfAbsent(
+            logicDeleteField, () -> queryColumn.setLogicDeleteField(logicDeleteField));
+      }
     }
     queryEntityMetaData.setTableName(tableName);
     tableAlia = StringUtils.isEmpty(tableAlia) ? tableName : tableAlia;
