@@ -56,14 +56,19 @@ import static java.util.stream.Collectors.toCollection;
  */
 @Slf4j
 public class Query {
-  /*
-   TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
-   思路: 构造OrderByClause,使用sql语法:
-   1. orderby id <> ?
-   2. orderby id not in (?,?) 特性
-   3. orderby case when id=? then min_number else max_number end
-  */
+  /**
+   *
+   *
+   * <pre>
+   * TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
+   * 思路: 构造OrderByClause,使用sql语法:
+   * 1. orderby id <> ?
+   * 2. orderby id not in (?,?) 特性
+   * 3. orderby case when id=? then min_number else max_number end
+   * </pre>
+   */
   private List<QueryColumn<?>> queryColumns;
+
   private List<ICondition<?>> conditions;
   private String queryString;
   private String conditionString;

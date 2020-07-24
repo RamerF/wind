@@ -24,7 +24,7 @@ public @interface TableInfo {
    *
    * @return the string
    */
-  String name();
+  String name() default "";
 
   /**
    * 是否支持逻辑删除,默认启用(true),设置为false时将不支持逻辑删除功能.
@@ -38,7 +38,7 @@ public @interface TableInfo {
    *
    * @return the string
    */
-  String logicDeleteField() default "isDelete";
+  String logicDeleteColumn() default "is_delete";
 
   /**
    * 逻辑已删除值.

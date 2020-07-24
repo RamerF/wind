@@ -14,8 +14,11 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 @Data
 @ConfigurationProperties("wind")
 public class WindConfiguration {
+  /** 是否开启逻辑删除. */
+  private boolean enableLogicDelete = true;
+
   /** 逻辑删除字段. */
-  private String logicDeleteField = "isDelete";
+  private String logicDeleteColumn = "is_delete";
 
   /** 逻辑未删除值. */
   private boolean logicNotDelete = false;

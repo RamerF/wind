@@ -1,15 +1,19 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import javax.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 /**
  * @author Tang Xiaofeng
- * @since 2019/12/16
+ * @since 2020/07/24
  */
-@Entity(name = "foo")
+@TableInfo(
+    value = "account",
+    logicDeleteColumn = "has_deleted",
+    logicDeleted = false,
+    logicNotDelete = true)
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -17,6 +21,11 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class Account extends AbstractEntityPoJo {
+
   private String name;
+
   private String tel;
+
+  /** 使用自定义逻辑删除字段. */
+  private Boolean hasDeleted;
 }

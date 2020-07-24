@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.factory;
 
-import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.QueryEntityMetaData;
 import io.github.ramerf.wind.core.config.AppContextInject;
@@ -8,7 +7,9 @@ import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.util.*;
+import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.support.EntityInfo;
+import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.Objects;
 
 /**
@@ -35,7 +36,7 @@ public class QueryColumnFactory {
     return getInstance(null, tableName, tableAlia);
   }
 
-  private static <T extends AbstractEntity> QueryColumn<T> getInstance(
+  public static <T extends AbstractEntity> QueryColumn<T> getInstance(
       final Class<T> clazz, String tableName, String tableAlia) {
     final QueryColumn<T> queryColumn =
         QueryColumn.of(AppContextInject.getBean(WindConfiguration.class));
@@ -44,18 +45,14 @@ public class QueryColumnFactory {
     }
     final QueryEntityMetaData<T> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
     queryEntityMetaData.setClazz(clazz);
-    if (StringUtils.isEmpty(tableName)) {
-      tableName = EntityUtils.getTableName(clazz);
-    }
     if (clazz != null) {
-      final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
-      if (tableInfo != null) {
-        queryColumn.setEnableLogicDelete(tableInfo.enableLogicDelete());
-        queryColumn.setLogicDeleted(tableInfo.logicDeleted());
-        queryColumn.setLogicNotDelete(tableInfo.logicNotDelete());
-        final String logicDeleteField = tableInfo.logicDeleteField();
-        ObjectUtils.execIfAbsent(
-            logicDeleteField, () -> queryColumn.setLogicDeleteField(logicDeleteField));
+      final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
+      if (StringUtils.isEmpty(tableName)) {
+        tableName = entityInfo.getName();
+      }
+      // 如果使用了@TableInfo注解,即使只指定了name,其它实体相关的全局配置也会失效,好坑😓
+      if (entityInfo.getEnableLogicDelete() != null) {
+        queryColumn.setEntityInfo(entityInfo);
       }
     }
     queryEntityMetaData.setTableName(tableName);

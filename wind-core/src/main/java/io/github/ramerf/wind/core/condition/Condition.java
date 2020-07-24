@@ -6,8 +6,10 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.helper.*;
+import io.github.ramerf.wind.core.helper.SqlHelper;
+import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -23,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
-import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static java.util.stream.Collectors.toCollection;
 
 /**
@@ -43,16 +44,20 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   private boolean containLogicNotDelete = false;
 
+  private Condition() {}
+
   public static <T extends AbstractEntity> Condition<T> of(QueryColumn<T> queryColumn) {
     final Condition<T> condition = new Condition<>();
-    condition.queryEntityMetaData = queryColumn.queryEntityMetaData;
+    condition.setEntityInfo(queryColumn.getEntityInfo());
+    condition.setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
     return condition;
   }
 
   @Override
   public Condition<T> condition() {
     final Condition<T> condition = new Condition<>();
-    condition.queryEntityMetaData = this.queryEntityMetaData;
+    condition.setEntityInfo(getEntityInfo());
+    condition.setQueryEntityMetaData(getQueryEntityMetaData());
     return condition;
   }
 
@@ -67,7 +72,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.EQUAL.operator)
@@ -88,7 +93,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.NOT_EQUAL.operator)
@@ -109,7 +114,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.GREATER.operator)
@@ -130,7 +135,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.GE.operator)
@@ -151,7 +156,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.LESS.operator)
@@ -172,7 +177,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.LE.operator)
@@ -193,7 +198,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
@@ -213,7 +218,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
@@ -237,7 +242,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(
@@ -266,7 +271,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(
@@ -288,7 +293,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.IS_NULL.operator));
@@ -306,7 +311,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.IS_NOT_NULL.operator));
@@ -328,7 +333,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(
@@ -356,7 +361,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(
@@ -387,11 +392,11 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(queryEntityMetaData.getTableAlia())
+              .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
               .concat(MatchPattern.EQUAL.operator)
-              .concat(queryColumn.queryEntityMetaData.getTableAlia())
+              .concat(queryColumn.getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field2.getColumn()));
     }
@@ -489,15 +494,18 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   private synchronized void appendLogicNotDelete() {
-    conditionSql.add(
-        (conditionSql.size() > 0 ? AND.operator : "")
-            .concat(queryEntityMetaData.getTableAlia())
-            .concat(DOT.operator)
-            .concat(camelToUnderline(logicDeleteField))
-            .concat(MatchPattern.EQUAL.operator)
-            .concat(toPreFormatSqlVal(logicNotDelete)));
-    final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setIsDelete;
-    valueTypes.add(ValueType.of(logicNotDelete, beanFunction));
+    final EntityInfo entityInfo = getEntityInfo();
+    if (entityInfo.getEnableLogicDelete()) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(entityInfo.getLogicDeleteColumn())
+              .concat(MatchPattern.EQUAL.operator)
+              .concat(toPreFormatSqlVal(entityInfo.isLogicNotDelete())));
+      final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setIsDelete;
+      valueTypes.add(ValueType.of(entityInfo.isLogicNotDelete(), beanFunction));
+    }
   }
 
   @Override

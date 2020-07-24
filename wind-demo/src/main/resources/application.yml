@@ -74,11 +74,13 @@ logging:
     log4j.logger.org.springframework.jdbc.core.StatementCreatorUtils: TRACE
     jdbc.sqltiming: info
 wind:
-  # 逻辑删除字段名
-  logic-delete-field: isDelete
-  # 逻辑未删除值(默认为 false)
+  # 是否启用逻辑删除,可以在类上使用@TableInfo的enableLogicDelete属性覆盖,添加@TableInfo注解会使该配置失效
+  enable-logic-delete: false
+  # 逻辑删除字段名,添加@TableInfo注解会使该配置失效
+  logic-delete-field: is_delete
+  # 逻辑未删除值(默认为 false),添加@TableInfo注解会使该配置失效
   logic-not-delete: false
-  # 逻辑已删除值(默认为 true)
+  # 逻辑已删除值(默认为 true),添加@TableInfo注解会使该配置失效
   logic-deleted: true
   # entity所在包路径,多个以,分割
   entity-package: io.github.ramerf.wind.demo.entity.pojo

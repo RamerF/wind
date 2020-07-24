@@ -1,8 +1,10 @@
 package io.github.ramerf.wind.core.helper;
 
+import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.sql.Types;
@@ -15,13 +17,12 @@ import lombok.extern.slf4j.Slf4j;
  * The type Entity helper.
  *
  * @author Tang Xiaofeng
- * @since 2020 /5/12
+ * @since 2020/5/12
  */
 @Slf4j
 public class EntityHelper {
-  /** 类全路径:{field:column} */
-  private static final Map<String, Map<String, String>> FIELD_COLUMN_MAP =
-      new ConcurrentHashMap<>();
+  /** 类信息:{Class:EntityInfo} */
+  private static final Map<String, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
 
   /**
    * 初始化实体和表对应信息.
@@ -40,8 +41,8 @@ public class EntityHelper {
                       ? columnAnnotation.name()
                       : StringUtils.camelToUnderline(field.getName());
               map.put(field.getName(), column);
-              FIELD_COLUMN_MAP.put(clazz.getTypeName(), map);
             });
+    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), EntityInfo.of(clazz, map));
   }
 
   /**
@@ -52,15 +53,17 @@ public class EntityHelper {
    */
   public static String getColumn(BeanFunction function) {
     if (log.isTraceEnabled()) {
-      log.trace("getColumn:[{}]", FIELD_COLUMN_MAP);
+      log.trace("getColumn:[{}]", CLAZZ_ENTITY_MAP);
     }
-    final Map<String, String> fieldColumnMap =
-        FIELD_COLUMN_MAP.get(function.getImplClassFullPath());
-    if (CollectionUtils.isEmpty(fieldColumnMap)) {
+    final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(function.getImplClassFullPath());
+    final Map<String, String> fieldColumnMap;
+    if (entityInfo == null
+        || CollectionUtils.isEmpty(fieldColumnMap = entityInfo.getFieldColumnMap())) {
       // 处理实体信息未自动扫描到的情况
       initEntity(BeanUtils.getClazz(function.getImplClassFullPath()));
-      return FIELD_COLUMN_MAP
+      return CLAZZ_ENTITY_MAP
           .get(function.getImplClassFullPath())
+          .getFieldColumnMap()
           .get(function.getField().getName());
     }
     return fieldColumnMap.get(function.getField().getName());
@@ -95,6 +98,10 @@ public class EntityHelper {
       }
     }
     return typeName;
+  }
+
+  public static <T extends AbstractEntity> EntityInfo getEntityInfo(final Class<T> clazz) {
+    return CLAZZ_ENTITY_MAP.get(clazz.getTypeName());
   }
 
   /**

@@ -6,10 +6,10 @@ import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.Objects;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,10 +25,9 @@ import static java.util.stream.Collectors.joining;
  *
  * @param <T> the type parameter
  * @author Tang Xiaofeng
- * @since 2019 /12/26
+ * @since 2019/12/26
  */
 @Slf4j
-@Data
 @EqualsAndHashCode(callSuper = true)
 @SuppressWarnings("UnusedReturnValue")
 public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T> {
@@ -37,16 +36,8 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
 
   private Condition<T> condition = null;
 
-  private QueryColumn() {}
-
-  /**
-   * Of query column.
-   *
-   * @param <T> the type parameter
-   * @return the query column
-   */
-  public static <T extends AbstractEntity> QueryColumn<T> of() {
-    return new QueryColumn<>();
+  private QueryColumn(final EntityInfo entityInfo) {
+    setEntityInfo(entityInfo);
   }
 
   /**
@@ -57,11 +48,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    * @return the query column
    */
   public static <T extends AbstractEntity> QueryColumn<T> of(WindConfiguration configuration) {
-    final QueryColumn<T> queryColumn = new QueryColumn<>();
-    queryColumn.logicDeleted = configuration.isLogicDeleted();
-    queryColumn.logicNotDelete = configuration.isLogicNotDelete();
-    queryColumn.logicDeleteField = configuration.getLogicDeleteField();
-    return queryColumn;
+    return new QueryColumn<>(EntityInfo.of(configuration));
   }
 
   /**
@@ -182,16 +169,17 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   /** 添加查询对象(列/聚合函数). */
   private QueryColumn<T> add(
       final IFunction<T, ?> function, final String alia, final SqlFunction sqlFunction) {
-    queryEntityMetaData.queryAlias.add(
-        QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia(), sqlFunction));
+    getQueryEntityMetaData()
+        .queryAlias
+        .add(QueryAlia.of(function, alia, getQueryEntityMetaData().getTableAlia(), sqlFunction));
     return this;
   }
 
   @Override
   public String getString() {
-    return CollectionUtils.isEmpty(queryEntityMetaData.queryAlias)
-        ? queryEntityMetaData.getTableAlia().concat(DOT.operator()).concat(WILDCARD.operator())
-        : queryEntityMetaData.queryAlias.stream()
+    return CollectionUtils.isEmpty(getQueryEntityMetaData().queryAlias)
+        ? getQueryEntityMetaData().getTableAlia().concat(DOT.operator()).concat(WILDCARD.operator())
+        : getQueryEntityMetaData().queryAlias.stream()
             .map(QueryColumn::methodToColumnWithAlia)
             .collect(joining(SEMICOLON));
   }
@@ -203,11 +191,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    */
   public Condition<T> getCondition() {
     if (Objects.isNull(condition)) {
-      condition = new Condition<>();
-      condition.logicDeleted = this.logicDeleted;
-      condition.logicNotDelete = this.logicNotDelete;
-      condition.logicDeleteField = this.logicDeleteField;
-      condition.queryEntityMetaData = this.queryEntityMetaData;
+      condition = Condition.of(this);
     }
     return condition;
   }

@@ -13,6 +13,7 @@ import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
@@ -51,13 +52,8 @@ public final class Update {
 
   private Class<?> clazz;
   private Condition<?> condition;
-  private String tableName;
 
-  @SuppressWarnings("FieldCanBeLocal")
-  private String logicDeleteField;
-
-  @SuppressWarnings("FieldCanBeLocal")
-  private boolean logicDeleted;
+  private EntityInfo entityInfo;
 
   public static Executor executor;
 
@@ -92,15 +88,12 @@ public final class Update {
   }
 
   private <T extends AbstractEntityPoJo> Update from(final Class<T> clazz, final String tableName) {
-    final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
-    logicDeleteField = configuration.getLogicDeleteField();
-    logicDeleted = configuration.isLogicDeleted();
     if (Objects.isNull(clazz) && StringUtils.isEmpty(tableName)) {
       throw CommonException.of("[clazz,tableName]不能同时为空");
     }
-    this.tableName = StringUtils.nonEmpty(tableName) ? tableName : EntityUtils.getTableName(clazz);
-    this.condition = QueryColumnFactory.getInstance(clazz).getCondition();
+    this.condition = QueryColumnFactory.getInstance(clazz, tableName, null).getCondition();
     this.clazz = clazz;
+    this.entityInfo = condition.getEntityInfo();
     return this;
   }
 
@@ -154,7 +147,8 @@ public final class Update {
               getArgsValueSetConsumer(index, field, BeanUtils.invoke(t, field, null), list);
             });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
-    final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
+    final String execSql =
+        String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
     KeyHolder keyHolder = new GeneratedKeyHolder();
     final int update =
         executor.update(
@@ -206,7 +200,8 @@ public final class Update {
           valueMarks.append(valueMarks.length() > 0 ? ",?" : "?");
         });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
-    final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
+    final String execSql =
+        String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
     int createRow = 0;
     final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
     int total = ts.size();
@@ -269,7 +264,7 @@ public final class Update {
     }
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
-        String.format(sql, tableName, setBuilder.toString(), condition.getString());
+        String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
     return executor.update(
         clazz,
         execSql,
@@ -312,7 +307,7 @@ public final class Update {
     where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
-        String.format(sql, tableName, setBuilder.toString(), condition.getString());
+        String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
     int updateRow = 0;
     final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
     int total = ts.size();
@@ -379,9 +374,9 @@ public final class Update {
     final String updateString =
         String.format(
             sql,
-            tableName,
-            StringUtils.camelToUnderline(logicDeleteField),
-            logicDeleted,
+            entityInfo.getName(),
+            StringUtils.camelToUnderline(entityInfo.getLogicDeleteColumn()),
+            entityInfo.isLogicDeleted(),
             new Date(),
             condition.getString());
     return executor.update(
