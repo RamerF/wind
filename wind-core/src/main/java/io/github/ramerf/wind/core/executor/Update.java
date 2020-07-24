@@ -375,7 +375,7 @@ public final class Update {
         String.format(
             sql,
             entityInfo.getName(),
-            StringUtils.camelToUnderline(entityInfo.getLogicDeleteColumn()),
+            entityInfo.getLogicDeleteColumn(),
             entityInfo.isLogicDeleted(),
             new Date(),
             condition.getString());
