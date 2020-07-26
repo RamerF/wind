@@ -14,17 +14,9 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 @Data
 @ConfigurationProperties("wind")
 public class WindConfiguration {
-  /** 是否开启逻辑删除. */
-  private boolean enableLogicDelete = true;
 
-  /** 逻辑删除字段. */
-  private String logicDeleteColumn = "is_delete";
-
-  /** 逻辑未删除值. */
-  private boolean logicNotDelete = false;
-
-  /** 逻辑已删除值. */
-  private boolean logicDeleted = true;
+  /** 逻辑删除配置. */
+  @NestedConfigurationProperty private LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
 
   /**
    * entity所在包路径,多个以,分割.<br>

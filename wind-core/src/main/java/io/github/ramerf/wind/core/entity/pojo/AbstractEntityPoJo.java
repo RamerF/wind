@@ -23,6 +23,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 @EqualsAndHashCode
 @MappedSuperclass
 public class AbstractEntityPoJo implements AbstractEntity {
+  public static final String LOGIC_DELETE_FIELD_NAME = "isDelete";
+  public static final String LOGIC_DELETE_COLUMN_NAME = "is_delete";
+  public static final String CREATE_TIME_FIELD_NAME = "createTime";
+  public static final String UPDATE_TIME_FIELD_NAME = "updateTime";
+
   // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
 
   @Id
@@ -42,7 +47,7 @@ public class AbstractEntityPoJo implements AbstractEntity {
   @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
   private Date updateTime;
 
-  /** 所在数据库名称,不能赋值,因为该值始终为数据库默认值:DATABASE(). */
+  /** 所在数据库名称,不能赋值,因为该值始终为数据库默认值:DATABASE(),暂时没用该字段. */
   @Setter(AccessLevel.NONE)
   private static transient String databaseName;
 }

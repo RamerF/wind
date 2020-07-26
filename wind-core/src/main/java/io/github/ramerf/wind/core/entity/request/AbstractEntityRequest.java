@@ -43,8 +43,8 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
 
   /**
    * 获取Request实体对应的的PoJo对象. <br>
-   * 注意: 使用该方法,需要Request继承的AbstractEntity具有PoJo泛型.<br>
-   * 例如: public class FooRequest extends AbstractEntityRequest&lt;Foo&gt;
+   * 注意: 使用该方法,需要<code>request</code>对象指定<code>pojo</code>泛型.<br>
+   * 例如: public class FooRequest extends AbstractEntityRequest&lt;FooPoJo&gt;
    *
    * @return the t
    */
@@ -54,8 +54,8 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
 
   /**
    * 获取Request实体对应的的PoJo对象. <br>
-   * 注意: 使用该方法,需要Request继承的AbstractEntity具有PoJo泛型.<br>
-   * 例如: public class FooRequest extends AbstractEntityRequest&lt;Foo&gt;
+   * 注意: 使用该方法,需要<code>request</code>对象指定<code>pojo</code>泛型.<br>
+   * 例如: public class FooRequest extends AbstractEntityRequest&lt;FooPoJo&gt;
    *
    * @return the t
    */
@@ -69,5 +69,18 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
     BeanUtils.copyProperties(this, poJo);
     Optional.ofNullable(id).ifPresent(o -> poJo.setId(id));
     return poJo;
+  }
+
+  /**
+   * 获取PoJo的class对象.<br>
+   * 注意: 使用该方法,需要<code>request</code>对象指定<code>pojo</code>泛型.<br>
+   */
+  public Class<? extends AbstractEntityPoJo> getPoJoClass() {
+    final Type genericSuperclass = this.getClass().getGenericSuperclass();
+    if (!(genericSuperclass instanceof ParameterizedType)) {
+      throw CommonException.of("无法获取pojo对象,请修改request类,添加pojo泛型");
+    }
+    return io.github.ramerf.wind.core.util.BeanUtils.getClazz(
+        ((ParameterizedType) genericSuperclass).getActualTypeArguments()[0].getTypeName());
   }
 }

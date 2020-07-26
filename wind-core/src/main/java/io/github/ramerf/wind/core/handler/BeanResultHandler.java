@@ -62,7 +62,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       final Object finalValue =
           TypeHandlerHelper.toJavaValue(
               ValueType.of(value, method.getGenericParameterTypes()[0], field), parameterType);
-      BeanUtils.invoke(obj, method, finalValue)
+      BeanUtils.getValue(obj, method, finalValue)
           .ifPresent(
               exception ->
                   log.warn(

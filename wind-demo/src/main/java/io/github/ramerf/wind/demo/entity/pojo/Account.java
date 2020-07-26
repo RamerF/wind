@@ -1,7 +1,8 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
-import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import java.util.Date;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -9,11 +10,7 @@ import lombok.experimental.SuperBuilder;
  * @author Tang Xiaofeng
  * @since 2020/07/24
  */
-@TableInfo(
-    value = "account",
-    logicDeleteColumn = "has_deleted",
-    logicDeleted = false,
-    logicNotDelete = true)
+@TableInfo(name = "account", logicDelete = @LogicDelete(column = "has_deleted"))
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -26,6 +23,12 @@ public class Account extends AbstractEntityPoJo {
 
   private String tel;
 
-  /** 使用自定义逻辑删除字段. */
+  /** 自定义逻辑删除字段. */
   private Boolean hasDeleted;
+
+  /** 自定义创建时间. */
+  @CreateTimestamp private long createDate;
+
+  /** 自定义更新时间. */
+  @UpdateTimestamp private Date updateDate;
 }

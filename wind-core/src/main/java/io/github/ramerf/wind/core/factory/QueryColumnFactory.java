@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.factory;
 
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.QueryEntityMetaData;
 import io.github.ramerf.wind.core.config.AppContextInject;
@@ -51,7 +52,7 @@ public class QueryColumnFactory {
         tableName = entityInfo.getName();
       }
       // 如果使用了@TableInfo注解,即使只指定了name,其它实体相关的全局配置也会失效,好坑😓
-      if (entityInfo.getEnableLogicDelete() != null) {
+      if (clazz.getAnnotation(TableInfo.class) != null) {
         queryColumn.setEntityInfo(entityInfo);
       }
     }

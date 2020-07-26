@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
@@ -9,7 +10,6 @@ import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -494,17 +494,17 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   private synchronized void appendLogicNotDelete() {
-    final EntityInfo entityInfo = getEntityInfo();
-    if (entityInfo.getEnableLogicDelete()) {
+    final LogicDeleteProp logicDeleteProp = getEntityInfo().getLogicDeleteProp();
+    if (logicDeleteProp.isEnable()) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
-              .concat(entityInfo.getLogicDeleteColumn())
+              .concat(logicDeleteProp.getColumn())
               .concat(MatchPattern.EQUAL.operator)
-              .concat(toPreFormatSqlVal(entityInfo.isLogicNotDelete())));
+              .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
       final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setIsDelete;
-      valueTypes.add(ValueType.of(entityInfo.isLogicNotDelete(), beanFunction));
+      valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), beanFunction));
     }
   }
 

@@ -328,7 +328,7 @@ public final class BeanUtils {
    * @param value the value
    * @return the optional
    */
-  public static Optional<Exception> invoke(Object obj, Method method, Object... value) {
+  public static Optional<Exception> getValue(Object obj, Method method, Object... value) {
     try {
       if (!method.isAccessible()) {
         method.setAccessible(true);
@@ -353,7 +353,8 @@ public final class BeanUtils {
    * @param consumer 异常时的处理,默认返回null
    * @return the optional
    */
-  public static Object invoke(Object obj, Field field, Function<Exception, Object> consumer) {
+  public static Object getValue(
+      final Object obj, final Field field, final Function<Exception, Object> consumer) {
     try {
       if (!field.isAccessible()) {
         field.setAccessible(true);
@@ -361,6 +362,38 @@ public final class BeanUtils {
       return field.get(obj);
     } catch (Exception e) {
       return Optional.ofNullable(consumer).map(ex -> ex.apply(e)).orElse(null);
+    }
+  }
+
+  /**
+   * 对于 {@link Field#set(Object, Object)}}<br>
+   * 用法:
+   *
+   * <pre>
+   *  BeanUtils.setValue(obj, field, value, e -&gt; throw e);
+   * </pre>
+   *
+   * @param obj the obj
+   * @param field the field
+   * @param value 参数
+   * @param consumer 异常时的处理,默认返回null
+   */
+  public static void setValue(
+      final Object obj,
+      final Field field,
+      final Object value,
+      Function<Exception, Object> consumer) {
+    try {
+      if (!field.isAccessible()) {
+        field.setAccessible(true);
+      }
+      field.set(obj, value);
+    } catch (Exception e) {
+      if (consumer != null) {
+        consumer.apply(e);
+      } else {
+        throw CommonException.of(e);
+      }
     }
   }
 
@@ -392,9 +425,9 @@ public final class BeanUtils {
     BeanUtils.scanClasses("io.github.ramerf", QueryEntity.class)
         .forEach(o -> log.info("main:[{}]", o));
 
-    invoke(null, String.class.getMethods()[0], "string");
+    getValue(null, String.class.getMethods()[0], "string");
 
-    invoke(null, String.class.getMethods()[0], "string")
+    getValue(null, String.class.getMethods()[0], "string")
         .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
     log.info("main:[{}]", retrievePrivateFields(Ts.class, new ArrayList<>()));
     log.info("main:[{}]", getDeclaredField(Ts.class, "name"));

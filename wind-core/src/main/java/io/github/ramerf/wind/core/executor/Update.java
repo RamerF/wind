@@ -124,13 +124,8 @@ public final class Update {
   public final <T extends AbstractEntityPoJo> void create(
       @Nonnull final T t, final IFunction<T, ?>... includeNullProps) throws DataAccessException {
     t.setId(AppContextInject.getBean(IdGenerator.class).nextId(t));
-    final Date now = new Date();
-    if (Objects.isNull(t.getCreateTime())) {
-      t.setCreateTime(now);
-    }
-    if (Objects.isNull(t.getUpdateTime())) {
-      t.setUpdateTime(now);
-    }
+    setCurrentTime(t, entityInfo.getCreateTimeField());
+    setCurrentTime(t, entityInfo.getUpdateTimeFiled());
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -144,7 +139,7 @@ public final class Update {
               final String column = EntityUtils.fieldToColumn(field);
               columns.append(columns.length() > 0 ? ",".concat(column) : column);
               valueMarks.append(valueMarks.length() > 0 ? ",?" : "?");
-              getArgsValueSetConsumer(index, field, BeanUtils.invoke(t, field, null), list);
+              getArgsValueSetConsumer(index, field, BeanUtils.getValue(t, field, null), list);
             });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql =
@@ -165,6 +160,21 @@ public final class Update {
     }
     if (update != 1 || Objects.isNull(t.getId())) {
       throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);
+    }
+  }
+
+  private <T extends AbstractEntityPoJo> void setCurrentTime(
+      @Nonnull final T t, final Field field) {
+    final Object val = BeanUtils.getValue(t, field, null);
+    // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
+    if (val == null || (val instanceof Long && (Long) val < 1)) {
+      final Object value;
+      if (Date.class.isAssignableFrom(field.getType())) {
+        value = new Date();
+      } else {
+        value = System.currentTimeMillis();
+      }
+      BeanUtils.setValue(t, field, value, null);
     }
   }
 
@@ -219,7 +229,8 @@ public final class Update {
                   final T obj = execList.get(i);
                   obj.setCreateTime(new Date());
                   savingFields.forEach(
-                      field -> setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
+                      field ->
+                          setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
                 }
 
                 @Override
@@ -244,7 +255,7 @@ public final class Update {
   @SuppressWarnings("DuplicatedCode")
   public final <T extends AbstractEntityPoJo> int update(
       @Nonnull final T t, final IFunction<T, ?>... includeNullProps) {
-    t.setUpdateTime(new Date());
+    setCurrentTime(t, entityInfo.getUpdateTimeFiled());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
@@ -253,7 +264,7 @@ public final class Update {
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
               setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
-              getArgsValueSetConsumer(index, field, BeanUtils.invoke(t, field, null), list);
+              getArgsValueSetConsumer(index, field, BeanUtils.getValue(t, field, null), list);
             });
     // 没有条件时,默认根据id更新
     if (condition.isEmpty()) {
@@ -324,9 +335,10 @@ public final class Update {
                 public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                   final AtomicInteger index = new AtomicInteger(1);
                   final T obj = execList.get(i);
-                  obj.setUpdateTime(new Date());
+                  setCurrentTime(t, entityInfo.getUpdateTimeFiled());
                   savingFields.forEach(
-                      field -> setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
+                      field ->
+                          setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
                   Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
                       .eq(T::setId, obj.getId())
                       .getValues(index)
@@ -370,14 +382,18 @@ public final class Update {
     if (condition.isEmpty()) {
       throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
     }
-    final String sql = "update %s set %s=%s,update_time='%s' where %s";
+    final String sql = "update %s set %s=%s,%s='%s' where %s";
+    final Field updateTimeFiled = entityInfo.getUpdateTimeFiled();
     final String updateString =
         String.format(
             sql,
             entityInfo.getName(),
-            entityInfo.getLogicDeleteColumn(),
-            entityInfo.isLogicDeleted(),
-            new Date(),
+            entityInfo.getLogicDeleteProp().getColumn(),
+            entityInfo.getLogicDeleteProp().isDeleted(),
+            entityInfo.getFieldColumnMap().get(updateTimeFiled.getName()),
+            Date.class.isAssignableFrom(updateTimeFiled.getType())
+                ? new Date()
+                : System.currentTimeMillis(),
             condition.getString());
     return executor.update(
         clazz,

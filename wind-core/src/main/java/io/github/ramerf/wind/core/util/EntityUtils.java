@@ -1,15 +1,20 @@
 package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.InterService;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -18,6 +23,7 @@ import org.springframework.aop.framework.AdvisedSupport;
 import org.springframework.aop.framework.AopProxy;
 import org.springframework.aop.support.AopUtils;
 
+import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.*;
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static java.util.stream.Collectors.toList;
 
@@ -68,12 +74,49 @@ public final class EntityUtils {
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .filter(field -> Objects.nonNull(BeanUtils.invoke(t, field, null)))
+            .filter(field -> Objects.nonNull(BeanUtils.getValue(t, field, null)))
             .collect(toList());
     if (log.isTraceEnabled()) {
       log.debug("getNonNullColumnFields:[{}]", fields);
     }
-    return fields;
+    return filterCustomerField(t, fields);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> List<Field> filterCustomerField(@Nonnull final T t, final List<Field> fields) {
+    final Class<? extends AbstractEntityPoJo> clazz;
+    if (t instanceof AbstractEntityRequest) {
+      clazz = ((AbstractEntityRequest<? extends AbstractEntityPoJo>) t).getPoJoClass();
+    } else {
+      clazz = (Class<? extends AbstractEntityPoJo>) t.getClass();
+    }
+    final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
+    // 剔除掉自定义字段
+    Stream<Field> stream = fields.stream();
+    // 创建时间
+    if (entityInfo.getCreateTimeField() != null) {
+      // 可能覆盖父类的字段
+      stream =
+          stream.filter(
+              field ->
+                  !CREATE_TIME_FIELD_NAME.equals(field.getName())
+                      || field.equals(entityInfo.getCreateTimeField()));
+    }
+    // 更新时间
+    if (entityInfo.getUpdateTimeFiled() != null) {
+      stream =
+          stream.filter(
+              field ->
+                  !UPDATE_TIME_FIELD_NAME.equals(field.getName())
+                      || field.equals(entityInfo.getUpdateTimeFiled()));
+    }
+    // 逻辑删除
+    final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
+    if (!logicDeleteProp.isEnable()
+        || !LOGIC_DELETE_FIELD_NAME.equals(logicDeleteProp.getColumn())) {
+      stream = stream.filter(field -> !LOGIC_DELETE_FIELD_NAME.equals(field.getName()));
+    }
+    return stream.collect(toList());
   }
 
   /**
@@ -89,7 +132,7 @@ public final class EntityUtils {
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .filter(field -> Objects.isNull(BeanUtils.invoke(t, field, ex -> -1)))
+            .filter(field -> Objects.isNull(BeanUtils.getValue(t, field, ex -> -1)))
             .collect(toList());
     log.debug("getNullColumnFields:[{}]", fields);
     return fields;
@@ -174,8 +217,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 表名: {@link TableInfo#name()} &gt; {@link TableInfo#value()} &gt; {@link Entity#name()} &gt;
-   * 类名(驼封转下划线)
+   * 表名: {@link TableInfo#name()} &gt; {@link Entity#name()} &gt; 类名(驼封转下划线)
    *
    * @param <T> the type t
    * @param clazz the clazz
@@ -186,9 +228,6 @@ public final class EntityUtils {
     if (tableInfo != null) {
       if (StringUtils.nonEmpty(tableInfo.name())) {
         return tableInfo.name();
-      }
-      if (StringUtils.nonEmpty(tableInfo.value())) {
-        return tableInfo.value();
       }
     }
 

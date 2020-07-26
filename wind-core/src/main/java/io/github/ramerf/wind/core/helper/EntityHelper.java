@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.core.helper;
 
+import io.github.ramerf.wind.core.annotation.CreateTimestamp;
+import io.github.ramerf.wind.core.annotation.UpdateTimestamp;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.BeanFunction;
@@ -13,6 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
 
+import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.CREATE_TIME_FIELD_NAME;
+import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.UPDATE_TIME_FIELD_NAME;
+
 /**
  * The type Entity helper.
  *
@@ -21,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class EntityHelper {
-  /** 类信息:{Class:EntityInfo} */
+  /** 实体信息:{类全路径:EntityInfo} */
   private static final Map<String, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
 
   /**
@@ -32,17 +37,36 @@ public class EntityHelper {
    */
   public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
     Map<String, String> map = new HashMap<>(10);
+    // 0:创建时间 1:更新时间
+    final Field[] timeField = new Field[2];
+    // 默认时间字段
+    final Field[] defaultTimeField = new Field[2];
     EntityUtils.getAllColumnFields(clazz)
         .forEach(
             field -> {
               final Column columnAnnotation = field.getAnnotation(Column.class);
+              if (field.getAnnotation(CreateTimestamp.class) != null) {
+                timeField[0] = field;
+              }
+              if (field.getAnnotation(UpdateTimestamp.class) != null) {
+                timeField[1] = field;
+              }
+              if (field.getName().equals(CREATE_TIME_FIELD_NAME)) {
+                defaultTimeField[0] = field;
+              }
+              if (field.getName().equals(UPDATE_TIME_FIELD_NAME)) {
+                defaultTimeField[1] = field;
+              }
               final String column =
                   columnAnnotation != null && StringUtils.nonEmpty(columnAnnotation.name())
                       ? columnAnnotation.name()
                       : StringUtils.camelToUnderline(field.getName());
               map.put(field.getName(), column);
             });
-    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), EntityInfo.of(clazz, map));
+    final EntityInfo entityInfo = EntityInfo.of(clazz, map);
+    entityInfo.setCreateTimeField(timeField[0] == null ? defaultTimeField[0] : timeField[0]);
+    entityInfo.setUpdateTimeFiled(timeField[1] == null ? defaultTimeField[1] : timeField[1]);
+    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), entityInfo);
   }
 
   /**
@@ -55,18 +79,9 @@ public class EntityHelper {
     if (log.isTraceEnabled()) {
       log.trace("getColumn:[{}]", CLAZZ_ENTITY_MAP);
     }
-    final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(function.getImplClassFullPath());
-    final Map<String, String> fieldColumnMap;
-    if (entityInfo == null
-        || CollectionUtils.isEmpty(fieldColumnMap = entityInfo.getFieldColumnMap())) {
-      // 处理实体信息未自动扫描到的情况
-      initEntity(BeanUtils.getClazz(function.getImplClassFullPath()));
-      return CLAZZ_ENTITY_MAP
-          .get(function.getImplClassFullPath())
-          .getFieldColumnMap()
-          .get(function.getField().getName());
-    }
-    return fieldColumnMap.get(function.getField().getName());
+    return initEntityIfNeeded(function.getImplClassFullPath())
+        .getFieldColumnMap()
+        .get(function.getField().getName());
   }
 
   /**
@@ -101,7 +116,17 @@ public class EntityHelper {
   }
 
   public static <T extends AbstractEntity> EntityInfo getEntityInfo(final Class<T> clazz) {
-    return CLAZZ_ENTITY_MAP.get(clazz.getTypeName());
+    return initEntityIfNeeded(clazz.getTypeName());
+  }
+
+  private static EntityInfo initEntityIfNeeded(final String fullPath) {
+    synchronized (EntityInfo.class) {
+      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(fullPath);
+      if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {
+        initEntity(BeanUtils.getClazz(fullPath));
+      }
+    }
+    return CLAZZ_ENTITY_MAP.get(fullPath);
   }
 
   /**

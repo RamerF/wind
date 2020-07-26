@@ -131,11 +131,8 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * 条件删除.
    *
    * @param consumer the consumer.<br>
-   *     示例:
-   *     <pre>
-   *      condition -&gt; condition.eq(AbstractEntityPoJo::setId)
-   *     </pre>
-   *
+   *     示例:<br>
+   *     condition -&gt; condition.eq(AbstractEntityPoJo::setId)<br>
    * @return 删除记录数 long
    * @throws RuntimeException the runtime exception
    * @see DataAccessException

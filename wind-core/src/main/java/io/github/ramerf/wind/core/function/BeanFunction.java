@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public interface BeanFunction extends Serializable {
   Logger log = LoggerFactory.getLogger(BeanFunction.class);
 
-  static final Map<BeanFunction, WeakReference<Field>> LAMBDA_FIELD_MAP = new ConcurrentHashMap<>();
+  Map<BeanFunction, WeakReference<Field>> LAMBDA_FIELD_MAP = new ConcurrentHashMap<>();
 
   /**
    * 获取实现类全路径.
