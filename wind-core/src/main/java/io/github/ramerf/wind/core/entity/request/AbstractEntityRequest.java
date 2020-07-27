@@ -39,7 +39,7 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    * @param domain Domain实体 {@link AbstractEntityPoJo}.
    */
   @SuppressWarnings({"unused"})
-  public final void redundantValue(T domain) {}
+  public void redundantValue(T domain) {}
 
   /**
    * 获取Request实体对应的的PoJo对象. <br>
@@ -48,7 +48,7 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    *
    * @return the t
    */
-  public T poJo() {
+  public final T poJo() {
     return poJo(null);
   }
 
@@ -59,7 +59,7 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    *
    * @return the t
    */
-  public T poJo(final Long id) {
+  public final T poJo(final Long id) {
     final Type genericSuperclass = this.getClass().getGenericSuperclass();
     if (!(genericSuperclass instanceof ParameterizedType)) {
       throw CommonException.of("无法获取pojo对象,请修改request类,添加pojo泛型");
@@ -75,7 +75,7 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    * 获取PoJo的class对象.<br>
    * 注意: 使用该方法,需要<code>request</code>对象指定<code>pojo</code>泛型.<br>
    */
-  public Class<? extends AbstractEntityPoJo> getPoJoClass() {
+  public final Class<? extends AbstractEntityPoJo> getPoJoClass() {
     final Type genericSuperclass = this.getClass().getGenericSuperclass();
     if (!(genericSuperclass instanceof ParameterizedType)) {
       throw CommonException.of("无法获取pojo对象,请修改request类,添加pojo泛型");
