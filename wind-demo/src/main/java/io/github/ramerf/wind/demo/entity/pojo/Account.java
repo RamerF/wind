@@ -2,6 +2,8 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.handler.TypeHandler;
+import io.github.ramerf.wind.core.handler.typehandler.LongTimestampTypeHandler;
 import java.util.Date;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -27,7 +29,9 @@ public class Account extends AbstractEntityPoJo {
   private Boolean hasDeleted;
 
   /** 自定义创建时间. */
-  @CreateTimestamp private long createDate;
+  @CreateTimestamp
+  @TypeHandler(LongTimestampTypeHandler.class)
+  private long createDate;
 
   /** 自定义更新时间. */
   @UpdateTimestamp private Date updateDate;
