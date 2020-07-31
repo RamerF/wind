@@ -382,6 +382,15 @@ public final class Update {
     if (condition.isEmpty()) {
       throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
     }
+    // 如果不支持逻辑删除
+    if (!entityInfo.getLogicDeleteProp().isEnable()) {
+      final String delSql = "delete from %s where %s";
+      return executor.update(
+          clazz,
+          String.format(delSql, entityInfo.getName(), condition.getString()),
+          ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
+    }
+    // 执行逻辑删除
     final String sql = "update %s set %s=%s,%s='%s' where %s";
     final Field updateTimeFiled = entityInfo.getUpdateTimeFiled();
     final String updateString =
