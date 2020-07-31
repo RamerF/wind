@@ -170,7 +170,7 @@ public final class Update {
     if (val == null || (val instanceof Long && (Long) val < 1)) {
       final Object value;
       if (Date.class.isAssignableFrom(field.getType())) {
-        value = new Date();
+        value = new Timestamp(System.currentTimeMillis());
       } else {
         value = System.currentTimeMillis();
       }
@@ -391,7 +391,7 @@ public final class Update {
           ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
     }
     // 执行逻辑删除
-    final String sql = "update %s set %s=%s,%s='%s' where %s";
+    final String sql = "update %s set %s=%s,%s=? where %s";
     final Field updateTimeFiled = entityInfo.getUpdateTimeFiled();
     final String updateString =
         String.format(
@@ -400,14 +400,18 @@ public final class Update {
             entityInfo.getLogicDeleteProp().getColumn(),
             entityInfo.getLogicDeleteProp().isDeleted(),
             entityInfo.getFieldColumnMap().get(updateTimeFiled.getName()),
-            Date.class.isAssignableFrom(updateTimeFiled.getType())
-                ? new Date()
-                : System.currentTimeMillis(),
             condition.getString());
     return executor.update(
         clazz,
         updateString,
-        ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
+        ps -> {
+          if (Date.class.isAssignableFrom(updateTimeFiled.getType())) {
+            ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+          } else {
+            ps.setLong(1, System.currentTimeMillis());
+          }
+          condition.getValues(new AtomicInteger(2)).forEach(val -> val.accept(ps));
+        });
   }
 
   /**

@@ -7,7 +7,7 @@ import java.util.*;
 import javax.annotation.Nonnull;
 
 /**
- * java:List&lt;Long&gt; &lt;-&gt; jdbc:Long[].
+ * {@literal java:List<Long> <=> jdbc:Long[]}.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4

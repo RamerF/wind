@@ -7,7 +7,7 @@ import java.util.*;
 import javax.annotation.Nonnull;
 
 /**
- * java:List&lt;String&gt; &lt;-&gt; jdbc:String[].
+ * {@literal java:List<String> <=> jdbc:String[]}.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4

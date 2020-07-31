@@ -8,7 +8,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
- * java:List&lt;String&gt; &lt;-&gt; jdbc:String[].
+ * {@literal java:Date <=> jdbc:Timestamp}.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4
@@ -17,7 +17,7 @@ public class TimestampTypeHandler implements ITypeHandler<Date, Timestamp> {
   @Override
   public Object convertToJdbc(
       Date javaVal, final Field field, @Nonnull final PreparedStatement ps) {
-    return new java.sql.Date(javaVal.getTime());
+    return new java.sql.Timestamp(javaVal.getTime());
   }
 
   @Override
