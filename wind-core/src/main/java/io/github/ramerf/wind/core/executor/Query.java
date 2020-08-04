@@ -371,7 +371,7 @@ public class Query {
             : "SELECT COUNT(1) FROM %s";
     return executor.fetchCount(
         SqlParam.builder()
-            .sql(queryString)
+            .sql(String.format(sql, countString))
             .aggregateFunction(SqlAggregateFunction.COUNT)
             .conditions(conditions)
             .startIndex(new AtomicInteger(1))

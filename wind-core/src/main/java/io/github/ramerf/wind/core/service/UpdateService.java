@@ -72,8 +72,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    */
   default Optional<Integer> update(final T t, final IFunction<T, ?>... includeNullProps)
       throws RuntimeException {
-    final int affectRow = getUpdate().update(t, includeNullProps);
-    return affectRow == 1 ? Optional.empty() : Optional.of(affectRow);
+    return Optional.of(getUpdate().update(t, includeNullProps));
   }
 
   /**

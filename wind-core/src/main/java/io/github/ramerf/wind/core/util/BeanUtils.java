@@ -328,7 +328,7 @@ public final class BeanUtils {
    * @param value the value
    * @return the optional
    */
-  public static Optional<Exception> getValue(Object obj, Method method, Object... value) {
+  public static Optional<Exception> invoke(Object obj, Method method, Object... value) {
     try {
       if (!method.isAccessible()) {
         method.setAccessible(true);
@@ -425,9 +425,8 @@ public final class BeanUtils {
     BeanUtils.scanClasses("io.github.ramerf", QueryEntity.class)
         .forEach(o -> log.info("main:[{}]", o));
 
-    getValue(null, String.class.getMethods()[0], "string");
-
-    getValue(null, String.class.getMethods()[0], "string")
+    invoke(null, String.class.getMethods()[0], "string");
+    invoke(null, String.class.getMethods()[0], "string")
         .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
     log.info("main:[{}]", retrievePrivateFields(Ts.class, new ArrayList<>()));
     log.info("main:[{}]", getDeclaredField(Ts.class, "name"));
