@@ -1,13 +1,11 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.entity.constant.Constant;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.*;
 import lombok.extern.slf4j.Slf4j;
-
-import static io.github.ramerf.wind.core.entity.constant.Constant.SEMICOLON;
 
 /**
  * The type String utils.
@@ -90,14 +88,13 @@ public class StringUtils {
   }
 
   /**
-   * 给定字符串以{@link Constant#SEMICOLON}分割,最后一个空白字符将会被删除.
+   * 给定字符串以逗号{@code ,}分割,最后一个空白字符将会被删除.
    *
-   * @param str the str
    * @return the list
    * @see StringUtils#splitToLong(String, String)
    */
   public static List<Long> splitToLong(final String str) {
-    return splitToLong(str, SEMICOLON);
+    return splitToLong(str, ",");
   }
 
   /**

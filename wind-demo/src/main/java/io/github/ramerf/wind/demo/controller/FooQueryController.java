@@ -3,9 +3,11 @@ package io.github.ramerf.wind.demo.controller;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.PrototypeBean;
 import io.github.ramerf.wind.core.entity.response.Rs;
+import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.pojo.OoO;
+import io.github.ramerf.wind.demo.entity.response.IdNameResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.math.BigDecimal;
@@ -80,7 +82,28 @@ public class FooQueryController {
     condition.eq(Foo::setId, 1L);
     // 执行连表: foo.id=o_o.id
     condition.eq(Foo::getId, queryColumn2, OoO::getId);
-    return Rs.ok(prototypeBean.query().select(queryColumn).where(condition).fetchAll(Foo.class));
+    return Rs.ok(
+        prototypeBean
+            .query()
+            .select(queryColumn)
+            .where(condition, queryColumn2.getCondition())
+            .fetchAll(Foo.class));
+  }
+
+  @GetMapping(value = "/diy", params = "type=2")
+  @ApiOperation("使用Query,查询任意表)")
+  public ResponseEntity<Rs<Object>> query4() {
+    // 获取查询列和查询条件对象
+    final QueryColumn<IdNameResponse> queryColumn =
+        QueryColumnFactory.getInstance(IdNameResponse.class, "foo", "");
+    final Condition<IdNameResponse> condition = queryColumn.getCondition();
+    final Query query = prototypeBean.query();
+    final List<IdNameResponse> list =
+        query
+            .select(queryColumn.col(IdNameResponse::getId).col(IdNameResponse::getName))
+            .where(condition)
+            .fetchAll(IdNameResponse.class);
+    return Rs.ok(list);
   }
 
   @Data

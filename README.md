@@ -205,7 +205,7 @@ redisCache.clear(Foo.class);
 ```yaml
 wind:
   logic-delete-prop:
-      # 是否启用逻辑删除,可以在类上使用@TableInfo的enableLogicDelete属性覆盖,添加@TableInfo注解会使该配置失效
+      # 是否启用逻辑删除,可以在类上使用@TableInfo(logicDelete = @LogicDelete(enable = true))属性覆盖,添加@TableInfo注解会使该配置失效
       enable: false
       # 逻辑删除字段名,添加@TableInfo注解会使该配置失效
       column: isDelete

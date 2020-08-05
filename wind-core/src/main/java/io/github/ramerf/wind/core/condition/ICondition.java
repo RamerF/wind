@@ -13,9 +13,11 @@ import javax.annotation.Nonnull;
 /**
  * The interface Condition.
  *
+ * <p>TODO: 如果要实现完整的连表查询,考虑在该类添加join方法
+ *
  * @param <T> the type parameter
  * @author Tang Xiaofeng
- * @since 20 -1-6
+ * @since 2020/1/6
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface ICondition<T extends AbstractEntity> extends Predicate<T> {

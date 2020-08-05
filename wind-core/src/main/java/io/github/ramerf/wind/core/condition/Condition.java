@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
@@ -490,7 +489,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
       appendLogicNotDelete();
       containLogicNotDelete = true;
     }
-    return String.join(Constant.DEFAULT_SPLIT_SPACE, conditionSql);
+    return String.join("", conditionSql);
   }
 
   private synchronized void appendLogicNotDelete() {

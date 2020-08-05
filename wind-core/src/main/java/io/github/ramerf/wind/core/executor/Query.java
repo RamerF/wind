@@ -4,7 +4,6 @@ import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
@@ -29,19 +28,18 @@ import static java.util.stream.Collectors.toCollection;
  * 通用查询操作对象.获取实例:<br>
  *
  * <pre>
- *     // 方式1:
+ *     // 方式1
  *     <code>@Resource private Provider&lt;Query&gt; queryProvider;</code>
- *     // 方式2:
+ *     // 方式2
  *     <code>@Resource private ObjectProvider&lt;Query&gt; queryProvider;</code>
  *     final Query query = queryProvider.get();
- *     // 方式3:
+ *     // 方式3
  *     <code>@Resource private PrototypeBean prototypeBean;</code>
  *     final Query query = prototypeBean.query();
  *   </pre>
  *
  * 构建 SQL.所有的条件字符串构造,需要改为对象<br>
  * 如: OrderByClause... <br>
- * TODO: 查询缓存
  *
  * <p>下面是新的实现思路 <br>
  * select {@link SqlFunction} <br>
@@ -50,6 +48,8 @@ import static java.util.stream.Collectors.toCollection;
  * {@link SqlFunction}
  *
  * <p>当{@link QueryAlia#getSqlFunction()}为null时,退化为普通条件,否则就是函数
+ *
+ * <p>TODO: [延后] 完整的连表查询需要{@link ICondition}支持
  *
  * @author Tang Xiaofeng
  * @since 2019 /12/28
@@ -62,9 +62,9 @@ public class Query {
    * <pre>
    * TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
    * 思路: 构造OrderByClause,使用sql语法:
-   * 1. orderby id <> ?
-   * 2. orderby id not in (?,?) 特性
-   * 3. orderby case when id=? then min_number else max_number end
+   * 1. orderBy id <> ?
+   * 2. orderBy id not in (?,?) 特性
+   * 3. orderBy case when id=? then min_number else max_number end
    * </pre>
    */
   private List<QueryColumn<?>> queryColumns;
@@ -94,12 +94,17 @@ public class Query {
    * @param queryColumns the query columns
    * @return the query
    */
-  public Query select(final QueryColumn<?>... queryColumns) {
+  public Query select(@Nonnull final QueryColumn<?>... queryColumns) {
     this.queryColumns = new LinkedList<>(Arrays.asList(queryColumns));
     this.queryString =
-        this.queryColumns.stream()
-            .map(QueryColumn::getString)
-            .collect(Collectors.joining(Constant.SEMICOLON));
+        this.queryColumns.stream().map(QueryColumn::getString).collect(Collectors.joining(","));
+    // 单表查询时,不包含表别名
+    if (queryColumns.length == 1) {
+      this.queryString =
+          Arrays.stream(queryString.split(","))
+              .map(col -> col.substring(col.lastIndexOf(" ") + 1))
+              .collect(Collectors.joining(","));
+    }
     return this;
   }
 
@@ -120,6 +125,7 @@ public class Query {
    * @param conditions the conditions
    * @return the query
    */
+  @SuppressWarnings("DuplicatedCode")
   public Query where(final ICondition<?>... conditions) {
     this.conditions = new LinkedList<>(Arrays.asList(conditions));
     String conditionString =
@@ -131,6 +137,7 @@ public class Query {
       conditionString =
           conditionString.substring(0, conditionString.length() - AND.operator().length());
     }
+    // 连表查询时,要是queryColumns和conditions都只指定了一个就洗白了
     this.conditionString =
         this.conditions.stream()
             .map(o -> o.getQueryEntityMetaData().getFromTable())
@@ -156,7 +163,9 @@ public class Query {
    * @return the query
    * @see Condition
    */
-  public Query where(final Consumer<Condition<?>>... consumers) {
+  @SafeVarargs
+  @SuppressWarnings("DuplicatedCode")
+  public final Query where(final Consumer<Condition<?>>... consumers) {
     this.conditions =
         consumers.length > 0
             ? IntStream.range(0, consumers.length)
@@ -203,7 +212,7 @@ public class Query {
    * @param groupByClauses the group by clauses
    * @return the query
    */
-  public Query groupBy(@Nonnull final GroupByClause... groupByClauses) {
+  public Query groupBy(@Nonnull final GroupByClause<?>... groupByClauses) {
     afterWhereString
         .append(GROUP_BY)
         .append(
@@ -269,18 +278,15 @@ public class Query {
    * @param pageable the pageable
    * @return the list
    */
+  @SuppressWarnings("DuplicatedCode")
   public <R> List<R> fetchAll(final Class<R> clazz, final PageRequest pageable) {
     doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
     // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
     orderByString =
         pageable.getSort().stream()
-            .map(
-                s ->
-                    s.getProperty()
-                        .concat(Constant.DEFAULT_SPLIT_SPACE)
-                        .concat(s.getDirection().name()))
-            .collect(Collectors.joining(Constant.SEMICOLON));
+            .map(s -> s.getProperty().concat(" ").concat(s.getDirection().name()))
+            .collect(Collectors.joining(","));
     if (StringUtils.nonEmpty(orderByString)) {
       conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
     }
@@ -314,6 +320,7 @@ public class Query {
    * @param pageable the pageable
    * @return the page
    */
+  @SuppressWarnings("DuplicatedCode")
   public <R> Page<R> fetchPage(final Class<R> clazz, final PageRequest pageable) {
     doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
 
@@ -321,12 +328,8 @@ public class Query {
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
     orderByString =
         pageable.getSort().stream()
-            .map(
-                s ->
-                    s.getProperty()
-                        .concat(Constant.DEFAULT_SPLIT_SPACE)
-                        .concat(s.getDirection().name()))
-            .collect(Collectors.joining(Constant.SEMICOLON));
+            .map(s -> s.getProperty().concat(" ").concat(s.getDirection().name()))
+            .collect(Collectors.joining(","));
     if (StringUtils.nonEmpty(orderByString)) {
       conditionString = conditionString.concat(ORDER_BY.operator()).concat(orderByString);
     }

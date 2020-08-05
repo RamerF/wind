@@ -14,7 +14,6 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
-import static io.github.ramerf.wind.core.entity.constant.Constant.SEMICOLON;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -181,7 +180,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
         ? getQueryEntityMetaData().getTableAlia().concat(DOT.operator()).concat(WILDCARD.operator())
         : getQueryEntityMetaData().queryAlias.stream()
             .map(QueryColumn::methodToColumnWithAlia)
-            .collect(joining(SEMICOLON));
+            .collect(joining(","));
   }
 
   /**
@@ -202,13 +201,11 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
     final String name = queryAlia.getColumnName();
     final String tableAlias = queryAlia.getTableAlia();
 
-    // 待测试
     final SqlFunction sqlFunction = queryAlia.getSqlFunction();
     final String queryName =
         Objects.isNull(sqlFunction)
             ? tableAlias.concat(DOT.operator()).concat(name)
             : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
-    // 待测试
     return queryName.concat(AS.operator()).concat(alia);
   }
 }

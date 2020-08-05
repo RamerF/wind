@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/controller")
+@RequestMapping("/foo")
 @SuppressWarnings("unchecked")
 @Api(tags = "controller层方法使用示例")
 @CrossOrigin(origins = "*", maxAge = 3600)

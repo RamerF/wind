@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
@@ -116,8 +117,8 @@ public class CommonBean {
    * @return the executor
    */
   @Bean
-  public Executor jdbcTemplateExecutor() {
-    return new JdbcTemplateExecutor();
+  public Executor jdbcTemplateExecutor(ObjectProvider<RedisCache> redisCache) {
+    return new JdbcTemplateExecutor(redisCache.getIfAvailable());
   }
 
   /**

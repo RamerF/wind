@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
 
@@ -115,7 +116,7 @@ public class EntityHelper {
     return typeName;
   }
 
-  public static <T extends AbstractEntity> EntityInfo getEntityInfo(final Class<T> clazz) {
+  public static <T extends AbstractEntity> EntityInfo getEntityInfo(@Nonnull final Class<T> clazz) {
     return initEntityIfNeeded(clazz.getTypeName());
   }
 

@@ -6,7 +6,6 @@ import io.github.ramerf.wind.core.condition.QueryEntityMetaData;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
@@ -60,8 +59,8 @@ public class QueryColumnFactory {
     tableAlia = StringUtils.isEmpty(tableAlia) ? tableName : tableAlia;
     queryEntityMetaData.setTableAlia(tableAlia);
     String fromTable = tableName;
-    if (StringUtils.nonEmpty(tableAlia)) {
-      fromTable = tableName.concat(Constant.DEFAULT_SPLIT_SPACE).concat(tableAlia);
+    if (StringUtils.nonEmpty(tableAlia) && !tableAlia.equals(tableName)) {
+      fromTable = tableName.concat(" ").concat(tableAlia);
     }
     queryEntityMetaData.setFromTable(fromTable);
     return queryColumn;

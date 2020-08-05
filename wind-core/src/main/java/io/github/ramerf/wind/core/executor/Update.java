@@ -11,6 +11,7 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.EntityInfo;
@@ -93,7 +94,12 @@ public final class Update {
     }
     this.condition = QueryColumnFactory.getInstance(clazz, tableName, null).getCondition();
     this.clazz = clazz;
-    this.entityInfo = condition.getEntityInfo();
+    if (clazz == null) {
+      this.entityInfo = EntityInfo.of(AppContextInject.getBean(WindConfiguration.class));
+      this.entityInfo.setName(tableName);
+    } else {
+      this.entityInfo = EntityHelper.getEntityInfo(clazz);
+    }
     return this;
   }
 
@@ -124,7 +130,7 @@ public final class Update {
   public final <T extends AbstractEntityPoJo> void create(
       @Nonnull final T t, final IFunction<T, ?>... includeNullProps) throws DataAccessException {
     t.setId(AppContextInject.getBean(IdGenerator.class).nextId(t));
-    setCurrentTime(t, entityInfo.getCreateTimeField());
+    setCurrentTime(t, entityInfo.getCreateTimeField(), false);
     setCurrentTime(t, entityInfo.getUpdateTimeFiled());
     // 插入列
     final StringBuilder columns = new StringBuilder();
@@ -165,6 +171,21 @@ public final class Update {
 
   private <T extends AbstractEntityPoJo> void setCurrentTime(
       @Nonnull final T t, final Field field) {
+    setCurrentTime(t, field, true);
+  }
+
+  private <T extends AbstractEntityPoJo> void setCurrentTime(
+      @Nonnull final T t, final Field field, final boolean isUpdateTime) {
+    // 如果是默认是时间字段
+    if (field == null) {
+      if (isUpdateTime) {
+        t.setUpdateTime(new Date());
+      } else {
+        t.setCreateTime(new Date());
+      }
+      return;
+    }
+
     final Object val = BeanUtils.getValue(t, field, null);
     // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
     if (val == null || (val instanceof Long && (Long) val < 1)) {

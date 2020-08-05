@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,9 +28,11 @@ import org.springframework.lang.Nullable;
 public class JdbcTemplateExecutor implements Executor {
   @Resource private JdbcTemplate jdbcTemplate;
 
-  @Autowired(required = false)
-  @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-  private RedisCache redisCache;
+  private final RedisCache redisCache;
+
+  public JdbcTemplateExecutor(RedisCache redisCache) {
+    this.redisCache = redisCache;
+  }
 
   @Override
   @SuppressWarnings("unchecked")
@@ -59,7 +60,8 @@ public class JdbcTemplateExecutor implements Executor {
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
           return resultHandler.handle(result.get(0));
-        });
+        },
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -84,7 +86,8 @@ public class JdbcTemplateExecutor implements Executor {
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
           return resultHandler.handle(list);
-        });
+        },
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -110,7 +113,8 @@ public class JdbcTemplateExecutor implements Executor {
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
           return resultHandler.handle(list);
-        });
+        },
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -144,7 +148,8 @@ public class JdbcTemplateExecutor implements Executor {
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
           return PageUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
-        });
+        },
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -163,7 +168,8 @@ public class JdbcTemplateExecutor implements Executor {
                     return rs.getLong(1);
                   }
                   return 0L;
-                }));
+                }),
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -171,13 +177,18 @@ public class JdbcTemplateExecutor implements Executor {
       @Nonnull final SqlParam sqlParam, final Object[] args, final Class<T> requiredType)
       throws DataAccessException {
     return cacheIfAbsent(
-        sqlParam, () -> jdbcTemplate.queryForObject(sqlParam.sql, args, requiredType));
+        sqlParam,
+        () -> jdbcTemplate.queryForObject(sqlParam.sql, args, requiredType),
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
   public List<Map<String, Object>> queryForList(
       @Nonnull final SqlParam sqlParam, final Object... args) throws DataAccessException {
-    return cacheIfAbsent(sqlParam, () -> jdbcTemplate.queryForList(sqlParam.sql, args));
+    return cacheIfAbsent(
+        sqlParam,
+        () -> jdbcTemplate.queryForList(sqlParam.sql, args),
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -222,12 +233,13 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> T cacheIfAbsent(@Nonnull final SqlParam sqlParam, Supplier<T> supplier) {
+  private <T> T cacheIfAbsent(
+      @Nonnull final SqlParam sqlParam, Supplier<T> supplier, final String methodName) {
     // 未开启缓存
-    if (Objects.isNull(redisCache)) {
+    if (Objects.isNull(redisCache) || sqlParam.clazz == null) {
       return supplier.get();
     }
-    final String key = redisCache.generateKey(sqlParam);
+    final String key = redisCache.generateKey(sqlParam, methodName);
     final Object exist = redisCache.get(key);
     if (redisCache.isKeyExist(key)) {
       if (log.isDebugEnabled()) {
