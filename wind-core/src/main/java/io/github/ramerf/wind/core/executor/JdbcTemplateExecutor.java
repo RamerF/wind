@@ -1,19 +1,25 @@
 package io.github.ramerf.wind.core.executor;
 
+import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.ramerf.wind.core.cache.RedisCache;
+import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.util.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.*;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.lang.Nullable;
@@ -147,7 +153,8 @@ public class JdbcTemplateExecutor implements Executor {
               BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
-          return PageUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
+          return PageUtils.toPage(
+              resultHandler.handle(list), total, currentPage, pageSize, pageable.getSort());
         },
         Thread.currentThread().getStackTrace()[1].getMethodName());
   }
@@ -240,12 +247,16 @@ public class JdbcTemplateExecutor implements Executor {
       return supplier.get();
     }
     final String key = redisCache.generateKey(sqlParam, methodName);
-    final Object exist = redisCache.get(key);
     if (redisCache.isKeyExist(key)) {
       if (log.isDebugEnabled()) {
         log.debug("cacheIfAbsent:Hit cache[{}]", key);
       }
-      return (T) exist;
+      final Object exist = redisCache.get(key);
+      if (exist instanceof RedisPageImpl) {
+        return (T) ((RedisPageImpl<?>) exist).getPage();
+      } else {
+        return (T) exist;
+      }
     }
     final T t = supplier.get();
     if (log.isDebugEnabled()) {
@@ -255,7 +266,16 @@ public class JdbcTemplateExecutor implements Executor {
     if (Objects.isNull(t)) {
       redisCache.put(key, null, 100, TimeUnit.MILLISECONDS);
     } else {
-      redisCache.put(key, t);
+      if (t instanceof Page) {
+        // redisCache.put(key, new RedisPageImpl<>((Page<?>) t));
+        try {
+          redisCache.put(key, new RedisPageImpl<>(new ObjectMapper().writeValueAsString(t)));
+        } catch (JsonProcessingException e) {
+          e.printStackTrace();
+        }
+      } else {
+        redisCache.put(key, t);
+      }
     }
     return t;
   }
@@ -267,5 +287,46 @@ public class JdbcTemplateExecutor implements Executor {
     }
     redisCache.clear(clazz);
     return supplier.get();
+  }
+
+  @Setter
+  @NoArgsConstructor
+  public static class RedisPageImpl<T> {
+    // private List<T> content;
+    // // private Pageable pageable;
+    // private List<SortColumn> sortColumns;
+    // private long total;
+    // private int page;
+    // private int size;
+    // private Sort sort;
+
+    // public RedisPageImpl(final Page<T> page) {
+    //   this.content = page.getContent();
+    //   // this.pageable = page.getPageable();
+    //   this.total = page.getTotalElements();
+    //   this.page = page.getPageable().getPageNumber();
+    //   this.size = page.getPageable().getPageSize();
+    //   this.sort = page.getPageable().getSort();
+    // }
+
+    private String json;
+
+    public RedisPageImpl(final String json) {
+      this.json = json;
+    }
+
+    @JsonIgnore
+    public Page<T> getPage() {
+      try {
+        return new ObjectMapper().readValue(json, Page.class);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      return null;
+    }
+    // @JsonIgnore
+    // public Page<T> getPage() {
+    //   return PageUtils.toPage(content, total, page, size, sort);
+    // }
   }
 }
