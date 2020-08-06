@@ -21,8 +21,25 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Tang Xiaofeng
  * @since 2020/1/5
  */
-@SuppressWarnings({"UnusedReturnValue", "unchecked"})
+@SuppressWarnings({"UnusedReturnValue"})
 public interface UpdateService<T extends AbstractEntityPoJo> extends InterService<T> {
+
+  /**
+   * 创建记录.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param t the {@link AbstractEntityPoJo}
+   * @return {@code id}
+   * @throws RuntimeException 创建失败时,抛异常
+   * @throws DataAccessException 如果执行失败
+   * @throws CommonException 创建记录条数不等于1
+   */
+  default long create(@Nonnull final T t) throws RuntimeException {
+    textFilter(t, t);
+    getUpdate().create(t);
+    return t.getId();
+  }
 
   /**
    * 创建记录.
@@ -36,11 +53,26 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果执行失败
    * @throws CommonException 创建记录条数不等于1
    */
-  default long create(@Nonnull final T t, final IFunction<T, ?>... includeNullProps)
+  default long createWithNull(@Nonnull final T t, List<IFunction<T, ?>> includeNullProps)
       throws RuntimeException {
     textFilter(t, t);
-    getUpdate().create(t, includeNullProps);
+    getUpdate().createWithNull(t, includeNullProps);
     return t.getId();
+  }
+
+  /**
+   * 批量创建.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param ts the ts
+   * @return 受影响的数据库记录数
+   * @throws RuntimeException the runtime exception
+   * @see DataAccessException
+   */
+  @Transactional(rollbackFor = Exception.class)
+  default int createBatch(final List<T> ts) throws RuntimeException {
+    return getUpdate().createBatch(ts);
   }
 
   /**
@@ -55,9 +87,22 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @see DataAccessException
    */
   @Transactional(rollbackFor = Exception.class)
-  default int createBatch(final List<T> ts, final IFunction<T, ?>... includeNullProps)
+  default int createBatchWithNull(final List<T> ts, List<IFunction<T, ?>> includeNullProps)
       throws RuntimeException {
-    return getUpdate().createBatch(ts, includeNullProps);
+    return getUpdate().createBatchWithNull(ts, includeNullProps);
+  }
+
+  /**
+   * 更新.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param t the t
+   * @return {@code Optional},只有当更新记录数不等于1时,包含入参为实际受影响的行数
+   * @throws RuntimeException the runtime exception
+   */
+  default Optional<Integer> update(final T t) throws RuntimeException {
+    return Optional.of(getUpdate().update(t));
   }
 
   /**
@@ -70,9 +115,24 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @return {@code Optional},只有当更新记录数不等于1时,包含入参为实际受影响的行数
    * @throws RuntimeException the runtime exception
    */
-  default Optional<Integer> update(final T t, final IFunction<T, ?>... includeNullProps)
+  default Optional<Integer> updateWithNull(final T t, List<IFunction<T, ?>> includeNullProps)
       throws RuntimeException {
-    return Optional.of(getUpdate().update(t, includeNullProps));
+    return Optional.of(getUpdate().updateWithNull(t, includeNullProps));
+  }
+
+  /**
+   * 条件更新.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param t the t
+   * @param consumer 更新条件
+   * @return the 更新记录数
+   * @throws RuntimeException the runtime exception
+   */
+  default int update(@Nonnull final Consumer<ICondition<T>> consumer, final T t)
+      throws RuntimeException {
+    return getUpdate().where(consumer).update(t);
   }
 
   /**
@@ -86,12 +146,26 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @return the 更新记录数
    * @throws RuntimeException the runtime exception
    */
-  default int update(
+  default int updateWithNull(
       @Nonnull final Consumer<ICondition<T>> consumer,
       final T t,
-      final IFunction<T, ?>... includeNullProps)
+      List<IFunction<T, ?>> includeNullProps)
       throws RuntimeException {
-    return getUpdate().where(consumer).update(t, includeNullProps);
+    return getUpdate().where(consumer).updateWithNull(t, includeNullProps);
+  }
+
+  /**
+   * 批量更新.<br>
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param ts 要更新的数据集
+   * @return {@code Optional},只有当{@code ts}不为空且删除记录数和{@code ts}的大小不同时,包含入参为实际受影响的行数
+   * @throws DataAccessException 如果更新失败
+   */
+  @Transactional(rollbackFor = Exception.class)
+  default Optional<Integer> updateBatch(final List<T> ts) throws DataAccessException {
+    return getUpdate().updateBatch(ts);
   }
 
   /**
@@ -105,9 +179,9 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果更新失败
    */
   @Transactional(rollbackFor = Exception.class)
-  default Optional<Integer> updateBatch(final List<T> ts, final IFunction<T, ?>... includeNullProps)
-      throws DataAccessException {
-    return getUpdate().updateBatch(ts, includeNullProps);
+  default Optional<Integer> updateBatchWithNull(
+      final List<T> ts, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
+    return getUpdate().updateBatchWithNull(ts, includeNullProps);
   }
 
   /**

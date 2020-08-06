@@ -122,13 +122,24 @@ public final class Update {
    *
    * @param <T> the type parameter
    * @param t the t
+   * @throws DataAccessException 如果执行失败
+   * @throws CommonException 创建记录条数不等于1
+   */
+  public <T extends AbstractEntityPoJo> void create(@Nonnull final T t) throws DataAccessException {
+    createWithNull(t, null);
+  }
+
+  /**
+   * 创建,默认不保存值为null的列.
+   *
+   * @param <T> the type parameter
+   * @param t the t
    * @param includeNullProps 即使值为null也保存的属性
    * @throws DataAccessException 如果执行失败
    * @throws CommonException 创建记录条数不等于1
    */
-  @SafeVarargs
-  public final <T extends AbstractEntityPoJo> void create(
-      @Nonnull final T t, final IFunction<T, ?>... includeNullProps) throws DataAccessException {
+  public <T extends AbstractEntityPoJo> void createWithNull(
+      @Nonnull final T t, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
     t.setId(AppContextInject.getBean(IdGenerator.class).nextId(t));
     setCurrentTime(t, entityInfo.getCreateTimeField(), false);
     setCurrentTime(t, entityInfo.getUpdateTimeFiled());
@@ -204,12 +215,22 @@ public final class Update {
    *
    * @param <T> the type parameter
    * @param ts the ts
+   * @return 保存成功数
+   */
+  public <T extends AbstractEntityPoJo> int createBatch(final List<T> ts) {
+    return createBatchWithNull(ts, null);
+  }
+
+  /**
+   * 批量创建,默认不保存null值.
+   *
+   * @param <T> the type parameter
+   * @param ts the ts
    * @param includeNullProps 即使值为null也保存的属性
    * @return 保存成功数
    */
-  @SafeVarargs
-  public final <T extends AbstractEntityPoJo> int createBatch(
-      final List<T> ts, @Nonnull final IFunction<T, ?>... includeNullProps) {
+  public <T extends AbstractEntityPoJo> int createBatchWithNull(
+      final List<T> ts, List<IFunction<T, ?>> includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
       return 0;
     }
@@ -269,13 +290,23 @@ public final class Update {
    *
    * @param <T> the type parameter
    * @param t the t
+   * @return 受影响记录数
+   */
+  public <T extends AbstractEntityPoJo> int update(@Nonnull final T t) {
+    return updateWithNull(t, null);
+  }
+
+  /**
+   * 更新,默认根据id更新且不更新值为null的列.
+   *
+   * @param <T> the type parameter
+   * @param t the t
    * @param includeNullProps 即使值为null也保存的属性
    * @return 受影响记录数
    */
-  @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
-  public final <T extends AbstractEntityPoJo> int update(
-      @Nonnull final T t, final IFunction<T, ?>... includeNullProps) {
+  public <T extends AbstractEntityPoJo> int updateWithNull(
+      @Nonnull final T t, List<IFunction<T, ?>> includeNullProps) {
     setCurrentTime(t, entityInfo.getUpdateTimeFiled());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
@@ -311,13 +342,24 @@ public final class Update {
    *
    * @param <T> the type parameter
    * @param ts the ts
+   * @return the int
+   */
+  @SuppressWarnings("DuplicatedCode")
+  public <T extends AbstractEntityPoJo> Optional<Integer> updateBatch(@Nonnull final List<T> ts) {
+    return updateBatchWithNull(ts, null);
+  }
+
+  /**
+   * 批量更新,根据id更新.
+   *
+   * @param <T> the type parameter
+   * @param ts the ts
    * @param includeNullProps 即使值为null也保存的属性
    * @return the int
    */
-  @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
-  public final <T extends AbstractEntityPoJo> Optional<Integer> updateBatch(
-      @Nonnull final List<T> ts, final IFunction<T, ?>... includeNullProps) {
+  public <T extends AbstractEntityPoJo> Optional<Integer> updateBatchWithNull(
+      @Nonnull final List<T> ts, List<IFunction<T, ?>> includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
     }
@@ -443,12 +485,11 @@ public final class Update {
    * @param <T> the type parameter
    * @return 要保存的属性
    */
-  @SafeVarargs
-  private final <T extends AbstractEntity> Set<Field> getSavingFields(
-      final T t, final IFunction<T, ?>... includeNullProps) {
+  private <T extends AbstractEntity> Set<Field> getSavingFields(
+      final T t, List<IFunction<T, ?>> includeNullProps) {
     final Set<Field> savingFields = new HashSet<>(EntityUtils.getNonNullColumnFields(t));
-    if (Objects.nonNull(includeNullProps) && includeNullProps.length > 0) {
-      Arrays.stream(includeNullProps).forEach(prop -> savingFields.add(prop.getField()));
+    if (CollectionUtils.nonEmpty(includeNullProps)) {
+      includeNullProps.forEach(prop -> savingFields.add(prop.getField()));
     }
     return savingFields;
   }

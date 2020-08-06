@@ -14,7 +14,7 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>wind</artifactId>
     <name>wind</name>
-    <version>3.8.3-RELEASE</version>
+    <version>3.8.4-RELEASE</version>
     <modules>
         <module>wind-core</module>
         <module>wind-annotation</module>
@@ -40,6 +40,8 @@
     </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <lombok.version>1.18.10</lombok.version>
         <fastjson.version>1.2.67</fastjson.version>
         <javax.inject.version>1</javax.inject.version>
@@ -47,7 +49,7 @@
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <wind-annotation.version>3.8.3-RELEASE</wind-annotation.version>
+        <wind-annotation.version>3.8.4-RELEASE</wind-annotation.version>
     </properties>
     <dependencies>
         <dependency>
@@ -141,6 +143,16 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <distributionManagement>
+        <repository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+        <snapshotRepository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
     <profiles>
         <profile>
             <id>local</id>
@@ -150,16 +162,6 @@
         </profile>
         <profile>
             <id>sonatype-release</id>
-            <distributionManagement>
-                <repository>
-                    <id>sonatype</id>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-                </repository>
-                <snapshotRepository>
-                    <id>sonatype</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                </snapshotRepository>
-            </distributionManagement>
             <build>
                 <plugins>
                     <plugin>

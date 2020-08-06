@@ -32,7 +32,6 @@ public class BaseServiceTest {
 
   @Test
   @Transactional(rollbackFor = Exception.class)
-  @SuppressWarnings("unchecked")
   public void createAndGet() {
     log.info(
         "createAndGet:[{}]",
@@ -55,7 +54,6 @@ public class BaseServiceTest {
 
   @Test
   @Transactional(rollbackFor = Exception.class)
-  @SuppressWarnings("unchecked")
   public void updateAndGet() {
     log.info(
         "updateAndGet:[{}]",
@@ -74,9 +72,7 @@ public class BaseServiceTest {
                 .stringArr(new String[] {"2", "a", "b"})
                 .column("non_match_column")
                 .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build(),
-            Foo::getName,
-            Foo::getStringList));
+                .build()));
   }
 
   @Test
@@ -275,7 +271,6 @@ public class BaseServiceTest {
 
   @Test
   @Transactional(rollbackFor = Exception.class)
-  @SuppressWarnings("unchecked")
   public void create() {
     log.info(
         "create:[{}]",
@@ -298,7 +293,6 @@ public class BaseServiceTest {
 
   @Test
   @Transactional(rollbackFor = Exception.class)
-  @SuppressWarnings("unchecked")
   public void createBatch() {
     final List<Foo> list =
         LongStream.range(0, 100)
@@ -321,17 +315,17 @@ public class BaseServiceTest {
                         .build())
             .collect(toList());
     long start = System.currentTimeMillis();
-    final int batch = service.createBatch(list, Foo::getName, Foo::getStringList);
+    final int batch =
+        service.createBatchWithNull(list, Arrays.asList(Foo::getName, Foo::getStringList));
   }
 
   @Test
   @Transactional(rollbackFor = Exception.class)
-  @SuppressWarnings("unchecked")
   public void update() {
     log.info(
         "update:[{}]",
         service
-            .update(
+            .updateWithNull(
                 Foo.builder()
                     .id(1L)
                     .name("demo")
@@ -347,18 +341,16 @@ public class BaseServiceTest {
                     .column("non_match_column")
                     .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
                     .build(),
-                Foo::getName,
-                Foo::getStringList)
+                Arrays.asList(Foo::getName, Foo::getStringList))
             .orElse(0));
   }
 
   @Test
   @Transactional(rollbackFor = Exception.class)
-  @SuppressWarnings("unchecked")
   public void testUpdate() {
     log.info(
         "testUpdate:[{}]",
-        service.update(
+        service.updateWithNull(
             condition -> condition.eq(Foo::setId, 1L).isNotNull(Foo::setCreateTime),
             Foo.builder()
                 .name("demo")
@@ -374,13 +366,11 @@ public class BaseServiceTest {
                 .column("non_match_column")
                 .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
                 .build(),
-            Foo::getName,
-            Foo::getStringList));
+            Arrays.asList(Foo::getName, Foo::getStringList)));
   }
 
   @Test
   @Transactional(rollbackFor = Exception.class)
-  @SuppressWarnings("unchecked")
   public void updateBatch() {
     final List<Foo> list =
         LongStream.range(0, 100)
@@ -403,7 +393,7 @@ public class BaseServiceTest {
                         .build())
             .collect(toList());
     service
-        .updateBatch(list, Foo::getName, Foo::getStringList)
+        .updateBatchWithNull(list, Arrays.asList(Foo::getName, Foo::getStringList))
         // 只有当list不为空且更新记录数和list的大小不同时,才会执行下方的代码,入参为实际受影响的行数
         .ifPresent(affectRow -> log.info("updateBatch:affectRow[{}]", affectRow));
   }

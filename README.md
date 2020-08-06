@@ -19,7 +19,7 @@
     <dependency>
         <groupId>io.github.ramerf</groupId>
         <artifactId>wind-core</artifactId>
-        <version>3.8.3-RELEASE</version>
+        <version>3.8.4-RELEASE</version>
     </dependency>
     ```
  2. 新建 pojo 实体`Foo`继承于`AbstractEntityPoJo`

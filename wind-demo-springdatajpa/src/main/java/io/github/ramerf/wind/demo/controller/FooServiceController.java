@@ -27,6 +27,7 @@ import static java.util.stream.Collectors.toList;
  * @author Tang Xiaofeng
  * @since 2020/4/28
  */
+@SuppressWarnings("DuplicatedCode")
 @Slf4j
 @RestController
 @RequestMapping("/service")
@@ -237,7 +238,6 @@ public class FooServiceController {
   }
 
   @PostMapping(value = "/create")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   @ApiOperation("创建")
   public ResponseEntity<Rs<Long>> create() {
     return Rs.ok(
@@ -259,7 +259,6 @@ public class FooServiceController {
   }
 
   @PostMapping(value = "/create", params = "type=2")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   @ApiOperation("创建,指定保存值为null的属性")
   public ResponseEntity<Rs<Long>> create2() {
     return Rs.ok(
@@ -277,13 +276,10 @@ public class FooServiceController {
                 .stringArr(new String[] {"2", "a", "b"})
                 .column("non_match_column")
                 .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build(),
-            Foo::getName,
-            Foo::getStringList));
+                .build()));
   }
 
   @PostMapping(value = "/createBatch")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   @ApiOperation("创建,批量创建,指定保存值为null的属性")
   public ResponseEntity<Rs<Long>> createBatch() {
     final List<Foo> list =
@@ -307,15 +303,14 @@ public class FooServiceController {
                         .build())
             .collect(toList());
     long start = System.currentTimeMillis();
-    /// 默认不保存值为null的属性
-    // final int batch = service.createBatch(list);
-    final int batch = service.createBatch(list, Foo::getName, Foo::getStringList);
+    /// 默认不保存值为null的属性,下面是指定保存null的属性
+    // final int batch = service.createBatch(list Arrays.asList(Foo::getName, Foo::getStringList));
+    final int batch = service.createBatch(list);
     log.info("createBatch:[total:{},time elapse:{}]", batch, (System.currentTimeMillis() - start));
     return Rs.ok(batch);
   }
 
   @PostMapping(value = "/update")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   @ApiOperation("更新,保存值为null的属性")
   public ResponseEntity<Rs<Long>> update() {
     return Rs.ok(
@@ -334,13 +329,10 @@ public class FooServiceController {
                 .stringArr(new String[] {"2", "a", "b"})
                 .column("non_match_column")
                 .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build(),
-            Foo::getName,
-            Foo::getStringList));
+                .build()));
   }
 
   @PostMapping(value = "/update", params = "type=2")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   @ApiOperation("更新,条件更新,保存值为null的属性")
   public ResponseEntity<Rs<Long>> update2() {
     return Rs.ok(
@@ -359,13 +351,10 @@ public class FooServiceController {
                 .stringArr(new String[] {"2", "a", "b"})
                 .column("non_match_column")
                 .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build(),
-            Foo::getName,
-            Foo::getStringList));
+                .build()));
   }
 
   @PostMapping(value = "/updateBatch")
-  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   @ApiOperation("更新,批量更新,保存值为null的属性,自定义未预期的返回结果操作")
   public ResponseEntity<Rs<Long>> updateBatch() {
     final List<Foo> list =
@@ -392,7 +381,7 @@ public class FooServiceController {
     /// 默认不更新值为null的属性
     // final int batch = service.updateBatch(list);
     service
-        .updateBatch(list, Foo::getName, Foo::getStringList)
+        .updateBatch(list)
         // 只有当list不为空且更新记录数和list的大小不同时,才会执行下方的代码,入参为实际受影响的行数
         .ifPresent(affectRow -> log.info("updateBatch:affectRow[{}]", affectRow));
     log.info(
