@@ -375,6 +375,7 @@ public class Query {
     return executor.fetchCount(
         SqlParam.builder()
             .sql(String.format(sql, countString))
+            .clazz(Long.class)
             .aggregateFunction(SqlAggregateFunction.COUNT)
             .conditions(conditions)
             .startIndex(new AtomicInteger(1))

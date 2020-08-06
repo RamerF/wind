@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.exception.CommonException;
-import java.time.Duration;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -57,8 +56,10 @@ public class RedisConfiguration extends CachingConfigurerSupport {
             .serializeValuesWith(
                 RedisSerializationContext.SerializationPair.fromSerializer(
                     redisTemplate.getValueSerializer()))
-            // .disableCachingNullValues()
-            .entryTtl(Duration.ofSeconds(60));
+        // .disableCachingNullValues()
+        // 配置全局失效时间
+        // .entryTtl(Duration.ofSeconds(60))
+        ;
     return RedisCacheManager.builder(
             CommonException.requireNonNull(
                 redisTemplate.getConnectionFactory(), "fail to init redisTemplate."))

@@ -269,7 +269,7 @@ public class BaseServiceTest {
             condition -> condition.gt(Foo::setId, 0L),
             1,
             10,
-            SortColumn.by(Foo::getName, Order.DESC),
+            SortColumn.by(Foo::getId, Order.DESC).desc(Foo::getName).asc(Foo::getType),
             IdNameResponse.class));
   }
 
