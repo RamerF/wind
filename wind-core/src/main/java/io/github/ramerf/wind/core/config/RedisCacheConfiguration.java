@@ -4,11 +4,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -31,11 +29,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @ConditionalOnClass(RedisTemplate.class)
 @ConditionalOnProperty(name = "spring.redis.host")
 public class RedisCacheConfiguration {
-  private final LettuceConnectionFactory connectionFactory;
-
-  public RedisCacheConfiguration(ObjectProvider<LettuceConnectionFactory> connectionFactory) {
-    this.connectionFactory = connectionFactory.getIfAvailable();
-  }
 
   /**
    * 用于查询缓存.
@@ -44,7 +37,8 @@ public class RedisCacheConfiguration {
    */
   @Bean
   @Order(5)
-  public RedisTemplate<String, Object> redisCacheRedisTemplate() {
+  public RedisTemplate<String, Object> redisCacheRedisTemplate(
+      LettuceConnectionFactory connectionFactory) {
     RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
     redisTemplate.setConnectionFactory(connectionFactory);
     // value 序列化
