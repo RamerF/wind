@@ -33,29 +33,24 @@ public final class EntityInfo {
   /** 字段与列名映射 {field:column}. */
   private Map<String, String> fieldColumnMap;
 
-  private EntityInfo() {}
-
   public static EntityInfo of(@Nonnull final WindConfiguration configuration) {
     EntityInfo entityInfo = new EntityInfo();
-    final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
-    logicDeleteProp.setEnable(configuration.getLogicDeleteProp().isEnable());
-    logicDeleteProp.setColumn(configuration.getLogicDeleteProp().getColumn());
-    logicDeleteProp.setDeleted(configuration.getLogicDeleteProp().isDeleted());
-    logicDeleteProp.setNotDelete(configuration.getLogicDeleteProp().isNotDelete());
+    entityInfo.setLogicDeleteProp(LogicDeleteProp.of(configuration));
     return entityInfo;
   }
 
-  public static EntityInfo of(@Nonnull final Class<?> clazz, Map<String, String> fieldColumnMap) {
+  public static EntityInfo of(
+      @Nonnull final Class<?> clazz,
+      Map<String, String> fieldColumnMap,
+      final WindConfiguration configuration) {
     EntityInfo entityInfo = new EntityInfo();
     entityInfo.setName(EntityUtils.getTableName(clazz));
     entityInfo.setFieldColumnMap(fieldColumnMap);
     final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
     if (tableInfo != null) {
-      final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
-      logicDeleteProp.setEnable(tableInfo.logicDelete().enable());
-      logicDeleteProp.setColumn(tableInfo.logicDelete().column());
-      logicDeleteProp.setDeleted(tableInfo.logicDelete().deleted());
-      logicDeleteProp.setNotDelete(tableInfo.logicDelete().notDelete());
+      entityInfo.setLogicDeleteProp(LogicDeleteProp.of(tableInfo));
+    } else {
+      entityInfo.setLogicDeleteProp(LogicDeleteProp.of(configuration));
     }
     return entityInfo;
   }

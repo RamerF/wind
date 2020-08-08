@@ -95,7 +95,8 @@ public final class Update {
     this.condition = QueryColumnFactory.getInstance(clazz, tableName, null).getCondition();
     this.clazz = clazz;
     if (clazz == null) {
-      this.entityInfo = EntityInfo.of(AppContextInject.getBean(WindConfiguration.class));
+      final WindConfiguration configuration = getConfiguration();
+      this.entityInfo = EntityInfo.of(configuration);
       this.entityInfo.setName(tableName);
     } else {
       this.entityInfo = EntityHelper.getEntityInfo(clazz);
@@ -196,7 +197,10 @@ public final class Update {
       }
       return;
     }
-
+    // 允许过滤创建/更新时间字段,因为可能是数据库自动生成的
+    // if (getConfiguration().getExcludeFields().contains(field.getName())) {
+    //   return;
+    // }
     final Object val = BeanUtils.getValue(t, field, null);
     // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
     if (val == null || (val instanceof Long && (Long) val < 1)) {
@@ -237,14 +241,17 @@ public final class Update {
     // 取第一条记录获取批量保存sql
     final T t = ts.get(0);
     final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
-    ts.forEach(o -> o.setId(idGenerator.nextId(t)));
+    ts.forEach(
+        o -> {
+          setCurrentTime(o, entityInfo.getCreateTimeField(), false);
+          setCurrentTime(o, entityInfo.getUpdateTimeFiled());
+          o.setId(idGenerator.nextId(o));
+        });
     final Set<Field> savingFields = getSavingFields(t, includeNullProps);
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
     final StringBuilder valueMarks = new StringBuilder();
-    List<Object> values = new LinkedList<>();
-    List<Consumer<PreparedStatement>> list = new LinkedList<>();
     savingFields.forEach(
         field -> {
           final String column = EntityUtils.fieldToColumn(field);
@@ -255,7 +262,7 @@ public final class Update {
     final String execSql =
         String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
     int createRow = 0;
-    final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
+    final int batchSize = getConfiguration().getBatchSize();
     int total = ts.size();
     final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
     for (int j = 0; j < execCount; j++) {
@@ -363,6 +370,9 @@ public final class Update {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
     }
+    // 保存更新时间
+    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeFiled()));
+
     // 取第一条记录获取批量更新sql
     final T t = ts.get(0);
     final Set<Field> savingFields = getSavingFields(t, includeNullProps);
@@ -383,7 +393,7 @@ public final class Update {
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
     int updateRow = 0;
-    final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
+    final int batchSize = getConfiguration().getBatchSize();
     int total = ts.size();
     final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
     for (int j = 0; j < execCount; j++) {
@@ -398,7 +408,7 @@ public final class Update {
                 public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                   final AtomicInteger index = new AtomicInteger(1);
                   final T obj = execList.get(i);
-                  setCurrentTime(t, entityInfo.getUpdateTimeFiled());
+                  setCurrentTime(obj, entityInfo.getUpdateTimeFiled());
                   savingFields.forEach(
                       field ->
                           setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
@@ -548,5 +558,10 @@ public final class Update {
       log.error(e.getMessage(), e);
       throw CommonException.of(e.getMessage(), e);
     }
+  }
+
+  @Nonnull
+  private WindConfiguration getConfiguration() {
+    return AppContextInject.getBean(WindConfiguration.class);
   }
 }

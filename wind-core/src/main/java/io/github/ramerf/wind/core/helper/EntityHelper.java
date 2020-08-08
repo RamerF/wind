@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.CreateTimestamp;
 import io.github.ramerf.wind.core.annotation.UpdateTimestamp;
+import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.BeanFunction;
@@ -23,12 +24,14 @@ import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.UPDATE_T
  * The type Entity helper.
  *
  * @author Tang Xiaofeng
- * @since 2020/5/12
+ * @since 2020 /5/12
  */
 @Slf4j
 public class EntityHelper {
   /** 实体信息:{类全路径:EntityInfo} */
   private static final Map<String, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
+
+  public static WindConfiguration CONFIGURATION;
 
   /**
    * 初始化实体和表对应信息.
@@ -64,7 +67,7 @@ public class EntityHelper {
                       : StringUtils.camelToUnderline(field.getName());
               map.put(field.getName(), column);
             });
-    final EntityInfo entityInfo = EntityInfo.of(clazz, map);
+    final EntityInfo entityInfo = EntityInfo.of(clazz, map, CONFIGURATION);
     entityInfo.setCreateTimeField(timeField[0] == null ? defaultTimeField[0] : timeField[0]);
     entityInfo.setUpdateTimeFiled(timeField[1] == null ? defaultTimeField[1] : timeField[1]);
     CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), entityInfo);
@@ -91,7 +94,7 @@ public class EntityHelper {
    *
    * @param field the field
    * @param defaultValue 默认值
-   * @return jdbcType名称
+   * @return jdbcType名称 jdbc type name
    * @see Types
    */
   public static String getJdbcTypeName(final Field field, final String defaultValue) {
@@ -116,6 +119,13 @@ public class EntityHelper {
     return typeName;
   }
 
+  /**
+   * Gets entity info.
+   *
+   * @param <T> the type parameter
+   * @param clazz the clazz
+   * @return the entity info
+   */
   public static <T extends AbstractEntity> EntityInfo getEntityInfo(@Nonnull final Class<T> clazz) {
     return initEntityIfNeeded(clazz.getTypeName());
   }

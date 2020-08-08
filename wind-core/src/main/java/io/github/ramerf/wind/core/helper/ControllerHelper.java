@@ -312,7 +312,7 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<String>> delete(
+      ResponseEntity<Rs<String>> exec(
           final Runnable runnable,
           final Supplier<ResponseEntity<Rs<String>>> success,
           final ResultCode errorCode) {
@@ -338,7 +338,7 @@ public final class ControllerHelper {
    * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<String>> delete(
+      ResponseEntity<Rs<String>> exec(
           final R result,
           final Function<R, ResponseEntity<Rs<String>>> function,
           final ResultCode errorCode) {

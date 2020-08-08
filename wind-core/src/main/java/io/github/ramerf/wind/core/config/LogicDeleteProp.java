@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
+import io.github.ramerf.wind.core.annotation.TableInfo;
+import javax.annotation.Nonnull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,4 +27,22 @@ public class LogicDeleteProp {
 
   /** 逻辑已删除值. */
   private boolean deleted = true;
+
+  public static LogicDeleteProp of(@Nonnull final WindConfiguration configuration) {
+    LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
+    logicDeleteProp.setEnable(configuration.getLogicDeleteProp().isEnable());
+    logicDeleteProp.setColumn(configuration.getLogicDeleteProp().getColumn());
+    logicDeleteProp.setDeleted(configuration.getLogicDeleteProp().isDeleted());
+    logicDeleteProp.setNotDelete(configuration.getLogicDeleteProp().isNotDelete());
+    return logicDeleteProp;
+  }
+
+  public static LogicDeleteProp of(@Nonnull final TableInfo tableInfo) {
+    LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
+    logicDeleteProp.setEnable(tableInfo.logicDelete().enable());
+    logicDeleteProp.setColumn(tableInfo.logicDelete().column());
+    logicDeleteProp.setDeleted(tableInfo.logicDelete().deleted());
+    logicDeleteProp.setNotDelete(tableInfo.logicDelete().notDelete());
+    return logicDeleteProp;
+  }
 }

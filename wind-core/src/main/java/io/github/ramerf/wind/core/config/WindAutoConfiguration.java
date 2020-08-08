@@ -84,6 +84,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       entityPackage = clazz.getPackage().getName();
     }
     log.info("initEntityInfo:init entity info[{}]", entityPackage);
+    EntityHelper.CONFIGURATION = windConfiguration;
     try {
       final Set<Class<? extends AbstractEntityPoJo>> entities =
           BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);

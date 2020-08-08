@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
@@ -9,6 +10,7 @@ import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.utility.RandomString;
+import org.springframework.beans.BeanUtils;
 
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
@@ -53,10 +57,23 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public Condition<T> condition() {
+  public Condition<T> condition(final boolean genAlia) {
+    this.getQueryEntityMetaData().setContainTableAlia(true);
+
     final Condition<T> condition = new Condition<>();
-    condition.setEntityInfo(getEntityInfo());
-    condition.setQueryEntityMetaData(getQueryEntityMetaData());
+    final EntityInfo entityInfo = new EntityInfo();
+    BeanUtils.copyProperties(getEntityInfo(), entityInfo);
+    condition.setEntityInfo(entityInfo);
+
+    final QueryEntityMetaData<T> metaData = new QueryEntityMetaData<>();
+    BeanUtils.copyProperties(getQueryEntityMetaData(), metaData);
+    condition.setQueryEntityMetaData(metaData);
+    if (genAlia) {
+      // 我们需要为子查询设置表别名
+      final String alia = RandomString.make(5);
+      metaData.setFromTable(metaData.getTableName() + " " + alia);
+      metaData.setTableAlia(alia);
+    }
     return condition;
   }
 
@@ -415,7 +432,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     if (condition) {
       final String childConditionsSql = childConditions.getString();
       if (StringUtils.nonEmpty(childConditionsSql)) {
-        conditionSql.add(PARENTHESIS_FORMAT.format(childConditionsSql));
+        final QueryEntityMetaData<T> entityMetaData = childConditions.getQueryEntityMetaData();
+        String childQuery =
+            SqlAggregateFunction.EXISTS.string(
+                "SELECT 1 FROM ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
+
+        conditionSql.add(childQuery);
+        valueTypes.addAll(childConditions.valueTypes);
       }
     }
     return this;

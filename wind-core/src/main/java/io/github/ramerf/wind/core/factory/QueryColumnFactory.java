@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.factory;
 
-import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.QueryEntityMetaData;
 import io.github.ramerf.wind.core.config.AppContextInject;
@@ -47,13 +46,13 @@ public class QueryColumnFactory {
     queryEntityMetaData.setClazz(clazz);
     if (clazz != null) {
       final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
-      if (StringUtils.isEmpty(tableName)) {
+      // 如果tableName不为空,需要覆盖entityInfo的值.传入的tableName优先级最高,因为支持使用不相关的类查询表
+      if (StringUtils.nonEmpty(tableName)) {
+        entityInfo.setName(tableName);
+      } else {
         tableName = entityInfo.getName();
       }
-      // 如果使用了@TableInfo注解,即使只指定了name,其它实体相关的全局配置也会失效,好坑😓
-      if (clazz.getAnnotation(TableInfo.class) != null) {
-        queryColumn.setEntityInfo(entityInfo);
-      }
+      queryColumn.setEntityInfo(entityInfo);
     }
     queryEntityMetaData.setTableName(tableName);
     tableAlia = StringUtils.isEmpty(tableAlia) ? tableName : tableAlia;

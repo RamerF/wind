@@ -12,11 +12,12 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
 @SuppressWarnings({"RedundantCast", "unused"})
 public enum SqlAggregateFunction implements SqlFunction {
   /** COUNT(%s) */
-  COUNT(str -> String.format(" COUNT(%s) ", (Object[]) str)),
-  SUM(str -> String.format(" SUM(%s) ", (Object[]) str)),
-  MAX(str -> String.format(" MAX(%s) ", (Object[]) str)),
-  MIN(str -> String.format(" MIN(%s) ", (Object[]) str)),
-  AVG(str -> String.format(" AVG(%s) ", (Object[]) str)),
+  COUNT(str -> " COUNT(" + String.join("", str) + ") "),
+  SUM(str -> " SUM(" + String.join("", str) + ") "),
+  MAX(str -> " MAX(" + String.join("", str) + ") "),
+  MIN(str -> " MIN(" + String.join("", str) + ") "),
+  AVG(str -> " AVG(" + String.join("", str) + ") "),
+  EXISTS(str -> " EXISTS(" + String.join("", str) + ") "),
   ;
   private final VarArgsFunction<String, String> exec;
 

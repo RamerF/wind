@@ -2,9 +2,11 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
+import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * The type Query entity meta data.
@@ -18,7 +20,18 @@ public class QueryEntityMetaData<T extends AbstractEntity> extends EntityMetaDat
   @Getter protected List<QueryAlia> queryAlias = new ArrayList<>();
 
   /** 对应sql语句from后的table字符串. */
-  @Getter @Setter protected String fromTable;
+  @Setter protected String fromTable;
+
+  /** 是否需要包含表别名.默认为false,仅含有子表查询时,设置为true. */
+  @Setter private boolean containTableAlia = false;
+
+  public String getFromTable() {
+    // containTableAlia为true 或者 别名不等于表名时 需要拼接
+    if (containTableAlia || (StringUtils.nonEmpty(tableAlia) && !tableAlia.equals(tableName))) {
+      return tableName.concat(" ").concat(tableAlia);
+    }
+    return tableName;
+  }
 
   /**
    * 获取group by条件.

@@ -36,7 +36,11 @@ public class WindConfiguration {
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 150;
 
+  /** 是否启用通用mvc配置. */
   private boolean enableWebMvcConfigurer = true;
+
+  // /** 过滤创建/更新时间字段.  */
+  // private List<String> excludeTimeFields;
 
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
