@@ -38,7 +38,11 @@ public class RedisConfiguration {
   @Resource(name = "redisCacheRedisTemplate")
   private RedisTemplate<String, Object> redisTemplate;
 
-  /** 缓存key生成策略.用法:{@code @Cacheable(value="xxx", keyGenerator="keyGenerator")} */
+  /**
+   * 缓存key生成策略.
+   *
+   * <p>用法: {@code @Cacheable(value="xxx", keyGenerator="keyGenerator")}
+   */
   @Bean
   public KeyGenerator keyGenerator() {
     return (target, method, params) -> {
