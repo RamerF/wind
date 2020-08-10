@@ -301,13 +301,13 @@ public final class ControllerHelper {
   }
 
   /**
-   * 执行删除,不包含返回值.
+   * 执行写操作,不包含返回值.
    *
    * @param <S> the service
    * @param <T> the type parameter
    * @param <R> the type parameter
-   * @param runnable 执行删除操作
-   * @param success 删除成功执行方法
+   * @param runnable 执行写操作
+   * @param success 成功后执行方法
    * @param errorCode 执行失败时的错误码,可以为null
    * @return the response entity
    */
@@ -327,13 +327,13 @@ public final class ControllerHelper {
   }
 
   /**
-   * 执行删除,包含返回值.
+   * 执行写操作,包含返回值.
    *
    * @param <S> the service
    * @param <T> the type parameter
    * @param <R> the type parameter
-   * @param result 执行删除操作后的结果
-   * @param function 返回结果处理,入参为删除返回结果
+   * @param result 执行写操作后的结果
+   * @param function 返回结果处理,入参为写操作返回结果
    * @param errorCode 执行失败时的错误码,可以为null
    * @return the response entity
    */
