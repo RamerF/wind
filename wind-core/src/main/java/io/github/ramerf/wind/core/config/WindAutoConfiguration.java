@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.ramerf.wind.core.WindVersion;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.event.InitEvent;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
@@ -23,8 +24,7 @@ import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.*;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 
@@ -41,10 +41,13 @@ import org.springframework.util.Assert;
 public class WindAutoConfiguration implements ApplicationContextAware, InitializingBean {
   @Resource private ObjectMapper objectMapper;
   private final WindConfiguration windConfiguration;
+  private final ApplicationEventPublisher publisher;
   private ApplicationContext applicationContext;
 
-  public WindAutoConfiguration(final WindConfiguration windConfiguration) {
+  public WindAutoConfiguration(
+      final WindConfiguration windConfiguration, final ApplicationEventPublisher publisher) {
     this.windConfiguration = windConfiguration;
+    this.publisher = publisher;
   }
 
   @Override
@@ -156,5 +159,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     initEntityInfo(bootClass, windConfiguration);
     // 初始化枚举反序列化器
     registerEnumDeserializer(bootClass, windConfiguration);
+    // 发布初始化完成事件
+    publisher.publishEvent(new InitEvent("haha"));
   }
 }
