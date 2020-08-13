@@ -2,10 +2,10 @@ package io.github.ramerf.wind.core.support;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.annotation.UpdateTimestamp;
-import io.github.ramerf.wind.core.config.LogicDeleteProp;
-import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import lombok.Data;
@@ -32,6 +32,9 @@ public final class EntityInfo {
 
   /** 字段与列名映射 {field:column}. */
   private Map<String, String> fieldColumnMap;
+
+  /** 列信息. */
+  private List<EntityColumn> entityColumns;
 
   public static EntityInfo of(@Nonnull final WindConfiguration configuration) {
     EntityInfo entityInfo = new EntityInfo();

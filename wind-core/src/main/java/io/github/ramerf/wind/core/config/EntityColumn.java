@@ -17,20 +17,18 @@ public class EntityColumn {
   private Field field;
   /** 列名. */
   private String javaType;
-  /** 列名. */
+  /** 长度. */
   private int length = DEFAULT_LENGTH;
-  /** 列名. */
+  /** 精度,小数位数. */
   private int precision = DEFAULT_PRECISION;
-  /** 列名. */
+  /** 是否可为空.true:可为空. */
   private boolean nullable = true;
-  /** 列名. */
+  /** 是否唯一.true:唯一. */
   private boolean unique;
-  /** 列名. */
+  /** 类型. */
   private String sqlType;
-  /** 列名. */
-  private boolean quoted;
-  /** 列名. */
+  /** 备注. */
   private String comment;
-  /** 列名. */
+  /** 默认值. */
   private String defaultValue;
 }
