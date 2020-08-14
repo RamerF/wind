@@ -18,6 +18,7 @@ import lombok.Data;
  */
 @Data
 public final class EntityInfo {
+  private Class<?> clazz;
 
   /** 表名. */
   private String name;
@@ -47,6 +48,7 @@ public final class EntityInfo {
       Map<String, String> fieldColumnMap,
       final WindConfiguration configuration) {
     EntityInfo entityInfo = new EntityInfo();
+    entityInfo.setClazz(clazz);
     entityInfo.setName(EntityUtils.getTableName(clazz));
     entityInfo.setFieldColumnMap(fieldColumnMap);
     final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);

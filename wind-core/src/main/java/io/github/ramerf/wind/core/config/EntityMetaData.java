@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.support.EntityInfo;
+import java.util.List;
 import lombok.Data;
 
 /**
@@ -11,5 +12,5 @@ import lombok.Data;
  */
 @Data
 public class EntityMetaData {
-  private EntityInfo entityInfo;
+  private List<EntityInfo> entityInfos;
 }

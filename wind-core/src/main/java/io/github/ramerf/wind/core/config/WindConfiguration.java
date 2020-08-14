@@ -42,6 +42,9 @@ public class WindConfiguration {
   // /** 过滤创建/更新时间字段.  */
   // private List<String> excludeTimeFields;
 
+  /** 自动更新表模式. */
+  private DdlAuto ddlAuto;
+
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
 
@@ -57,5 +60,13 @@ public class WindConfiguration {
 
     /** 缓存key前缀. */
     private String keyPrefix = "io.github.ramerf.wind";
+  }
+
+  /** The enum Ddl auto. */
+  public enum DdlAuto {
+    /** Create ddl auto. */
+    CREATE,
+    /** Update ddl auto. */
+    UPDATE;
   }
 }
