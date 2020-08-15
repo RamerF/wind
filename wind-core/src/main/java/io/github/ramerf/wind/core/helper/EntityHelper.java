@@ -190,13 +190,17 @@ public class EntityHelper {
     final List<EntityColumn> columns = entityInfo.getEntityColumns();
     StringBuilder sql = new StringBuilder("CREATE TABLE ").append(entityInfo.getName()).append(" ");
     for (EntityColumn column : columns) {
-      // id bigint(10) (not null) default null primary key,
-      sql.append(column.getName())
-          .append(column.getSqlType())
-          .append("(")
-          .append(column.getSqlLengthDefinition())
-          .append("(");
-      // 还需要拼接sql类型  bigint
+      if (column.getColumnDefinition() != null) {
+        sql.append(column.getName()).append(column.getColumnDefinition());
+      } else {
+        // id bigint(10) (not null) default null primary key,
+        sql.append(column.getName())
+            .append(column.getSqlType())
+            .append("(")
+            .append(column.getSqlLengthDefinition())
+            .append("(");
+        // 还需要拼接sql类型  bigint
+      }
     }
   }
 

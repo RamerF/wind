@@ -37,6 +37,9 @@ public final class EntityInfo {
   /** 列信息. */
   private List<EntityColumn> entityColumns;
 
+  /** 主键. */
+  private List<EntityColumn> primaryKeys;
+
   public static EntityInfo of(@Nonnull final WindConfiguration configuration) {
     EntityInfo entityInfo = new EntityInfo();
     entityInfo.setLogicDeleteProp(LogicDeleteProp.of(configuration));
