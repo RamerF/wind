@@ -210,13 +210,10 @@ public final class EntityUtils {
    */
   public static String fieldToColumn(@Nonnull final Field field) {
     String column = null;
-    if (field.isAnnotationPresent(Column.class)) {
-      column = field.getAnnotation(Column.class).name();
-    }
-    if (StringUtils.isEmpty(column)) {
-      column = camelToUnderline(field.getName());
-    }
-    return column;
+    final Column columnAnnotation = field.getAnnotation(Column.class);
+    return columnAnnotation != null && StringUtils.nonEmpty(columnAnnotation.name())
+        ? columnAnnotation.name()
+        : camelToUnderline(field.getName());
   }
 
   /**

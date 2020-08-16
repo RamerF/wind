@@ -1,15 +1,13 @@
 package io.github.ramerf.wind.core.helper;
 
-import io.github.ramerf.wind.core.annotation.*;
-import io.github.ramerf.wind.core.config.EntityColumn;
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.entity.response.ResultCode;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.support.DdlAdapter;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
@@ -20,9 +18,6 @@ import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
-
-import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.CREATE_TIME_FIELD_NAME;
-import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.UPDATE_TIME_FIELD_NAME;
 
 /**
  * The type Entity helper.
@@ -35,6 +30,7 @@ public class EntityHelper {
   /** 实体信息:{类全路径:EntityInfo} */
   private static final Map<String, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
 
+  /** The constant CONFIGURATION. */
   public static WindConfiguration CONFIGURATION;
 
   /**
@@ -44,37 +40,7 @@ public class EntityHelper {
    * @param clazz the clazz
    */
   public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
-    Map<String, String> map = new HashMap<>(10);
-    // 0:创建时间 1:更新时间
-    final Field[] timeField = new Field[2];
-    // 默认时间字段
-    final Field[] defaultTimeField = new Field[2];
-    EntityUtils.getAllColumnFields(clazz)
-        .forEach(
-            field -> {
-              final Column columnAnnotation = field.getAnnotation(Column.class);
-              if (field.getAnnotation(CreateTimestamp.class) != null) {
-                timeField[0] = field;
-              }
-              if (field.getAnnotation(UpdateTimestamp.class) != null) {
-                timeField[1] = field;
-              }
-              if (field.getName().equals(CREATE_TIME_FIELD_NAME)) {
-                defaultTimeField[0] = field;
-              }
-              if (field.getName().equals(UPDATE_TIME_FIELD_NAME)) {
-                defaultTimeField[1] = field;
-              }
-              final String column =
-                  columnAnnotation != null && StringUtils.nonEmpty(columnAnnotation.name())
-                      ? columnAnnotation.name()
-                      : StringUtils.camelToUnderline(field.getName());
-              map.put(field.getName(), column);
-            });
-    final EntityInfo entityInfo = EntityInfo.of(clazz, map, CONFIGURATION);
-    entityInfo.setCreateTimeField(timeField[0] == null ? defaultTimeField[0] : timeField[0]);
-    entityInfo.setUpdateTimeFiled(timeField[1] == null ? defaultTimeField[1] : timeField[1]);
-    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), entityInfo);
+    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), EntityInfo.of(clazz, CONFIGURATION));
     // 这里进行表定义更新
     ddlAuto();
   }
@@ -187,29 +153,12 @@ public class EntityHelper {
 
   /** 删除表后,再新建数据库表. */
   private static void ddlCreate(@Nonnull final EntityInfo entityInfo) {
-    final List<EntityColumn> columns = entityInfo.getEntityColumns();
-    StringBuilder sql = new StringBuilder("CREATE TABLE ").append(entityInfo.getName()).append(" ");
-    for (EntityColumn column : columns) {
-      if (column.getColumnDefinition() != null) {
-        sql.append(column.getName()).append(column.getColumnDefinition());
-      } else {
-        // id bigint(10) (not null) default null primary key,
-        sql.append(column.getName())
-            .append(column.getSqlType())
-            .append("(")
-            .append(column.getSqlLengthDefinition())
-            .append("(");
-        // 还需要拼接sql类型  bigint
-      }
-    }
+    new DdlAdapter().createTable(entityInfo);
   }
 
   /** 更新数据库表定义. */
   private static void ddlUpdate(@Nonnull final EntityInfo entityInfo) {
-    final List<EntityColumn> columns = entityInfo.getEntityColumns();
-    for (EntityColumn column : columns) {
-      throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
-    }
+    new DdlAdapter().updateTable(entityInfo);
   }
 
   /**

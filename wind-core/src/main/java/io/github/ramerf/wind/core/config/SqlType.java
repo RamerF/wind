@@ -11,38 +11,38 @@ import java.sql.Timestamp;
  */
 public enum SqlType {
   /** bigint. */
-  BIGINT("BIGINT", Long.class),
-  BINARY("BINARY", null),
-  BIT("BIT", Boolean.class),
-  CHAR("CHAR", Character.class),
-  DATETIME("DATETIME", null),
-  DECIMAL("DECIMAL", BigDecimal.class),
-  DOUBLE("DOUBLE", Double.class),
-  FLOAT("FLOAT", Float.class),
-  INT("INT", Integer.class),
-  MONEY("MONEY", BigDecimal.class),
-  NCHAR("NCHAR", Character.class),
-  N_TEXT("N_TEXT", String.class),
-  NUMERIC("NUMERIC", BigDecimal.class),
-  NVARCHAR("NVARCHAR", String.class),
-  SMALL_DATETIME("SMALL_DATETIME", Timestamp.class),
-  SMALL_INT("SMALL_INT", Integer.class),
-  SMALL_MONEY("SMALL_MONEY", BigDecimal.class),
-  SQL_VARIANT("SQL_VARIANT", String.class),
-  SYS_NAME("SYS_NAME", String.class),
-  TEXT("TEXT", String.class),
-  TIMESTAMP("TIMESTAMP", Timestamp.class),
-  TINYINT("TINYINT", Integer.class),
-  UNIQUE_IDENTIFIER("UNIQUE_IDENTIFIER", Character.class),
-  VARBINARY("VARBINARY", null),
-  VARCHAR("VARCHAR", String.class),
+  BIGINT(Long.class, "BIGINT"),
+  BINARY(null, "BINARY"),
+  BIT(Boolean.class, "BIT"),
+  CHAR(Character.class, "CHAR"),
+  DATETIME(null, "DATETIME"),
+  DECIMAL(BigDecimal.class, "DECIMAL"),
+  DOUBLE(Double.class, "DOUBLE"),
+  FLOAT(Float.class, "FLOAT"),
+  INT(Integer.class, "INT"),
+  MONEY(BigDecimal.class, "MONEY"),
+  NCHAR(Character.class, "NCHAR"),
+  N_TEXT(String.class, "N_TEXT"),
+  NUMERIC(BigDecimal.class, "NUMERIC"),
+  NVARCHAR(String.class, "NVARCHAR"),
+  SMALL_DATETIME(Timestamp.class, "SMALL_DATETIME"),
+  SMALL_INT(Integer.class, "SMALL_INT"),
+  SMALL_MONEY(BigDecimal.class, "SMALL_MONEY"),
+  SQL_VARIANT(String.class, "SQL_VARIANT"),
+  SYS_NAME(String.class, "SYS_NAME"),
+  TEXT(String.class, "TEXT"),
+  TIMESTAMP(Timestamp.class, "TIMESTAMP"),
+  TINYINT(Integer.class, "TINYINT"),
+  UNIQUE_IDENTIFIER(Character.class, "UNIQUE_IDENTIFIER"),
+  VARBINARY(null, "VARBINARY"),
+  VARCHAR(String.class, "VARCHAR"),
   ;
   private final String sqlType;
   private final Class<?> javaType;
 
-  SqlType(final String sqlType, final Class<?> javaType) {
-    this.sqlType = sqlType;
+  SqlType(final Class<?> javaType, final String sqlType) {
     this.javaType = javaType;
+    this.sqlType = sqlType;
   }
 
   public String getSqlType() {

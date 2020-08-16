@@ -45,6 +45,11 @@ public class WindConfiguration {
   /** 自动更新表模式. */
   private DdlAuto ddlAuto;
 
+  /** 数据库方言全路径.. */
+  private String dialect;
+
+  private String storageEngine;
+
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
 

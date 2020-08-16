@@ -1,6 +1,8 @@
 package io.github.ramerf.wind.core.config;
 
+import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
+import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import lombok.Data;
 
@@ -12,8 +14,12 @@ import lombok.Data;
  */
 @Data
 public class EntityColumn {
+  /** 非浮点数长度. */
   public static final int DEFAULT_LENGTH = 255;
+  /** 浮点数长度. */
   public static final int DEFAULT_PRECISION = 19;
+  /** 小数位数. */
+  public static final int DEFAULT_SCALE = 2;
 
   /** 列名. */
   private String name;
@@ -22,7 +28,7 @@ public class EntityColumn {
   private Field field;
 
   /** 对应java类型. */
-  private SqlType javaType;
+  private Class<?> javaType;
 
   /** 长度. */
   private int length = DEFAULT_LENGTH;
@@ -34,7 +40,7 @@ public class EntityColumn {
   private boolean nullable = true;
 
   /** 是否唯一.true:唯一. */
-  private boolean unique;
+  private boolean unique = false;
 
   /** 类型. */
   private SqlType sqlType;
@@ -62,12 +68,12 @@ public class EntityColumn {
           .append(sqlType.getSqlType())
           .append("(")
           .append(getSqlLengthDefinition())
-          .append(") ");
+          .append(")");
       if (!nullable) {
-        definition.append("NOT NULL ");
+        definition.append(" NOT NULL");
       }
       if (defaultValue != null) {
-        definition.append("DEFAULT ").append(defaultValue);
+        definition.append(" DEFAULT ").append(defaultValue);
       }
     }
     return definition.toString();
@@ -76,5 +82,22 @@ public class EntityColumn {
   /** 获取唯一定义sql. */
   public String getUniqueDefinition() {
     return unique ? String.format("CREATE UNIQUE INDEX %s_index ON TABLE(%s)", name, name) : null;
+  }
+
+  public static EntityColumn of(@Nonnull Field field) {
+    EntityColumn entityColumn = new EntityColumn();
+    final Column column = field.getAnnotation(Column.class);
+    if (column == null) {
+      //
+      entityColumn.name = EntityUtils.fieldToColumn(field);
+      entityColumn.field = field;
+      entityColumn.javaType = field.getType();
+      // SqlType  根据范围决定使用的sql类型,如: 0-255 varchar, 255-65535 text, 255-65535 mediumtext, 65535-n
+      // longtext
+      // TODO: 继续跟踪 StandardBasicTypes 里面的类型对应了数据库类型,暂时可以简单的用属性的类型对应数据库类型
+      // entityColumn.sqlType = null;
+    }
+
+    return null;
   }
 }
