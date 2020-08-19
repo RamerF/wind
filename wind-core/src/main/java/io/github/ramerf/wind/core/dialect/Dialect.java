@@ -4,10 +4,13 @@ import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.BeanUtils;
-import java.sql.Types;
+import java.sql.*;
 import java.util.*;
+import javax.sql.DataSource;
+import lombok.extern.slf4j.Slf4j;
 
 /** The type Dialect. */
+@Slf4j
 public abstract class Dialect {
   private final TypeNames typeNames = new TypeNames();
   /** Defines a default batch size constant */
@@ -85,7 +88,7 @@ public abstract class Dialect {
 
   private static Dialect instantiateDialect(String dialectName) throws CommonException {
     if (dialectName == null) {
-      throw CommonException.of("The dialect was not set. Set the property wind.dialect.");
+      throw CommonException.of("The dialect was not set. Set the property [wind.dialect].");
     }
     return (Dialect) BeanUtils.initial(dialectName);
   }
@@ -103,6 +106,9 @@ public abstract class Dialect {
   public String toString() {
     return getClass().getName();
   }
+
+  /** 获取所有的表信息. */
+  public abstract List<String> getTables(DataSource dataSource);
 
   /**
    * Get the name of the database type associated with the given {@link java.sql.Types} typecode.

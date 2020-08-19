@@ -13,13 +13,16 @@ import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.IOException;
+import java.sql.*;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
+import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -43,11 +46,31 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   private final WindConfiguration windConfiguration;
   private final ApplicationEventPublisher publisher;
   private ApplicationContext applicationContext;
+  private final DataSource dataSource;
 
   public WindAutoConfiguration(
-      final WindConfiguration windConfiguration, final ApplicationEventPublisher publisher) {
+      final WindConfiguration windConfiguration,
+      final ApplicationEventPublisher publisher,
+      @Qualifier("dataSource") final DataSource dataSource) {
     this.windConfiguration = windConfiguration;
     this.publisher = publisher;
+    this.dataSource = dataSource;
+    final Connection connection;
+    try {
+      connection = dataSource.getConnection();
+      final DatabaseMetaData databaseMetaData = connection.getMetaData();
+      final ResultSet tables =
+          databaseMetaData.getTables(
+              connection.getCatalog(), connection.getSchema(), "%%", new String[] {"TABLE"});
+      while (tables.next()) {
+        final Object object = tables.getString(3);
+        log.info("WindAutoConfiguration:[{}]", object);
+      }
+
+      log.info("WindAutoConfiguration:[{}]", databaseMetaData.getDatabaseProductName());
+    } catch (SQLException throwables) {
+      throwables.printStackTrace();
+    }
   }
 
   @Override
