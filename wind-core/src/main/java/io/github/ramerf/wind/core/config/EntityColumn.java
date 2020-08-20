@@ -33,8 +33,11 @@ public class EntityColumn {
   /** 长度. */
   private int length = DEFAULT_LENGTH;
 
-  /** 精度,小数位数. */
+  /** Numeric类型长度. */
   private int precision = DEFAULT_PRECISION;
+
+  /** 精度,小数点位数. */
+  private int scale = DEFAULT_SCALE;
 
   /** 是否可为空.true:可为空. */
   private boolean nullable = true;

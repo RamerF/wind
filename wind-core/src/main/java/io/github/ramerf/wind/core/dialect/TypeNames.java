@@ -105,6 +105,8 @@ public class TypeNames {
     return replaceOnce(type, "$p", Integer.toString(precision));
   }
 
+// TODO-WARN 注册时Key改为Java类型,如: Long.class
+  
   /**
    * Register a weighted typeCode mapping
    *

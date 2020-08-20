@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.config;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.sql.Types;
 
 /**
  * 数据库列定义类型.
@@ -11,7 +12,7 @@ import java.sql.Timestamp;
  */
 public enum SqlType {
   /** bigint. */
-  BIGINT(Long.class, "BIGINT"),
+  BIGINT(Long.class, Types.BIGINT),
   BINARY(null, "BINARY"),
   BIT(Boolean.class, "BIT"),
   CHAR(Character.class, "CHAR"),
@@ -37,16 +38,16 @@ public enum SqlType {
   VARBINARY(null, "VARBINARY"),
   VARCHAR(String.class, "VARCHAR"),
   ;
-  private final String sqlType;
+  private final int typeCode;
   private final Class<?> javaType;
 
-  SqlType(final Class<?> javaType, final String sqlType) {
+  SqlType(final Class<?> javaType, final int typeCode) {
     this.javaType = javaType;
-    this.sqlType = sqlType;
+    this.typeCode = typeCode;
   }
 
-  public String getSqlType() {
-    return sqlType;
+  public int getTypeCode() {
+    return typeCode;
   }
 
   public Class<?> getJavaType() {
