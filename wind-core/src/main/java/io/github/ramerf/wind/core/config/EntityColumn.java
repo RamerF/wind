@@ -88,7 +88,6 @@ public class EntityColumn {
     EntityColumn entityColumn = new EntityColumn();
     final Column column = field.getAnnotation(Column.class);
     if (column == null) {
-      //
       entityColumn.name = EntityUtils.fieldToColumn(field);
       entityColumn.field = field;
       entityColumn.javaType = field.getType();
@@ -96,6 +95,7 @@ public class EntityColumn {
       // longtext
       // TODO: 继续跟踪 StandardBasicTypes 里面的类型对应了数据库类型,暂时可以简单的用属性的类型对应数据库类型
       // entityColumn.sqlType = null;
+
     }
 
     return null;

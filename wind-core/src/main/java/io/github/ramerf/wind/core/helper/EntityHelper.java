@@ -1,12 +1,15 @@
 package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
+import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.metadata.*;
 import io.github.ramerf.wind.core.support.DdlAdapter;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
@@ -32,6 +35,8 @@ public class EntityHelper {
 
   /** The constant CONFIGURATION. */
   public static WindConfiguration CONFIGURATION;
+
+  public static DbMetaData dbMetaData;
 
   /**
    * 初始化实体和表对应信息.
@@ -126,17 +131,21 @@ public class EntityHelper {
 
   private static void ddlAuto() {
     final DdlAuto ddlAuto = CONFIGURATION.getDdlAuto();
+    final Collection<TableInformation> tableInformations = dbMetaData.getTables();
     // 先删除,再创建
     if (DdlAuto.CREATE.equals(ddlAuto)) {
+      // Phase 1. delete
+
+      // Phase 2. create
       CLAZZ_ENTITY_MAP.values().stream()
           .filter(EntityHelper::isMapToTable)
           .forEach(EntityHelper::ddlCreate);
     }
-    // 第一版本 仅新增列,后面支持更新列定义
+    // 仅新增列，不支持更新列定义
     if (DdlAuto.UPDATE.equals(ddlAuto)) {
       CLAZZ_ENTITY_MAP.values().stream()
           .filter(EntityHelper::isMapToTable)
-          .forEach(EntityHelper::ddlUpdate);
+          .forEach(o -> ddlUpdate(o, tableInformations));
     }
   }
 
@@ -154,11 +163,18 @@ public class EntityHelper {
   /** 删除表后,再新建数据库表. */
   private static void ddlCreate(@Nonnull final EntityInfo entityInfo) {
     new DdlAdapter().createTable(entityInfo);
+    final Dialect dialect = dbMetaData.getDialect();
+    final String addColumnString = dialect.getAddColumnString();
   }
 
   /** 更新数据库表定义. */
-  private static void ddlUpdate(@Nonnull final EntityInfo entityInfo) {
-    new DdlAdapter().updateTable(entityInfo);
+  private static void ddlUpdate(
+      @Nonnull final EntityInfo entityInfo, final TableInformation tableInformation) {
+    final List<EntityColumn> columns = entityInfo.getEntityColumns();
+    final List<TableColumnInformation> existColumns = tableInformation.getColumns();
+    columns.stream()
+        .filter(column -> !existColumns.contains(TableColumnInformation.of(column.getName())))
+        .forEach();
   }
 
   /**

@@ -8,12 +8,12 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.event.InitEvent;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.metadata.DbMetaData;
 import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.IOException;
-import java.sql.*;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -46,7 +46,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   private final WindConfiguration windConfiguration;
   private final ApplicationEventPublisher publisher;
   private ApplicationContext applicationContext;
-  private final DataSource dataSource;
+  private final DbMetaData dbMetaData;
 
   public WindAutoConfiguration(
       final WindConfiguration windConfiguration,
@@ -54,23 +54,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       @Qualifier("dataSource") final DataSource dataSource) {
     this.windConfiguration = windConfiguration;
     this.publisher = publisher;
-    this.dataSource = dataSource;
-    final Connection connection;
-    try {
-      connection = dataSource.getConnection();
-      final DatabaseMetaData databaseMetaData = connection.getMetaData();
-      final ResultSet tables =
-          databaseMetaData.getTables(
-              connection.getCatalog(), connection.getSchema(), "%%", new String[] {"TABLE"});
-      while (tables.next()) {
-        final Object object = tables.getString(3);
-        log.info("WindAutoConfiguration:[{}]", object);
-      }
-
-      log.info("WindAutoConfiguration:[{}]", databaseMetaData.getDatabaseProductName());
-    } catch (SQLException throwables) {
-      throwables.printStackTrace();
-    }
+    dbMetaData = DbMetaData.getInstance(dataSource);
   }
 
   @Override
@@ -111,6 +95,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     }
     log.info("initEntityInfo:init entity info[{}]", entityPackage);
     EntityHelper.CONFIGURATION = windConfiguration;
+    EntityHelper.dbMetaData = dbMetaData;
     try {
       final Set<Class<? extends AbstractEntityPoJo>> entities =
           BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);

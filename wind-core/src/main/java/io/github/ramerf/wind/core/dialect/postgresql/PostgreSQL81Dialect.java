@@ -7,9 +7,6 @@
 package io.github.ramerf.wind.core.dialect.postgresql;
 
 import io.github.ramerf.wind.core.dialect.Dialect;
-import java.sql.*;
-import java.util.*;
-import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -23,26 +20,4 @@ import lombok.extern.slf4j.Slf4j;
  * @author Gavin King
  */
 @Slf4j
-public class PostgreSQL81Dialect extends Dialect {
-
-  @Override
-  public List<String> getTables(DataSource dataSource) {
-    final Connection connection;
-    try {
-      connection = dataSource.getConnection();
-      final DatabaseMetaData databaseMetaData = connection.getMetaData();
-      final ResultSet resultSet =
-          databaseMetaData.getTables(
-              connection.getCatalog(), connection.getSchema(), "%%", new String[] {"TABLE"});
-      List<String> tables = new ArrayList<>();
-      while (resultSet.next()) {
-        tables.add(resultSet.getString(3));
-      }
-      return tables;
-    } catch (SQLException e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
-    }
-    return Collections.emptyList();
-  }
-}
+public class PostgreSQL81Dialect extends Dialect {}

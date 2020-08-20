@@ -1,10 +1,13 @@
 package io.github.ramerf.wind.core.support;
 
 import io.github.ramerf.wind.core.config.EntityColumn;
+import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.DdlExecutor;
 import io.github.ramerf.wind.core.executor.DefaultDdlExecutor;
+import io.github.ramerf.wind.core.metadata.TableColumnInformation;
+import io.github.ramerf.wind.core.metadata.TableInformation;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -16,6 +19,20 @@ import javax.annotation.Nonnull;
  * @see DdlExecutor
  */
 public class DdlAdapter {
+  /** The constant INSTANCE. */
+  public static final DdlAdapter INSTANCE = new DdlAdapter();
+
+  private static Dialect dialect;
+
+  /**
+   * Sets dialect.
+   *
+   * @param dialect the dialect
+   */
+  public static void setDialect(final Dialect dialect) {
+    DdlAdapter.dialect = dialect;
+  }
+
   /**
    * Create table.
    *
@@ -32,10 +49,16 @@ public class DdlAdapter {
    * Update table.
    *
    * @param entityInfo the entity info
+   * @param tableInformation the table information
    */
-  public void updateTable(@Nonnull final EntityInfo entityInfo) {
+  public void updateTable(
+      @Nonnull final EntityInfo entityInfo, final TableInformation tableInformation) {
     final List<EntityColumn> columns = entityInfo.getEntityColumns();
+    final List<TableColumnInformation> existColumns = tableInformation.getColumns();
+    columns.stream()
+        .filter(column -> !existColumns.contains(TableColumnInformation.of(column.getName()))).forEach();
     for (EntityColumn column : columns) {
+
       throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
     }
   }

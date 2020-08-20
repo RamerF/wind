@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.dialect;
 
 import io.github.ramerf.wind.core.dialect.mysql.*;
 import io.github.ramerf.wind.core.dialect.postgresql.*;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +23,12 @@ public enum DatabaseEnum {
     }
 
     @Override
-    public Dialect resolveDialect(DatabaseMetaData info) {
+    public Dialect resolveDialect(DatabaseMetaData metaData) {
       try {
-        String databaseName = info.getDatabaseProductName();
+        String databaseName = metaData.getDatabaseProductName();
         if ("MySQL".equals(databaseName)) {
-          int majorVersion = info.getDatabaseMajorVersion();
-          int minorVersion = info.getDatabaseMinorVersion();
+          int majorVersion = metaData.getDatabaseMajorVersion();
+          int minorVersion = metaData.getDatabaseMinorVersion();
           if (majorVersion < 5) {
             return new MySQLDialect();
           } else if (majorVersion == 5) {
@@ -57,12 +57,12 @@ public enum DatabaseEnum {
     }
 
     @Override
-    public Dialect resolveDialect(DatabaseMetaData info) {
+    public Dialect resolveDialect(DatabaseMetaData metaData) {
       try {
-        String databaseName = info.getDatabaseProductName();
+        String databaseName = metaData.getDatabaseProductName();
         if ("PostgreSQL".equals(databaseName)) {
-          int majorVersion = info.getDatabaseMajorVersion();
-          int minorVersion = info.getDatabaseMinorVersion();
+          int majorVersion = metaData.getDatabaseMajorVersion();
+          int minorVersion = metaData.getDatabaseMinorVersion();
           if (majorVersion < 8) {
             return new PostgreSQL81Dialect();
           } else if (majorVersion == 8) {
@@ -112,16 +112,12 @@ public enum DatabaseEnum {
   /**
    * Resolve dialect dialect.
    *
-   * @param var1 the var 1
+   * @param metaData the meta data
    * @return the dialect
    */
-  public abstract Dialect resolveDialect(DatabaseMetaData var1);
+  public abstract Dialect resolveDialect(DatabaseMetaData metaData);
 
   private static Dialect latestDialectInstance(DatabaseEnum database) {
-    try {
-      return database.latestDialect().newInstance();
-    } catch (IllegalAccessException | InstantiationException var2) {
-      throw CommonException.of(var2);
-    }
+    return BeanUtils.initial(database.latestDialect());
   }
 }

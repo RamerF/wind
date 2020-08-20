@@ -28,6 +28,12 @@ public abstract class Dialect {
   private final Properties properties = new Properties();
   private final Set<String> sqlKeywords = new HashSet<>();
 
+  protected DataSource dataSource;
+
+  public void setDataSource(final DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
   /** Instantiates a new Dialect. */
   protected Dialect() {
     registerColumnType(Types.BIT, "bit");
@@ -70,6 +76,29 @@ public abstract class Dialect {
     return instantiateDialect(AppContextInject.getBean(WindConfiguration.class).getDialect());
   }
 
+  /** 通过数据库元数据获取方言. */
+  public static Dialect getInstance(DataSource dataSource) {
+    Connection connection;
+    final DatabaseMetaData databaseMetaData;
+    try {
+      connection = dataSource.getConnection();
+      databaseMetaData = connection.getMetaData();
+    } catch (SQLException e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+      throw CommonException.of(e);
+    }
+
+    for (DatabaseEnum database : DatabaseEnum.values()) {
+      Dialect dialect = database.resolveDialect(databaseMetaData);
+      if (dialect != null) {
+        dialect.setDataSource(dataSource);
+        return dialect;
+      }
+    }
+    throw new IllegalStateException("can not initial dialect, check data source.");
+  }
+
   /**
    * Get an instance of the dialect specified by the given properties or by the current
    * <tt>System</tt> properties.
@@ -106,9 +135,6 @@ public abstract class Dialect {
   public String toString() {
     return getClass().getName();
   }
-
-  /** 获取所有的表信息. */
-  public abstract List<String> getTables(DataSource dataSource);
 
   /**
    * Get the name of the database type associated with the given {@link java.sql.Types} typecode.
@@ -177,14 +203,5 @@ public abstract class Dialect {
   public String getAddColumnString() {
     throw new UnsupportedOperationException(
         "No add column syntax supported by " + getClass().getName());
-  }
-
-  /**
-   * The syntax for the suffix used to add a column to a table (optional).
-   *
-   * @return The suffix "add column" fragment.
-   */
-  public String getAddColumnSuffixString() {
-    return "";
   }
 }

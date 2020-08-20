@@ -9,11 +9,7 @@ package io.github.ramerf.wind.core.dialect.mysql;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.entity.response.ResultCode;
-import io.github.ramerf.wind.core.exception.CommonException;
 import java.sql.Types;
-import java.util.List;
-import javax.sql.DataSource;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).
@@ -49,7 +45,8 @@ public class MySQLDialect extends Dialect {
     registerColumnType(Types.CHAR, "char(1)");
     registerColumnType(Types.FLOAT, "float");
     registerColumnType(Types.DOUBLE, "double precision");
-    registerColumnType(Types.BOOLEAN, "bit"); // HHH-6935
+    // HHH-6935
+    registerColumnType(Types.BOOLEAN, "bit");
     registerColumnType(Types.DATE, "date");
     registerColumnType(Types.TIME, "time");
     registerColumnType(Types.TIMESTAMP, "datetime");
@@ -69,11 +66,6 @@ public class MySQLDialect extends Dialect {
     //		registerColumnType( Types.CLOB, 16777215, "mediumtext" );
     //		registerColumnType( Types.CLOB, 65535, "text" );
     registerVarcharTypes();
-  }
-
-  @Override
-  public List<String> getTables(final DataSource dataSource) {
-    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
   }
 
   protected void registerVarcharTypes() {
