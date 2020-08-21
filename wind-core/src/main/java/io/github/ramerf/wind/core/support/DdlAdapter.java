@@ -39,7 +39,7 @@ public class DdlAdapter {
   public void createTable(@Nonnull final EntityInfo entityInfo) {
     // 获取数据库元信息.类型,版本等
     DdlExecutor executor = null;
-    executor = new DefaultDdlExecutor();
+    executor = new DefaultDdlExecutor(dialect);
     executor.createTable(entityInfo);
   }
 
@@ -56,15 +56,15 @@ public class DdlAdapter {
     StringBuilder sql = new StringBuilder();
 
     /*
-     create table ${tableName} (
-      id ${sqlType}(${length}) ${nullable} default ${defaultValue},
-      big_decimal ${sqlType}(${precision}, ${scale}) default ${defaultValue},
+    create table ${tableName} (
+     id ${sqlType}(${length}) ${nullable} default ${defaultValue},
+     big_decimal ${sqlType}(${precision}, ${scale}) default ${defaultValue},
 
 
-     )${engine};
-     create unique index UK_${tableName}_xxx on ${tableName}(${columnName});
-     alter table ${tableName} add column
-     */
+    )${engine};
+    create unique index UK_${tableName}_xxx on ${tableName}(${columnName});
+    alter table ${tableName} add column
+    */
 
     StringBuilder createTableSql = new StringBuilder();
     final String createTableString = "create table " + tableInformation.getName() + "(%s)";
@@ -74,8 +74,10 @@ public class DdlAdapter {
         .filter(column -> !existColumns.contains(TableColumnInformation.of(column.getName())))
         .forEach(
             column -> {
-              createTableSql.append( column.getName()).append(" ");
-              dialect.getTypeName(column.getSqlType().getSqlType(), column.getLength(), column.getPrecision(), column.getScale());
+              createTableSql.append(column.getName()).append(" ");
+              // dialect.getTypeName(column.getJavaType().getSqlType(), column.getLength(),
+              // column.getPrecision(), column.getScale());
+              // TODO-WARN 更新适配器
             });
   }
 }

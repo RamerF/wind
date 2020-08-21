@@ -6,7 +6,7 @@
  */
 package io.github.ramerf.wind.core.dialect.mysql;
 
-import java.sql.Types;
+import java.util.Date;
 
 /** @author Gail Badner */
 public class MySQL57Dialect extends MySQL55Dialect {
@@ -24,12 +24,13 @@ public class MySQL57Dialect extends MySQL55Dialect {
     // The following is defined because Hibernate currently expects
     // the SQL 1992 default of 6 (which is inconsistent with the MySQL
     // default).
-    registerColumnType(Types.TIMESTAMP, "datetime(6)");
+    registerColumnType(Date.class, "datetime(6)");
 
     // MySQL 5.7 brings JSON native support with a dedicated datatype.
     // For more details about MySql new JSON datatype support, see:
     // https://dev.mysql.com/doc/refman/5.7/en/json.html
-    registerColumnType(Types.JAVA_OBJECT, "json");
+    // TODO-WARN MYSQL JSON 对应Java类型
+    // registerColumnType(Types.JAVA_OBJECT, "json");
   }
 
   /**

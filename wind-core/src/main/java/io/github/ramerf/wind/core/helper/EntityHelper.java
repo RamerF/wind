@@ -45,7 +45,8 @@ public class EntityHelper {
    * @param clazz the clazz
    */
   public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
-    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), EntityInfo.of(clazz, CONFIGURATION));
+    CLAZZ_ENTITY_MAP.put(
+        clazz.getTypeName(), EntityInfo.of(clazz, CONFIGURATION, dbMetaData.getDialect()));
     // 这里进行表定义更新
     ddlAuto();
   }
@@ -130,8 +131,9 @@ public class EntityHelper {
   }
 
   private static void ddlAuto() {
-    final DdlAuto ddlAuto = CONFIGURATION.getDdlAuto();
-    final Collection<TableInformation> tableInformations = dbMetaData.getTables();
+    // TODO-WARN 配置ddl参数
+    // final DdlAuto ddlAuto = CONFIGURATION.getDdlAuto();
+    final DdlAuto ddlAuto = DdlAuto.CREATE;
     // 先删除,再创建
     if (DdlAuto.CREATE.equals(ddlAuto)) {
       // Phase 1. delete
@@ -145,7 +147,7 @@ public class EntityHelper {
     if (DdlAuto.UPDATE.equals(ddlAuto)) {
       CLAZZ_ENTITY_MAP.values().stream()
           .filter(EntityHelper::isMapToTable)
-          .forEach(o -> ddlUpdate(o, tableInformations));
+          .forEach(EntityHelper::ddlUpdate);
     }
   }
 
@@ -168,13 +170,13 @@ public class EntityHelper {
   }
 
   /** 更新数据库表定义. */
-  private static void ddlUpdate(
-      @Nonnull final EntityInfo entityInfo, final TableInformation tableInformation) {
+  private static void ddlUpdate(@Nonnull final EntityInfo entityInfo) {
+    final TableInformation tableInformation = dbMetaData.getTableInformation(entityInfo.getName());
     final List<EntityColumn> columns = entityInfo.getEntityColumns();
     final List<TableColumnInformation> existColumns = tableInformation.getColumns();
-    columns.stream()
-        .filter(column -> !existColumns.contains(TableColumnInformation.of(column.getName())))
-        .forEach();
+    // columns.stream()
+    //     .filter(column -> !existColumns.contains(TableColumnInformation.of(column.getName())))
+    //     .forEach();
   }
 
   /**

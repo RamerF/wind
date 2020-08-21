@@ -9,22 +9,22 @@ package io.github.ramerf.wind.core.dialect.mysql;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import java.sql.Types;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class MySQLDialect extends Dialect {
 
-  private MySQLStorageEngine storageEngine;
+  private final MySQLStorageEngine storageEngine;
 
   /** Constructs a MySQLDialect */
   public MySQLDialect() {
     super();
-
     String storageEngine = AppContextInject.getBean(WindConfiguration.class).getStorageEngine();
     if (storageEngine == null) {
       this.storageEngine = getDefaultMySQLStorageEngine();
@@ -36,44 +36,26 @@ public class MySQLDialect extends Dialect {
       throw new UnsupportedOperationException(
           "The " + storageEngine + " storage engine is not supported!");
     }
+    // char type
+    registerColumnType(Character.class, "char(1)");
+    registerColumnType(char.class, "char(1)");
+    // boolean type
+    registerColumnType(Boolean.class, "bit");
+    registerColumnType(boolean.class, "bit");
+    // value type
+    registerColumnType(Float.class, "float");
+    registerColumnType(float.class, "float");
 
-    registerColumnType(Types.BIT, "bit");
-    registerColumnType(Types.BIGINT, "bigint");
-    registerColumnType(Types.SMALLINT, "smallint");
-    registerColumnType(Types.TINYINT, "tinyint");
-    registerColumnType(Types.INTEGER, "integer");
-    registerColumnType(Types.CHAR, "char(1)");
-    registerColumnType(Types.FLOAT, "float");
-    registerColumnType(Types.DOUBLE, "double precision");
-    // HHH-6935
-    registerColumnType(Types.BOOLEAN, "bit");
-    registerColumnType(Types.DATE, "date");
-    registerColumnType(Types.TIME, "time");
-    registerColumnType(Types.TIMESTAMP, "datetime");
-    registerColumnType(Types.VARBINARY, "longblob");
-    registerColumnType(Types.VARBINARY, 16777215, "mediumblob");
-    registerColumnType(Types.VARBINARY, 65535, "blob");
-    registerColumnType(Types.VARBINARY, 255, "tinyblob");
-    registerColumnType(Types.BINARY, "binary($l)");
-    registerColumnType(Types.LONGVARBINARY, "longblob");
-    registerColumnType(Types.LONGVARBINARY, 16777215, "mediumblob");
-    registerColumnType(Types.NUMERIC, "decimal($p,$s)");
-    registerColumnType(Types.BLOB, "longblob");
-    //		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
-    //		registerColumnType( Types.BLOB, 65535, "blob" );
-    registerColumnType(Types.CLOB, "longtext");
-    registerColumnType(Types.NCLOB, "longtext");
-    //		registerColumnType( Types.CLOB, 16777215, "mediumtext" );
-    //		registerColumnType( Types.CLOB, 65535, "text" );
-    registerVarcharTypes();
-  }
+    registerColumnType(Double.class, "double");
+    registerColumnType(double.class, "double");
 
-  protected void registerVarcharTypes() {
-    registerColumnType(Types.VARCHAR, "longtext");
-    //		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
-    //		registerColumnType( Types.VARCHAR, 65535, "text" );
-    registerColumnType(Types.VARCHAR, 255, "varchar($l)");
-    registerColumnType(Types.LONGVARCHAR, "longtext");
+    registerColumnType(BigDecimal.class, "decimal($p,$s)");
+    // date type
+    registerColumnType(Date.class, "datetime");
+    // varchar type
+    registerColumnType(String.class, "varchar");
+    registerColumnType(String.class, 255, "varchar($l)");
+    registerColumnType(String.class, 65535, "longtext");
   }
 
   @Override
@@ -83,5 +65,10 @@ public class MySQLDialect extends Dialect {
 
   protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
     return MyISAMStorageEngine.INSTANCE;
+  }
+
+  @Override
+  protected void addSupportedJavaType(final Type type) {
+    super.addSupportedJavaType(type);
   }
 }

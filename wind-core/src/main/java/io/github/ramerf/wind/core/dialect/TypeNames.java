@@ -6,11 +6,14 @@
  */
 package io.github.ramerf.wind.core.dialect;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import org.springframework.data.mapping.MappingException;
 
 /**
- * This class maps a type to names. Associations may be marked with a capacity. Calling the get()
+ * <b>Reference: {@code org.hibernate.dialect.TypeNames}.</b>
+ *
+ * <p>This class maps a type to names. Associations may be marked with a capacity. Calling the get()
  * method with a type and actual size n will return the associated name with smallest capacity >= n,
  * if available and an unmarked default type otherwise. Eg, setting
  *
@@ -47,26 +50,26 @@ import org.springframework.data.mapping.MappingException;
  */
 public class TypeNames {
   /** Holds default type mappings for a typeCode. This is the non-sized mapping */
-  private Map<Integer, String> defaults = new HashMap<Integer, String>();
+  private final Map<Type, String> defaults = new HashMap<>();
 
   /**
    * Holds the weighted mappings for a typeCode. The nested map is a TreeMap to sort its contents
-   * based on the key (the weighting) to ensure proper iteration ordering during {@link #get(int,
+   * based on the key (the weighting) to ensure proper iteration ordering during {@link #get(Type,
    * long, int, int)}
    */
-  private Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
+  private final Map<Type, Map<Long, String>> weighted = new HashMap<>();
 
   /**
    * get default type name for specified type
    *
-   * @param typeCode the type key
+   * @param type the type key
    * @return the default type name associated with specified key
-   * @throws MappingException Indicates that no registrations were made for that typeCode
+   * @throws MappingException Indicates that no registrations were made for that type
    */
-  public String get(int typeCode) throws MappingException {
-    final String result = defaults.get(typeCode);
+  public String get(Type type) throws MappingException {
+    final String result = defaults.get(type);
     if (result == null) {
-      throw new MappingException("No Dialect mapping for JDBC type: " + typeCode);
+      throw new MappingException("No Dialect mapping for JDBC type: " + type);
     }
     return result;
   }
@@ -74,16 +77,16 @@ public class TypeNames {
   /**
    * get type name for specified type and size
    *
-   * @param typeCode the type key
+   * @param type the type key
    * @param size the SQL length
    * @param scale the SQL scale
    * @param precision the SQL precision
    * @return the associated name with smallest capacity >= size, if available and the default type
    *     name otherwise
-   * @throws MappingException Indicates that no registrations were made for that typeCode
+   * @throws MappingException Indicates that no registrations were made for that type
    */
-  public String get(int typeCode, long size, int precision, int scale) throws MappingException {
-    final Map<Long, String> map = weighted.get(typeCode);
+  public String get(Type type, long size, int precision, int scale) throws MappingException {
+    final Map<Long, String> map = weighted.get(type);
     if (map != null && map.size() > 0) {
       // iterate entries ordered by capacity to find first fit
       for (Map.Entry<Long, String> entry : map.entrySet()) {
@@ -94,9 +97,9 @@ public class TypeNames {
     }
 
     // if we get here one of 2 things happened:
-    //		1) There was no weighted registration for that typeCode
+    //		1) There was no weighted registration for that type
     //		2) There was no weighting whose max capacity was big enough to contain size
-    return replace(get(typeCode), size, precision, scale);
+    return replace(get(type), size, precision, scale);
   }
 
   private static String replace(String type, long size, int precision, int scale) {
@@ -105,8 +108,6 @@ public class TypeNames {
     return replaceOnce(type, "$p", Integer.toString(precision));
   }
 
-// TODO-WARN 注册时Key改为Java类型,如: Long.class
-  
   /**
    * Register a weighted typeCode mapping
    *
@@ -114,7 +115,7 @@ public class TypeNames {
    * @param capacity The capacity for this weighting
    * @param value The mapping (type name)
    */
-  public void put(int typeCode, long capacity, String value) {
+  public void put(Type typeCode, long capacity, String value) {
     weighted.computeIfAbsent(typeCode, k -> new TreeMap<>()).put(capacity, value);
   }
 
@@ -124,7 +125,7 @@ public class TypeNames {
    * @param typeCode the type key
    * @param value The mapping (type name)
    */
-  public void put(int typeCode, String value) {
+  public void put(Type typeCode, String value) {
     defaults.put(typeCode, value);
   }
 

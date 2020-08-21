@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.support;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -42,14 +43,21 @@ public final class EntityInfo {
   /** 主键. */
   private List<EntityColumn> primaryKeys;
 
+  private Dialect dialect;
+
   public static EntityInfo of(@Nonnull final WindConfiguration configuration) {
+    return of(configuration, null);
+  }
+
+  public static EntityInfo of(@Nonnull final WindConfiguration configuration, Dialect dialect) {
     EntityInfo entityInfo = new EntityInfo();
+    entityInfo.dialect = dialect;
     entityInfo.setLogicDeleteProp(LogicDeleteProp.of(configuration));
     return entityInfo;
   }
 
   public static EntityInfo of(
-      @Nonnull final Class<?> clazz, final WindConfiguration configuration) {
+      @Nonnull final Class<?> clazz, final WindConfiguration configuration, Dialect dialect) {
     Map<String, String> fieldColumnMap = new HashMap<>(10);
     // 0:创建时间 1:更新时间
     final Field[] timeField = new Field[2];
@@ -74,6 +82,7 @@ public final class EntityInfo {
         });
 
     EntityInfo entityInfo = new EntityInfo();
+    entityInfo.dialect = dialect;
     entityInfo.setCreateTimeField(timeField[0] == null ? defaultTimeField[0] : timeField[0]);
     entityInfo.setUpdateTimeFiled(timeField[1] == null ? defaultTimeField[1] : timeField[1]);
     entityInfo.setClazz(clazz);
@@ -89,7 +98,7 @@ public final class EntityInfo {
     List<EntityColumn> primaryKeys = new ArrayList<>();
     List<EntityColumn> entityColumns = new ArrayList<>();
     for (Field field : columnFields) {
-      final EntityColumn entityColumn = EntityColumn.of(field);
+      final EntityColumn entityColumn = EntityColumn.of(field, dialect);
       if (field.getAnnotation(Id.class) != null) {
         primaryKeys.add(entityColumn);
       }

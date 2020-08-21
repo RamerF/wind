@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.executor;
 
+import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import javax.annotation.Nonnull;
 
@@ -24,4 +25,6 @@ public interface DdlExecutor {
    * @param entityInfo the entity info
    */
   void updateTable(@Nonnull final EntityInfo entityInfo);
+
+  Dialect getDialect();
 }

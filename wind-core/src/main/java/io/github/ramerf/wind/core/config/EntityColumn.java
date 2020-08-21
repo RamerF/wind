@@ -1,10 +1,14 @@
 package io.github.ramerf.wind.core.config;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
+import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.type.JavaType;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
-import lombok.Data;
+import lombok.*;
 
 /**
  * 实体列信息(字段,sqlType).
@@ -28,7 +32,9 @@ public class EntityColumn {
   private Field field;
 
   /** 对应java类型. */
-  private Class<?> javaType;
+  private Type type;
+
+  private String typeName;
 
   /** 长度. */
   private int length = DEFAULT_LENGTH;
@@ -46,7 +52,7 @@ public class EntityColumn {
   private boolean unique = false;
 
   /** 类型. */
-  private SqlType sqlType;
+  private JavaType javaType;
 
   /** 备注. */
   private String comment;
@@ -55,20 +61,26 @@ public class EntityColumn {
   private String defaultValue;
 
   /** {@link Column#columnDefinition()}. */
+  @Getter(AccessLevel.NONE)
   private String columnDefinition;
+
+  /** 数据库是否支持列类型,如果不支持ddl时会跳过该字段. */
+  private boolean supported = false;
 
   /** 获取sql长度定义.如:(1,10)或(255). */
   public String getSqlLengthDefinition() {
-    return sqlType.isContainPrecision() ? length + "," + precision : length + "";
+    // return javaType.isContainPrecision() ? length + "," + precision : length + "";
+    // throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+    return "";
   }
 
-  public String getColumnDefinition() {
+  public String getColumnDefinition(final Dialect dialect) {
     StringBuilder definition = new StringBuilder();
     if (columnDefinition == null) {
       definition
           .append(name)
           .append(" ")
-          .append(sqlType.getSqlType())
+          .append(supported ? dialect.getTypeName(getType(), length, precision, scale) : "")
           .append("(")
           .append(getSqlLengthDefinition())
           .append(")");
@@ -87,20 +99,40 @@ public class EntityColumn {
     return unique ? String.format("CREATE UNIQUE INDEX %s_index ON TABLE(%s)", name, name) : null;
   }
 
-  public static EntityColumn of(@Nonnull Field field) {
+  public static EntityColumn of(@Nonnull Field field, Dialect dialect) {
     EntityColumn entityColumn = new EntityColumn();
+    entityColumn.field = field;
+    entityColumn.name = EntityUtils.fieldToColumn(field);
+    entityColumn.type = field.getGenericType();
+    if (dialect.isSupportJavaType(entityColumn.type)) {
+      entityColumn.supported = true;
+    }
     final Column column = field.getAnnotation(Column.class);
     if (column == null) {
-      entityColumn.name = EntityUtils.fieldToColumn(field);
-      entityColumn.field = field;
-      entityColumn.javaType = field.getType();
       // SqlType  根据范围决定使用的sql类型,如: 0-255 varchar, 255-65535 text, 255-65535 mediumtext, 65535-n
       // longtext
       // TODO: 继续跟踪 StandardBasicTypes 里面的类型对应了数据库类型,暂时可以简单的用属性的类型对应数据库类型
       // entityColumn.sqlType = null;
-
+      entityColumn.typeName =
+          entityColumn.supported ? dialect.getTypeName(entityColumn.type) : null;
+      return entityColumn;
     }
-
-    return null;
+    entityColumn.name = column.name();
+    entityColumn.columnDefinition = column.columnDefinition();
+    entityColumn.length = column.length();
+    entityColumn.precision = column.precision();
+    entityColumn.scale = column.scale();
+    entityColumn.nullable = column.nullable();
+    entityColumn.unique = column.unique();
+    final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
+    if (tableColumn != null) {
+      entityColumn.comment = tableColumn.comment();
+    }
+    entityColumn.typeName =
+        entityColumn.supported
+            ? dialect.getTypeName(
+                entityColumn.type, entityColumn.length, entityColumn.precision, entityColumn.scale)
+            : null;
+    return entityColumn;
   }
 }

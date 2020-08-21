@@ -7,6 +7,8 @@
 package io.github.ramerf.wind.core.dialect.postgresql;
 
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.type.JavaType;
+import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -20,4 +22,37 @@ import lombok.extern.slf4j.Slf4j;
  * @author Gavin King
  */
 @Slf4j
-public class PostgreSQL81Dialect extends Dialect {}
+public class PostgreSQL81Dialect extends Dialect {
+  public PostgreSQL81Dialect() {
+    super();
+    registerColumnType(String.class, "text");
+    registerColumnType(String.class, 255, "text");
+    registerColumnType(String.class, 65535, "text");
+    registerColumnType(Date.class, "timestamp");
+    // array
+    registerColumnType(int[].class, "int[]");
+    registerColumnType(Integer[].class, "int[]");
+    registerColumnType(JavaType.LIST_INTEGER, "int[]");
+
+    registerColumnType(long[].class, "bigint[]");
+    registerColumnType(Long[].class, "bigint[]");
+    registerColumnType(JavaType.LIST_LONG, "bigint[]");
+
+    registerColumnType(String[].class, "text[]");
+    registerColumnType(JavaType.LIST_STRING, "text[]");
+  }
+
+  @Override
+  public void addSupportedJavaTypes() {
+    super.addSupportedJavaTypes();
+
+    addSupportedJavaType(JavaType.LIST_SHORT);
+    addSupportedJavaType(JavaType.LIST_INTEGER);
+    addSupportedJavaType(JavaType.LIST_LONG);
+    addSupportedJavaType(JavaType.LIST_FLOAT);
+    addSupportedJavaType(JavaType.LIST_DOUBLE);
+    addSupportedJavaType(JavaType.LIST_BIGDECIMAL);
+
+    addSupportedJavaType(JavaType.LIST_STRING);
+  }
+}

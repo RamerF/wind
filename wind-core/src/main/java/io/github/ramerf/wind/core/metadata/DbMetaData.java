@@ -21,7 +21,7 @@ import static io.github.ramerf.wind.core.metadata.DbResolver.*;
 public class DbMetaData {
   private static volatile DbMetaData INSTANCE;
   @Getter private final Dialect dialect;
-  @Getter private final NameTableInformation tableInformations;
+  private final NameTableInformation tableInformations;
 
   private DbMetaData(DataSource dataSource) {
     Connection connection = getConnection(dataSource);
@@ -46,7 +46,12 @@ public class DbMetaData {
   }
 
   /** 获取所有表信息. */
-  public Collection<TableInformation> getTables() {
+  public Collection<TableInformation> getTableInformations() {
     return this.tableInformations.getTables().values();
+  }
+
+  /** 获取表信息. */
+  public TableInformation getTableInformation(final String tableName) {
+    return this.tableInformations.getTables().get(tableName);
   }
 }
