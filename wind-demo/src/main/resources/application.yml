@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: wind-demo
+  profiles:
+    active: dev
   datasource:
     name: wind-demo
     type: com.alibaba.druid.pool.DruidDataSource
@@ -89,6 +91,7 @@ wind:
   batch-size: 500
   # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
   custom-enum-deserializer: false
+  ddl-auto: update
   redis-cache:
     # 默认开启redis缓存
     enable: true

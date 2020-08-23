@@ -8,6 +8,7 @@ package io.github.ramerf.wind.core.dialect.postgresql;
 
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.type.JavaType;
+import java.util.BitSet;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,9 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 public class PostgreSQL81Dialect extends Dialect {
   public PostgreSQL81Dialect() {
     super();
+    // boolean type
+    registerColumnType(boolean.class, "bool");
+    registerColumnType(Boolean.class, "bool");
+
     registerColumnType(String.class, "text");
     registerColumnType(String.class, 255, "text");
     registerColumnType(String.class, 65535, "text");
+
     registerColumnType(Date.class, "timestamp");
     // array
     registerColumnType(int[].class, "int[]");
@@ -43,8 +49,25 @@ public class PostgreSQL81Dialect extends Dialect {
   }
 
   @Override
+  public String getAddColumnString() {
+    return "add column";
+  }
+
+  @Override
   public void addSupportedJavaTypes() {
     super.addSupportedJavaTypes();
+
+    addSupportedJavaType(char[].class);
+    addSupportedJavaType(Character[].class);
+
+    addSupportedJavaType(short[].class);
+    addSupportedJavaType(Short[].class);
+    addSupportedJavaType(int[].class);
+    addSupportedJavaType(Integer[].class);
+    addSupportedJavaType(long[].class);
+    addSupportedJavaType(Long[].class);
+
+    addSupportedJavaType(String[].class);
 
     addSupportedJavaType(JavaType.LIST_SHORT);
     addSupportedJavaType(JavaType.LIST_INTEGER);
@@ -54,5 +77,12 @@ public class PostgreSQL81Dialect extends Dialect {
     addSupportedJavaType(JavaType.LIST_BIGDECIMAL);
 
     addSupportedJavaType(JavaType.LIST_STRING);
+
+    addSupportedJavaType(BitSet.class);
+  }
+
+  @Override
+  public boolean isSupportCommentOnTable() {
+    return true;
   }
 }

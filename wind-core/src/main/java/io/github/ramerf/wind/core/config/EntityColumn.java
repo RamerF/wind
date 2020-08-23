@@ -2,8 +2,7 @@ package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.type.JavaType;
-import io.github.ramerf.wind.core.util.EntityUtils;
+import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import javax.annotation.Nonnull;
@@ -51,9 +50,6 @@ public class EntityColumn {
   /** 是否唯一.true:唯一. */
   private boolean unique = false;
 
-  /** 类型. */
-  private JavaType javaType;
-
   /** 备注. */
   private String comment;
 
@@ -64,34 +60,30 @@ public class EntityColumn {
   @Getter(AccessLevel.NONE)
   private String columnDefinition;
 
-  /** 数据库是否支持列类型,如果不支持ddl时会跳过该字段. */
+  /** 数据库是否支持列类型. 如果不支持,ddl时会跳过该字段. */
   private boolean supported = false;
 
-  /** 获取sql长度定义.如:(1,10)或(255). */
-  public String getSqlLengthDefinition() {
-    // return javaType.isContainPrecision() ? length + "," + precision : length + "";
-    // throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
-    return "";
-  }
-
   public String getColumnDefinition(final Dialect dialect) {
+    if (columnDefinition != null) {
+      return name + " " + columnDefinition;
+    }
     StringBuilder definition = new StringBuilder();
-    if (columnDefinition == null) {
-      definition
-          .append(name)
-          .append(" ")
-          .append(supported ? dialect.getTypeName(getType(), length, precision, scale) : "")
-          .append("(")
-          .append(getSqlLengthDefinition())
-          .append(")");
-      if (!nullable) {
-        definition.append(" NOT NULL");
-      }
-      if (defaultValue != null) {
-        definition.append(" DEFAULT ").append(defaultValue);
-      }
+    definition
+        .append(name)
+        .append(" ")
+        .append(supported ? dialect.getTypeName(getType(), length, precision, scale) : "");
+    if (!nullable) {
+      definition.append(" NOT NULL");
+    }
+    if (defaultValue != null) {
+      definition.append(" DEFAULT ").append(defaultValue);
     }
     return definition.toString();
+  }
+
+  public String getComment(final Dialect dialect) {
+    // TODO-WARN 获取comment
+    return comment;
   }
 
   /** 获取唯一定义sql. */
@@ -117,22 +109,35 @@ public class EntityColumn {
           entityColumn.supported ? dialect.getTypeName(entityColumn.type) : null;
       return entityColumn;
     }
-    entityColumn.name = column.name();
-    entityColumn.columnDefinition = column.columnDefinition();
+
+    StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
+    StringUtils.doIfNonEmpty(
+        column.columnDefinition(),
+        columnDefinition -> entityColumn.columnDefinition = columnDefinition);
+
     entityColumn.length = column.length();
-    entityColumn.precision = column.precision();
-    entityColumn.scale = column.scale();
+    // 使用默认值而不是0
+    NumberUtils.doIfGreaterThanZero(column.precision(), o -> entityColumn.precision = o);
+    NumberUtils.doIfGreaterThanZero(column.scale(), o -> entityColumn.scale = o);
+
     entityColumn.nullable = column.nullable();
     entityColumn.unique = column.unique();
+
     final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
     if (tableColumn != null) {
       entityColumn.comment = tableColumn.comment();
     }
-    entityColumn.typeName =
-        entityColumn.supported
-            ? dialect.getTypeName(
-                entityColumn.type, entityColumn.length, entityColumn.precision, entityColumn.scale)
-            : null;
+
+    if (entityColumn.columnDefinition == null) {
+      entityColumn.typeName =
+          entityColumn.supported
+              ? dialect.getTypeName(
+                  entityColumn.type,
+                  entityColumn.length,
+                  entityColumn.precision,
+                  entityColumn.scale)
+              : null;
+    }
     return entityColumn;
   }
 }

@@ -31,7 +31,7 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @SuppressWarnings("DuplicatedCode")
 public class JdbcTemplateExecutor implements Executor {
-  @Resource private JdbcTemplate jdbcTemplate;
+  @Resource @Getter private JdbcTemplate jdbcTemplate;
 
   private final RedisCache redisCache;
 

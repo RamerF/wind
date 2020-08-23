@@ -1,13 +1,12 @@
 package io.github.ramerf.wind.core.dialect;
 
-import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.*;
+import java.util.Date;
 import java.util.*;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 /** The type Dialect. */
 @Slf4j
 public abstract class Dialect {
+  /** sql类型与长度映射. */
   private final TypeNames typeNames = new TypeNames();
-  private final List<Type> supportedDateTypes = new ArrayList<>();
+  /** 支持的Java类型. */
+  private final List<Type> supportedJavaTypes = new ArrayList<>();
+  /** 不支持指定长度的sql类型.如: date,datetime */
+  private final List<Type> notSupportedLengthTypes = new ArrayList<>();
   /** Defines a default batch size constant */
   public static final String DEFAULT_BATCH_SIZE = "15";
 
@@ -79,7 +82,10 @@ public abstract class Dialect {
     // varchar type
     registerColumnType(String.class, "varchar($l)");
 
+    // 支持的Java类型
     addSupportedJavaTypes();
+    // 不支持指定长度的sql类型
+    addNotSupportedLengthTypes();
   }
 
   /**
@@ -88,8 +94,11 @@ public abstract class Dialect {
    * @return The specified Dialect
    * @throws CommonException If no dialect was specified, or if it could not be instantiated.
    */
-  public static Dialect getDialect() throws CommonException {
-    return instantiateDialect(AppContextInject.getBean(WindConfiguration.class).getDialect());
+  public static Dialect getInstance(final String dialect) throws CommonException {
+    if (dialect != null) {
+      return (Dialect) BeanUtils.initial(dialect);
+    }
+    return null;
   }
 
   /** 通过数据库元数据获取方言. */
@@ -113,29 +122,6 @@ public abstract class Dialect {
       }
     }
     throw new IllegalStateException("can not initial dialect, check data source.");
-  }
-
-  /**
-   * Get an instance of the dialect specified by the given properties or by the current
-   * <tt>System</tt> properties.
-   *
-   * @param props The properties to use for finding the dialect class to use.
-   * @return The specified Dialect
-   * @throws CommonException If no dialect was specified, or if it could not be instantiated.
-   */
-  public static Dialect getDialect(Properties props) throws CommonException {
-    final String dialectName = props.getProperty("wind.dialect");
-    if (dialectName == null) {
-      return getDialect();
-    }
-    return instantiateDialect(dialectName);
-  }
-
-  private static Dialect instantiateDialect(String dialectName) throws CommonException {
-    if (dialectName == null) {
-      throw CommonException.of("The dialect was not set. Set the property [wind.dialect].");
-    }
-    return (Dialect) BeanUtils.initial(dialectName);
   }
 
   /**
@@ -183,7 +169,10 @@ public abstract class Dialect {
     if (!isSupportJavaType(type)) {
       throw CommonException.of("Not supported type " + type.getTypeName());
     }
-    final String result = typeNames.get(type, length, precision, scale);
+    final String result =
+        notSupportedLengthType(type)
+            ? typeNames.get(type)
+            : typeNames.get(type, length, precision, scale);
     if (result == null) {
       throw CommonException.of(
           String.format("No sql type mapping for java type: %s, length: %s", type, length));
@@ -224,12 +213,12 @@ public abstract class Dialect {
         "No add column syntax supported by " + getClass().getName());
   }
 
-  public boolean isSupportJavaType(final Type type) {
-    return supportedDateTypes.contains(type);
+  public final boolean isSupportJavaType(final Type type) {
+    return supportedJavaTypes.contains(type);
   }
 
   protected void addSupportedJavaType(final Type type) {
-    supportedDateTypes.add(type);
+    supportedJavaTypes.add(type);
   }
 
   public void addSupportedJavaTypes() {
@@ -251,7 +240,30 @@ public abstract class Dialect {
     addSupportedJavaType(Float.class);
     addSupportedJavaType(double.class);
     addSupportedJavaType(Double.class);
+
     addSupportedJavaType(BigDecimal.class);
     addSupportedJavaType(String.class);
+
+    addSupportedJavaType(Date.class);
+    addSupportedJavaType(LocalDate.class);
+    addSupportedJavaType(LocalTime.class);
+    addSupportedJavaType(LocalDateTime.class);
+  }
+
+  public void addNotSupportedLengthTypes() {
+    notSupportedLengthTypes.add(Date.class);
+
+    notSupportedLengthTypes.add(LocalDate.class);
+    notSupportedLengthTypes.add(LocalTime.class);
+    notSupportedLengthTypes.add(LocalDateTime.class);
+  }
+
+  /** 是否支持指定长度. */
+  public final boolean notSupportedLengthType(final Type type) {
+    return notSupportedLengthTypes.contains(type);
+  }
+
+  public boolean isSupportCommentOnTable() {
+    return false;
   }
 }

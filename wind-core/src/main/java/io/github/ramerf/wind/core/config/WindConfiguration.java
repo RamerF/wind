@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import java.util.List;
 import lombok.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,8 +10,8 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 /**
  * The type Wind configuration.
  *
- * @author Tang Xiaofeng
  * @since 2020 /1/14
+ * @author Tang Xiaofeng
  */
 @Data
 @ConfigurationProperties("wind")
@@ -45,10 +47,11 @@ public class WindConfiguration {
   /** 自动更新表模式. */
   private DdlAuto ddlAuto;
 
-  /** 数据库方言全路径.. */
+  /** 数据库方言全路径. */
   private String dialect;
 
-  private String storageEngine;
+  /** 禁用{@link AbstractEntityPoJo}中的公共字段.可选值: createTime,updateTime */
+  private List<String> disableFields;
 
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
@@ -56,7 +59,11 @@ public class WindConfiguration {
   /** Redis分布式缓存配置. */
   @NestedConfigurationProperty private RedisCache redisCache = new RedisCache();
 
-  /** Redis 缓存配置. */
+  /**
+   * Redis 缓存配置. @since 2020.08.23
+   *
+   * @author Tang Xiaofeng
+   */
   @Setter
   @Getter
   public static class RedisCache {
@@ -67,11 +74,13 @@ public class WindConfiguration {
     private String keyPrefix = "io.github.ramerf.wind";
   }
 
-  /** The enum Ddl auto. */
+  /** The enum Ddl auto. @author Tang Xiaofeng */
   public enum DdlAuto {
     /** Create ddl auto. */
     CREATE,
     /** Update ddl auto. */
-    UPDATE;
+    UPDATE,
+    /** None ddl auto. */
+    NONE
   }
 }

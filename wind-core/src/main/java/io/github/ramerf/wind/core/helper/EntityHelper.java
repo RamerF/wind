@@ -1,16 +1,13 @@
 package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.config.EntityColumn;
-import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
-import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.metadata.*;
-import io.github.ramerf.wind.core.support.DdlAdapter;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
@@ -21,6 +18,7 @@ import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * The type Entity helper.
@@ -33,10 +31,11 @@ public class EntityHelper {
   /** 实体信息:{类全路径:EntityInfo} */
   private static final Map<String, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
 
-  /** The constant CONFIGURATION. */
-  public static WindConfiguration CONFIGURATION;
+  private static WindContext windContext;
 
-  public static DbMetaData dbMetaData;
+  public static void initital(final WindContext windContext) {
+    EntityHelper.windContext = windContext;
+  }
 
   /**
    * 初始化实体和表对应信息.
@@ -45,10 +44,12 @@ public class EntityHelper {
    * @param clazz the clazz
    */
   public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
-    CLAZZ_ENTITY_MAP.put(
-        clazz.getTypeName(), EntityInfo.of(clazz, CONFIGURATION, dbMetaData.getDialect()));
+    final EntityInfo entityInfo =
+        EntityInfo.of(
+            clazz, windContext.getWindConfiguration(), windContext.getDbMetaData().getDialect());
+    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), entityInfo);
     // 这里进行表定义更新
-    ddlAuto();
+    ddlAuto(entityInfo);
   }
 
   /**
@@ -130,24 +131,27 @@ public class EntityHelper {
     return CLAZZ_ENTITY_MAP.get(fullPath);
   }
 
-  private static void ddlAuto() {
-    // TODO-WARN 配置ddl参数
-    // final DdlAuto ddlAuto = CONFIGURATION.getDdlAuto();
-    final DdlAuto ddlAuto = DdlAuto.CREATE;
+  private static void ddlAuto(final EntityInfo entityInfo) {
+    final DdlAuto ddlAuto = windContext.getWindConfiguration().getDdlAuto();
+    if (ddlAuto == null || DdlAuto.NONE.equals(ddlAuto)) {
+      return;
+    }
+    if (!isMapToTable(entityInfo)) {
+      return;
+    }
     // 先删除,再创建
     if (DdlAuto.CREATE.equals(ddlAuto)) {
       // Phase 1. delete
-
+      final JdbcTemplate jdbcTemplate = windContext.getJdbcTemplateExecutor().getJdbcTemplate();
+      final String dropSql = "drop table if exists " + entityInfo.getName();
+      log.info("ddlAuto:drop table[{}]", dropSql);
+      jdbcTemplate.execute(dropSql);
       // Phase 2. create
-      CLAZZ_ENTITY_MAP.values().stream()
-          .filter(EntityHelper::isMapToTable)
-          .forEach(EntityHelper::ddlCreate);
+      TableExporter.of(windContext).createTable(entityInfo);
     }
     // 仅新增列，不支持更新列定义
     if (DdlAuto.UPDATE.equals(ddlAuto)) {
-      CLAZZ_ENTITY_MAP.values().stream()
-          .filter(EntityHelper::isMapToTable)
-          .forEach(EntityHelper::ddlUpdate);
+      TableExporter.of(windContext).updateTable(entityInfo);
     }
   }
 
@@ -160,23 +164,6 @@ public class EntityHelper {
     return entityInfo != null
         && (entityInfo.getClazz().getAnnotation(Entity.class) != null
             || entityInfo.getClazz().getAnnotation(TableInfo.class) != null);
-  }
-
-  /** 删除表后,再新建数据库表. */
-  private static void ddlCreate(@Nonnull final EntityInfo entityInfo) {
-    new DdlAdapter().createTable(entityInfo);
-    final Dialect dialect = dbMetaData.getDialect();
-    final String addColumnString = dialect.getAddColumnString();
-  }
-
-  /** 更新数据库表定义. */
-  private static void ddlUpdate(@Nonnull final EntityInfo entityInfo) {
-    final TableInformation tableInformation = dbMetaData.getTableInformation(entityInfo.getName());
-    final List<EntityColumn> columns = entityInfo.getEntityColumns();
-    final List<TableColumnInformation> existColumns = tableInformation.getColumns();
-    // columns.stream()
-    //     .filter(column -> !existColumns.contains(TableColumnInformation.of(column.getName())))
-    //     .forEach();
   }
 
   /**

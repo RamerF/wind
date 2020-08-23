@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.util;
 
+import io.github.ramerf.wind.core.reflect.ParameterizedTypeImpl;
 import java.lang.reflect.Type;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  * The type Type utils.
@@ -11,6 +11,6 @@ import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
  */
 public class TypeUtils {
   public static Type getType(final Class<?> rawType, final Class<?> actualArgumentType) {
-    return ParameterizedTypeImpl.make(rawType, new Type[] {actualArgumentType}, null);
+    return new ParameterizedTypeImpl(rawType, new Type[] {actualArgumentType}, null);
   }
 }

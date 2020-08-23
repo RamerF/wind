@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.ramerf.wind.core.WindVersion;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.event.InitEvent;
+import io.github.ramerf.wind.core.event.InitFinishEvent;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
@@ -42,25 +42,54 @@ import org.springframework.util.Assert;
 @EnableConfigurationProperties(WindConfiguration.class)
 @AutoConfigureAfter({CommonBean.class, PrototypeBean.class})
 public class WindAutoConfiguration implements ApplicationContextAware, InitializingBean {
-  @Resource private ObjectMapper objectMapper;
   private final WindConfiguration windConfiguration;
-  private final ApplicationEventPublisher publisher;
+  private final WindContext windContext = new WindContext();
+
   private ApplicationContext applicationContext;
-  private final DbMetaData dbMetaData;
+  @Resource private ObjectMapper objectMapper;
+  private final ApplicationEventPublisher publisher;
 
   public WindAutoConfiguration(
       final WindConfiguration windConfiguration,
-      final ApplicationEventPublisher publisher,
-      @Qualifier("dataSource") final DataSource dataSource) {
+      @Qualifier("dataSource") final DataSource dataSource,
+      final ApplicationEventPublisher publisher) {
     this.windConfiguration = windConfiguration;
+
+    windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
+    windContext.setWindConfiguration(windConfiguration);
+
     this.publisher = publisher;
-    dbMetaData = DbMetaData.getInstance(dataSource);
   }
 
   @Override
   public void setApplicationContext(@Nonnull final ApplicationContext applicationContext)
       throws BeansException {
     this.applicationContext = applicationContext;
+  }
+
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    // 打印banner
+    printBanner();
+    // 初始化分布式主键
+    SnowflakeIdWorker.setWorkerId(windConfiguration.getSnowflakeProp().getWorkerId());
+    SnowflakeIdWorker.setDatacenterId(windConfiguration.getSnowflakeProp().getDataCenterId());
+    AppContextInject.context = applicationContext;
+    // 初始化Query/Update
+    Query.executor = Update.executor = AppContextInject.getBean(JdbcTemplateExecutor.class);
+    windContext.setJdbcTemplateExecutor(Query.executor);
+    // 初始化实体类
+    final Class<?> bootClass =
+        applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
+            .findFirst()
+            .map(Object::getClass)
+            .orElse(null);
+    Assert.notNull(bootClass, "No class annotate with @SpringBootApplication.");
+    initEntityInfo(bootClass, windConfiguration);
+    // 初始化枚举反序列化器
+    registerEnumDeserializer(bootClass, windConfiguration);
+    // 发布初始化完成事件
+    publisher.publishEvent(new InitFinishEvent(windContext));
   }
 
   private void printBanner() {
@@ -80,8 +109,8 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
             AnsiStyle.FAINT));
   }
 
-  private void initEntityInfo(final Class<?> clazz, final WindConfiguration configuration) {
-    final SpringBootApplication application = clazz.getAnnotation(SpringBootApplication.class);
+  private void initEntityInfo(final Class<?> bootClass, final WindConfiguration configuration) {
+    final SpringBootApplication application = bootClass.getAnnotation(SpringBootApplication.class);
     String scanBasePackages;
     String entityPackage;
     if (StringUtils.nonEmpty(configuration.getEntityPackage())) {
@@ -91,11 +120,10 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
             scanBasePackages = String.join(",", application.scanBasePackages()))) {
       entityPackage = scanBasePackages;
     } else {
-      entityPackage = clazz.getPackage().getName();
+      entityPackage = bootClass.getPackage().getName();
     }
-    log.info("initEntityInfo:init entity info[{}]", entityPackage);
-    EntityHelper.CONFIGURATION = windConfiguration;
-    EntityHelper.dbMetaData = dbMetaData;
+    log.info("initEntityInfo:package[{}]", entityPackage);
+    EntityHelper.initital(windContext);
     try {
       final Set<Class<? extends AbstractEntityPoJo>> entities =
           BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);
@@ -145,29 +173,5 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     } catch (IOException e) {
       log.warn("initEntityInfo:fail to register enum deserializer[{}]", e.getMessage());
     }
-  }
-
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    // 打印banner
-    printBanner();
-    // 初始化分布式主键
-    SnowflakeIdWorker.setWorkerId(windConfiguration.getSnowflakeProp().getWorkerId());
-    SnowflakeIdWorker.setDatacenterId(windConfiguration.getSnowflakeProp().getDataCenterId());
-    AppContextInject.context = applicationContext;
-    // 初始化Query/Update
-    Query.executor = Update.executor = AppContextInject.getBean(JdbcTemplateExecutor.class);
-    // 初始化实体类
-    final Class<?> bootClass =
-        applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
-            .findFirst()
-            .map(Object::getClass)
-            .orElse(null);
-    Assert.notNull(bootClass, "No class annotate with @SpringBootApplication.");
-    initEntityInfo(bootClass, windConfiguration);
-    // 初始化枚举反序列化器
-    registerEnumDeserializer(bootClass, windConfiguration);
-    // 发布初始化完成事件
-    publisher.publishEvent(new InitEvent("haha"));
   }
 }

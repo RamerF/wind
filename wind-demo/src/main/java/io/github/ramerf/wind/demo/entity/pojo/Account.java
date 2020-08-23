@@ -5,6 +5,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.LongTimestampTypeHandler;
 import java.util.Date;
+import javax.persistence.Column;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -34,5 +35,7 @@ public class Account extends AbstractEntityPoJo {
   private long createDate;
 
   /** 自定义更新时间. */
-  @UpdateTimestamp private Date updateDate;
+  @Column(columnDefinition = "timestamp with time zone")
+  @UpdateTimestamp
+  private Date updateDate;
 }

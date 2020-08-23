@@ -11,7 +11,7 @@ import javax.persistence.Column;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
+@Target({ElementType.FIELD})
 public @interface TableColumn {
 
   /**

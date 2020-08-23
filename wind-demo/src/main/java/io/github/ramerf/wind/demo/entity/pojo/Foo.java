@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ public class Foo extends AbstractEntityPoJo {
   private String name;
 
   @Column(columnDefinition = "text")
+  @TableColumn(comment = "text string comment")
   private String textString;
 
   /** List&lt;Long&gt; 可对应数据库类型 bigint[] */

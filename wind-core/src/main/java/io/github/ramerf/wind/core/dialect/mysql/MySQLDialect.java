@@ -6,8 +6,6 @@
  */
 package io.github.ramerf.wind.core.dialect.mysql;
 
-import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -20,22 +18,22 @@ import java.util.Date;
  */
 public class MySQLDialect extends Dialect {
 
-  private final MySQLStorageEngine storageEngine;
+  // private final MySQLStorageEngine storageEngine;
 
   /** Constructs a MySQLDialect */
   public MySQLDialect() {
     super();
-    String storageEngine = AppContextInject.getBean(WindConfiguration.class).getStorageEngine();
-    if (storageEngine == null) {
-      this.storageEngine = getDefaultMySQLStorageEngine();
-    } else if ("innodb".equals(storageEngine.toLowerCase())) {
-      this.storageEngine = InnoDBStorageEngine.INSTANCE;
-    } else if ("myisam".equals(storageEngine.toLowerCase())) {
-      this.storageEngine = MyISAMStorageEngine.INSTANCE;
-    } else {
-      throw new UnsupportedOperationException(
-          "The " + storageEngine + " storage engine is not supported!");
-    }
+    // String storageEngine = AppContextInject.getBean(WindConfiguration.class).getStorageEngine();
+    // if (storageEngine == null) {
+    //   this.storageEngine = getDefaultMySQLStorageEngine();
+    // } else if ("innodb".equals(storageEngine.toLowerCase())) {
+    //   this.storageEngine = InnoDBStorageEngine.INSTANCE;
+    // } else if ("myisam".equals(storageEngine.toLowerCase())) {
+    //   this.storageEngine = MyISAMStorageEngine.INSTANCE;
+    // } else {
+    //   throw new UnsupportedOperationException(
+    //       "The " + storageEngine + " storage engine is not supported!");
+    // }
     // char type
     registerColumnType(Character.class, "char(1)");
     registerColumnType(char.class, "char(1)");

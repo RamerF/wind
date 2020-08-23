@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.metadata;
 
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.support.DdlAdapter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.Collection;
@@ -23,17 +22,17 @@ public class DbMetaData {
   @Getter private final Dialect dialect;
   private final NameTableInformation tableInformations;
 
-  private DbMetaData(DataSource dataSource) {
+  private DbMetaData(DataSource dataSource, final String dialectName) {
     Connection connection = getConnection(dataSource);
     final DatabaseMetaData databaseMetaData = getMetaData(connection);
-    this.dialect = Dialect.getInstance(dataSource);
-    DdlAdapter.setDialect(dialect);
     this.tableInformations =
         DbResolver.getTables(databaseMetaData, getCatalog(connection), getSchema(connection));
+    this.dialect =
+        dialectName != null ? Dialect.getInstance(dialectName) : Dialect.getInstance(dataSource);
   }
 
   /** 该方法返回一个单例. */
-  public static DbMetaData getInstance(DataSource dataSource) {
+  public static DbMetaData getInstance(DataSource dataSource, final String dialect) {
     if (INSTANCE != null) {
       return INSTANCE;
     }
@@ -41,7 +40,7 @@ public class DbMetaData {
       if (INSTANCE != null) {
         return INSTANCE;
       }
-      return INSTANCE = new DbMetaData(dataSource);
+      return INSTANCE = new DbMetaData(dataSource, dialect);
     }
   }
 
