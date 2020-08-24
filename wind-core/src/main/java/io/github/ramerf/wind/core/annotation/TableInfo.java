@@ -20,5 +20,8 @@ public @interface TableInfo {
    */
   String name();
 
+  /** 备注. */
+  String comment() default "";
+
   LogicDelete logicDelete() default @LogicDelete;
 }

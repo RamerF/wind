@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.dialect;
 
+import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.lang.reflect.Type;
@@ -263,7 +264,17 @@ public abstract class Dialect {
     return notSupportedLengthTypes.contains(type);
   }
 
-  public boolean isSupportCommentOnTable() {
+  public String getCommonOnTableString(
+      String category, String schema, String table, String comment) {
+    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+  }
+
+  public String getCommonOnColumnString(
+      final String table, final String column, final String comment) {
+    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+  }
+
+  public boolean isSupportCommentOn() {
     return false;
   }
 }

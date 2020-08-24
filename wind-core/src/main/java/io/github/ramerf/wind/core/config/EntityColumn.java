@@ -81,9 +81,8 @@ public class EntityColumn {
     return definition.toString();
   }
 
-  public String getComment(final Dialect dialect) {
-    // TODO-WARN 获取comment
-    return comment;
+  public String getComment(final String tableName, final Dialect dialect) {
+    return dialect.getCommonOnColumnString(tableName, name, comment);
   }
 
   /** 获取唯一定义sql. */

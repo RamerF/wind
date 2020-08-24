@@ -20,13 +20,19 @@ import static io.github.ramerf.wind.core.metadata.DbResolver.*;
 public class DbMetaData {
   private static volatile DbMetaData INSTANCE;
   @Getter private final Dialect dialect;
+  @Getter private final String catelog;
+  @Getter private final String schema;
+
   private final NameTableInformation tableInformations;
 
   private DbMetaData(DataSource dataSource, final String dialectName) {
     Connection connection = getConnection(dataSource);
     final DatabaseMetaData databaseMetaData = getMetaData(connection);
-    this.tableInformations =
-        DbResolver.getTables(databaseMetaData, getCatalog(connection), getSchema(connection));
+    final String catalog = getCatalog(connection);
+    final String schema = DbResolver.getSchema(connection);
+    this.catelog = catalog;
+    this.schema = schema;
+    this.tableInformations = DbResolver.getTables(databaseMetaData, catalog, schema);
     this.dialect =
         dialectName != null ? Dialect.getInstance(dialectName) : Dialect.getInstance(dataSource);
   }

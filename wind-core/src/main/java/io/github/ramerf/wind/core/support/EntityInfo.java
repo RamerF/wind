@@ -26,6 +26,9 @@ public final class EntityInfo {
   /** 表名. */
   private String name;
 
+  /** 备注. */
+  private String comment;
+
   /** 逻辑删除. */
   LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
 
@@ -87,6 +90,10 @@ public final class EntityInfo {
     entityInfo.setUpdateTimeFiled(timeField[1] == null ? defaultTimeField[1] : timeField[1]);
     entityInfo.setClazz(clazz);
     entityInfo.setName(EntityUtils.getTableName(clazz));
+    entityInfo.setComment(
+        Optional.ofNullable(clazz.getAnnotation(TableInfo.class))
+            .map(TableInfo::comment)
+            .orElse(null));
     entityInfo.setFieldColumnMap(fieldColumnMap);
     final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
     if (tableInfo != null) {

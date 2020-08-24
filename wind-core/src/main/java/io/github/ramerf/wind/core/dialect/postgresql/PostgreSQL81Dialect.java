@@ -82,7 +82,19 @@ public class PostgreSQL81Dialect extends Dialect {
   }
 
   @Override
-  public boolean isSupportCommentOnTable() {
+  public String getCommonOnTableString(
+      final String category, final String schema, final String table, final String comment) {
+    return String.format("comment on table %s is '%s'", table, comment);
+  }
+
+  @Override
+  public String getCommonOnColumnString(
+      final String table, final String column, final String comment) {
+    return String.format("comment on column %s.%s is '%s'", table, column, comment);
+  }
+
+  @Override
+  public boolean isSupportCommentOn() {
     return true;
   }
 }
