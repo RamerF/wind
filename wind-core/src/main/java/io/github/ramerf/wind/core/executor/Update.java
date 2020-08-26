@@ -460,27 +460,42 @@ public final class Update {
           ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
     }
     // 执行逻辑删除
-    final String sql = "update %s set %s=%s,%s=? where %s";
-    final Field updateTimeFiled = entityInfo.getUpdateTimeFiled();
-    final String updateString =
-        String.format(
-            sql,
-            entityInfo.getName(),
-            entityInfo.getLogicDeleteProp().getColumn(),
-            entityInfo.getLogicDeleteProp().isDeleted(),
-            entityInfo.getFieldColumnMap().get(updateTimeFiled.getName()),
-            condition.getString());
-    return executor.update(
-        clazz,
-        updateString,
-        ps -> {
-          if (Date.class.isAssignableFrom(updateTimeFiled.getType())) {
-            ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-          } else {
-            ps.setLong(1, System.currentTimeMillis());
-          }
-          condition.getValues(new AtomicInteger(2)).forEach(val -> val.accept(ps));
-        });
+    final Field updateTimeField = entityInfo.getUpdateTimeFiled();
+    final boolean containUpdateTime = updateTimeField != null;
+    // 包含更新时间
+    if (containUpdateTime) {
+      final String updateString =
+          String.format(
+              "update %s set %s=%s,%s=? where %s",
+              entityInfo.getName(),
+              entityInfo.getLogicDeleteProp().getColumn(),
+              entityInfo.getLogicDeleteProp().isDeleted(),
+              entityInfo.getFieldColumnMap().get(updateTimeField.getName()),
+              condition.getString());
+      return executor.update(
+          clazz,
+          updateString,
+          ps -> {
+            if (Date.class.isAssignableFrom(updateTimeField.getType())) {
+              ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            } else {
+              ps.setLong(1, System.currentTimeMillis());
+            }
+            condition.getValues(new AtomicInteger(2)).forEach(val -> val.accept(ps));
+          });
+    } else {
+      final String updateString =
+          String.format(
+              "update %s set %s=%s where %s",
+              entityInfo.getName(),
+              entityInfo.getLogicDeleteProp().getColumn(),
+              entityInfo.getLogicDeleteProp().isDeleted(),
+              condition.getString());
+      return executor.update(
+          clazz,
+          updateString,
+          ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
+    }
   }
 
   /**
