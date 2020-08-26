@@ -11,13 +11,11 @@ import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
 import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
-import io.github.ramerf.wind.core.util.BeanUtils;
-import io.github.ramerf.wind.core.util.StringUtils;
+import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
-import javax.annotation.Resource;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -35,30 +33,33 @@ import org.springframework.util.Assert;
  * 初始化配置.
  *
  * @author Tang Xiaofeng
- * @since 2020 /3/28
+ * @since 2020.3.28
  */
 @Slf4j
 @Configuration
 @EnableConfigurationProperties(WindConfiguration.class)
 @AutoConfigureAfter({CommonBean.class, PrototypeBean.class})
 public class WindAutoConfiguration implements ApplicationContextAware, InitializingBean {
-  private final WindConfiguration windConfiguration;
+  private final WindConfiguration configuration;
   private final WindContext windContext = new WindContext();
-
   private ApplicationContext applicationContext;
-  @Resource private ObjectMapper objectMapper;
   private final ApplicationEventPublisher publisher;
+  private final ObjectMapper objectMapper;
+  private final Executor executor;
 
   public WindAutoConfiguration(
       final WindConfiguration windConfiguration,
       @Qualifier("dataSource") final DataSource dataSource,
-      final ApplicationEventPublisher publisher) {
-    this.windConfiguration = windConfiguration;
-
+      final ApplicationEventPublisher publisher,
+      final ObjectMapper objectMapper,
+      final Executor jdbcTemplateExecutor) {
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
     windContext.setWindConfiguration(windConfiguration);
 
+    this.configuration = windConfiguration;
     this.publisher = publisher;
+    this.objectMapper = objectMapper;
+    this.executor = jdbcTemplateExecutor;
   }
 
   @Override
@@ -68,16 +69,19 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   }
 
   @Override
+  @SuppressWarnings("RedundantThrows")
   public void afterPropertiesSet() throws Exception {
     // 打印banner
     printBanner();
+    AppContextInject.initital(applicationContext);
+    windContext.setJdbcTemplateExecutor(executor);
     // 初始化分布式主键
-    SnowflakeIdWorker.setWorkerId(windConfiguration.getSnowflakeProp().getWorkerId());
-    SnowflakeIdWorker.setDatacenterId(windConfiguration.getSnowflakeProp().getDataCenterId());
-    AppContextInject.context = applicationContext;
+    SnowflakeIdWorker.initial(configuration.getSnowflakeProp());
     // 初始化Query/Update
-    Query.executor = Update.executor = AppContextInject.getBean(JdbcTemplateExecutor.class);
-    windContext.setJdbcTemplateExecutor(Query.executor);
+    Update.initial(executor, configuration);
+    Query.initial(executor, configuration);
+    // 初始化EntityUtils
+    EntityUtils.initial(configuration);
     // 初始化实体类
     final Class<?> bootClass =
         applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
@@ -85,9 +89,11 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
             .map(Object::getClass)
             .orElse(null);
     Assert.notNull(bootClass, "No class annotate with @SpringBootApplication.");
-    initEntityInfo(bootClass, windConfiguration);
+    // 初始化实体信息
+    EntityHelper.initital(windContext);
+    initEntityInfo(bootClass, configuration);
     // 初始化枚举反序列化器
-    registerEnumDeserializer(bootClass, windConfiguration);
+    registerEnumDeserializer(bootClass, configuration);
     // 发布初始化完成事件
     publisher.publishEvent(new InitFinishEvent(windContext));
   }
@@ -123,7 +129,6 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       entityPackage = bootClass.getPackage().getName();
     }
     log.info("initEntityInfo:package[{}]", entityPackage);
-    EntityHelper.initital(windContext);
     try {
       final Set<Class<? extends AbstractEntityPoJo>> entities =
           BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);

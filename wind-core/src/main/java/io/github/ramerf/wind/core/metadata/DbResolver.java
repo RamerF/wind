@@ -101,10 +101,10 @@ public final class DbResolver {
       throws SQLException {
     NameTableColumnInformation nameTableColumnInformation = new NameTableColumnInformation();
     while (resultSet.next()) {
-      final String tableName = resultSet.getString(4);
+      final String tableName = resultSet.getString(3);
       final TableInformation tableInformation = nameTableInformation.getTableInformation(tableName);
       if (tableInformation != null) {
-        tableInformation.getColumns().add(TableColumnInformation.of(resultSet.getString(3)));
+        tableInformation.getColumns().add(TableColumnInformation.of(resultSet.getString(4)));
       }
     }
   }

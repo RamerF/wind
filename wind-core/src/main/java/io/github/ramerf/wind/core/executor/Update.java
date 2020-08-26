@@ -56,7 +56,13 @@ public final class Update {
 
   private EntityInfo entityInfo;
 
-  public static Executor executor;
+  private static Executor executor;
+  private static WindConfiguration configuration;
+
+  public static void initial(final Executor executor, final WindConfiguration configuration) {
+    Update.executor = executor;
+    Update.configuration = configuration;
+  }
 
   /**
    * Gets instance.
@@ -188,19 +194,9 @@ public final class Update {
 
   private <T extends AbstractEntityPoJo> void setCurrentTime(
       @Nonnull final T t, final Field field, final boolean isUpdateTime) {
-    // 如果是默认是时间字段
     if (field == null) {
-      if (isUpdateTime) {
-        t.setUpdateTime(new Date());
-      } else {
-        t.setCreateTime(new Date());
-      }
       return;
     }
-    // 允许过滤创建/更新时间字段,因为可能是数据库自动生成的
-    // if (getConfiguration().getExcludeFields().contains(field.getName())) {
-    //   return;
-    // }
     final Object val = BeanUtils.getValue(t, field, null);
     // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
     if (val == null || (val instanceof Long && (Long) val < 1)) {

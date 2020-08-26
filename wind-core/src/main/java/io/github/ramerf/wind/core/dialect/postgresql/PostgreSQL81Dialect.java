@@ -7,6 +7,8 @@
 package io.github.ramerf.wind.core.dialect.postgresql;
 
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
+import io.github.ramerf.wind.core.dialect.identity.PostgreSQL81IdentityColumnSupport;
 import io.github.ramerf.wind.core.type.JavaType;
 import java.util.BitSet;
 import java.util.Date;
@@ -96,5 +98,10 @@ public class PostgreSQL81Dialect extends Dialect {
   @Override
   public boolean isSupportCommentOn() {
     return true;
+  }
+
+  @Override
+  public IdentityColumnSupport getIdentityColumnSupport() {
+    return new PostgreSQL81IdentityColumnSupport();
   }
 }

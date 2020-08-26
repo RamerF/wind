@@ -16,7 +16,7 @@ public class LongTimestampTypeHandler implements ITypeHandler<Long, Timestamp> {
   @Override
   public Object convertToJdbc(
       Long javaVal, final Field field, @Nonnull final PreparedStatement ps) {
-    return new java.sql.Timestamp(javaVal == null ? 0 : javaVal);
+    return javaVal == null ? 0 : javaVal;
   }
 
   @Override

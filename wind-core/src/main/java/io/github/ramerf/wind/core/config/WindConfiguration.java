@@ -1,8 +1,11 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.support.EntityInfo;
+import java.lang.reflect.Field;
 import java.util.List;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
@@ -41,17 +44,14 @@ public class WindConfiguration {
   /** 是否启用通用mvc配置. */
   private boolean enableWebMvcConfigurer = true;
 
-  // /** 过滤创建/更新时间字段.  */
-  // private List<String> excludeTimeFields;
-
   /** 自动更新表模式. */
   private DdlAuto ddlAuto;
 
+  /** 禁用{@link AbstractEntityPoJo}中的公共字段. */
+  private List<CommonField> disableFields;
+
   /** 数据库方言全路径. */
   private String dialect;
-
-  /** 禁用{@link AbstractEntityPoJo}中的公共字段.可选值: createTime,updateTime */
-  private List<String> disableFields;
 
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
@@ -60,8 +60,9 @@ public class WindConfiguration {
   @NestedConfigurationProperty private RedisCache redisCache = new RedisCache();
 
   /**
-   * Redis 缓存配置. @since 2020.08.23
+   * Redis 缓存配置.
    *
+   * @since 2020.08.23
    * @author Tang Xiaofeng
    */
   @Setter
@@ -74,7 +75,11 @@ public class WindConfiguration {
     private String keyPrefix = "io.github.ramerf.wind";
   }
 
-  /** The enum Ddl auto. @author Tang Xiaofeng */
+  /**
+   * The enum Ddl auto.
+   *
+   * @author Tang Xiaofeng
+   */
   public enum DdlAuto {
     /** Create ddl auto. */
     CREATE,
@@ -82,5 +87,38 @@ public class WindConfiguration {
     UPDATE,
     /** None ddl auto. */
     NONE
+  }
+
+  /**
+   * PoJo公共字段.
+   *
+   * @author Tang Xiaofeng
+   */
+  @SuppressWarnings("JavadocReference")
+  @Slf4j
+  public enum CommonField {
+    /** {@link AbstractEntityPoJo#isDelete}. */
+    IS_DELETE {
+      @Override
+      public Field getField() {
+        return EntityInfo.DEFAULT_LOGIC_DELETE_FIELD;
+      }
+    },
+    /** {@link AbstractEntityPoJo#createTime}. */
+    CREATE_TIME {
+      @Override
+      public Field getField() {
+        return EntityInfo.DEFAULT_CREATE_TIME_FIELD;
+      }
+    },
+    /** {@link AbstractEntityPoJo#updateTime}. */
+    UPDATE_TIME {
+      @Override
+      public Field getField() {
+        return EntityInfo.DEFAULT_UPDATE_TIME_FIELD;
+      }
+    };
+
+    public abstract Field getField();
   }
 }

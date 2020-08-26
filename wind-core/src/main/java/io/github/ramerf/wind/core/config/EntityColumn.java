@@ -2,11 +2,14 @@ package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
+import javax.persistence.Id;
 import lombok.*;
 
 /**
@@ -56,6 +59,9 @@ public class EntityColumn {
   /** 默认值. */
   private String defaultValue;
 
+  /** 是否是主键. */
+  private boolean primaryKey = false;
+
   /** {@link Column#columnDefinition()}. */
   @Getter(AccessLevel.NONE)
   private String columnDefinition;
@@ -73,10 +79,10 @@ public class EntityColumn {
         .append(" ")
         .append(supported ? dialect.getTypeName(getType(), length, precision, scale) : "");
     if (!nullable) {
-      definition.append(" NOT NULL");
+      definition.append(" not null");
     }
     if (defaultValue != null) {
-      definition.append(" DEFAULT ").append(defaultValue);
+      definition.append(" default ").append(defaultValue);
     }
     return definition.toString();
   }
@@ -87,7 +93,7 @@ public class EntityColumn {
 
   /** 获取唯一定义sql. */
   public String getUniqueDefinition() {
-    return unique ? String.format("CREATE UNIQUE INDEX %s_index ON TABLE(%s)", name, name) : null;
+    return unique ? String.format("create unique index %s_index on table(%s)", name, name) : null;
   }
 
   public static EntityColumn of(@Nonnull Field field, Dialect dialect) {
@@ -95,17 +101,29 @@ public class EntityColumn {
     entityColumn.field = field;
     entityColumn.name = EntityUtils.fieldToColumn(field);
     entityColumn.type = field.getGenericType();
-    if (dialect.isSupportJavaType(entityColumn.type)) {
+    if (dialect.isSupportJavaType(entityColumn.type)
+        || (entityColumn.type instanceof Class
+            && InterEnum.class.isAssignableFrom((Class<?>) entityColumn.type))) {
       entityColumn.supported = true;
     }
+    if (field.isAnnotationPresent(Id.class)) {
+      entityColumn.primaryKey = true;
+    }
+
+    final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
+    if (tableColumn != null) {
+      entityColumn.comment = tableColumn.comment();
+    }
+
     final Column column = field.getAnnotation(Column.class);
     if (column == null) {
-      // SqlType  根据范围决定使用的sql类型,如: 0-255 varchar, 255-65535 text, 255-65535 mediumtext, 65535-n
-      // longtext
-      // TODO: 继续跟踪 StandardBasicTypes 里面的类型对应了数据库类型,暂时可以简单的用属性的类型对应数据库类型
-      // entityColumn.sqlType = null;
       entityColumn.typeName =
           entityColumn.supported ? dialect.getTypeName(entityColumn.type) : null;
+
+      // 默认主键定义
+      if (entityColumn.isPrimaryKey()) {
+        entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn);
+      }
       return entityColumn;
     }
 
@@ -122,11 +140,6 @@ public class EntityColumn {
     entityColumn.nullable = column.nullable();
     entityColumn.unique = column.unique();
 
-    final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
-    if (tableColumn != null) {
-      entityColumn.comment = tableColumn.comment();
-    }
-
     if (entityColumn.columnDefinition == null) {
       entityColumn.typeName =
           entityColumn.supported
@@ -138,5 +151,20 @@ public class EntityColumn {
               : null;
     }
     return entityColumn;
+  }
+
+  private static String getPrimaryKeyDefinition(
+      final Dialect dialect, final EntityColumn entityColumn) {
+    final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
+    Long id = 1L;
+    try {
+      id = idGenerator.nextId(null);
+    } catch (Exception ignore) {
+      // 用户自定义的id生成器可能会用到obj参数,此时会抛异常,认为主键非自增
+    }
+    // 只有id为null时才拼接自增定义
+    return id == null
+        ? dialect.getIdentityColumnSupport().getIdentityColumnString(entityColumn.type)
+        : entityColumn.columnDefinition;
   }
 }

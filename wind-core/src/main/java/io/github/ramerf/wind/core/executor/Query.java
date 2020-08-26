@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.AppContextInject;
+import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
@@ -77,7 +78,13 @@ public class Query {
   /** 暂时用于where之后的函数(group by等). */
   private final StringBuilder afterWhereString = new StringBuilder();
 
-  public static Executor executor;
+  private static Executor executor;
+  private static WindConfiguration configuration;
+
+  public static void initial(final Executor executor, final WindConfiguration configuration) {
+    Query.executor = executor;
+    Query.configuration = configuration;
+  }
 
   /**
    * Gets instance.

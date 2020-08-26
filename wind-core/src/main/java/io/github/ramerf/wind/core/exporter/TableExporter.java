@@ -3,6 +3,8 @@ package io.github.ramerf.wind.core.exporter;
 import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.metadata.TableColumnInformation;
+import io.github.ramerf.wind.core.metadata.TableInformation;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.List;
@@ -17,9 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TableExporter {
   private final WindContext windContext;
+  private final Dialect dialect;
 
   private TableExporter(WindContext windContext) {
     this.windContext = windContext;
+    this.dialect = windContext.getDbMetaData().getDialect();
   }
 
   public static TableExporter of(WindContext windContext) {
@@ -28,9 +32,8 @@ public class TableExporter {
 
   public void createTable(@Nonnull final EntityInfo entityInfo) {
     final List<EntityColumn> columns = entityInfo.getEntityColumns();
-    StringBuilder sql = new StringBuilder("CREATE TABLE ");
+    StringBuilder sql = new StringBuilder("create table ");
     sql.append(entityInfo.getName()).append("(\n\t");
-    final Dialect dialect = windContext.getDbMetaData().getDialect();
     final String columnDefinition =
         columns.stream()
             .filter(EntityColumn::isSupported)
@@ -55,7 +58,7 @@ public class TableExporter {
               .filter(column -> StringUtils.nonEmpty(column.getComment()))
               .map(comment -> comment.getComment(entityInfo.getName(), dialect))
               .collect(Collectors.joining(";\n\t"));
-      log.warn("ddlCreate:[\n{}\n]", columnComment);
+      log.debug("createTable:columnComment[\n{}\n]", columnComment);
       sql.append(";\n\t").append(columnComment);
       if (StringUtils.nonEmpty(entityComment)) {
         final String tableComment =
@@ -67,10 +70,53 @@ public class TableExporter {
         sql.append(";\n\t").append(tableComment);
       }
     }
-    log.warn("ddlCreate:[\n{}\n]", sql.toString());
+    log.info("createTable:[\n{}\n]", sql.toString());
     windContext.getJdbcTemplateExecutor().getJdbcTemplate().execute(sql.toString());
-    // 唯一索引
   }
 
-  public void updateTable(@Nonnull final EntityInfo entityInfo) {}
+  public void updateTable(@Nonnull final EntityInfo entityInfo) {
+    final TableInformation tableInformation =
+        windContext.getDbMetaData().getTableInformation(entityInfo.getName());
+    if (tableInformation == null) {
+      createTable(entityInfo);
+      return;
+    }
+    final List<EntityColumn> updateColumns = getUpdatingColumns(entityInfo, tableInformation);
+    if (updateColumns.isEmpty()) {
+      return;
+    }
+    StringBuilder sql = new StringBuilder("alter table ");
+    sql.append(entityInfo.getName()).append("\n\t");
+
+    final String columnDefinition =
+        updateColumns.stream()
+            .filter(EntityColumn::isSupported)
+            .map(column -> " add column " + column.getColumnDefinition(dialect))
+            .collect(Collectors.joining(",\n\t"));
+    sql.append(columnDefinition);
+    // 列注释
+    if (dialect.isSupportCommentOn()) {
+      final String columnComment =
+          updateColumns.stream()
+              .filter(EntityColumn::isSupported)
+              .filter(column -> StringUtils.nonEmpty(column.getComment()))
+              .map(comment -> comment.getComment(entityInfo.getName(), dialect))
+              .collect(Collectors.joining(";\n\t"));
+      sql.append(";\n\t").append(columnComment);
+    }
+    log.info("updateTable:[\n{}\n]", sql.toString());
+    windContext.getJdbcTemplateExecutor().getJdbcTemplate().execute(sql.toString());
+  }
+
+  /** 获取需要更新的列. */
+  private List<EntityColumn> getUpdatingColumns(
+      @Nonnull final EntityInfo entityInfo, final TableInformation tableInformation) {
+    final List<TableColumnInformation> existColumns = tableInformation.getColumns();
+    return entityInfo.getEntityColumns().stream()
+        .filter(
+            column ->
+                existColumns.stream()
+                    .noneMatch(existColumn -> existColumn.getName().equals(column.getName())))
+        .collect(Collectors.toList());
+  }
 }

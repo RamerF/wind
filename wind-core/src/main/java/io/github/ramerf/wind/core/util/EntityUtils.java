@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
+import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
@@ -37,9 +38,14 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @SuppressWarnings({"unused"})
 public final class EntityUtils {
+  private static WindConfiguration configuration;
   /** {@link BaseService} 泛型{@link AbstractEntityPoJo} */
   private static final Map<Class<?>, WeakReference<Class<?>>> SERVICE_POJO_MAP =
       new ConcurrentHashMap<>();
+
+  public static void initial(final WindConfiguration configuration) {
+    EntityUtils.configuration = configuration;
+  }
 
   /**
    * 获取对象所有{@code private && !static && !transient}保存到数据库的属性.<br>
@@ -52,6 +58,7 @@ public final class EntityUtils {
   public static List<Field> getAllColumnFields(@Nonnull final Class<?> obj) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(obj, new ArrayList<>()).stream()
+            .filter(EntityUtils::isNotDisabled)
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
@@ -60,6 +67,12 @@ public final class EntityUtils {
       log.trace("getAllColumnFields:[{}]", fields);
     }
     return fields;
+  }
+
+  /** 断言给定的字段未被禁用.false:已被禁用 */
+  public static boolean isNotDisabled(final Field field) {
+    return configuration.getDisableFields().stream()
+        .noneMatch(disableField -> disableField.getField().equals(field));
   }
 
   /**
@@ -72,6 +85,7 @@ public final class EntityUtils {
   public static <T extends AbstractEntity> List<Field> getNonNullColumnFields(@Nonnull final T t) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(t.getClass(), new ArrayList<>()).stream()
+            .filter(EntityUtils::isNotDisabled)
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
@@ -123,7 +137,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有{@code private && !static && !transient}保存到数据库且值为null的属性.<br>
+   * 获取对象所有{@code private && !static && !transient}保存到数据库且值为null的属性.
    *
    * @param <T> the type parameter
    * @param t the t
@@ -132,6 +146,7 @@ public final class EntityUtils {
   public static <T> List<Field> getNullColumnFields(@Nonnull final T t) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(t.getClass(), new ArrayList<>()).stream()
+            .filter(EntityUtils::isNotDisabled)
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))

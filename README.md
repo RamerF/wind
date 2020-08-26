@@ -215,6 +215,10 @@ wind:
       deleted: true
   # entity所在包路径,多个以,分割
   entity-package: io.github.ramerf.wind.demo.entity.pojo
+  # 自动建表
+  ddl-auto: update
+  # 禁用公共字段
+  disable-fields: is_delete,create_time,update_time
   # 批量操作时每次处理的大小,默认为150
   batch-size: 500
   # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码

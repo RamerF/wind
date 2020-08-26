@@ -7,6 +7,8 @@
 package io.github.ramerf.wind.core.dialect.mysql;
 
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
+import io.github.ramerf.wind.core.dialect.identity.MySQLIdentityColumnSupport;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -68,5 +70,10 @@ public class MySQLDialect extends Dialect {
   @Override
   protected void addSupportedJavaType(final Type type) {
     super.addSupportedJavaType(type);
+  }
+
+  @Override
+  public IdentityColumnSupport getIdentityColumnSupport() {
+    return new MySQLIdentityColumnSupport();
   }
 }

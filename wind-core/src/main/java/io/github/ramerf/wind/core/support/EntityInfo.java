@@ -2,16 +2,15 @@ package io.github.ramerf.wind.core.support;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.config.WindConfiguration.CommonField;
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
 import java.util.*;
 import javax.annotation.Nonnull;
-import javax.persistence.Id;
 import lombok.Data;
-
-import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.CREATE_TIME_FIELD_NAME;
-import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.UPDATE_TIME_FIELD_NAME;
 
 /**
  * 实体信息.
@@ -48,6 +47,25 @@ public final class EntityInfo {
 
   private Dialect dialect;
 
+  /** 默认创建时间字段. */
+  public static final Field DEFAULT_CREATE_TIME_FIELD;
+
+  /** 默认更新时间字段. */
+  public static final Field DEFAULT_UPDATE_TIME_FIELD;
+
+  /** 默认逻辑删除字段. */
+  public static final Field DEFAULT_LOGIC_DELETE_FIELD;
+
+  static {
+    try {
+      DEFAULT_CREATE_TIME_FIELD = AbstractEntityPoJo.class.getDeclaredField("createTime");
+      DEFAULT_UPDATE_TIME_FIELD = AbstractEntityPoJo.class.getDeclaredField("updateTime");
+      DEFAULT_LOGIC_DELETE_FIELD = AbstractEntityPoJo.class.getDeclaredField("isDelete");
+    } catch (NoSuchFieldException e) {
+      throw CommonException.of(e.getMessage(), e);
+    }
+  }
+
   public static EntityInfo of(@Nonnull final WindConfiguration configuration) {
     return of(configuration, null);
   }
@@ -61,11 +79,18 @@ public final class EntityInfo {
 
   public static EntityInfo of(
       @Nonnull final Class<?> clazz, final WindConfiguration configuration, Dialect dialect) {
+    EntityInfo entityInfo = new EntityInfo();
+    entityInfo.dialect = dialect;
+    entityInfo.setClazz(clazz);
+    entityInfo.setName(EntityUtils.getTableName(clazz));
+    entityInfo.setComment(
+        Optional.ofNullable(clazz.getAnnotation(TableInfo.class))
+            .map(TableInfo::comment)
+            .orElse(null));
+
     Map<String, String> fieldColumnMap = new HashMap<>(10);
     // 0:创建时间 1:更新时间
     final Field[] timeField = new Field[2];
-    // 默认时间字段
-    final Field[] defaultTimeField = new Field[2];
     final List<Field> columnFields = EntityUtils.getAllColumnFields(clazz);
     columnFields.forEach(
         field -> {
@@ -75,25 +100,11 @@ public final class EntityInfo {
           if (field.getAnnotation(UpdateTimestamp.class) != null) {
             timeField[1] = field;
           }
-          if (field.getName().equals(CREATE_TIME_FIELD_NAME)) {
-            defaultTimeField[0] = field;
-          }
-          if (field.getName().equals(UPDATE_TIME_FIELD_NAME)) {
-            defaultTimeField[1] = field;
-          }
           fieldColumnMap.put(field.getName(), EntityUtils.fieldToColumn(field));
         });
-
-    EntityInfo entityInfo = new EntityInfo();
-    entityInfo.dialect = dialect;
-    entityInfo.setCreateTimeField(timeField[0] == null ? defaultTimeField[0] : timeField[0]);
-    entityInfo.setUpdateTimeFiled(timeField[1] == null ? defaultTimeField[1] : timeField[1]);
-    entityInfo.setClazz(clazz);
-    entityInfo.setName(EntityUtils.getTableName(clazz));
-    entityInfo.setComment(
-        Optional.ofNullable(clazz.getAnnotation(TableInfo.class))
-            .map(TableInfo::comment)
-            .orElse(null));
+    getCreateUpdateTimeFields(timeField, configuration);
+    entityInfo.setCreateTimeField(timeField[0]);
+    entityInfo.setUpdateTimeFiled(timeField[1]);
     entityInfo.setFieldColumnMap(fieldColumnMap);
     final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
     if (tableInfo != null) {
@@ -106,7 +117,7 @@ public final class EntityInfo {
     List<EntityColumn> entityColumns = new ArrayList<>();
     for (Field field : columnFields) {
       final EntityColumn entityColumn = EntityColumn.of(field, dialect);
-      if (field.getAnnotation(Id.class) != null) {
+      if (entityColumn.isPrimaryKey()) {
         primaryKeys.add(entityColumn);
       }
       entityColumns.add(entityColumn);
@@ -114,5 +125,21 @@ public final class EntityInfo {
     entityInfo.setPrimaryKeys(primaryKeys);
     entityInfo.setEntityColumns(entityColumns);
     return entityInfo;
+  }
+
+  /** 获取创建/更新时间字段.如果字段为空且默认字段未被禁用,将会使用默认字段. */
+  private static void getCreateUpdateTimeFields(
+      final Field[] timeField, final WindConfiguration configuration) {
+    final List<CommonField> disableFields = configuration.getDisableFields();
+    if (timeField[0] == null
+        && disableFields.stream()
+            .noneMatch(disableField -> disableField.getField().equals(DEFAULT_CREATE_TIME_FIELD))) {
+      timeField[0] = DEFAULT_CREATE_TIME_FIELD;
+    }
+    if (timeField[1] == null
+        && disableFields.stream()
+            .noneMatch(disableField -> disableField.getField().equals(DEFAULT_UPDATE_TIME_FIELD))) {
+      timeField[1] = DEFAULT_UPDATE_TIME_FIELD;
+    }
   }
 }

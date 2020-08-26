@@ -148,9 +148,8 @@ public class EntityHelper {
       jdbcTemplate.execute(dropSql);
       // Phase 2. create
       TableExporter.of(windContext).createTable(entityInfo);
-    }
-    // 仅新增列，不支持更新列定义
-    if (DdlAuto.UPDATE.equals(ddlAuto)) {
+    } else if (DdlAuto.UPDATE.equals(ddlAuto)) {
+      // 仅新增列，不支持更新列定义
       TableExporter.of(windContext).updateTable(entityInfo);
     }
   }
