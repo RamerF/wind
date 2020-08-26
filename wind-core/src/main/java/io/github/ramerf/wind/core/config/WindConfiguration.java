@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.config;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,7 @@ public class WindConfiguration {
   private DdlAuto ddlAuto;
 
   /** 禁用{@link AbstractEntityPoJo}中的公共字段. */
-  private List<CommonField> disableFields;
+  private List<CommonField> disableFields = new ArrayList<>();
 
   /** 数据库方言全路径. */
   private String dialect;
