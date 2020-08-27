@@ -8,6 +8,8 @@ import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import io.github.ramerf.wind.core.util.EntityUtils;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Objects;
 import lombok.EqualsAndHashCode;
@@ -176,11 +178,34 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
 
   @Override
   public String getString() {
-    return CollectionUtils.isEmpty(getQueryEntityMetaData().queryAlias)
-        ? getQueryEntityMetaData().getTableAlia().concat(DOT.operator()).concat(WILDCARD.operator())
-        : getQueryEntityMetaData().queryAlias.stream()
-            .map(QueryColumn::methodToColumnWithAlia)
-            .collect(joining(","));
+    final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
+    return CollectionUtils.isEmpty(metaData.queryAlias)
+        ? EntityUtils.getAllColumnFields(metaData.clazz).stream()
+            .filter(EntityUtils::isNotDontFetch)
+            .map(this::fieldToColumnWithAlia)
+            .collect(joining(","))
+        : metaData.queryAlias.stream().map(QueryColumn::toColumnWithAlia).collect(joining(","));
+  }
+
+  private String fieldToColumnWithAlia(final Field field) {
+    return getQueryEntityMetaData()
+        .tableAlia
+        .concat(DOT.operator())
+        .concat(EntityUtils.fieldToColumn(field));
+  }
+
+  /** 增加额外的表别名前缀 */
+  private static String toColumnWithAlia(final QueryAlia queryAlia) {
+    final String alia = queryAlia.getColumnAlia();
+    final String name = queryAlia.getColumnName();
+    final String tableAlias = queryAlia.getTableAlia();
+
+    final SqlFunction sqlFunction = queryAlia.getSqlFunction();
+    final String queryName =
+        Objects.isNull(sqlFunction)
+            ? tableAlias.concat(DOT.operator()).concat(name)
+            : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
+    return queryName.concat(AS.operator()).concat(alia);
   }
 
   /**
@@ -193,19 +218,5 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
       condition = Condition.of(this);
     }
     return condition;
-  }
-
-  /** 增加额外的表别名前缀 */
-  private static String methodToColumnWithAlia(final QueryAlia queryAlia) {
-    final String alia = queryAlia.getColumnAlia();
-    final String name = queryAlia.getColumnName();
-    final String tableAlias = queryAlia.getTableAlia();
-
-    final SqlFunction sqlFunction = queryAlia.getSqlFunction();
-    final String queryName =
-        Objects.isNull(sqlFunction)
-            ? tableAlias.concat(DOT.operator()).concat(name)
-            : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
-    return queryName.concat(AS.operator()).concat(alia);
   }
 }

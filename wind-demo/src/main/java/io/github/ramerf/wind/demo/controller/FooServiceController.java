@@ -306,7 +306,8 @@ public class FooServiceController {
     /// 默认不保存值为null的属性,下面是保存null的属性
     // final int batch = service.createBatchWithNull(list, Arrays.asList(Foo::getName,
     // Foo::getStringList));
-    final int batch = service.createBatch(list);
+    service.createBatch(list);
+    final int batch = list.size();
     log.info("createBatch:[total:{},time elapse:{}]", batch, (System.currentTimeMillis() - start));
     return Rs.ok(batch);
   }

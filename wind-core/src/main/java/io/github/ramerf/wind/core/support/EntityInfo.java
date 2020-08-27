@@ -32,7 +32,7 @@ public final class EntityInfo {
   LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
 
   /** 更新时间字段,{@link UpdateTimestamp} */
-  private Field updateTimeFiled;
+  private Field updateTimeField;
 
   private Field createTimeField;
 
@@ -60,7 +60,7 @@ public final class EntityInfo {
     try {
       DEFAULT_CREATE_TIME_FIELD = AbstractEntityPoJo.class.getDeclaredField("createTime");
       DEFAULT_UPDATE_TIME_FIELD = AbstractEntityPoJo.class.getDeclaredField("updateTime");
-      DEFAULT_LOGIC_DELETE_FIELD = AbstractEntityPoJo.class.getDeclaredField("isDelete");
+      DEFAULT_LOGIC_DELETE_FIELD = AbstractEntityPoJo.class.getDeclaredField("deleted");
     } catch (NoSuchFieldException e) {
       throw CommonException.of(e.getMessage(), e);
     }
@@ -104,7 +104,7 @@ public final class EntityInfo {
         });
     getCreateUpdateTimeFields(timeField, configuration);
     entityInfo.setCreateTimeField(timeField[0]);
-    entityInfo.setUpdateTimeFiled(timeField[1]);
+    entityInfo.setUpdateTimeField(timeField[1]);
     entityInfo.setFieldColumnMap(fieldColumnMap);
     final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
     if (tableInfo != null) {

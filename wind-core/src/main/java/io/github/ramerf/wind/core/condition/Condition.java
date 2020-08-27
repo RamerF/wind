@@ -525,7 +525,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(logicDeleteProp.getColumn())
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
-      final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setIsDelete;
+      final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setDeleted;
       valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), beanFunction));
     }
   }

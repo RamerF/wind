@@ -28,4 +28,7 @@ public @interface TableColumn {
    * <p>对于MYSQL等支持在列定义后直接跟comment的数据库,{@link Column#columnDefinition()}中的comment会被覆盖.
    */
   String comment() default "";
+
+  /** 默认值. */
+  String defaultValue() default "";
 }

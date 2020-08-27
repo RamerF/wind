@@ -58,10 +58,15 @@ public final class Update {
 
   private static Executor executor;
   private static WindConfiguration configuration;
+  private static IdGenerator idGenerator;
 
-  public static void initial(final Executor executor, final WindConfiguration configuration) {
+  public static void initial(
+      final Executor executor,
+      final WindConfiguration configuration,
+      final IdGenerator idGenerator) {
     Update.executor = executor;
     Update.configuration = configuration;
+    Update.idGenerator = idGenerator;
   }
 
   /**
@@ -101,7 +106,6 @@ public final class Update {
     this.condition = QueryColumnFactory.getInstance(clazz, tableName, null).getCondition();
     this.clazz = clazz;
     if (clazz == null) {
-      final WindConfiguration configuration = getConfiguration();
       this.entityInfo = EntityInfo.of(configuration);
       this.entityInfo.setName(tableName);
     } else {
@@ -147,9 +151,9 @@ public final class Update {
    */
   public <T extends AbstractEntityPoJo> void createWithNull(
       @Nonnull final T t, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
-    t.setId(AppContextInject.getBean(IdGenerator.class).nextId(t));
+    t.setId(idGenerator.nextId(t));
     setCurrentTime(t, entityInfo.getCreateTimeField(), false);
-    setCurrentTime(t, entityInfo.getUpdateTimeFiled());
+    setCurrentTime(t, entityInfo.getUpdateTimeField());
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -217,7 +221,7 @@ public final class Update {
    * @param ts the ts
    * @return 保存成功数
    */
-  public <T extends AbstractEntityPoJo> int createBatch(final List<T> ts) {
+  public <T extends AbstractEntityPoJo> Optional<Integer> createBatch(final List<T> ts) {
     return createBatchWithNull(ts, null);
   }
 
@@ -229,18 +233,17 @@ public final class Update {
    * @param includeNullProps 即使值为null也保存的属性
    * @return 保存成功数
    */
-  public <T extends AbstractEntityPoJo> int createBatchWithNull(
+  public <T extends AbstractEntityPoJo> Optional<Integer> createBatchWithNull(
       final List<T> ts, List<IFunction<T, ?>> includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
-      return 0;
+      return Optional.empty();
     }
     // 取第一条记录获取批量保存sql
     final T t = ts.get(0);
-    final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
     ts.forEach(
         o -> {
           setCurrentTime(o, entityInfo.getCreateTimeField(), false);
-          setCurrentTime(o, entityInfo.getUpdateTimeFiled());
+          setCurrentTime(o, entityInfo.getUpdateTimeField());
           o.setId(idGenerator.nextId(o));
         });
     final Set<Field> savingFields = getSavingFields(t, includeNullProps);
@@ -257,35 +260,69 @@ public final class Update {
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql =
         String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
-    int createRow = 0;
-    final int batchSize = getConfiguration().getBatchSize();
-    int total = ts.size();
-    final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
-    for (int j = 0; j < execCount; j++) {
-      final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
-      final int[] batchUpdate =
-          executor.batchUpdate(
-              clazz,
-              execSql,
-              new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(@Nonnull final PreparedStatement ps, final int i) {
-                  final AtomicInteger index = new AtomicInteger(1);
-                  final T obj = execList.get(i);
-                  obj.setCreateTime(new Date());
-                  savingFields.forEach(
-                      field ->
-                          setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
-                }
 
-                @Override
-                public int getBatchSize() {
-                  return execList.size();
-                }
-              });
-      createRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
-    }
-    return createRow;
+    AtomicInteger createRow = new AtomicInteger();
+    BatchExecUtil.batchExec(
+        ts,
+        configuration.getBatchSize(),
+        execList -> {
+          final int[] batchUpdate =
+              executor.batchUpdate(
+                  clazz,
+                  execSql,
+                  new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(@Nonnull final PreparedStatement ps, final int i) {
+                      final AtomicInteger index = new AtomicInteger(1);
+                      final T obj = execList.get(i);
+                      obj.setCreateTime(new Date());
+                      savingFields.forEach(
+                          field ->
+                              setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                      return execList.size();
+                    }
+                  });
+
+          /*
+           * From java.sql.Statement#executeBatch().
+           *
+           * Submits a batch of commands to the database for execution and if all commands execute
+           * successfully, returns an array of update counts. The <code>int</code> elements of the
+           * array that is returned are ordered to correspond to the commands in the batch, which
+           * are ordered according to the order in which they were added to the batch. The elements
+           * in the array returned by the method <code>executeBatch</code> may be one of the
+           * following:
+           *
+           * <OL>
+           *   <LI>A number greater than or equal to zero -- indicates that the command was
+           *       processed successfully and is an update count giving the number of rows in the
+           *       database that were affected by the command's execution
+           *   <LI>A value of <code>SUCCESS_NO_INFO</code> -- indicates that the command was
+           *       processed successfully but that the number of rows affected is unknown
+           *       <p>If one of the commands in a batch update fails to execute properly, this
+           *       method throws a <code>BatchUpdateException</code>, and a JDBC driver may or may
+           *       not continue to process the remaining commands in the batch. However, the
+           *       driver's behavior must be consistent with a particular DBMS, either always
+           *       continuing to process commands or never continuing to process commands. If the
+           *       driver continues processing after a failure, the array returned by the method
+           *       <code>BatchUpdateException.getUpdateCounts</code> will contain as many elements
+           *       as there are commands in the batch, and at least one of the elements will be the
+           *       following:
+           *   <LI>A value of <code>EXECUTE_FAILED</code> -- indicates that the command failed to
+           *       execute successfully and occurs only if a driver continues to process commands
+           *       after a command fails
+           * </OL>
+           *
+           * <p>
+           */
+          createRow.addAndGet(
+              Arrays.stream(batchUpdate).filter(o -> o >= 0 || o == -2).map(o -> 1).sum());
+        });
+    return createRow.get() == ts.size() ? Optional.empty() : Optional.of(createRow.get());
   }
 
   /**
@@ -310,7 +347,7 @@ public final class Update {
   @SuppressWarnings("DuplicatedCode")
   public <T extends AbstractEntityPoJo> int updateWithNull(
       @Nonnull final T t, List<IFunction<T, ?>> includeNullProps) {
-    setCurrentTime(t, entityInfo.getUpdateTimeFiled());
+    setCurrentTime(t, entityInfo.getUpdateTimeField());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
@@ -367,7 +404,7 @@ public final class Update {
       return Optional.empty();
     }
     // 保存更新时间
-    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeFiled()));
+    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeField()));
 
     // 取第一条记录获取批量更新sql
     final T t = ts.get(0);
@@ -388,40 +425,41 @@ public final class Update {
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
-    int updateRow = 0;
-    final int batchSize = getConfiguration().getBatchSize();
-    int total = ts.size();
-    final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
-    for (int j = 0; j < execCount; j++) {
-      final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
-      final int[] batchUpdate =
-          executor.batchUpdate(
-              clazz,
-              execSql,
-              new BatchPreparedStatementSetter() {
-                @Override
-                @SuppressWarnings("unchecked")
-                public void setValues(@Nonnull final PreparedStatement ps, final int i) {
-                  final AtomicInteger index = new AtomicInteger(1);
-                  final T obj = execList.get(i);
-                  setCurrentTime(obj, entityInfo.getUpdateTimeFiled());
-                  savingFields.forEach(
-                      field ->
-                          setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
-                  Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
-                      .eq(T::setId, obj.getId())
-                      .getValues(index)
-                      .forEach(val -> val.accept(ps));
-                }
 
-                @Override
-                public int getBatchSize() {
-                  return execList.size();
-                }
-              });
-      updateRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
-    }
-    return updateRow == ts.size() ? Optional.empty() : Optional.of(updateRow);
+    AtomicInteger updateRow = new AtomicInteger();
+    BatchExecUtil.batchExec(
+        ts,
+        configuration.getBatchSize(),
+        execList -> {
+          final int[] batchUpdate =
+              executor.batchUpdate(
+                  clazz,
+                  execSql,
+                  new BatchPreparedStatementSetter() {
+                    @Override
+                    @SuppressWarnings("unchecked")
+                    public void setValues(@Nonnull final PreparedStatement ps, final int i) {
+                      final AtomicInteger index = new AtomicInteger(1);
+                      final T obj = execList.get(i);
+                      setCurrentTime(obj, entityInfo.getUpdateTimeField());
+                      savingFields.forEach(
+                          field ->
+                              setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
+                      Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
+                          .eq(T::setId, obj.getId())
+                          .getValues(index)
+                          .forEach(val -> val.accept(ps));
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                      return execList.size();
+                    }
+                  });
+          updateRow.getAndAdd(
+              Arrays.stream(batchUpdate).filter(o -> o >= 0 || o == -2).map(o -> 1).sum());
+        });
+    return updateRow.get() == ts.size() ? Optional.empty() : Optional.of(updateRow.get());
   }
 
   /**
@@ -460,7 +498,7 @@ public final class Update {
           ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
     }
     // 执行逻辑删除
-    final Field updateTimeField = entityInfo.getUpdateTimeFiled();
+    final Field updateTimeField = entityInfo.getUpdateTimeField();
     final boolean containUpdateTime = updateTimeField != null;
     // 包含更新时间
     if (containUpdateTime) {
@@ -569,10 +607,5 @@ public final class Update {
       log.error(e.getMessage(), e);
       throw CommonException.of(e.getMessage(), e);
     }
-  }
-
-  @Nonnull
-  private WindConfiguration getConfiguration() {
-    return AppContextInject.getBean(WindConfiguration.class);
   }
 }

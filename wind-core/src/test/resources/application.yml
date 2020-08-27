@@ -2,7 +2,9 @@ server:
   port: 8181
 spring:
   application:
-    name: wind-demo
+    name: wind-test
+  profiles:
+    active: test
   datasource:
     name: wind-demo
     type: com.alibaba.druid.pool.DruidDataSource
@@ -64,8 +66,6 @@ spring:
         max-wait: 100 # # 等待可用连接的最大时间，单位毫秒，默认值为-1，表示永不超时。如果超过等待时间，则直接抛出JedisConnectionException
         min-idle: 2    # 连接池中的最小空闲连接 ，默认值也是0
       shutdown-timeout: 100ms
-  swagger:
-    enable: true
 logging:
   level:
     root: info
@@ -78,20 +78,24 @@ wind:
     # 是否启用逻辑删除,可以在类上使用@TableInfo的enableLogicDelete属性覆盖,添加@TableInfo注解会使该配置失效
     enable: true
     # 逻辑删除字段名,添加@TableInfo注解会使该配置失效
-    column: is_delete
+    column: deleted
     # 逻辑未删除值(默认为 false),添加@TableInfo注解会使该配置失效
     not-delete: false
     # 逻辑已删除值(默认为 true),添加@TableInfo注解会使该配置失效
     deleted: true
+  # 自动建表
+  ddl-auto: update
+  # 禁用公共字段
+  disable-fields: deleted,create_time,update_time
   # entity所在包路径,多个以,分割
-  entity-package: io.github.ramerf.wind.demo.entity.pojo
+  entity-package: io.github.ramerf.wind.core.entity.pojo
   # 批量操作时每次处理的大小,默认为150
-  batch-size: 500
+  batch-size: 30
   # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
   custom-enum-deserializer: false
   redis-cache:
     # 默认开启redis缓存
-    enable: true
+    enable: false
     # redis key前缀
     key-prefix: io.github.ramerf.wind
   # 用于分布式id雪花算法

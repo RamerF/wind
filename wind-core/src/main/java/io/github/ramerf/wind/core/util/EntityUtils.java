@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.config.WindConfiguration;
@@ -69,12 +70,6 @@ public final class EntityUtils {
     return fields;
   }
 
-  /** 断言给定的字段未被禁用.false:已被禁用 */
-  public static boolean isNotDisabled(final Field field) {
-    return configuration.getDisableFields().stream()
-        .noneMatch(disableField -> disableField.getField().equals(field));
-  }
-
   /**
    * 获取对象所有{@code private && !static && !transient}保存到数据库且值不为null的属性.<br>
    *
@@ -94,11 +89,11 @@ public final class EntityUtils {
     if (log.isTraceEnabled()) {
       log.debug("getNonNullColumnFields:[{}]", fields);
     }
-    return filterCustomerField(t, fields);
+    return filterCustomField(t, fields);
   }
 
   @SuppressWarnings("unchecked")
-  private static <T extends AbstractEntity> List<Field> filterCustomerField(
+  private static <T extends AbstractEntity> List<Field> filterCustomField(
       @Nonnull final T t, final List<Field> fields) {
     final Class<? extends AbstractEntityPoJo> clazz;
     if (t instanceof AbstractEntityRequest) {
@@ -110,21 +105,21 @@ public final class EntityUtils {
     // 剔除掉自定义字段
     Stream<Field> stream = fields.stream();
     // 创建时间
-    if (entityInfo.getCreateTimeField() != null) {
+    final Field createTimeField = entityInfo.getCreateTimeField();
+    if (createTimeField != null) {
       // 可能覆盖父类的字段
       stream =
           stream.filter(
               field ->
-                  !CREATE_TIME_FIELD_NAME.equals(field.getName())
-                      || field.equals(entityInfo.getCreateTimeField()));
+                  !CREATE_TIME_FIELD_NAME.equals(field.getName()) || field.equals(createTimeField));
     }
     // 更新时间
-    if (entityInfo.getUpdateTimeFiled() != null) {
+    final Field updateTimeField = entityInfo.getUpdateTimeField();
+    if (updateTimeField != null) {
       stream =
           stream.filter(
               field ->
-                  !UPDATE_TIME_FIELD_NAME.equals(field.getName())
-                      || field.equals(entityInfo.getUpdateTimeFiled()));
+                  !UPDATE_TIME_FIELD_NAME.equals(field.getName()) || field.equals(updateTimeField));
     }
     // 逻辑删除
     final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
@@ -210,6 +205,18 @@ public final class EntityUtils {
     final String nonNullColumn = String.join(",", getNonNullColumns(t));
     log.debug("getNonNullColumn:[{}]", nonNullColumn);
     return nonNullColumn;
+  }
+
+  /** 断言给定的字段未被禁用.false:已被禁用 */
+  public static boolean isNotDisabled(final Field field) {
+    return configuration.getDisableFields().stream()
+        .noneMatch(disableField -> disableField.getField().equals(field));
+  }
+
+  /** 断言给定的字段未被标记默认不抓取.false:不抓取 */
+  public static boolean isNotDontFetch(final Field field) {
+    final TableColumn annotation = field.getAnnotation(TableColumn.class);
+    return annotation == null || !annotation.dontFetch();
   }
 
   /**

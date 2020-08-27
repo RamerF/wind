@@ -98,8 +98,8 @@ public class WindConfiguration {
   @SuppressWarnings("JavadocReference")
   @Slf4j
   public enum CommonField {
-    /** {@link AbstractEntityPoJo#isDelete}. */
-    IS_DELETE {
+    /** {@link AbstractEntityPoJo#deleted}. */
+    DELETED {
       @Override
       public Field getField() {
         return EntityInfo.DEFAULT_LOGIC_DELETE_FIELD;

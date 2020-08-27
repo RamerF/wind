@@ -71,7 +71,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @see DataAccessException
    */
   @Transactional(rollbackFor = Exception.class)
-  default int createBatch(final List<T> ts) throws RuntimeException {
+  default Optional<Integer> createBatch(final List<T> ts) throws RuntimeException {
     return getUpdate().createBatch(ts);
   }
 
@@ -87,8 +87,8 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @see DataAccessException
    */
   @Transactional(rollbackFor = Exception.class)
-  default int createBatchWithNull(final List<T> ts, List<IFunction<T, ?>> includeNullProps)
-      throws RuntimeException {
+  default Optional<Integer> createBatchWithNull(
+      final List<T> ts, List<IFunction<T, ?>> includeNullProps) throws RuntimeException {
     return getUpdate().createBatchWithNull(ts, includeNullProps);
   }
 
@@ -160,7 +160,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
    *
    * @param ts 要更新的数据集
-   * @return {@code Optional},只有当{@code ts}不为空且删除记录数和{@code ts}的大小不同时,包含入参为实际受影响的行数
+   * @return {@code Optional},只有当{@code ts}不为空且更新记录数和{@code ts}的大小不同时,包含入参为实际受影响的行数
    * @throws DataAccessException 如果更新失败
    */
   @Transactional(rollbackFor = Exception.class)
@@ -175,7 +175,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    *
    * @param ts 要更新的数据集
    * @param includeNullProps 即使值为null也保存的属性
-   * @return {@code Optional},只有当{@code ts}不为空且删除记录数和{@code ts}的大小不同时,包含入参为实际受影响的行数
+   * @return {@code Optional},只有当{@code ts}不为空且更新记录数和{@code ts}的大小不同时,包含入参为实际受影响的行数
    * @throws DataAccessException 如果更新失败
    */
   @Transactional(rollbackFor = Exception.class)
@@ -189,7 +189,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    *
    * @param id the id
    * @throws RuntimeException 执行失败或者未删除
-   * @return an {@code Optional} with the {@code CommonException}
+   * @return 仅当受影响行数不为1时,{@code Optional#isPresent()}为true
    * @see DataAccessException
    * @see CommonException
    */

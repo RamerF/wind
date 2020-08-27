@@ -22,6 +22,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class Account extends AbstractEntityPoJo {
 
+  @TableColumn(dontFetch = true)
   private String name;
 
   private String tel;

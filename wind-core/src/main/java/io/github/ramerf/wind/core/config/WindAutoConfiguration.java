@@ -10,6 +10,7 @@ import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
 import io.github.ramerf.wind.core.serializer.JacksonEnumDeserializer;
+import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -27,7 +29,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.*;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.Assert;
 
 /**
  * 初始化配置.
@@ -46,13 +47,15 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   private final ApplicationEventPublisher publisher;
   private final ObjectMapper objectMapper;
   private final Executor executor;
+  private final IdGenerator idGenerator;
 
   public WindAutoConfiguration(
       final WindConfiguration windConfiguration,
       @Qualifier("dataSource") final DataSource dataSource,
       final ApplicationEventPublisher publisher,
       final ObjectMapper objectMapper,
-      final Executor jdbcTemplateExecutor) {
+      final Executor jdbcTemplateExecutor,
+      final ObjectProvider<IdGenerator> idGenerator) {
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
     windContext.setWindConfiguration(windConfiguration);
 
@@ -60,6 +63,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     this.publisher = publisher;
     this.objectMapper = objectMapper;
     this.executor = jdbcTemplateExecutor;
+    this.idGenerator = idGenerator.getIfAvailable();
   }
 
   @Override
@@ -73,12 +77,12 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   public void afterPropertiesSet() throws Exception {
     // 打印banner
     printBanner();
-    AppContextInject.initital(applicationContext);
     windContext.setJdbcTemplateExecutor(executor);
+    AppContextInject.initital(applicationContext);
     // 初始化分布式主键
     SnowflakeIdWorker.initial(configuration.getSnowflakeProp());
     // 初始化Query/Update
-    Update.initial(executor, configuration);
+    Update.initial(executor, configuration, idGenerator);
     Query.initial(executor, configuration);
     // 初始化EntityUtils
     EntityUtils.initial(configuration);
@@ -87,8 +91,8 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
         applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
             .findFirst()
             .map(Object::getClass)
-            .orElse(null);
-    Assert.notNull(bootClass, "No class annotate with @SpringBootApplication.");
+            .orElseThrow(
+                () -> new IllegalStateException("No class annotate with @SpringBootApplication."));
     // 初始化实体信息
     EntityHelper.initital(windContext);
     initEntityInfo(bootClass, configuration);

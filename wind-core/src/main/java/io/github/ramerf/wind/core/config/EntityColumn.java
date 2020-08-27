@@ -74,10 +74,7 @@ public class EntityColumn {
       return name + " " + columnDefinition;
     }
     StringBuilder definition = new StringBuilder();
-    definition
-        .append(name)
-        .append(" ")
-        .append(supported ? dialect.getTypeName(getType(), length, precision, scale) : "");
+    definition.append(name).append(" ").append(typeName);
     if (!nullable) {
       definition.append(" not null");
     }
@@ -113,6 +110,13 @@ public class EntityColumn {
     final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
     if (tableColumn != null) {
       entityColumn.comment = tableColumn.comment();
+      entityColumn.defaultValue = tableColumn.defaultValue();
+    }
+
+    // 如果是基本类型,列定义不能为空
+    if (entityColumn.getType() instanceof Class
+        && BeanUtils.isPrimitiveType((Class<?>) entityColumn.getType())) {
+      entityColumn.nullable = false;
     }
 
     final Column column = field.getAnnotation(Column.class);
@@ -130,14 +134,26 @@ public class EntityColumn {
     StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
     StringUtils.doIfNonEmpty(
         column.columnDefinition(),
-        columnDefinition -> entityColumn.columnDefinition = columnDefinition);
+        columnDefinition -> {
+          final String upperCaseDefinition = columnDefinition.toUpperCase();
+          final int start = upperCaseDefinition.indexOf("DEFAULT");
+          if (start == -1
+              || tableColumn == null
+              || StringUtils.isEmpty(entityColumn.defaultValue)) {
+            entityColumn.columnDefinition = columnDefinition;
+            return;
+          }
+          // TableColumn#defaultValue优先级高于Column#columnDefinition中的default值
+          entityColumn.columnDefinition =
+              columnDefinition.substring(0, start + 8) + entityColumn.defaultValue;
+        });
 
     entityColumn.length = column.length();
     // 使用默认值而不是0
     NumberUtils.doIfGreaterThanZero(column.precision(), o -> entityColumn.precision = o);
     NumberUtils.doIfGreaterThanZero(column.scale(), o -> entityColumn.scale = o);
 
-    entityColumn.nullable = column.nullable();
+    entityColumn.nullable = entityColumn.nullable && column.nullable();
     entityColumn.unique = column.unique();
 
     if (entityColumn.columnDefinition == null) {

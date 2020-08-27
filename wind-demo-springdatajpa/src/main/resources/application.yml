@@ -89,7 +89,7 @@ logging:
 wind:
   logic-delete-prop:
     # 逻辑删除字段名
-    column: is_delete
+    column: deleted
     # 逻辑未删除值(默认为 false)
     not-delete: false
     # 逻辑已删除值(默认为 true)

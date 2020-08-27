@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.entity.pojo;
 
-import io.github.ramerf.wind.core.annotation.LogicDelete;
-import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import java.math.BigDecimal;
 import java.util.BitSet;
@@ -62,7 +61,8 @@ public class Foo extends AbstractEntityPoJo {
   private Integer[] intArr;
 
   /** 自定义逻辑删除字段. */
-  private Boolean hasDeleted;
+  @TableColumn(defaultValue = "false")
+  private boolean hasDeleted;
 
   public enum Type implements InterEnum {
     /** 商品类别 */

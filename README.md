@@ -208,7 +208,7 @@ wind:
       # 是否启用逻辑删除,可以在类上使用@TableInfo(logicDelete = @LogicDelete(enable = true))属性覆盖,添加@TableInfo注解会使该配置失效
       enable: false
       # 逻辑删除字段名,添加@TableInfo注解会使该配置失效
-      column: isDelete
+      column: deleted
       # 逻辑未删除值(默认为 false),添加@TableInfo注解会使该配置失效
       not-delete: false
       # 逻辑已删除值(默认为 true),添加@TableInfo注解会使该配置失效
@@ -218,7 +218,7 @@ wind:
   # 自动建表
   ddl-auto: update
   # 禁用公共字段
-  disable-fields: is_delete,create_time,update_time
+  disable-fields: deleted,create_time,update_time
   # 批量操作时每次处理的大小,默认为150
   batch-size: 500
   # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
