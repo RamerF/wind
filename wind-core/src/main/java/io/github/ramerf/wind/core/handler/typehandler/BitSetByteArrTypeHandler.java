@@ -7,16 +7,16 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
- * java:{@literal java:BitSet <=> jdbc:byte[]}.
+ * java:{@literal java:BitSet <=> jdbc:byte[]}.适用于支持byte[]/bytea的数据库如:Pgsql.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class BitSetTypeHandler implements ITypeHandler<BitSet, byte[]> {
+public class BitSetByteArrTypeHandler implements ITypeHandler<BitSet, byte[]> {
   @Override
   public Object convertToJdbc(
       BitSet javaVal, final Field field, @Nonnull final PreparedStatement ps) {
-    return javaVal.toByteArray();
+    return javaVal != null ? javaVal.toByteArray() : null;
   }
 
   @Override

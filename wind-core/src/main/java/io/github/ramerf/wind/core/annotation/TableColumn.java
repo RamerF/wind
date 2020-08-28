@@ -29,6 +29,13 @@ public @interface TableColumn {
    */
   String comment() default "";
 
-  /** 默认值. */
+  /**
+   * 默认值.<b>如果是空串,需要设置{@link #defaultBlankValue()}为true</b>
+   *
+   * <p>{@link Column#columnDefinition()}中的default会被覆盖.
+   */
   String defaultValue() default "";
+
+  /** 指定默认值为空串. */
+  boolean defaultBlankValue() default false;
 }

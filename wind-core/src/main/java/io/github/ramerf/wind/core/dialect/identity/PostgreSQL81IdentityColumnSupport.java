@@ -10,6 +10,10 @@ import java.lang.reflect.Type;
 
 /** @author Andrea Boriero */
 public class PostgreSQL81IdentityColumnSupport extends IdentityColumnSupportImpl {
+  @Override
+  public boolean containDataTypeInIdentityColumn() {
+    return true;
+  }
 
   @Override
   public String getIdentityColumnString(Type type) {

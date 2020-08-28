@@ -82,7 +82,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     // 初始化分布式主键
     SnowflakeIdWorker.initial(configuration.getSnowflakeProp());
     // 初始化Query/Update
-    Update.initial(executor, configuration, idGenerator);
+    Update.initial(executor, configuration, idGenerator, windContext.getDbMetaData().getDialect());
     Query.initial(executor, configuration);
     // 初始化EntityUtils
     EntityUtils.initial(configuration);

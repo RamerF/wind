@@ -34,7 +34,7 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
   private Long id;
 
   /**
-   * Request实体转换为Domain实体的额外处理.
+   * Request实体转换为Domain实体的额外处理,比如敏感词过滤.
    *
    * @param domain Domain实体 {@link AbstractEntityPoJo}.
    */

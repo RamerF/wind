@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.condition.ICondition;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
@@ -59,14 +60,17 @@ public final class Update {
   private static Executor executor;
   private static WindConfiguration configuration;
   private static IdGenerator idGenerator;
+  private static Dialect dialect;
 
   public static void initial(
       final Executor executor,
       final WindConfiguration configuration,
-      final IdGenerator idGenerator) {
+      final IdGenerator idGenerator,
+      final Dialect dialect) {
     Update.executor = executor;
     Update.configuration = configuration;
     Update.idGenerator = idGenerator;
+    Update.dialect = dialect;
   }
 
   /**
@@ -184,7 +188,7 @@ public final class Update {
             },
             keyHolder);
     if (Objects.isNull(t.getId())) {
-      t.setId((Long) Objects.requireNonNull(keyHolder.getKeys()).get("id"));
+      t.setId((Long) Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey()));
     }
     if (update != 1 || Objects.isNull(t.getId())) {
       throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);

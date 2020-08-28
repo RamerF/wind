@@ -45,11 +45,11 @@ public class WindConfiguration {
   /** 是否启用通用mvc配置. */
   private boolean enableWebMvcConfigurer = true;
 
-  /** 自动更新表模式. */
-  private DdlAuto ddlAuto;
-
   /** 禁用{@link AbstractEntityPoJo}中的公共字段. */
   private List<CommonField> disableFields = new ArrayList<>();
+
+  /** 自动更新表模式. */
+  private DdlAuto ddlAuto;
 
   /** 数据库方言全路径. */
   private String dialect;
@@ -95,8 +95,8 @@ public class WindConfiguration {
    *
    * @author Tang Xiaofeng
    */
-  @SuppressWarnings("JavadocReference")
   @Slf4j
+  @SuppressWarnings("JavadocReference")
   public enum CommonField {
     /** {@link AbstractEntityPoJo#deleted}. */
     DELETED {

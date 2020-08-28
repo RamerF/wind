@@ -14,7 +14,6 @@ import org.springframework.dao.DataAccessException;
  * @author Tang Xiaofeng
  * @since 2019 /11/13
  */
-@SuppressWarnings({"unused", "unchecked"})
 public interface BaseService<T extends AbstractEntityPoJo>
     extends QueryService<T>, UpdateService<T> {
   /**

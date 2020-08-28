@@ -7,6 +7,11 @@ import java.lang.reflect.Type;
 public class IdentityColumnSupportImpl implements IdentityColumnSupport {
 
   @Override
+  public boolean containDataTypeInIdentityColumn() {
+    return false;
+  }
+
+  @Override
   public String getIdentityColumnString(Type type) throws CommonException {
     throw CommonException.of(getClass().getName() + " does not support identity key generation");
   }

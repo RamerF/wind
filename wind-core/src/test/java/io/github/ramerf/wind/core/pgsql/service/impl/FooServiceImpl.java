@@ -1,6 +1,6 @@
-package io.github.ramerf.wind.core.service.impl;
+package io.github.ramerf.wind.core.pgsql.service.impl;
 
-import io.github.ramerf.wind.core.service.FooService;
+import io.github.ramerf.wind.core.pgsql.service.FooService;
 import org.springframework.stereotype.Service;
 
 /**

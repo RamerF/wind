@@ -1,7 +1,10 @@
-package io.github.ramerf.wind.core.entity.pojo;
+package io.github.ramerf.wind.core.pgsql.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.handler.TypeHandler;
+import io.github.ramerf.wind.core.handler.typehandler.BitSetByteArrTypeHandler;
 import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
@@ -13,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * @author Tang Xiaofeng
  * @since 2019/12/16
  */
-@TableInfo(name = "foo", logicDelete = @LogicDelete(column = "has_deleted"))
+@TableInfo(name = "foo", comment = "测试表", logicDelete = @LogicDelete(column = "has_deleted"))
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -22,6 +25,9 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class Foo extends AbstractEntityPoJo {
   private String name;
+
+  /** 基本类型. */
+  private int age;
 
   @Column(columnDefinition = "text")
   private String textString;
@@ -41,6 +47,7 @@ public class Foo extends AbstractEntityPoJo {
 
   /** Bitset 可对应数据库类型 bytea */
   @Column(columnDefinition = "bytea")
+  @TypeHandler(BitSetByteArrTypeHandler.class)
   private BitSet bitSet;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 smallint/int */
@@ -63,6 +70,11 @@ public class Foo extends AbstractEntityPoJo {
   /** 自定义逻辑删除字段. */
   @TableColumn(defaultValue = "false")
   private boolean hasDeleted;
+
+  /** 大文本字段,测试默认不拉取该字段. */
+  @TableColumn(dontFetch = true, comment = "大文本字段,测试默认不拉取该字段")
+  @Column(columnDefinition = "text")
+  private String largeText;
 
   public enum Type implements InterEnum {
     /** 商品类别 */

@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core;
+package io.github.ramerf.wind.core.pgsql;
 
 import io.github.ramerf.wind.core.support.IdGenerator;
 import org.springframework.boot.SpringApplication;
@@ -11,9 +11,9 @@ import org.springframework.context.annotation.Bean;
  * @author Tang xiaofeng
  */
 @SpringBootApplication
-public class TestApplication {
+public class PgsqlApplication {
   public static void main(String[] args) {
-    SpringApplication.run(TestApplication.class, args);
+    SpringApplication.run(PgsqlApplication.class, args);
   }
 
   @Bean

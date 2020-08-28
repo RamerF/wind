@@ -9,8 +9,8 @@ package io.github.ramerf.wind.core.dialect.mysql;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.dialect.identity.MySQLIdentityColumnSupport;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.BitSet;
 import java.util.Date;
 
 /**
@@ -19,23 +19,11 @@ import java.util.Date;
  * @author Gavin King
  */
 public class MySQLDialect extends Dialect {
-
-  // private final MySQLStorageEngine storageEngine;
+  private final MySQLStorageEngine storageEngine = getDefaultMySQLStorageEngine();
 
   /** Constructs a MySQLDialect */
   public MySQLDialect() {
     super();
-    // String storageEngine = AppContextInject.getBean(WindConfiguration.class).getStorageEngine();
-    // if (storageEngine == null) {
-    //   this.storageEngine = getDefaultMySQLStorageEngine();
-    // } else if ("innodb".equals(storageEngine.toLowerCase())) {
-    //   this.storageEngine = InnoDBStorageEngine.INSTANCE;
-    // } else if ("myisam".equals(storageEngine.toLowerCase())) {
-    //   this.storageEngine = MyISAMStorageEngine.INSTANCE;
-    // } else {
-    //   throw new UnsupportedOperationException(
-    //       "The " + storageEngine + " storage engine is not supported!");
-    // }
     // char type
     registerColumnType(Character.class, "char(1)");
     registerColumnType(char.class, "char(1)");
@@ -68,12 +56,27 @@ public class MySQLDialect extends Dialect {
   }
 
   @Override
-  protected void addSupportedJavaType(final Type type) {
-    super.addSupportedJavaType(type);
+  public void addSupportedJavaTypes() {
+    super.addSupportedJavaTypes();
+    addSupportedJavaType(BitSet.class);
   }
 
   @Override
   public IdentityColumnSupport getIdentityColumnSupport() {
     return new MySQLIdentityColumnSupport();
+  }
+
+  @Override
+  public String getTableTypeString() {
+    return storageEngine.getTableTypeString(getEngineKeyword());
+  }
+
+  protected String getEngineKeyword() {
+    return "type";
+  }
+
+  @Override
+  public String getKeyHolderKey() {
+    return "GENERATED_KEY";
   }
 }

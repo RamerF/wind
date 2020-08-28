@@ -271,7 +271,7 @@ public abstract class Dialect {
     throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
   }
 
-  public String getCommonOnColumnString(
+  public String getCommentOnColumnString(
       final String table, final String column, final String comment) {
     throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
   }
@@ -289,4 +289,11 @@ public abstract class Dialect {
   public IdentityColumnSupport getIdentityColumnSupport() {
     return new IdentityColumnSupportImpl();
   }
+
+  public String getTableTypeString() {
+    // grrr... for differentiation of mysql storage engines
+    return "";
+  }
+
+  public abstract String getKeyHolderKey();
 }

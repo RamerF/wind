@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.entity.response;
+package io.github.ramerf.wind.core.pgsql.entity.response;
 
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import lombok.Getter;

@@ -179,8 +179,8 @@ public final class ControllerHelper {
     }
     entity.setId(id);
     try {
-      final Optional<Integer> update = invoke.update(entity);
-      return update.isPresent()
+      final int update = invoke.update(entity);
+      return update == 1
           ? notExist(String.valueOf(id))
           : ok(json().put("id", entity.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
     } catch (Exception e) {
@@ -240,8 +240,8 @@ public final class ControllerHelper {
           final ResultCode successCode,
           final ResultCode errorCode) {
     try {
-      final Optional<Integer> update = invoke.update(entity);
-      return update.isPresent()
+      final int update = invoke.update(entity);
+      return update == 1
           ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
           : Objects.nonNull(successCode) ? ok(entity.getId(), successCode) : ok();
     } catch (Exception e) {
@@ -504,11 +504,11 @@ public final class ControllerHelper {
         getNullProp(entity).stream()
             .filter(prop -> !includeNulls.contains(prop))
             .toArray(String[]::new));
-    // 额外处理
+    // 额外处理,比如敏感词过滤
     entity.redundantValue(poJo);
     log.debug("createOrUpdate:[{}]", poJo);
     try {
-      long affectRow = create ? invoke.create(poJo) > 0 ? 1 : 0 : invoke.update(poJo).orElse(0);
+      long affectRow = create ? invoke.create(poJo) > 0 ? 1 : 0 : invoke.update(poJo);
       return affectRow == 1
           ? ok(
               json().put("id", poJo.getId()),

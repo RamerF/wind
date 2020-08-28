@@ -90,7 +90,7 @@ public class PostgreSQL81Dialect extends Dialect {
   }
 
   @Override
-  public String getCommonOnColumnString(
+  public String getCommentOnColumnString(
       final String table, final String column, final String comment) {
     return String.format("comment on column %s.%s is '%s'", table, column, comment);
   }
@@ -103,5 +103,10 @@ public class PostgreSQL81Dialect extends Dialect {
   @Override
   public IdentityColumnSupport getIdentityColumnSupport() {
     return new PostgreSQL81IdentityColumnSupport();
+  }
+
+  @Override
+  public String getKeyHolderKey() {
+    return "id";
   }
 }

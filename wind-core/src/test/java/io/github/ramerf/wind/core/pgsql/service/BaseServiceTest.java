@@ -1,10 +1,10 @@
-package io.github.ramerf.wind.core.service;
+package io.github.ramerf.wind.core.pgsql.service;
 
-import io.github.ramerf.wind.core.TestApplication;
 import io.github.ramerf.wind.core.condition.SortColumn;
-import io.github.ramerf.wind.core.entity.pojo.Foo;
-import io.github.ramerf.wind.core.entity.pojo.Foo.Type;
-import io.github.ramerf.wind.core.entity.response.IdNameResponse;
+import io.github.ramerf.wind.core.pgsql.PgsqlApplication;
+import io.github.ramerf.wind.core.pgsql.entity.pojo.Foo;
+import io.github.ramerf.wind.core.pgsql.entity.pojo.Foo.Type;
+import io.github.ramerf.wind.core.pgsql.entity.response.IdNameResponse;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.LongStream;
@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +28,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 05/08/2020
  */
 @Slf4j
-@Sql("classpath:db-test.sql")
+@Sql("classpath:db-pgsql.sql")
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = TestApplication.class)
+@ActiveProfiles("pgsql")
+@SpringBootTest(classes = PgsqlApplication.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@DisplayName("Pgsql 测试")
 public class BaseServiceTest {
   @Resource private FooService service;
   private static final Foo foo;
@@ -64,7 +67,7 @@ public class BaseServiceTest {
   @Order(1)
   @Transactional(rollbackFor = Exception.class)
   public void createAndGet() {
-    assertNotNull(service.createAndGet(foo));
+    assertNotNull(service.createAndGetWithNull(foo, Collections.singletonList(Foo::getStringList)));
   }
 
   @Test
@@ -287,7 +290,7 @@ public class BaseServiceTest {
   @Test
   @Transactional(rollbackFor = Exception.class)
   public void testUpdate() {
-    assertEquals(service.update(foo).orElse(0), 1);
+    assertEquals(service.update(foo), 1);
   }
 
   @Test
@@ -334,7 +337,7 @@ public class BaseServiceTest {
   @Order(30)
   @Transactional(rollbackFor = Exception.class)
   public void testDelete() {
-    assertFalse(service.delete(id).isPresent());
+    assertEquals(service.delete(id), 1);
   }
 
   @Test
@@ -348,6 +351,6 @@ public class BaseServiceTest {
   @Order(32)
   @Transactional(rollbackFor = Exception.class)
   public void testDeleteByIds() {
-    assertFalse(service.deleteByIds(Arrays.asList(id, 2L, 3L, 4L)).isPresent());
+    assertTrue(service.deleteByIds(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
   }
 }

@@ -1,9 +1,9 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.reflect.Field;
 import java.sql.*;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
@@ -16,14 +16,15 @@ public class LongArrayTypeHandler implements ITypeHandler<Long[], Long[]> {
   @Override
   public Object convertToJdbc(
       Long[] javaVal, final Field field, @Nonnull final PreparedStatement ps) {
+    if (javaVal == null) {
+      return null;
+    }
     try {
       final Connection connection = ps.getConnection();
       return connection.createArrayOf(getJdbcType(field), javaVal);
     } catch (SQLException e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
+      throw CommonException.of(e);
     }
-    return Objects.nonNull(javaVal) ? javaVal : new Integer[0];
   }
 
   @Override

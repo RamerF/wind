@@ -17,4 +17,8 @@ public class MySQL5Dialect extends MySQLDialect {
     //		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
     registerColumnType(String.class, 65535, "varchar($l)");
   }
+
+  protected String getEngineKeyword() {
+    return "engine";
+  }
 }

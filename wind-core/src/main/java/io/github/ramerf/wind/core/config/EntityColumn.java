@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -81,11 +82,14 @@ public class EntityColumn {
     if (defaultValue != null) {
       definition.append(" default ").append(defaultValue);
     }
+    if (!dialect.isSupportCommentOn() && StringUtils.nonEmpty(comment)) {
+      definition.append(" comment ").append(comment);
+    }
     return definition.toString();
   }
 
   public String getComment(final String tableName, final Dialect dialect) {
-    return dialect.getCommonOnColumnString(tableName, name, comment);
+    return dialect.getCommentOnColumnString(tableName, name, comment);
   }
 
   /** 获取唯一定义sql. */
@@ -110,19 +114,29 @@ public class EntityColumn {
     final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
     if (tableColumn != null) {
       entityColumn.comment = tableColumn.comment();
-      entityColumn.defaultValue = tableColumn.defaultValue();
+      if (StringUtils.nonEmpty(tableColumn.defaultValue())) {
+        entityColumn.defaultValue = tableColumn.defaultValue();
+      } else if (tableColumn.defaultBlankValue()) {
+        entityColumn.defaultValue = "''";
+      }
     }
 
     // 如果是基本类型,列定义不能为空
     if (entityColumn.getType() instanceof Class
-        && BeanUtils.isPrimitiveType((Class<?>) entityColumn.getType())) {
+        && ((Class<?>) entityColumn.getType()).isPrimitive()) {
       entityColumn.nullable = false;
     }
 
     final Column column = field.getAnnotation(Column.class);
     if (column == null) {
       entityColumn.typeName =
-          entityColumn.supported ? dialect.getTypeName(entityColumn.type) : null;
+          entityColumn.supported
+              ? dialect.getTypeName(
+                  entityColumn.type,
+                  entityColumn.length,
+                  entityColumn.precision,
+                  entityColumn.scale)
+              : null;
 
       // 默认主键定义
       if (entityColumn.isPrimaryKey()) {
@@ -135,17 +149,31 @@ public class EntityColumn {
     StringUtils.doIfNonEmpty(
         column.columnDefinition(),
         columnDefinition -> {
-          final String upperCaseDefinition = columnDefinition.toUpperCase();
-          final int start = upperCaseDefinition.indexOf("DEFAULT");
-          if (start == -1
-              || tableColumn == null
-              || StringUtils.isEmpty(entityColumn.defaultValue)) {
+          final String defaultRegex = "default[ ]+\\w+[ ]?";
+          final String commentRegex = "comment.*";
+          final String lowerCaseDefinition = columnDefinition.toLowerCase();
+          if (tableColumn == null) {
             entityColumn.columnDefinition = columnDefinition;
             return;
           }
           // TableColumn#defaultValue优先级高于Column#columnDefinition中的default值
-          entityColumn.columnDefinition =
-              columnDefinition.substring(0, start + 8) + entityColumn.defaultValue;
+          String defaultValue = entityColumn.defaultValue;
+          if (StringUtils.nonEmpty(defaultValue)) {
+            String replacement = " default '" + defaultValue + "'";
+            entityColumn.columnDefinition = columnDefinition.replaceAll(defaultRegex, replacement);
+            if (!entityColumn.columnDefinition.contains("default")) {
+              entityColumn.columnDefinition += replacement;
+            }
+          }
+          String comment = entityColumn.comment;
+          if (StringUtils.nonEmpty(comment)) {
+            String replacement = " comment '" + comment + "'";
+            entityColumn.columnDefinition = columnDefinition.replaceAll(commentRegex, replacement);
+            if (!dialect.isSupportCommentOn()
+                && !entityColumn.columnDefinition.contains("comment")) {
+              entityColumn.columnDefinition += replacement;
+            }
+          }
         });
 
     entityColumn.length = column.length();
@@ -179,8 +207,14 @@ public class EntityColumn {
       // 用户自定义的id生成器可能会用到obj参数,此时会抛异常,认为主键非自增
     }
     // 只有id为null时才拼接自增定义
+    final IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
     return id == null
-        ? dialect.getIdentityColumnSupport().getIdentityColumnString(entityColumn.type)
+        ? identityColumnSupport.containDataTypeInIdentityColumn()
+            ? identityColumnSupport.getIdentityColumnString(entityColumn.type)
+            : dialect
+                .getTypeName(entityColumn.type)
+                .concat(" ")
+                .concat(identityColumnSupport.getIdentityColumnString(entityColumn.type))
         : entityColumn.columnDefinition;
   }
 }

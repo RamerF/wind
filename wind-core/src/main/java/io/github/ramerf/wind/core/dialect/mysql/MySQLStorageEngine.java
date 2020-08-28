@@ -7,17 +7,18 @@
 package io.github.ramerf.wind.core.dialect.mysql;
 
 /**
- * This interface defines how various MySQL storage engines behave in regard to Hibernate functionality.
+ * This interface defines how various MySQL storage engines behave in regard to Hibernate
+ * functionality.
  *
  * @author Vlad Mihalcea
  */
 public interface MySQLStorageEngine {
-	
-	boolean supportsCascadeDelete();
 
-	String getTableTypeString(String engineKeyword);
+  boolean supportsCascadeDelete();
 
-	boolean hasSelfReferentialForeignKeyBug();
+  String getTableTypeString(String engineKeyword);
 
-	boolean dropConstraints();
+  boolean hasSelfReferentialForeignKeyBug();
+
+  boolean dropConstraints();
 }

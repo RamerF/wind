@@ -13,6 +13,13 @@ import org.springframework.data.mapping.MappingException;
 public interface IdentityColumnSupport {
 
   /**
+   * {@link #getIdentityColumnString(Type)}是否包含数据类型.
+   *
+   * @return boolean
+   */
+  boolean containDataTypeInIdentityColumn();
+
+  /**
    * The syntax used during DDL to define a column as being an IDENTITY of a particular type.
    *
    * @param type The type.
