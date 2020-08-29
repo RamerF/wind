@@ -26,4 +26,5 @@ hs_err_pid*
 
 target
 /**/src/main/resources/config
+/**/src/test/resources/config
 /**/TestController.java

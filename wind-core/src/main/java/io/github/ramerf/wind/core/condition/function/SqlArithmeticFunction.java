@@ -13,13 +13,9 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  * @author Tang Xiaofeng
  * @since 2020/4/29
  */
-@SuppressWarnings("RedundantCast")
 public enum SqlArithmeticFunction implements SqlFunction {
   /** 取绝对值. */
-  ABS(
-      str -> {
-        return String.format(" SUM(%s) ", (Object[]) str);
-      }),
+  ABS(str -> " ABS(" + String.join("", str) + ") "),
   ;
 
   private final VarArgsFunction<String, String> exec;

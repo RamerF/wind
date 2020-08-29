@@ -13,7 +13,11 @@ import org.springframework.context.ApplicationContext;
  */
 @Slf4j
 public class AppContextInject {
-  static ApplicationContext context;
+  private static ApplicationContext context;
+
+  public static void initital(final ApplicationContext context) {
+    AppContextInject.context = context;
+  }
 
   public static <T> T getBean(final Class<T> requiredType) {
     return context.getBean(requiredType);

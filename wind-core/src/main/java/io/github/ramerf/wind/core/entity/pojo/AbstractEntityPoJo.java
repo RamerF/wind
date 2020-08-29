@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.entity.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import java.util.Date;
 import javax.persistence.*;
@@ -23,6 +24,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 @EqualsAndHashCode
 @MappedSuperclass
 public class AbstractEntityPoJo implements AbstractEntity {
+  public static final String LOGIC_DELETE_FIELD_NAME = "deleted";
+  public static final String LOGIC_DELETE_COLUMN_NAME = "deleted";
+  public static final String CREATE_TIME_FIELD_NAME = "createTime";
+  public static final String UPDATE_TIME_FIELD_NAME = "updateTime";
+
   // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
 
   @Id
@@ -30,7 +36,9 @@ public class AbstractEntityPoJo implements AbstractEntity {
   private Long id;
 
   /** 是否逻辑删除,false:未删除,所有的查询默认支只会查询未删除的数据. */
-  @Builder.Default private Boolean isDelete = Boolean.FALSE;
+  @Builder.Default
+  @TableColumn(defaultValue = "false")
+  private boolean deleted = false;
 
   /** 创建时间 */
   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -42,7 +50,7 @@ public class AbstractEntityPoJo implements AbstractEntity {
   @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
   private Date updateTime;
 
-  /** 所在数据库名称,不能赋值,因为该值始终为数据库默认值:DATABASE(). */
+  /** 所在数据库名称,不能赋值,因为该值始终为数据库默认值:DATABASE(),暂时没用该字段. */
   @Setter(AccessLevel.NONE)
   private static transient String databaseName;
 }

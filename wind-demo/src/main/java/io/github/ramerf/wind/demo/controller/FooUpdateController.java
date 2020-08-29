@@ -35,7 +35,7 @@ public class FooUpdateController {
             .update()
             .from(Foo.class)
             .where((Consumer<ICondition<Foo>>) condition -> condition.eq(Foo::setId, 1L))
-            .update(foo, Foo::getStringArr);
+            .update(foo);
     return Rs.ok(affectRow);
   }
 }

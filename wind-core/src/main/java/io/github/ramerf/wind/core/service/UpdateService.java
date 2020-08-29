@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.ICondition;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -21,8 +20,22 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Tang Xiaofeng
  * @since 2020/1/5
  */
-@SuppressWarnings({"UnusedReturnValue", "unchecked"})
 public interface UpdateService<T extends AbstractEntityPoJo> extends InterService<T> {
+
+  /**
+   * 创建记录.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param t the {@link AbstractEntityPoJo}
+   * @return {@code id}
+   * @throws DataAccessException 如果执行失败
+   */
+  default long create(@Nonnull final T t) throws DataAccessException {
+    textFilter(t, t);
+    getUpdate().create(t);
+    return t.getId();
+  }
 
   /**
    * 创建记录.
@@ -32,14 +45,12 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @param t the {@link AbstractEntityPoJo}
    * @param includeNullProps 即使值为null也保存的属性
    * @return {@code id}
-   * @throws RuntimeException 创建失败时,抛异常
    * @throws DataAccessException 如果执行失败
-   * @throws CommonException 创建记录条数不等于1
    */
-  default long create(@Nonnull final T t, final IFunction<T, ?>... includeNullProps)
-      throws RuntimeException {
+  default long createWithNull(@Nonnull final T t, List<IFunction<T, ?>> includeNullProps)
+      throws DataAccessException {
     textFilter(t, t);
-    getUpdate().create(t, includeNullProps);
+    getUpdate().createWithNull(t, includeNullProps);
     return t.getId();
   }
 
@@ -49,15 +60,43 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
    *
    * @param ts the ts
-   * @param includeNullProps 即使值为null也保存的属性
-   * @return 受影响的数据库记录数
-   * @throws RuntimeException the runtime exception
-   * @see DataAccessException
+   * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
+   *     否则{@link Optional#get()}返回实际受影响的行数
+   * @throws DataAccessException 如果执行失败
    */
   @Transactional(rollbackFor = Exception.class)
-  default int createBatch(final List<T> ts, final IFunction<T, ?>... includeNullProps)
-      throws RuntimeException {
-    return getUpdate().createBatch(ts, includeNullProps);
+  default Optional<Integer> createBatch(final List<T> ts) throws DataAccessException {
+    return getUpdate().createBatch(ts);
+  }
+
+  /**
+   * 批量创建.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param ts the ts
+   * @param includeNullProps 即使值为null也保存的属性
+   * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
+   *     否则{@link Optional#get()}返回实际受影响的行数
+   * @throws DataAccessException 如果执行失败
+   */
+  @Transactional(rollbackFor = Exception.class)
+  default Optional<Integer> createBatchWithNull(
+      final List<T> ts, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
+    return getUpdate().createBatchWithNull(ts, includeNullProps);
+  }
+
+  /**
+   * 更新.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param t the t
+   * @return 实际受影响的行数
+   * @throws DataAccessException 如果执行失败
+   */
+  default int update(final T t) throws DataAccessException {
+    return getUpdate().update(t);
   }
 
   /**
@@ -67,13 +106,27 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    *
    * @param t the t
    * @param includeNullProps 即使值为null也保存的属性
-   * @return {@code Optional},只有当更新记录数不等于1时,包含入参为实际受影响的行数
-   * @throws RuntimeException the runtime exception
+   * @return 实际受影响的行数
+   * @throws DataAccessException 如果执行失败
    */
-  default Optional<Integer> update(final T t, final IFunction<T, ?>... includeNullProps)
-      throws RuntimeException {
-    final int affectRow = getUpdate().update(t, includeNullProps);
-    return affectRow == 1 ? Optional.empty() : Optional.of(affectRow);
+  default int updateWithNull(final T t, List<IFunction<T, ?>> includeNullProps)
+      throws DataAccessException {
+    return getUpdate().updateWithNull(t, includeNullProps);
+  }
+
+  /**
+   * 条件更新.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param t the t
+   * @param consumer 更新条件
+   * @return 实际受影响的行数
+   * @throws DataAccessException 如果执行失败
+   */
+  default int update(@Nonnull final Consumer<ICondition<T>> consumer, final T t)
+      throws DataAccessException {
+    return getUpdate().where(consumer).update(t);
   }
 
   /**
@@ -84,15 +137,30 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @param t the t
    * @param consumer 更新条件
    * @param includeNullProps 即使值为null也保存的属性
-   * @return the 更新记录数
-   * @throws RuntimeException the runtime exception
+   * @return 实际受影响的行数
+   * @throws DataAccessException 如果执行失败
    */
-  default int update(
+  default int updateWithNull(
       @Nonnull final Consumer<ICondition<T>> consumer,
       final T t,
-      final IFunction<T, ?>... includeNullProps)
-      throws RuntimeException {
-    return getUpdate().where(consumer).update(t, includeNullProps);
+      List<IFunction<T, ?>> includeNullProps)
+      throws DataAccessException {
+    return getUpdate().where(consumer).updateWithNull(t, includeNullProps);
+  }
+
+  /**
+   * 批量更新.<br>
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @param ts 要更新的数据集
+   * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
+   *     否则{@link Optional#get()}返回实际受影响的行数
+   * @throws DataAccessException 如果执行失败
+   */
+  @Transactional(rollbackFor = Exception.class)
+  default Optional<Integer> updateBatch(final List<T> ts) throws DataAccessException {
+    return getUpdate().updateBatch(ts);
   }
 
   /**
@@ -102,45 +170,39 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    *
    * @param ts 要更新的数据集
    * @param includeNullProps 即使值为null也保存的属性
-   * @return {@code Optional},只有当{@code ts}不为空且删除记录数和{@code ts}的大小不同时,包含入参为实际受影响的行数
-   * @throws DataAccessException 如果更新失败
+   * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
+   *     否则{@link Optional#get()}返回实际受影响的行数
+   * @throws DataAccessException 如果执行失败
    */
   @Transactional(rollbackFor = Exception.class)
-  default Optional<Integer> updateBatch(final List<T> ts, final IFunction<T, ?>... includeNullProps)
-      throws DataAccessException {
-    return getUpdate().updateBatch(ts, includeNullProps);
+  default Optional<Integer> updateBatchWithNull(
+      final List<T> ts, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
+    return getUpdate().updateBatchWithNull(ts, includeNullProps);
   }
 
   /**
    * 删除记录.
    *
    * @param id the id
-   * @throws RuntimeException 执行失败或者未删除
-   * @return an {@code Optional} with the {@code CommonException}
+   * @return 实际受影响的行数
+   * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    * @see CommonException
    */
-  default Optional<CommonException> delete(final long id) throws RuntimeException {
-    if (getUpdate().where(condition -> condition.eq(AbstractEntityPoJo::setId, id)).delete() != 1) {
-      return Optional.of(CommonException.of(ResultCode.API_FAIL_EXEC_DELETE));
-    }
-    return Optional.empty();
+  default int delete(final long id) throws DataAccessException {
+    return getUpdate().where(condition -> condition.eq(AbstractEntityPoJo::setId, id)).delete();
   }
 
   /**
    * 条件删除.
    *
-   * @param consumer the consumer.<br>
-   *     示例:
-   *     <pre>
-   *      condition -&gt; condition.eq(AbstractEntityPoJo::setId)
-   *     </pre>
-   *
+   * @param consumer the consumer.示例:<br>
+   *     {@code condition -> condition.eq(AbstractEntityPoJo::setId, 1L)}
    * @return 删除记录数 long
-   * @throws RuntimeException the runtime exception
+   * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
-  default long delete(Consumer<ICondition<T>> consumer) throws RuntimeException {
+  default int delete(Consumer<ICondition<T>> consumer) throws DataAccessException {
     return getUpdate().where(consumer).delete();
   }
 
@@ -148,12 +210,12 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * 如果删除数量不等于id的大小,将执行失败.
    *
    * @param ids the ids
-   * @return 如果 {@code ids}为空且删除记录数不等于 {@code ids}的大小,返回删除影响行数的 {@code Optional}<br>
-   *     否则返回空的 {@code Optional}
-   * @throws RuntimeException the runtime exception
+   * @return 当受影响行数等于 {@code ids.size()}时,{@link Optional#isPresent()}为false.<br>
+   *     否则{@link Optional#get()}返回实际受影响的行数
+   * @throws DataAccessException 如果执行失败
    */
   @Transactional(rollbackFor = Exception.class)
-  default Optional<Integer> deleteByIds(final Collection<Long> ids) throws RuntimeException {
+  default Optional<Integer> deleteByIds(final Collection<Long> ids) throws DataAccessException {
     if (CollectionUtils.isEmpty(ids)) {
       return Optional.empty();
     }

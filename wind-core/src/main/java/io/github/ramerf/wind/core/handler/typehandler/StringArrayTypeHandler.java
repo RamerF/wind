@@ -1,14 +1,14 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
- * java:List&lt;String&gt; &lt;-&gt; jdbc:String[].
+ * {@literal java:String[] <=> jdbc:String[]}.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4
@@ -17,13 +17,14 @@ public class StringArrayTypeHandler implements ITypeHandler<String[], String[]> 
   @Override
   public Object convertToJdbc(
       String[] javaVal, final Field field, @Nonnull final PreparedStatement ps) {
+    if (javaVal == null) {
+      return null;
+    }
     try {
       return ps.getConnection().createArrayOf(getJdbcType(field), javaVal);
     } catch (SQLException e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
+      throw CommonException.of(e);
     }
-    return Objects.nonNull(javaVal) ? javaVal : new Integer[0];
   }
 
   @Override

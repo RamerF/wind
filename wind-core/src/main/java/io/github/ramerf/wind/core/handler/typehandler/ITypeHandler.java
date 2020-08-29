@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
+import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -12,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 数据库与Java Bean相互转换.暂时只支持单类双向,如果双向转换不存在一个类中,建议直接弃用.
+ * 数据库与Java Bean相互转换.暂时只支持单类双向,如果双向转换不存在一个类中,可以在字段上添加{@link TypeHandler}指定使用的类型转换器.
  *
  * @param <T> Java对象类型
  * @param <V> 数据库值类型

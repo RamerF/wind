@@ -171,6 +171,8 @@ public interface Executor {
       @Nonnull final Class<?> clazz, String sql, final BatchPreparedStatementSetter pss)
       throws DataAccessException;
 
+  JdbcTemplate getJdbcTemplate();
+
   /** 主要用于缓存的key生成. */
   @Getter
   @Builder

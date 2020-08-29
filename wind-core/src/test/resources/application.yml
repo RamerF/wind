@@ -1,0 +1,102 @@
+server:
+  port: 8181
+spring:
+  application:
+    name: wind-test
+  datasource:
+    name: wind-test
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:postgresql:///wind?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+    druid:
+      # 连接池的配置信息
+      # 初始化大小，最小，最大
+      initial-size: 5
+      min-idle: 5
+      maxActive: 20
+      # 配置获取连接等待超时的时间
+      maxWait: 60000
+      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      timeBetweenEvictionRunsMillis: 60000
+      # 配置一个连接在池中最小生存的时间，单位是毫秒
+      minEvictableIdleTimeMillis: 30000000
+      maxEvictableIdleTimeMillis: 30000000
+      validationQuery: SELECT 1
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: true
+      maxPoolPreparedStatementPerConnectionSize: 20
+      # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙  以下开启不能和多条语句执行并存
+      # filters: stat,wall,slf4j
+      # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+      connectionProperties: druid.stat.mergeSql\=true;druid.stat.slowSqlMillis\=50
+      # 配置DruidStatFilter
+      web-stat-filter:
+        enabled: true
+        url-pattern: "/*"
+        exclusions: "*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*"
+      # 配置DruidStatViewServlet
+      stat-view-servlet:
+        url-pattern: "/druid/*"
+        # IP白名单(没有配置或者为空，则允许所有访问)
+        # allow: 127.0.0.1,192.168.1.250
+        # IP黑名单 (存在共同时，deny优先于allow)
+        # deny: 192.168.1.73
+        #  禁用HTML页面上的“Reset All”功能
+        reset-enable: false
+        # 登录名
+        # login-username: admin
+        # 登录密码
+        # login-password: 123456
+  redis:
+    host: localhost
+    port: 6379
+    password: 123456
+    database: 5
+    timeout: 6000
+    lettuce:
+      pool:
+        max-active: 10 # 连接池最大连接数（使用负值表示没有限制）,如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)
+        max-idle: 8   # 连接池中的最大空闲连接 ，默认值也是8
+        max-wait: 100 # # 等待可用连接的最大时间，单位毫秒，默认值为-1，表示永不超时。如果超过等待时间，则直接抛出JedisConnectionException
+        min-idle: 2    # 连接池中的最小空闲连接 ，默认值也是0
+      shutdown-timeout: 100ms
+logging:
+  level:
+    root: info
+    io.github.ramerf.wind: debug
+    io.swagger.models.parameters.AbstractSerializableParameter: ERROR
+    log4j.logger.org.springframework.jdbc.core.StatementCreatorUtils: TRACE
+    jdbc.sqltiming: info
+wind:
+  logic-delete-prop:
+    # 是否启用逻辑删除,可以在类上使用@TableInfo的enableLogicDelete属性覆盖,添加@TableInfo注解会使该配置失效
+    enable: true
+    # 逻辑删除字段名,添加@TableInfo注解会使该配置失效
+    column: deleted
+    # 逻辑未删除值(默认为 false),添加@TableInfo注解会使该配置失效
+    not-delete: false
+    # 逻辑已删除值(默认为 true),添加@TableInfo注解会使该配置失效
+    deleted: true
+  # 自动建表
+  ddl-auto: update
+  # 禁用公共字段
+  disable-fields: deleted,create_time,update_time
+  # entity所在包路径,多个以,分割
+  entity-package: io.github.ramerf.wind.core.entity.pojo
+  # 批量操作时每次处理的大小,默认为150
+  batch-size: 30
+  # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
+  custom-enum-deserializer: false
+  redis-cache:
+    # 默认开启redis缓存
+    enable: false
+    # redis key前缀
+    key-prefix: io.github.ramerf.wind
+  # 用于分布式id雪花算法
+  snowflake-prop:
+    worker-id: 3
+    data-center-id: 2

@@ -7,7 +7,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
- * BigDecimal-&gt;Double转换.
+ * {@literal java:BigDecimal <=> jdbc:Double}.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4

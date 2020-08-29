@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.condition.ICondition;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
@@ -11,8 +12,10 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
@@ -51,15 +54,24 @@ public final class Update {
 
   private Class<?> clazz;
   private Condition<?> condition;
-  private String tableName;
 
-  @SuppressWarnings("FieldCanBeLocal")
-  private String logicDeleteField;
+  private EntityInfo entityInfo;
 
-  @SuppressWarnings("FieldCanBeLocal")
-  private boolean logicDeleted;
+  private static Executor executor;
+  private static WindConfiguration configuration;
+  private static IdGenerator idGenerator;
+  private static Dialect dialect;
 
-  public static Executor executor;
+  public static void initial(
+      final Executor executor,
+      final WindConfiguration configuration,
+      final IdGenerator idGenerator,
+      final Dialect dialect) {
+    Update.executor = executor;
+    Update.configuration = configuration;
+    Update.idGenerator = idGenerator;
+    Update.dialect = dialect;
+  }
 
   /**
    * Gets instance.
@@ -92,15 +104,17 @@ public final class Update {
   }
 
   private <T extends AbstractEntityPoJo> Update from(final Class<T> clazz, final String tableName) {
-    final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
-    logicDeleteField = configuration.getLogicDeleteField();
-    logicDeleted = configuration.isLogicDeleted();
     if (Objects.isNull(clazz) && StringUtils.isEmpty(tableName)) {
       throw CommonException.of("[clazz,tableName]不能同时为空");
     }
-    this.tableName = StringUtils.nonEmpty(tableName) ? tableName : EntityUtils.getTableName(clazz);
-    this.condition = QueryColumnFactory.getInstance(clazz).getCondition();
+    this.condition = QueryColumnFactory.getInstance(clazz, tableName, null).getCondition();
     this.clazz = clazz;
+    if (clazz == null) {
+      this.entityInfo = EntityInfo.of(configuration);
+      this.entityInfo.setName(tableName);
+    } else {
+      this.entityInfo = EntityHelper.getEntityInfo(clazz);
+    }
     return this;
   }
 
@@ -123,21 +137,27 @@ public final class Update {
    *
    * @param <T> the type parameter
    * @param t the t
+   * @throws DataAccessException 如果执行失败
+   * @throws CommonException 创建记录条数不等于1
+   */
+  public <T extends AbstractEntityPoJo> void create(@Nonnull final T t) throws DataAccessException {
+    createWithNull(t, null);
+  }
+
+  /**
+   * 创建,默认不保存值为null的列.
+   *
+   * @param <T> the type parameter
+   * @param t the t
    * @param includeNullProps 即使值为null也保存的属性
    * @throws DataAccessException 如果执行失败
    * @throws CommonException 创建记录条数不等于1
    */
-  @SafeVarargs
-  public final <T extends AbstractEntityPoJo> void create(
-      @Nonnull final T t, final IFunction<T, ?>... includeNullProps) throws DataAccessException {
-    t.setId(AppContextInject.getBean(IdGenerator.class).nextId(t));
-    final Date now = new Date();
-    if (Objects.isNull(t.getCreateTime())) {
-      t.setCreateTime(now);
-    }
-    if (Objects.isNull(t.getUpdateTime())) {
-      t.setUpdateTime(now);
-    }
+  public <T extends AbstractEntityPoJo> void createWithNull(
+      @Nonnull final T t, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
+    t.setId(idGenerator.nextId(t));
+    setCurrentTime(t, entityInfo.getCreateTimeField(), false);
+    setCurrentTime(t, entityInfo.getUpdateTimeField());
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -151,10 +171,11 @@ public final class Update {
               final String column = EntityUtils.fieldToColumn(field);
               columns.append(columns.length() > 0 ? ",".concat(column) : column);
               valueMarks.append(valueMarks.length() > 0 ? ",?" : "?");
-              getArgsValueSetConsumer(index, field, BeanUtils.invoke(t, field, null), list);
+              getArgsValueSetConsumer(index, field, BeanUtils.getValue(t, field, null), list);
             });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
-    final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
+    final String execSql =
+        String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
     KeyHolder keyHolder = new GeneratedKeyHolder();
     final int update =
         executor.update(
@@ -167,11 +188,45 @@ public final class Update {
             },
             keyHolder);
     if (Objects.isNull(t.getId())) {
-      t.setId((Long) Objects.requireNonNull(keyHolder.getKeys()).get("id"));
+      t.setId((Long) Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey()));
     }
     if (update != 1 || Objects.isNull(t.getId())) {
       throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);
     }
+  }
+
+  private <T extends AbstractEntityPoJo> void setCurrentTime(
+      @Nonnull final T t, final Field field) {
+    setCurrentTime(t, field, true);
+  }
+
+  private <T extends AbstractEntityPoJo> void setCurrentTime(
+      @Nonnull final T t, final Field field, final boolean isUpdateTime) {
+    if (field == null) {
+      return;
+    }
+    final Object val = BeanUtils.getValue(t, field, null);
+    // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
+    if (val == null || (val instanceof Long && (Long) val < 1)) {
+      final Object value;
+      if (Date.class.isAssignableFrom(field.getType())) {
+        value = new Timestamp(System.currentTimeMillis());
+      } else {
+        value = System.currentTimeMillis();
+      }
+      BeanUtils.setValue(t, field, value, null);
+    }
+  }
+
+  /**
+   * 批量创建,默认不保存null值.
+   *
+   * @param <T> the type parameter
+   * @param ts the ts
+   * @return 保存成功数
+   */
+  public <T extends AbstractEntityPoJo> Optional<Integer> createBatch(final List<T> ts) {
+    return createBatchWithNull(ts, null);
   }
 
   /**
@@ -182,23 +237,24 @@ public final class Update {
    * @param includeNullProps 即使值为null也保存的属性
    * @return 保存成功数
    */
-  @SafeVarargs
-  public final <T extends AbstractEntityPoJo> int createBatch(
-      final List<T> ts, @Nonnull final IFunction<T, ?>... includeNullProps) {
+  public <T extends AbstractEntityPoJo> Optional<Integer> createBatchWithNull(
+      final List<T> ts, List<IFunction<T, ?>> includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
-      return 0;
+      return Optional.empty();
     }
     // 取第一条记录获取批量保存sql
     final T t = ts.get(0);
-    final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
-    ts.forEach(o -> o.setId(idGenerator.nextId(t)));
+    ts.forEach(
+        o -> {
+          setCurrentTime(o, entityInfo.getCreateTimeField(), false);
+          setCurrentTime(o, entityInfo.getUpdateTimeField());
+          o.setId(idGenerator.nextId(o));
+        });
     final Set<Field> savingFields = getSavingFields(t, includeNullProps);
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
     final StringBuilder valueMarks = new StringBuilder();
-    List<Object> values = new LinkedList<>();
-    List<Consumer<PreparedStatement>> list = new LinkedList<>();
     savingFields.forEach(
         field -> {
           final String column = EntityUtils.fieldToColumn(field);
@@ -206,35 +262,82 @@ public final class Update {
           valueMarks.append(valueMarks.length() > 0 ? ",?" : "?");
         });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
-    final String execSql = String.format(sql, tableName, columns.toString(), valueMarks.toString());
-    int createRow = 0;
-    final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
-    int total = ts.size();
-    final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
-    for (int j = 0; j < execCount; j++) {
-      final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
-      final int[] batchUpdate =
-          executor.batchUpdate(
-              clazz,
-              execSql,
-              new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(@Nonnull final PreparedStatement ps, final int i) {
-                  final AtomicInteger index = new AtomicInteger(1);
-                  final T obj = execList.get(i);
-                  obj.setCreateTime(new Date());
-                  savingFields.forEach(
-                      field -> setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
-                }
+    final String execSql =
+        String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
 
-                @Override
-                public int getBatchSize() {
-                  return execList.size();
-                }
-              });
-      createRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
-    }
-    return createRow;
+    AtomicInteger createRow = new AtomicInteger();
+    BatchExecUtil.batchExec(
+        ts,
+        configuration.getBatchSize(),
+        execList -> {
+          final int[] batchUpdate =
+              executor.batchUpdate(
+                  clazz,
+                  execSql,
+                  new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(@Nonnull final PreparedStatement ps, final int i) {
+                      final AtomicInteger index = new AtomicInteger(1);
+                      final T obj = execList.get(i);
+                      obj.setCreateTime(new Date());
+                      savingFields.forEach(
+                          field ->
+                              setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                      return execList.size();
+                    }
+                  });
+
+          /*
+           * From java.sql.Statement#executeBatch().
+           *
+           * Submits a batch of commands to the database for execution and if all commands execute
+           * successfully, returns an array of update counts. The <code>int</code> elements of the
+           * array that is returned are ordered to correspond to the commands in the batch, which
+           * are ordered according to the order in which they were added to the batch. The elements
+           * in the array returned by the method <code>executeBatch</code> may be one of the
+           * following:
+           *
+           * <OL>
+           *   <LI>A number greater than or equal to zero -- indicates that the command was
+           *       processed successfully and is an update count giving the number of rows in the
+           *       database that were affected by the command's execution
+           *   <LI>A value of <code>SUCCESS_NO_INFO</code> -- indicates that the command was
+           *       processed successfully but that the number of rows affected is unknown
+           *       <p>If one of the commands in a batch update fails to execute properly, this
+           *       method throws a <code>BatchUpdateException</code>, and a JDBC driver may or may
+           *       not continue to process the remaining commands in the batch. However, the
+           *       driver's behavior must be consistent with a particular DBMS, either always
+           *       continuing to process commands or never continuing to process commands. If the
+           *       driver continues processing after a failure, the array returned by the method
+           *       <code>BatchUpdateException.getUpdateCounts</code> will contain as many elements
+           *       as there are commands in the batch, and at least one of the elements will be the
+           *       following:
+           *   <LI>A value of <code>EXECUTE_FAILED</code> -- indicates that the command failed to
+           *       execute successfully and occurs only if a driver continues to process commands
+           *       after a command fails
+           * </OL>
+           *
+           * <p>
+           */
+          createRow.addAndGet(
+              Arrays.stream(batchUpdate).filter(o -> o >= 0 || o == -2).map(o -> 1).sum());
+        });
+    return createRow.get() == ts.size() ? Optional.empty() : Optional.of(createRow.get());
+  }
+
+  /**
+   * 更新,默认根据id更新且不更新值为null的列.
+   *
+   * @param <T> the type parameter
+   * @param t the t
+   * @return 受影响记录数
+   */
+  public <T extends AbstractEntityPoJo> int update(@Nonnull final T t) {
+    return updateWithNull(t, null);
   }
 
   /**
@@ -245,11 +348,10 @@ public final class Update {
    * @param includeNullProps 即使值为null也保存的属性
    * @return 受影响记录数
    */
-  @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
-  public final <T extends AbstractEntityPoJo> int update(
-      @Nonnull final T t, final IFunction<T, ?>... includeNullProps) {
-    t.setUpdateTime(new Date());
+  public <T extends AbstractEntityPoJo> int updateWithNull(
+      @Nonnull final T t, List<IFunction<T, ?>> includeNullProps) {
+    setCurrentTime(t, entityInfo.getUpdateTimeField());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
@@ -258,7 +360,7 @@ public final class Update {
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
               setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
-              getArgsValueSetConsumer(index, field, BeanUtils.invoke(t, field, null), list);
+              getArgsValueSetConsumer(index, field, BeanUtils.getValue(t, field, null), list);
             });
     // 没有条件时,默认根据id更新
     if (condition.isEmpty()) {
@@ -269,7 +371,7 @@ public final class Update {
     }
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
-        String.format(sql, tableName, setBuilder.toString(), condition.getString());
+        String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
     return executor.update(
         clazz,
         execSql,
@@ -284,16 +386,30 @@ public final class Update {
    *
    * @param <T> the type parameter
    * @param ts the ts
+   * @return the int
+   */
+  @SuppressWarnings("DuplicatedCode")
+  public <T extends AbstractEntityPoJo> Optional<Integer> updateBatch(@Nonnull final List<T> ts) {
+    return updateBatchWithNull(ts, null);
+  }
+
+  /**
+   * 批量更新,根据id更新.
+   *
+   * @param <T> the type parameter
+   * @param ts the ts
    * @param includeNullProps 即使值为null也保存的属性
    * @return the int
    */
-  @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
-  public final <T extends AbstractEntityPoJo> Optional<Integer> updateBatch(
-      @Nonnull final List<T> ts, final IFunction<T, ?>... includeNullProps) {
+  public <T extends AbstractEntityPoJo> Optional<Integer> updateBatchWithNull(
+      @Nonnull final List<T> ts, List<IFunction<T, ?>> includeNullProps) {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
     }
+    // 保存更新时间
+    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeField()));
+
     // 取第一条记录获取批量更新sql
     final T t = ts.get(0);
     final Set<Field> savingFields = getSavingFields(t, includeNullProps);
@@ -312,40 +428,42 @@ public final class Update {
     where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
-        String.format(sql, tableName, setBuilder.toString(), condition.getString());
-    int updateRow = 0;
-    final int batchSize = AppContextInject.getBean(WindConfiguration.class).getBatchSize();
-    int total = ts.size();
-    final int execCount = total / batchSize + (total % batchSize != 0 ? 1 : 0);
-    for (int j = 0; j < execCount; j++) {
-      final List<T> execList = ts.subList(j * batchSize, Math.min((j + 1) * batchSize, total));
-      final int[] batchUpdate =
-          executor.batchUpdate(
-              clazz,
-              execSql,
-              new BatchPreparedStatementSetter() {
-                @Override
-                @SuppressWarnings("unchecked")
-                public void setValues(@Nonnull final PreparedStatement ps, final int i) {
-                  final AtomicInteger index = new AtomicInteger(1);
-                  final T obj = execList.get(i);
-                  obj.setUpdateTime(new Date());
-                  savingFields.forEach(
-                      field -> setArgsValue(index, field, BeanUtils.invoke(obj, field, null), ps));
-                  Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
-                      .eq(T::setId, obj.getId())
-                      .getValues(index)
-                      .forEach(val -> val.accept(ps));
-                }
+        String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
 
-                @Override
-                public int getBatchSize() {
-                  return execList.size();
-                }
-              });
-      updateRow += Arrays.stream(batchUpdate).filter(o -> o == 1).sum();
-    }
-    return updateRow == ts.size() ? Optional.empty() : Optional.of(updateRow);
+    AtomicInteger updateRow = new AtomicInteger();
+    BatchExecUtil.batchExec(
+        ts,
+        configuration.getBatchSize(),
+        execList -> {
+          final int[] batchUpdate =
+              executor.batchUpdate(
+                  clazz,
+                  execSql,
+                  new BatchPreparedStatementSetter() {
+                    @Override
+                    @SuppressWarnings("unchecked")
+                    public void setValues(@Nonnull final PreparedStatement ps, final int i) {
+                      final AtomicInteger index = new AtomicInteger(1);
+                      final T obj = execList.get(i);
+                      setCurrentTime(obj, entityInfo.getUpdateTimeField());
+                      savingFields.forEach(
+                          field ->
+                              setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
+                      Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
+                          .eq(T::setId, obj.getId())
+                          .getValues(index)
+                          .forEach(val -> val.accept(ps));
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                      return execList.size();
+                    }
+                  });
+          updateRow.getAndAdd(
+              Arrays.stream(batchUpdate).filter(o -> o >= 0 || o == -2).map(o -> 1).sum());
+        });
+    return updateRow.get() == ts.size() ? Optional.empty() : Optional.of(updateRow.get());
   }
 
   /**
@@ -375,19 +493,51 @@ public final class Update {
     if (condition.isEmpty()) {
       throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
     }
-    final String sql = "update %s set %s=%s,update_time='%s' where %s";
-    final String updateString =
-        String.format(
-            sql,
-            tableName,
-            StringUtils.camelToUnderline(logicDeleteField),
-            logicDeleted,
-            new Date(),
-            condition.getString());
-    return executor.update(
-        clazz,
-        updateString,
-        ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
+    // 如果不支持逻辑删除
+    if (!entityInfo.getLogicDeleteProp().isEnable()) {
+      final String delSql = "delete from %s where %s";
+      return executor.update(
+          clazz,
+          String.format(delSql, entityInfo.getName(), condition.getString()),
+          ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
+    }
+    // 执行逻辑删除
+    final Field updateTimeField = entityInfo.getUpdateTimeField();
+    final boolean containUpdateTime = updateTimeField != null;
+    // 包含更新时间
+    if (containUpdateTime) {
+      final String updateString =
+          String.format(
+              "update %s set %s=%s,%s=? where %s",
+              entityInfo.getName(),
+              entityInfo.getLogicDeleteProp().getColumn(),
+              entityInfo.getLogicDeleteProp().isDeleted(),
+              entityInfo.getFieldColumnMap().get(updateTimeField.getName()),
+              condition.getString());
+      return executor.update(
+          clazz,
+          updateString,
+          ps -> {
+            if (Date.class.isAssignableFrom(updateTimeField.getType())) {
+              ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            } else {
+              ps.setLong(1, System.currentTimeMillis());
+            }
+            condition.getValues(new AtomicInteger(2)).forEach(val -> val.accept(ps));
+          });
+    } else {
+      final String updateString =
+          String.format(
+              "update %s set %s=%s where %s",
+              entityInfo.getName(),
+              entityInfo.getLogicDeleteProp().getColumn(),
+              entityInfo.getLogicDeleteProp().isDeleted(),
+              condition.getString());
+      return executor.update(
+          clazz,
+          updateString,
+          ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
+    }
   }
 
   /**
@@ -398,12 +548,11 @@ public final class Update {
    * @param <T> the type parameter
    * @return 要保存的属性
    */
-  @SafeVarargs
-  private final <T extends AbstractEntity> Set<Field> getSavingFields(
-      final T t, final IFunction<T, ?>... includeNullProps) {
+  private <T extends AbstractEntity> Set<Field> getSavingFields(
+      final T t, List<IFunction<T, ?>> includeNullProps) {
     final Set<Field> savingFields = new HashSet<>(EntityUtils.getNonNullColumnFields(t));
-    if (Objects.nonNull(includeNullProps) && includeNullProps.length > 0) {
-      Arrays.stream(includeNullProps).forEach(prop -> savingFields.add(prop.getField()));
+    if (CollectionUtils.nonEmpty(includeNullProps)) {
+      includeNullProps.forEach(prop -> savingFields.add(prop.getField()));
     }
     return savingFields;
   }

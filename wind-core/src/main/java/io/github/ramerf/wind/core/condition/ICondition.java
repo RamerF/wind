@@ -13,9 +13,11 @@ import javax.annotation.Nonnull;
 /**
  * The interface Condition.
  *
+ * <p>TODO: 如果要实现完整的连表查询,考虑在该类添加join方法
+ *
  * @param <T> the type parameter
  * @author Tang Xiaofeng
- * @since 20 -1-6
+ * @since 2020 /1/6
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
@@ -24,10 +26,20 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * 创建一个空的条件,包含表信息.
    *
    * @return the Condition
-   * @see Condition#of(QueryColumn) Condition#of(QueryColumn)
-   *     Condition#of(QueryColumn)Condition#of(QueryColumn)Condition#of(QueryColumn)
+   * @see Condition#of(QueryColumn)
    */
-  Condition<T> condition();
+  default Condition<T> condition() {
+    return condition(false);
+  }
+
+  /**
+   * 创建一个空的条件,包含表信息.
+   *
+   * @param genAlia 是否生成新的表别名,用于子查询时传true
+   * @return the Condition
+   * @see Condition#of(QueryColumn)
+   */
+  Condition<T> condition(final boolean genAlia);
 
   /**
    * Eq condition.

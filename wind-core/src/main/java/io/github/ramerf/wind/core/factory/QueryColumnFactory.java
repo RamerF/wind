@@ -5,9 +5,9 @@ import io.github.ramerf.wind.core.condition.QueryEntityMetaData;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.util.EntityUtils;
+import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.Objects;
 
@@ -35,7 +35,7 @@ public class QueryColumnFactory {
     return getInstance(null, tableName, tableAlia);
   }
 
-  private static <T extends AbstractEntity> QueryColumn<T> getInstance(
+  public static <T extends AbstractEntity> QueryColumn<T> getInstance(
       final Class<T> clazz, String tableName, String tableAlia) {
     final QueryColumn<T> queryColumn =
         QueryColumn.of(AppContextInject.getBean(WindConfiguration.class));
@@ -44,15 +44,22 @@ public class QueryColumnFactory {
     }
     final QueryEntityMetaData<T> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
     queryEntityMetaData.setClazz(clazz);
-    if (StringUtils.isEmpty(tableName)) {
-      tableName = EntityUtils.getTableName(clazz);
+    if (clazz != null) {
+      final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
+      // 如果tableName不为空,需要覆盖entityInfo的值.传入的tableName优先级最高,因为支持使用不相关的类查询表
+      if (StringUtils.nonEmpty(tableName)) {
+        entityInfo.setName(tableName);
+      } else {
+        tableName = entityInfo.getName();
+      }
+      queryColumn.setEntityInfo(entityInfo);
     }
     queryEntityMetaData.setTableName(tableName);
     tableAlia = StringUtils.isEmpty(tableAlia) ? tableName : tableAlia;
     queryEntityMetaData.setTableAlia(tableAlia);
     String fromTable = tableName;
-    if (StringUtils.nonEmpty(tableAlia)) {
-      fromTable = tableName.concat(Constant.DEFAULT_SPLIT_SPACE).concat(tableAlia);
+    if (StringUtils.nonEmpty(tableAlia) && !tableAlia.equals(tableName)) {
+      fromTable = tableName.concat(" ").concat(tableAlia);
     }
     queryEntityMetaData.setFromTable(fromTable);
     return queryColumn;

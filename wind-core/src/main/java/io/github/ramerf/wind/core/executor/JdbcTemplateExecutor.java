@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.executor;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.ramerf.wind.core.cache.RedisCache;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -10,14 +11,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.*;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.lang.Nullable;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * The jdbc template executor.
@@ -26,15 +29,17 @@ import org.springframework.lang.Nullable;
  * @since 2020/5/19
  */
 @Slf4j
+@SuppressWarnings("DuplicatedCode")
 public class JdbcTemplateExecutor implements Executor {
-  @Resource private JdbcTemplate jdbcTemplate;
+  @Resource @Getter private JdbcTemplate jdbcTemplate;
 
-  @Autowired(required = false)
-  @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
-  private RedisCache redisCache;
+  private final RedisCache redisCache;
+
+  public JdbcTemplateExecutor(RedisCache redisCache) {
+    this.redisCache = redisCache;
+  }
 
   @Override
-  @SuppressWarnings("unchecked")
   public <R> R fetchOne(@Nonnull final SqlParam sqlParam) throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
@@ -53,13 +58,15 @@ public class JdbcTemplateExecutor implements Executor {
           if (result.size() > 1) {
             throw CommonException.of(ResultCode.API_TOO_MANY_RESULTS);
           }
+          @SuppressWarnings("unchecked")
           final Class<R> clazz = (Class<R>) sqlParam.getClazz();
           ResultHandler<Map<String, Object>, R> resultHandler =
               BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
           return resultHandler.handle(result.get(0));
-        });
+        },
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -84,7 +91,8 @@ public class JdbcTemplateExecutor implements Executor {
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
           return resultHandler.handle(list);
-        });
+        },
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -110,10 +118,12 @@ public class JdbcTemplateExecutor implements Executor {
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
           return resultHandler.handle(list);
-        });
+        },
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <R> Page<R> fetchPage(
       @Nonnull final SqlParam sqlParam, final long total, final PageRequest pageable)
       throws DataAccessException {
@@ -139,12 +149,15 @@ public class JdbcTemplateExecutor implements Executor {
             return PageUtils.toPage(Collections.emptyList(), 0, currentPage, pageSize);
           }
           final Class<?> clazz = sqlParam.getClazz();
+          @SuppressWarnings("rawtypes")
           ResultHandler resultHandler =
               BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
                   ? new PrimitiveResultHandler<>(clazz)
                   : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
-          return PageUtils.toPage(resultHandler.handle(list), total, currentPage, pageSize);
-        });
+          return PageUtils.toPage(
+              resultHandler.handle(list), total, currentPage, pageSize, pageable.getSort());
+        },
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -163,7 +176,8 @@ public class JdbcTemplateExecutor implements Executor {
                     return rs.getLong(1);
                   }
                   return 0L;
-                }));
+                }),
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -171,13 +185,18 @@ public class JdbcTemplateExecutor implements Executor {
       @Nonnull final SqlParam sqlParam, final Object[] args, final Class<T> requiredType)
       throws DataAccessException {
     return cacheIfAbsent(
-        sqlParam, () -> jdbcTemplate.queryForObject(sqlParam.sql, args, requiredType));
+        sqlParam,
+        () -> jdbcTemplate.queryForObject(sqlParam.sql, args, requiredType),
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
   public List<Map<String, Object>> queryForList(
       @Nonnull final SqlParam sqlParam, final Object... args) throws DataAccessException {
-    return cacheIfAbsent(sqlParam, () -> jdbcTemplate.queryForList(sqlParam.sql, args));
+    return cacheIfAbsent(
+        sqlParam,
+        () -> jdbcTemplate.queryForList(sqlParam.sql, args),
+        Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
@@ -222,19 +241,32 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> T cacheIfAbsent(@Nonnull final SqlParam sqlParam, Supplier<T> supplier) {
+  private <T> T cacheIfAbsent(
+      @Nonnull final SqlParam sqlParam, Supplier<T> supplier, final String methodName) {
     // 未开启缓存
     if (Objects.isNull(redisCache)) {
       return supplier.get();
     }
-    final String key = redisCache.generateKey(sqlParam);
-    final Object exist = redisCache.get(key);
+    final String key = redisCache.generateKey(sqlParam, methodName);
+    // 命中缓存
     if (redisCache.isKeyExist(key)) {
       if (log.isDebugEnabled()) {
         log.debug("cacheIfAbsent:Hit cache[{}]", key);
       }
+      final Object exist = redisCache.get(key);
+      if (exist == null) {
+        return null;
+      }
+      if (exist instanceof PageInRedis) {
+        return (T) ((PageInRedis<?>) exist).getPage();
+      }
+      // 由于redis没有Long型,存入的Long取出可能会失败
+      if (exist instanceof Number && Long.class.isAssignableFrom(sqlParam.clazz)) {
+        return (T) Long.valueOf(exist.toString());
+      }
       return (T) exist;
     }
+    // 没有缓存
     final T t = supplier.get();
     if (log.isDebugEnabled()) {
       log.debug("cacheIfAbsent:Put cache[{}]", key);
@@ -243,7 +275,9 @@ public class JdbcTemplateExecutor implements Executor {
     if (Objects.isNull(t)) {
       redisCache.put(key, null, 100, TimeUnit.MILLISECONDS);
     } else {
-      redisCache.put(key, t);
+      // Page对象需要单独处理
+      final Object putRedis = t instanceof Page ? new PageInRedis<>((Page<?>) t) : t;
+      redisCache.put(key, putRedis);
     }
     return t;
   }
@@ -255,5 +289,53 @@ public class JdbcTemplateExecutor implements Executor {
     }
     redisCache.clear(clazz);
     return supplier.get();
+  }
+
+  /**
+   * 由于{@link PageImpl}无法序列化,写了这一大堆,真让人头大😔.
+   *
+   * @param <T>
+   */
+  @Setter
+  @NoArgsConstructor
+  private static class PageInRedis<T> {
+    private int page;
+    private int size;
+    private long total;
+    private List<T> content;
+    private List<Order> orders;
+
+    public PageInRedis(final Page<T> page) {
+      this.page = page.getPageable().getPageNumber();
+      this.size = page.getPageable().getPageSize();
+      this.total = page.getTotalElements();
+      this.content = page.getContent();
+      this.orders =
+          page.getPageable().getSort().stream()
+              .map(o -> Order.of(o.getDirection(), o.getProperty()))
+              .collect(toList());
+    }
+
+    @JsonIgnore
+    public Page<T> getPage() {
+      final Sort sort =
+          Sort.by(
+              orders.stream()
+                  .map(
+                      o ->
+                          o.getDirection() == Direction.ASC
+                              ? Sort.Order.asc(o.property)
+                              : Sort.Order.desc(o.property))
+                  .collect(toList()));
+      return PageUtils.toPage(content, total, page, size, sort);
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor(staticName = "of")
+    private static class Order {
+      private Direction direction;
+      private String property;
+    }
   }
 }

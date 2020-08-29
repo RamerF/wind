@@ -11,19 +11,19 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wind-demo</artifactId>
     <name>wind-demo</name>
-    <version>3.8.3-RELEASE</version>
+    <version>3.8.4-RELEASE</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <druid.version>1.1.22</druid.version>
-        <wind-core.version>3.8.3-RELEASE</wind-core.version>
+        <wind.version>3.8.4-RELEASE</wind.version>
         <lombok.version>1.18.10</lombok.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>io.github.ramerf</groupId>
             <artifactId>wind-core</artifactId>
-            <version>${wind-core.version}</version>
+            <version>${wind.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

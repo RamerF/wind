@@ -1,15 +1,24 @@
 package io.github.ramerf.wind.core.helper;
 
+import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
+import io.github.ramerf.wind.core.config.WindContext;
+import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nonnull;
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * The type Entity helper.
@@ -19,9 +28,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class EntityHelper {
-  /** 类全路径:{field:column} */
-  private static final Map<String, Map<String, String>> FIELD_COLUMN_MAP =
-      new ConcurrentHashMap<>();
+  /** 实体信息:{类全路径:EntityInfo} */
+  private static final Map<String, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
+
+  private static WindContext windContext;
+
+  public static void initital(final WindContext windContext) {
+    EntityHelper.windContext = windContext;
+  }
 
   /**
    * 初始化实体和表对应信息.
@@ -30,18 +44,12 @@ public class EntityHelper {
    * @param clazz the clazz
    */
   public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
-    Map<String, String> map = new HashMap<>(10);
-    EntityUtils.getAllColumnFields(clazz)
-        .forEach(
-            field -> {
-              final Column columnAnnotation = field.getAnnotation(Column.class);
-              final String column =
-                  columnAnnotation != null && StringUtils.nonEmpty(columnAnnotation.name())
-                      ? columnAnnotation.name()
-                      : StringUtils.camelToUnderline(field.getName());
-              map.put(field.getName(), column);
-              FIELD_COLUMN_MAP.put(clazz.getTypeName(), map);
-            });
+    final EntityInfo entityInfo =
+        EntityInfo.of(
+            clazz, windContext.getWindConfiguration(), windContext.getDbMetaData().getDialect());
+    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), entityInfo);
+    // 这里进行表定义更新
+    ddlAuto(entityInfo);
   }
 
   /**
@@ -52,18 +60,11 @@ public class EntityHelper {
    */
   public static String getColumn(BeanFunction function) {
     if (log.isTraceEnabled()) {
-      log.trace("getColumn:[{}]", FIELD_COLUMN_MAP);
+      log.trace("getColumn:[{}]", CLAZZ_ENTITY_MAP);
     }
-    final Map<String, String> fieldColumnMap =
-        FIELD_COLUMN_MAP.get(function.getImplClassFullPath());
-    if (CollectionUtils.isEmpty(fieldColumnMap)) {
-      // 处理实体信息未自动扫描到的情况
-      initEntity(BeanUtils.getClazz(function.getImplClassFullPath()));
-      return FIELD_COLUMN_MAP
-          .get(function.getImplClassFullPath())
-          .get(function.getField().getName());
-    }
-    return fieldColumnMap.get(function.getField().getName());
+    return initEntityIfNeeded(function.getImplClassFullPath())
+        .getFieldColumnMap()
+        .get(function.getField().getName());
   }
 
   /**
@@ -72,7 +73,7 @@ public class EntityHelper {
    *
    * @param field the field
    * @param defaultValue 默认值
-   * @return jdbcType名称
+   * @return jdbcType名称 jdbc type name
    * @see Types
    */
   public static String getJdbcTypeName(final Field field, final String defaultValue) {
@@ -95,6 +96,73 @@ public class EntityHelper {
       }
     }
     return typeName;
+  }
+
+  /**
+   * Gets entity info.
+   *
+   * @param <T> the type parameter
+   * @param clazz the clazz
+   * @return the entity info
+   */
+  public static <T extends AbstractEntity> EntityInfo getEntityInfo(@Nonnull final Class<T> clazz) {
+    return initEntityIfNeeded(clazz);
+  }
+
+  private static <T extends AbstractEntity> EntityInfo initEntityIfNeeded(
+      @Nonnull final Class<T> clazz) {
+    final String fullPath = clazz.getTypeName();
+    synchronized (EntityHelper.class) {
+      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(fullPath);
+      if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {
+        initEntity(BeanUtils.getClazz(fullPath));
+      }
+    }
+    return CLAZZ_ENTITY_MAP.get(fullPath);
+  }
+
+  private static EntityInfo initEntityIfNeeded(final String fullPath) {
+    synchronized (EntityHelper.class) {
+      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(fullPath);
+      if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {
+        initEntity(BeanUtils.getClazz(fullPath));
+      }
+    }
+    return CLAZZ_ENTITY_MAP.get(fullPath);
+  }
+
+  private static void ddlAuto(final EntityInfo entityInfo) {
+    final DdlAuto ddlAuto = windContext.getWindConfiguration().getDdlAuto();
+    if (ddlAuto == null || DdlAuto.NONE.equals(ddlAuto)) {
+      return;
+    }
+    if (!isMapToTable(entityInfo)) {
+      return;
+    }
+    // 先删除,再创建
+    if (DdlAuto.CREATE.equals(ddlAuto)) {
+      // Phase 1. delete
+      final JdbcTemplate jdbcTemplate = windContext.getJdbcTemplateExecutor().getJdbcTemplate();
+      final String dropSql = "drop table if exists " + entityInfo.getName();
+      log.info("ddlAuto:drop table[{}]", dropSql);
+      jdbcTemplate.execute(dropSql);
+      // Phase 2. create
+      TableExporter.of(windContext).createTable(entityInfo);
+    } else if (DdlAuto.UPDATE.equals(ddlAuto)) {
+      // 仅新增列，不支持更新列定义
+      TableExporter.of(windContext).updateTable(entityInfo);
+    }
+  }
+
+  /**
+   * 判断一个{@link EntityInfo}是否映射到数据库表.true:是
+   *
+   * <p>映射到数据库表需要实体包含注解中的一个: {@link Entity},{@link TableInfo}.
+   */
+  private static boolean isMapToTable(final EntityInfo entityInfo) {
+    return entityInfo != null
+        && (entityInfo.getClazz().getAnnotation(Entity.class) != null
+            || entityInfo.getClazz().getAnnotation(TableInfo.class) != null);
   }
 
   /**

@@ -105,12 +105,15 @@ public interface RedisCache {
    * 指定缓存key前缀.
    *
    * @param sqlParam the sql param
+   * @param methodName the method name
    * @return the string
    * @see SqlParam
    */
-  default String generateKey(@Nonnull final SqlParam sqlParam) {
+  default String generateKey(@Nonnull final SqlParam sqlParam, @Nonnull final String methodName) {
     return getFixedKeyPrefix(sqlParam.getClazz())
         + sqlParam.getClazz().getName()
+        + ":"
+        + methodName
         + ":"
         + sqlParam.getSql()
         + ":"

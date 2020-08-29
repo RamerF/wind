@@ -7,7 +7,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
- * java:List&lt;String&gt; &lt;-&gt; jdbc:String[].
+ * {@literal java:Date <=> jdbc:java.sql.Date}.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4

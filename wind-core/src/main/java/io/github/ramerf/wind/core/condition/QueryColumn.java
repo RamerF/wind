@@ -6,15 +6,16 @@ import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import io.github.ramerf.wind.core.util.EntityUtils;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Objects;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
-import static io.github.ramerf.wind.core.entity.constant.Constant.SEMICOLON;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -25,10 +26,9 @@ import static java.util.stream.Collectors.joining;
  *
  * @param <T> the type parameter
  * @author Tang Xiaofeng
- * @since 2019 /12/26
+ * @since 2019/12/26
  */
 @Slf4j
-@Data
 @EqualsAndHashCode(callSuper = true)
 @SuppressWarnings("UnusedReturnValue")
 public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T> {
@@ -37,16 +37,8 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
 
   private Condition<T> condition = null;
 
-  private QueryColumn() {}
-
-  /**
-   * Of query column.
-   *
-   * @param <T> the type parameter
-   * @return the query column
-   */
-  public static <T extends AbstractEntity> QueryColumn<T> of() {
-    return new QueryColumn<>();
+  private QueryColumn(final EntityInfo entityInfo) {
+    setEntityInfo(entityInfo);
   }
 
   /**
@@ -57,11 +49,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    * @return the query column
    */
   public static <T extends AbstractEntity> QueryColumn<T> of(WindConfiguration configuration) {
-    final QueryColumn<T> queryColumn = new QueryColumn<>();
-    queryColumn.logicDeleted = configuration.isLogicDeleted();
-    queryColumn.logicNotDelete = configuration.isLogicNotDelete();
-    queryColumn.logicDeleteField = configuration.getLogicDeleteField();
-    return queryColumn;
+    return new QueryColumn<>(EntityInfo.of(configuration));
   }
 
   /**
@@ -182,18 +170,42 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   /** 添加查询对象(列/聚合函数). */
   private QueryColumn<T> add(
       final IFunction<T, ?> function, final String alia, final SqlFunction sqlFunction) {
-    queryEntityMetaData.queryAlias.add(
-        QueryAlia.of(function, alia, queryEntityMetaData.getTableAlia(), sqlFunction));
+    getQueryEntityMetaData()
+        .queryAlias
+        .add(QueryAlia.of(function, alia, getQueryEntityMetaData().getTableAlia(), sqlFunction));
     return this;
   }
 
   @Override
   public String getString() {
-    return CollectionUtils.isEmpty(queryEntityMetaData.queryAlias)
-        ? queryEntityMetaData.getTableAlia().concat(DOT.operator()).concat(WILDCARD.operator())
-        : queryEntityMetaData.queryAlias.stream()
-            .map(QueryColumn::methodToColumnWithAlia)
-            .collect(joining(SEMICOLON));
+    final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
+    return CollectionUtils.isEmpty(metaData.queryAlias)
+        ? EntityUtils.getAllColumnFields(metaData.clazz).stream()
+            .filter(EntityUtils::isNotDontFetch)
+            .map(this::fieldToColumnWithAlia)
+            .collect(joining(","))
+        : metaData.queryAlias.stream().map(QueryColumn::toColumnWithAlia).collect(joining(","));
+  }
+
+  private String fieldToColumnWithAlia(final Field field) {
+    return getQueryEntityMetaData()
+        .tableAlia
+        .concat(DOT.operator())
+        .concat(EntityUtils.fieldToColumn(field));
+  }
+
+  /** 增加额外的表别名前缀 */
+  private static String toColumnWithAlia(final QueryAlia queryAlia) {
+    final String alia = queryAlia.getColumnAlia();
+    final String name = queryAlia.getColumnName();
+    final String tableAlias = queryAlia.getTableAlia();
+
+    final SqlFunction sqlFunction = queryAlia.getSqlFunction();
+    final String queryName =
+        Objects.isNull(sqlFunction)
+            ? tableAlias.concat(DOT.operator()).concat(name)
+            : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
+    return queryName.concat(AS.operator()).concat(alia);
   }
 
   /**
@@ -203,28 +215,8 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    */
   public Condition<T> getCondition() {
     if (Objects.isNull(condition)) {
-      condition = new Condition<>();
-      condition.logicDeleted = this.logicDeleted;
-      condition.logicNotDelete = this.logicNotDelete;
-      condition.logicDeleteField = this.logicDeleteField;
-      condition.queryEntityMetaData = this.queryEntityMetaData;
+      condition = Condition.of(this);
     }
     return condition;
-  }
-
-  /** 增加额外的表别名前缀 */
-  private static String methodToColumnWithAlia(final QueryAlia queryAlia) {
-    final String alia = queryAlia.getColumnAlia();
-    final String name = queryAlia.getColumnName();
-    final String tableAlias = queryAlia.getTableAlia();
-
-    // 待测试
-    final SqlFunction sqlFunction = queryAlia.getSqlFunction();
-    final String queryName =
-        Objects.isNull(sqlFunction)
-            ? tableAlias.concat(DOT.operator()).concat(name)
-            : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
-    // 待测试
-    return queryName.concat(AS.operator()).concat(alia);
   }
 }

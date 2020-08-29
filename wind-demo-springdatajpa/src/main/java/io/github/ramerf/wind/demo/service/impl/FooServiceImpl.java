@@ -56,7 +56,7 @@ public class FooServiceImpl implements FooService {
       key = "caches[0].name+'('+#poJo.id+')'")
   @Transactional(rollbackFor = Exception.class)
   public void redisCacheClear(final Foo poJo) {
-    final int update = update(poJo).orElse(0);
+    final int update = update(poJo);
     log.info("redisCacheClear:[{}]", update);
   }
 

@@ -115,6 +115,21 @@ public class PageUtils {
   }
 
   /**
+   * 将 {@link List} 转换为 {@link Page}对象.
+   *
+   * @param <T> the type parameter
+   * @param list the list
+   * @param total 总数
+   * @param page 当前页,从0开始
+   * @param size 每页大小
+   * @return the page
+   */
+  public static <T> Page<T> toPage(
+      final List<T> list, final long total, final int page, final int size, final Sort sort) {
+    return new PageImpl<>(list, PageRequest.of(page, size, sort), total);
+  }
+
+  /**
    * 转换{@link Page}对象,可选过滤.
    *
    * @param <T> the type parameter

@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.core.support;
 
+import io.github.ramerf.wind.core.config.SnowflakeProp;
+
 /**
  * 雪花分布式id生成算法.
  *
@@ -70,12 +72,9 @@ public class SnowflakeIdWorker {
     SnowflakeIdWorker.datacenterId = dataCenterId;
   }
 
-  public static void setWorkerId(final long workerId) {
-    SnowflakeIdWorker.workerId = workerId;
-  }
-
-  public static void setDatacenterId(final long datacenterId) {
-    SnowflakeIdWorker.datacenterId = datacenterId;
+  public static void initial(final SnowflakeProp snowflakeProp) {
+    SnowflakeIdWorker.workerId = snowflakeProp.getWorkerId();
+    SnowflakeIdWorker.datacenterId = snowflakeProp.getDataCenterId();
   }
 
   // ==============================Methods==========================================

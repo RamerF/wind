@@ -1,6 +1,12 @@
 package io.github.ramerf.wind.core.config;
 
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.support.EntityInfo;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
@@ -8,20 +14,15 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 /**
  * The type Wind configuration.
  *
- * @author Tang Xiaofeng
  * @since 2020 /1/14
+ * @author Tang Xiaofeng
  */
 @Data
 @ConfigurationProperties("wind")
 public class WindConfiguration {
-  /** 逻辑删除字段. */
-  private String logicDeleteField = "isDelete";
 
-  /** 逻辑未删除值. */
-  private boolean logicNotDelete = false;
-
-  /** 逻辑已删除值. */
-  private boolean logicDeleted = true;
+  /** 逻辑删除配置. */
+  @NestedConfigurationProperty private LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
 
   /**
    * entity所在包路径,多个以,分割.<br>
@@ -41,7 +42,17 @@ public class WindConfiguration {
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 150;
 
+  /** 是否启用通用mvc配置. */
   private boolean enableWebMvcConfigurer = true;
+
+  /** 禁用{@link AbstractEntityPoJo}中的公共字段. */
+  private List<CommonField> disableFields = new ArrayList<>();
+
+  /** 自动更新表模式. */
+  private DdlAuto ddlAuto;
+
+  /** 数据库方言全路径. */
+  private String dialect;
 
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
@@ -49,7 +60,12 @@ public class WindConfiguration {
   /** Redis分布式缓存配置. */
   @NestedConfigurationProperty private RedisCache redisCache = new RedisCache();
 
-  /** Redis 缓存配置. */
+  /**
+   * Redis 缓存配置.
+   *
+   * @since 2020.08.23
+   * @author Tang Xiaofeng
+   */
   @Setter
   @Getter
   public static class RedisCache {
@@ -58,5 +74,52 @@ public class WindConfiguration {
 
     /** 缓存key前缀. */
     private String keyPrefix = "io.github.ramerf.wind";
+  }
+
+  /**
+   * The enum Ddl auto.
+   *
+   * @author Tang Xiaofeng
+   */
+  public enum DdlAuto {
+    /** Create ddl auto. */
+    CREATE,
+    /** Update ddl auto. */
+    UPDATE,
+    /** None ddl auto. */
+    NONE
+  }
+
+  /**
+   * PoJo公共字段.
+   *
+   * @author Tang Xiaofeng
+   */
+  @Slf4j
+  @SuppressWarnings("JavadocReference")
+  public enum CommonField {
+    /** {@link AbstractEntityPoJo#deleted}. */
+    DELETED {
+      @Override
+      public Field getField() {
+        return EntityInfo.DEFAULT_LOGIC_DELETE_FIELD;
+      }
+    },
+    /** {@link AbstractEntityPoJo#createTime}. */
+    CREATE_TIME {
+      @Override
+      public Field getField() {
+        return EntityInfo.DEFAULT_CREATE_TIME_FIELD;
+      }
+    },
+    /** {@link AbstractEntityPoJo#updateTime}. */
+    UPDATE_TIME {
+      @Override
+      public Field getField() {
+        return EntityInfo.DEFAULT_UPDATE_TIME_FIELD;
+      }
+    };
+
+    public abstract Field getField();
   }
 }

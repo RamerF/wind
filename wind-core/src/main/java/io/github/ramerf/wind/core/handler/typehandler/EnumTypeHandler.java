@@ -7,7 +7,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
- * 枚举类转换.
+ * {@literal java:InterEnum <=> jdbc:Integer}.
  *
  * @author Tang Xiaofeng
  * @since 2020/3/4

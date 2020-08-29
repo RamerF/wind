@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/controller")
+@RequestMapping("/foo")
 @SuppressWarnings("unchecked")
 @Api(tags = "controller层方法使用示例")
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -191,7 +191,7 @@ public class FooController {
   @PostMapping(value = "/delete/{id}", params = "type=2")
   @ApiOperation("删除,自定义删除,不带返回值")
   public ResponseEntity<Rs<String>> delete2(@PathVariable("id") final long id) {
-    return ControllerHelper.delete(
+    return ControllerHelper.exec(
         () -> service.delete(id),
         () -> {
           // 这里处理业务逻辑,成功时的返回信息
@@ -203,7 +203,7 @@ public class FooController {
   @PostMapping(value = "/delete/{id}", params = "type=3")
   @ApiOperation("删除,自定义删除,带返回值")
   public ResponseEntity<Rs<String>> delete3(@PathVariable("id") final long id) {
-    return ControllerHelper.delete(
+    return ControllerHelper.exec(
         service.delete(condition -> condition.eq(Foo::setId, id)),
         result -> {
           // 这里处理业务逻辑,成功时的返回信息

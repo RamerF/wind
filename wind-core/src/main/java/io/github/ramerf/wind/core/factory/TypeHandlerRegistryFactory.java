@@ -3,7 +3,9 @@ package io.github.ramerf.wind.core.factory;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.typehandler.*;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -14,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 注册类型转换器.
  *
  * @author Tang Xiaofeng
- * @since 2020 /3/28
+ * @since 2020/3/28
  */
 @Slf4j
 @SuppressWarnings({"rawtypes", "unused"})
@@ -27,17 +29,19 @@ public class TypeHandlerRegistryFactory {
 
   /** 注册默认的类型转换器,在添加自定义转换器之后添加这些,保持自定义的转换器优先级更高. */
   public void registerDefaultTypeHandlers() {
-    addTypeHandlers(new BigDecimalTypeHandler());
-    addTypeHandlers(new BitSetTypeHandler());
-    addTypeHandlers(new DateTypeHandler());
-    addTypeHandlers(new EnumTypeHandler());
-    addTypeHandlers(new IntegerArrayTypeHandler());
-    addTypeHandlers(new ListIntegerArrayTypeHandler());
-    addTypeHandlers(new ListLongArrayTypeHandler());
-    addTypeHandlers(new ListStringArrayTypeHandler());
-    addTypeHandlers(new LongArrayTypeHandler());
-    addTypeHandlers(new StringArrayTypeHandler());
-    addTypeHandlers(new TimestampTypeHandler());
+    try {
+      BeanUtils.scanClasses("io.github.ramerf.wind.core.handler.typehandler", ITypeHandler.class)
+          .stream()
+          .peek(clazz -> log.info("registerDefaultTypeHandlers:[{}]", clazz.getName()))
+          .filter(clazz -> !clazz.equals(ITypeHandler.class))
+          // 过滤掉特殊的类型处理器
+          .filter(clazz -> !clazz.equals(LongTimestampTypeHandler.class))
+          .map(BeanUtils::initial)
+          .forEach(this::addTypeHandlers);
+    } catch (IOException e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+    }
   }
 
   /**

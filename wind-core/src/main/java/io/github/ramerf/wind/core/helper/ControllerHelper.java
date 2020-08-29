@@ -179,8 +179,8 @@ public final class ControllerHelper {
     }
     entity.setId(id);
     try {
-      final Optional<Integer> update = invoke.update(entity);
-      return update.isPresent()
+      final int update = invoke.update(entity);
+      return update == 1
           ? notExist(String.valueOf(id))
           : ok(json().put("id", entity.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
     } catch (Exception e) {
@@ -240,8 +240,8 @@ public final class ControllerHelper {
           final ResultCode successCode,
           final ResultCode errorCode) {
     try {
-      final Optional<Integer> update = invoke.update(entity);
-      return update.isPresent()
+      final int update = invoke.update(entity);
+      return update == 1
           ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
           : Objects.nonNull(successCode) ? ok(entity.getId(), successCode) : ok();
     } catch (Exception e) {
@@ -301,18 +301,18 @@ public final class ControllerHelper {
   }
 
   /**
-   * 执行删除,不包含返回值.
+   * 执行写操作,不包含返回值.
    *
    * @param <S> the service
    * @param <T> the type parameter
    * @param <R> the type parameter
-   * @param runnable 执行删除操作
-   * @param success 删除成功执行方法
+   * @param runnable 执行写操作
+   * @param success 成功后执行方法
    * @param errorCode 执行失败时的错误码,可以为null
    * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<String>> delete(
+      ResponseEntity<Rs<String>> exec(
           final Runnable runnable,
           final Supplier<ResponseEntity<Rs<String>>> success,
           final ResultCode errorCode) {
@@ -327,18 +327,18 @@ public final class ControllerHelper {
   }
 
   /**
-   * 执行删除,包含返回值.
+   * 执行写操作,包含返回值.
    *
    * @param <S> the service
    * @param <T> the type parameter
    * @param <R> the type parameter
-   * @param result 执行删除操作后的结果
-   * @param function 返回结果处理,入参为删除返回结果
+   * @param result 执行写操作后的结果
+   * @param function 返回结果处理,入参为写操作返回结果
    * @param errorCode 执行失败时的错误码,可以为null
    * @return the response entity
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<String>> delete(
+      ResponseEntity<Rs<String>> exec(
           final R result,
           final Function<R, ResponseEntity<Rs<String>>> function,
           final ResultCode errorCode) {
@@ -504,11 +504,11 @@ public final class ControllerHelper {
         getNullProp(entity).stream()
             .filter(prop -> !includeNulls.contains(prop))
             .toArray(String[]::new));
-    // 额外处理
+    // 额外处理,比如敏感词过滤
     entity.redundantValue(poJo);
     log.debug("createOrUpdate:[{}]", poJo);
     try {
-      long affectRow = create ? invoke.create(poJo) > 0 ? 1 : 0 : invoke.update(poJo).orElse(0);
+      long affectRow = create ? invoke.create(poJo) > 0 ? 1 : 0 : invoke.update(poJo);
       return affectRow == 1
           ? ok(
               json().put("id", poJo.getId()),

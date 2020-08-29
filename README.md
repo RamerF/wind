@@ -1,30 +1,40 @@
-﻿# wind
+﻿#  wind
 
 ---
-基于spring-boot的快速开发框架,对jdbc-template进行封装,可与Mybatis/Hibernate共存.
+基于JdbcTemplate实现的快速开发框架,开箱即用,始终坚持低学习成本,所以它非常简单,使用它你会感觉很自然.
 
 ### 特性
- - 查询支持返回指定列,返回基本类型(Long/BigDecimal/枚举等)
- - lambda方式构造条件,支持类型推断
- - 基于jdbc-template
- - service层切入,repository层依然可以使用其它持久化框架
- - 自定义枚举序列化
- - 自定义ID生成策略
- - 自定义结果转换器
- - 查询默认开启redis缓存
- - 对controller(ControllerHelper),service,repository(Query/Update)三层分别进行增强
+ - 支持Mysql,Postgresql
+ - 基于JdbcTemplate: 就是快,非常小巧,学习成本低
+ - 拥抱Lambda: 全局Lambda/方法引用方式入参,完美支持参数类型推断
+ - 特定查询: 查询指定列,返回基本类型(Long/BigDecimal/枚举等),过滤大字段
+ - 枚举支持: Controller枚举参数,自定义枚举序列化
+ - 类型支持: 支持自定义类型转换器,支持BitSet
+ - 支持自动建表
+ - 可定制: 
+   - 自定义ID生成策略,默认使用雪花算法
+   - 查询默认开启redis缓存
+   - 禁用公共字段
+#### 测试项
+
+![Mysql](Mysql-test.png?raw=true)
+
+![Pgsql](Pgsql-test.png?raw=true)
+
 ### 开始使用
+
  1. 引入jar包:
     ```xml
     <dependency>
         <groupId>io.github.ramerf</groupId>
         <artifactId>wind-core</artifactId>
-        <version>3.8.3-RELEASE</version>
+        <version>4.0.0-RELEASE</version>
     </dependency>
     ```
  2. 新建 pojo 实体`Foo`继承于`AbstractEntityPoJo`
     ```java
-    public class Foo extends AbstractEntityPoJo{}
+    @Entity
+    public class Foo extends AbstractEntityPoJo {}
     ```
  3. 新建 service `FooService`继承于`BaseService`
     ```java
@@ -38,98 +48,445 @@
  5. 注入`FooService`即可使用.
 
 ### 方法示例
-## `wind-demo`模块提供所有方法的使用示例
-## controller层
+#### 参考 wind-demo 模块 和 wind-core 测试代码 
+#### service层
 ```java
-@Resource private FooService service;
+@Slf4j
+@Sql("classpath:db-mysql.sql")
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("mysql")
+@SpringBootTest(classes = MysqlApplication.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@DisplayName("Mysql 测试")
+public class BaseServiceTest {
+  @Resource private FooService service;
+  private static final Foo foo;
+  private static final Long id = 10000L;
 
-@GetMapping(value = "/detail/{id}", params = "type=2")
-@ApiOperation("查询,根据id获取详情,并转换为response")
-public ResponseEntity<Rs<FooResponse>> detail2(@PathVariable("id") final long id) {
-    return ControllerHelper.detail(service, id, FooResponse::of);
-}
+  static {
+    foo =
+        Foo.builder()
+            .id(1L)
+            .name("test")
+            .textString("textString")
+            .bigDecimal(BigDecimal.valueOf(100))
+            .type(Type.SPORT)
+            .column("non_match_column")
+            .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
+            // .largeText("")
+            .build();
+  }
 
-@GetMapping(value = "/list")
-@ApiOperation("查询,列表查询,支持转换和过滤")
-public ResponseEntity<Rs<List<FooResponse>>> list() {
-    final List<Foo> list = service.list(condition -> condition.like(Foo::setName, "foo"));
-    return ControllerHelper.list(list, FooResponse::of, foo -> StringUtils.nonEmpty(foo.getName()));
-}
+  @BeforeEach
+  public void before() {
+    foo.setId(id);
+  }
 
-@GetMapping(value = "/page")
-@ApiOperation("查询,分页")
-public ResponseEntity<Rs<Page<FooResponse>>> page() {
-    // page需要自己调用分页查询,仅提供相关的对象转换方法
-    final Page<Foo> page =
-        service.page(
-            condition -> condition.eq(Foo::setName, "foo"),
+  @Test
+  @Order(1)
+  @DisplayName("单个创建:创建并返回对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateAndGet() {
+    assertNotNull(service.createAndGet(foo));
+  }
+
+  @Test
+  @Order(1)
+  @DisplayName("单个创建:创建并返回对象,指定保存可能为null的列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateAndGetWithNull() {
+    assertNotNull(service.createAndGetWithNull(foo, Collections.singletonList(Foo::getLargeText)));
+  }
+
+  @Test
+  @DisplayName("单个更新:更新并返回对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateAndGet() {
+    assertNotNull(service.updateAndGet(foo));
+  }
+
+  @Test
+  @DisplayName("单个更新:更新并返回对象,指定保存可能为null的列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateAndGetWithNull() {
+    assertNotNull(service.updateAndGetWithNull(foo, Collections.singletonList(Foo::getLargeText)));
+  }
+
+  @Test
+  @DisplayName("count所有")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCount1() {
+    assertTrue(service.count() > 0);
+  }
+
+  @Test
+  @DisplayName("count带条件")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCount2() {
+    assertTrue(service.count(condition -> condition.gt(Foo::setId, 0L)) > 0);
+  }
+
+  @Test
+  @DisplayName("count指定列带条件")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCount3() {
+    final long count =
+        service.count(query -> query.col(Foo::getId), condition -> condition.gt(Foo::setId, 0L));
+    assertTrue(count > 0);
+  }
+
+  @Test
+  @DisplayName("查询单个:通过id查询")
+  @Transactional(rollbackFor = Exception.class)
+  public void testGetById() {
+    assertNotNull(service.getById(id));
+  }
+
+  @Test
+  @DisplayName("查询单个:条件查询")
+  @Transactional(rollbackFor = Exception.class)
+  public void testGetOne1() {
+    assertNotNull(service.getOne(condition -> condition.eq(Foo::setId, id)));
+  }
+
+  @Test
+  @DisplayName("查询单个:条件查询指定列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testGetOne2() {
+    assertNotNull(
+        service.getOne(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            condition -> condition.eq(Foo::setId, id)));
+  }
+
+  @Test
+  @DisplayName("查询单个:条件查询指定列,返回任意对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testGetOne3() {
+    assertNotNull(
+        service.getOne(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            condition -> condition.eq(Foo::setId, id),
+            IdNameResponse.class));
+  }
+
+  @Test
+  @DisplayName("查询列表:通过id列表查询")
+  @Transactional(rollbackFor = Exception.class)
+  public void testListByIds() {
+    assertNotNull(service.listByIds(Arrays.asList(id, 2L, 3L)));
+  }
+
+  @Test
+  @DisplayName("查询列表:条件查询")
+  @Transactional(rollbackFor = Exception.class)
+  public void testList1() {
+    assertNotNull(service.list(condition -> condition.gt(Foo::setId, 0L)));
+  }
+
+  @Test
+  @DisplayName("查询列表:指定列,返回任意对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testList2() {
+    assertNotNull(
+        service.list(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
+  }
+
+  @Test
+  @DisplayName("查询列表:条件查询指定列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testList3() {
+    assertNotNull(
+        service.list(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            condition -> condition.gt(Foo::setId, 0L)));
+  }
+
+  @Test
+  @DisplayName("查询列表:条件查询指定页,带排序")
+  @Transactional(rollbackFor = Exception.class)
+  public void testList4() {
+    assertNotNull(
+        service.list(
+            condition -> condition.gt(Foo::setId, 0L),
             1,
             10,
-            SortColumn.by(Foo::getUpdateTime, Order.DESC).desc(Foo::getId));
-    return ControllerHelper.page(page, FooResponse::of);
+            SortColumn.by(Foo::getName, SortColumn.Order.DESC)));
+  }
+
+  @Test
+  @DisplayName("查询列表:条件查询指定列,返回任意对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testList5() {
+    assertNotNull(
+        service.list(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            condition -> condition.gt(Foo::setId, 0L),
+            IdNameResponse.class));
+  }
+
+  @Test
+  @DisplayName("查询列表:条件查询指定列指定页,返回任意对象,带条件")
+  @Transactional(rollbackFor = Exception.class)
+  public void testList6() {
+    assertNotNull(
+        service.list(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            condition -> condition.gt(Foo::setId, 0L),
+            1,
+            10,
+            SortColumn.by(Foo::getName, SortColumn.Order.DESC),
+            IdNameResponse.class));
+  }
+
+  @Test
+  @DisplayName("查询列表:查询所有,指定列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testListAll1() {
+    assertNotNull(service.listAll(query -> query.col(Foo::getId).col(Foo::getName)));
+  }
+
+  @Test
+  @DisplayName("查询列表:查询所有,指定列,返回任意对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testListAll2() {
+    assertNotNull(
+        service.listAll(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
+  }
+
+  @Test
+  @DisplayName("查询分页:带条件,带排序")
+  @Transactional(rollbackFor = Exception.class)
+  public void testPage1() {
+    assertNotNull(
+        service.page(
+            condition -> condition.gt(Foo::setId, 0L),
+            1,
+            10,
+            SortColumn.by(Foo::getName, SortColumn.Order.DESC)));
+  }
+
+  @Test
+  @DisplayName("查询分页:指定列,返回任意对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testPage2() {
+    assertNotNull(
+        service.page(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            1,
+            10,
+            SortColumn.by(Foo::getName, SortColumn.Order.DESC),
+            IdNameResponse.class));
+  }
+
+  @Test
+  @DisplayName("查询分页:带条件指定列,返回任意对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testPage3() {
+    assertNotNull(
+        service.page(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            condition -> condition.gt(Foo::setId, 0L),
+            1,
+            10,
+            SortColumn.by(Foo::getName, SortColumn.Order.DESC)));
+  }
+
+  @Test
+  @DisplayName("查询分页:带条件指定列,返回任意对象,多个字段排序")
+  @Transactional(rollbackFor = Exception.class)
+  public void testPage4() {
+    assertNotNull(
+        service.page(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            condition -> condition.gt(Foo::setId, 0L),
+            1,
+            10,
+            SortColumn.by(Foo::getId, SortColumn.Order.DESC).desc(Foo::getName).asc(Foo::getType),
+            IdNameResponse.class));
+  }
+
+  @Test
+  @Order(2)
+  @DisplayName("单个创建")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreate() {
+    assertTrue(service.create(foo) > 0);
+  }
+
+  @Test
+  @Order(2)
+  @DisplayName("单个创建: 指定保存可能为null的列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateWithNull() {
+    assertTrue(service.createWithNull(foo, Collections.singletonList(Foo::getLargeText)) > 0);
+  }
+
+  @Test
+  @DisplayName("批量创建")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateBatch() {
+    final List<Foo> list =
+        LongStream.range(1, 101)
+            .mapToObj(
+                i ->
+                    Foo.builder()
+                        // .id(1234123L)
+                        .name("test" + i)
+                        .textString("text" + i)
+                        .bigDecimal(BigDecimal.valueOf(100 + i))
+                        .type(Type.SPORT)
+                        .column("non_match_column")
+                        .build())
+            .collect(toList());
+    long start = System.currentTimeMillis();
+    assertFalse(service.createBatch(list).isPresent());
+  }
+
+  @Test
+  @DisplayName("批量创建:指定保存可能为null的列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateBatchWithNull() {
+    final List<Foo> list =
+        LongStream.range(1, 101)
+            .mapToObj(
+                i ->
+                    Foo.builder()
+                        // .id(1234123L)
+                        .name("test" + i)
+                        .textString("text" + i)
+                        .bigDecimal(BigDecimal.valueOf(100 + i))
+                        .type(Type.SPORT)
+                        .column("non_match_column")
+                        .build())
+            .collect(toList());
+    long start = System.currentTimeMillis();
+    assertFalse(
+        service.createBatchWithNull(list, Collections.singletonList(Foo::getName)).isPresent());
+  }
+
+  @Test
+  @DisplayName("单个更新")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdate() {
+    assertEquals(service.update(foo), 1);
+  }
+
+  @Test
+  @DisplayName("单个更新:指定保存可能为null的列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateWithNull() {
+    assertEquals(service.updateWithNull(foo, Collections.singletonList(Foo::getLargeText)), 1);
+  }
+
+  @Test
+  @DisplayName("单个更新:条件更新")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateCondition() {
+    assertEquals(service.update(condition -> condition.eq(Foo::setId, id), foo), 1);
+  }
+
+  @Test
+  @DisplayName("单个更新:条件更新,指定保存可能为null的列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateConditionWithNull() {
+    assertEquals(
+        service.updateWithNull(
+            condition -> condition.eq(Foo::setId, id),
+            foo,
+            Collections.singletonList(Foo::getName)),
+        1);
+  }
+
+  @Test
+  @DisplayName("批量更新")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateBatch() {
+    final List<Foo> list =
+        LongStream.range(1, 101)
+            .mapToObj(
+                i ->
+                    Foo.builder()
+                        .id(i)
+                        .name("test" + i * i)
+                        .textString("text" + i)
+                        .bigDecimal(BigDecimal.valueOf(100 + i))
+                        .type(Type.SPORT)
+                        .column("non_match_column")
+                        .build())
+            .collect(toList());
+    assertFalse(service.updateBatch(list).isPresent());
+  }
+
+  @Test
+  @DisplayName("批量更新:指定保存可能为null的列")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateBatchWithNull() {
+    final List<Foo> list =
+        LongStream.range(1, 101)
+            .mapToObj(
+                i ->
+                    Foo.builder()
+                        .id(i)
+                        .name("test" + i * i)
+                        .textString("text" + i)
+                        .bigDecimal(BigDecimal.valueOf(100 + i))
+                        .type(Type.SPORT)
+                        .column("non_match_column")
+                        .build())
+            .collect(toList());
+    assertFalse(
+        service.updateBatchWithNull(list, Collections.singletonList(Foo::getName)).isPresent());
+  }
+
+  @Test
+  @Order(30)
+  @DisplayName("单个删除:通过id删除")
+  @Transactional(rollbackFor = Exception.class)
+  public void testDelete1() {
+    assertEquals(service.delete(id), 1);
+  }
+
+  @Test
+  @Order(31)
+  @DisplayName("批量删除:条件删除")
+  @Transactional(rollbackFor = Exception.class)
+  public void testDelete2() {
+    assertEquals(service.delete(condition -> condition.eq(Foo::setId, id)), 1);
+  }
+
+  @Test
+  @Order(32)
+  @DisplayName("批量删除:通过id列表删除")
+  @Transactional(rollbackFor = Exception.class)
+  public void testDeleteByIds() {
+    assertTrue(service.deleteByIds(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
+  }
+
+  @Test
+  @DisplayName("单个查询:默认不查询指定字段(大字段)")
+  @Transactional(rollbackFor = Exception.class)
+  public void testDontFetch() {
+    // 默认不查询
+    assertNull(service.getOne(condition -> condition.eq(Foo::setId, id)).getLargeText());
+    // 指定查询该字段
+    assertNotNull(
+        service
+            .getOne(
+                query -> query.col(Foo::getLargeText), condition -> condition.eq(Foo::setId, id))
+            .getLargeText());
+  }
 }
+
 ```
-## service层
-```java
-@Resource private FooService service;
-
-@GetMapping(value = "/get-one", params = "type=2")
-@ApiOperation("查询,单条查询,指定条件返回自定义对象,支持返回基本类型")
-public ResponseEntity<Rs<FooThinResponse>> getOne2() {
-    // 支持返回基本类型
-    final Long one =
-        service.getOne(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(Foo::setId, 1L),
-            Long.class);
-    log.info("getOne2:[{}]", one);
-    // 返回自定义对象
-    final FooThinResponse thinResponse =
-        service.getOne(
-            query ->
-                query
-                    .col(Foo::getId)
-                    .col(Foo::getName)
-                    .col(Foo::getCreateTime),
-            condition -> condition.eq(Foo::setId, 1L),
-            FooThinResponse.class);
-    log.info("getOne2:[{}]", thinResponse);
-    return Rs.ok(thinResponse);
-}
-
-@PostMapping(value = "/create", params = "type=2")
-@SuppressWarnings({"unchecked", "DuplicatedCode"})
-@ApiOperation("创建,指定保存值为null的属性")
-public ResponseEntity<Rs<Long>> create2() {
-    return Rs.ok(
-        service.create(
-            Foo.builder()
-                .name("demo")
-                .textString("text")
-                .bigDecimal(BigDecimal.valueOf(100))
-                .type(Type.SPORT)
-                .intList(Arrays.asList(1, 3, 5))
-                .intArr(new Integer[] {1, 4, 7})
-                .longList(Arrays.asList(2L, 4L, 6L))
-                .longArr(new Long[] {1L, 3L, 5L})
-                // .stringList(Arrays.asList("3", "a", "6", "b"))
-                .stringArr(new String[] {"2", "a", "b"})
-                .column("non_match_column")
-                .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-                .build(),
-            Foo::getName,
-            Foo::getStringList));
-}
-
-```
-## repository层(Query/Update)
+#### repository层(Query/Update)
 支持任意表
 ```java
 @Resource private PrototypeBean prototypeBean;
 
 @GetMapping
 @ApiOperation("使用Query")
-public ResponseEntity<Rs<Object>> query() {
+public ResponseEntity<Rs<List<Long>> query() {
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumnFactory.getInstance(Foo.class);
     final Condition<Foo> condition = queryColumn.getCondition();
@@ -144,7 +501,7 @@ public ResponseEntity<Rs<Object>> query() {
 
 @GetMapping
 @ApiOperation("使用Update")
-public ResponseEntity<Rs<Object>> update() {
+public ResponseEntity<Rs<Integer>> update() {
     final Foo foo = Foo.builder().name("name").build();
     final int affectRow =
         prototypeBean
@@ -157,7 +514,31 @@ public ResponseEntity<Rs<Object>> update() {
 
 ```
 
-## 自定义枚举序列化
+#### 过滤大字段
+
+```java
+@TableColumn(dontFetch = true)
+private String largeText;
+```
+
+#### 禁用公共字段
+
+```yml
+wind:
+  # 禁用公共字段,可选:deleted,created_time,update_time
+  disable-fields: create_time,update_time
+```
+
+#### 自动建表
+
+```yml
+wind:
+  # 自动建表,扫描entity-package下包含@Entity/@TableInfo的类.可选值:none,create,update.默认:none
+  ddl-auto: update
+```
+
+#### 自定义枚举序列化
+
  - 默认枚举序列化为 key:value 格式
     ```json
     {
@@ -167,19 +548,15 @@ public ResponseEntity<Rs<Object>> update() {
     ```
  - 自定义
     ```java
-    /**
-    * 自定义枚举的序列化格式,只返回value.
-    *
-    * @return the inter enum serializer
-    */
+    /** 自定义枚举的序列化格式,只返回value. */
     @Bean
     public InterEnumSerializer interEnumSerializer() {
         return InterEnum::value;
     }
     ```
 
-## 自定义ID生成策略
-默认使用分布式id雪花算法
+#### 自定义ID生成策略
+默认使用雪花算法
 ```java
 @Bean
 public IdGenerator autoIncrementGenerator() {
@@ -188,30 +565,38 @@ public IdGenerator autoIncrementGenerator() {
 }
 ```
 
-## redis分布式缓存
+#### redis缓存
 ```yaml
+wind:  
   redis-cache:
     # 默认开启
     enable: true
     # 前缀
     key-prefix: io.github.ramerf.wind
 ```
-其它orm框架执行对象写入后,手动清除缓存
+手动清除缓存
 ```java
 @Resource private RedisCache redisCache;
 redisCache.clear(Foo.class);
 ```
-## 可配置项
+#### 可配置项
 ```yaml
 wind:
-  # 逻辑删除字段名
-  logic-delete-field: isDelete
-  # 逻辑未删除值(默认为 false)
-  logic-not-delete: false
-  # 逻辑已删除值(默认为 true)
-  logic-deleted: true
+  logic-delete-prop:
+      # 是否启用逻辑删除,可以在类上使用@TableInfo(logicDelete = @LogicDelete(enable = true))属性覆盖,添加@TableInfo注解会使该配置失效
+      enable: false
+      # 逻辑删除字段名,添加@TableInfo注解会使该配置失效
+      column: deleted
+      # 逻辑未删除值(默认为 false),添加@TableInfo注解会使该配置失效
+      not-delete: false
+      # 逻辑已删除值(默认为 true),添加@TableInfo注解会使该配置失效
+      deleted: true
   # entity所在包路径,多个以,分割
   entity-package: io.github.ramerf.wind.demo.entity.pojo
+  # 自动建表,扫描entity-package下包含@Entity/@TableInfo的类.可选值:none,create,update.默认:none
+  ddl-auto: update
+  # 禁用公共字段,可选:deleted,created_time,update_time
+  disable-fields: create_time,update_time
   # 批量操作时每次处理的大小,默认为150
   batch-size: 500
   # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
@@ -228,3 +613,38 @@ wind:
   # 默认true,当默认mvc配置与当前项目不兼容时设置为false可禁用
   enable-web-mvc-configurer: false
 ```
+
+#### 可用注解
+
+- @TableInfo 用于指定表信息,配合@Entity使用
+- @TableColumn 用于指定列信息,配合@Column使用
+- @LogicDelete 用于@TableInfo注解指定逻辑删除信息
+- @TypeHandler 当全局类型处理器不满足需求时,用于指定特定字段使用的类型处理器
+- @CreateTimestamp 指定该字段值为创建时间
+- @UpdateTimestamp 指定该字段为更新时间
+
+#### 通用命名风格
+
+代码格式化使用: google-java-format
+
+- 单个: getXxx/getOne
+- 多个: listXxx
+- 分页: pageXxx
+- 批量: xxxBatch
+- 获取/构造实例: of, fromXxx, getInstance, by
+
+#### Issue & Pull request
+
+欢迎提Issue 和 Pull request
+
+#### 联系我
+
+如果你在使用本项目时遇到问题,可以通过以下方式联系到我,我将提供免费技术支持
+
+- WX: ramer-
+- QQ: 1390635973
+- Mail: [1390635973@qq.com](mailto:1390635973@qq.com)
+
+#### 开源协议
+
+[GNU GENERAL PUBLIC LICENSE](http://www.gnu.org/licenses)

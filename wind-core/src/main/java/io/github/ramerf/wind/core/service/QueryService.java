@@ -17,7 +17,7 @@ import org.springframework.data.domain.Sort.Order;
  *
  * <pre>
  * <h2>
- *   <font color="yellow">注意: 所有的方法忽略已删除记录<code>{@link AbstractEntityPoJo#getIsDelete()}=false.</code></font>
+ *   <font color="yellow">注意: 所有的方法忽略逻辑删除记录.</code></font>
  * </h2>
  * </pre>
  *
@@ -25,7 +25,6 @@ import org.springframework.data.domain.Sort.Order;
  * @author Tang Xiaofeng
  * @since 2020 /1/5
  */
-@SuppressWarnings({"unused"})
 public interface QueryService<T extends AbstractEntityPoJo> extends InterService<T> {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(QueryService.class);
