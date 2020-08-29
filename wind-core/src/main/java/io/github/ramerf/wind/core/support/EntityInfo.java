@@ -6,11 +6,13 @@ import io.github.ramerf.wind.core.config.WindConfiguration.CommonField;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
 import java.util.*;
 import javax.annotation.Nonnull;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 实体信息.
@@ -19,6 +21,7 @@ import lombok.Data;
  * @since 2020/7/24
  */
 @Data
+@Slf4j
 public final class EntityInfo {
   private Class<?> clazz;
 
@@ -35,6 +38,9 @@ public final class EntityInfo {
   private Field updateTimeField;
 
   private Field createTimeField;
+
+  /** 是否映射到数据库. */
+  private boolean mapToTable = true;
 
   /** 字段与列名映射 {field:column}. */
   private Map<String, String> fieldColumnMap;
@@ -80,6 +86,7 @@ public final class EntityInfo {
   public static EntityInfo of(
       @Nonnull final Class<?> clazz, final WindConfiguration configuration, Dialect dialect) {
     EntityInfo entityInfo = new EntityInfo();
+    entityInfo.mapToTable = EntityHelper.isMapToTable(clazz);
     entityInfo.dialect = dialect;
     entityInfo.setClazz(clazz);
     entityInfo.setName(EntityUtils.getTableName(clazz));
@@ -108,11 +115,13 @@ public final class EntityInfo {
     entityInfo.setFieldColumnMap(fieldColumnMap);
     final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
     if (tableInfo != null) {
-      entityInfo.setLogicDeleteProp(LogicDeleteProp.of(tableInfo));
+      entityInfo.setLogicDeleteProp(LogicDeleteProp.of(tableInfo, configuration));
     } else {
       entityInfo.setLogicDeleteProp(LogicDeleteProp.of(configuration));
     }
-
+    if (!entityInfo.getLogicDeleteProp().isEnable() && entityInfo.isMapToTable()) {
+      log.warn("表[{}]将使用物理删除!", entityInfo.name);
+    }
     List<EntityColumn> primaryKeys = new ArrayList<>();
     List<EntityColumn> entityColumns = new ArrayList<>();
     for (Field field : columnFields) {

@@ -136,7 +136,7 @@ public class EntityHelper {
     if (ddlAuto == null || DdlAuto.NONE.equals(ddlAuto)) {
       return;
     }
-    if (!isMapToTable(entityInfo)) {
+    if (!entityInfo.isMapToTable()) {
       return;
     }
     // 先删除,再创建
@@ -155,14 +155,14 @@ public class EntityHelper {
   }
 
   /**
-   * 判断一个{@link EntityInfo}是否映射到数据库表.true:是
+   * 判断一个Class是否映射到数据库表.true:是
    *
    * <p>映射到数据库表需要实体包含注解中的一个: {@link Entity},{@link TableInfo}.
    */
-  private static boolean isMapToTable(final EntityInfo entityInfo) {
-    return entityInfo != null
-        && (entityInfo.getClazz().getAnnotation(Entity.class) != null
-            || entityInfo.getClazz().getAnnotation(TableInfo.class) != null);
+  public static boolean isMapToTable(final Class<?> clazz) {
+    return clazz != null
+        && (clazz.getAnnotation(Entity.class) != null
+            || clazz.getAnnotation(TableInfo.class) != null);
   }
 
   /**

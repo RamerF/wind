@@ -18,6 +18,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * @author Tang Xiaofeng
  */
 @Data
+@Slf4j
 @ConfigurationProperties("wind")
 public class WindConfiguration {
 
@@ -59,6 +60,30 @@ public class WindConfiguration {
 
   /** Redis分布式缓存配置. */
   @NestedConfigurationProperty private RedisCache redisCache = new RedisCache();
+
+  public void setLogicDeleteProp(final LogicDeleteProp logicDeleteProp) {
+    this.logicDeleteProp = logicDeleteProp;
+    // 如果逻辑删除字段已被禁用,给个提示
+    final String logicDeleteColumn = logicDeleteProp.getColumn();
+    if (disableFields.size() > 0
+        && logicDeleteColumn.equals(AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME)
+        && getDisableFields().stream()
+            .anyMatch(field -> field.getColumn().equals(logicDeleteColumn))) {
+      log.warn("逻辑删除字段[{}]已被禁用,将启用全局物理删除!", logicDeleteColumn);
+      logicDeleteProp.setEnable(false);
+    }
+  }
+
+  public void setDisableFields(final List<CommonField> disableFields) {
+    this.disableFields = disableFields;
+    // 如果逻辑删除字段已被禁用,给个提示
+    final String logicDeleteColumn = logicDeleteProp.getColumn();
+    if (logicDeleteColumn.equals(AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME)
+        && disableFields.stream().anyMatch(field -> field.getColumn().equals(logicDeleteColumn))) {
+      log.warn("逻辑删除字段[{}]已被禁用,将启用全局物理删除!", logicDeleteColumn);
+      logicDeleteProp.setEnable(false);
+    }
+  }
 
   /**
    * Redis 缓存配置.
@@ -104,12 +129,22 @@ public class WindConfiguration {
       public Field getField() {
         return EntityInfo.DEFAULT_LOGIC_DELETE_FIELD;
       }
+
+      @Override
+      public String getColumn() {
+        return AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME;
+      }
     },
     /** {@link AbstractEntityPoJo#createTime}. */
     CREATE_TIME {
       @Override
       public Field getField() {
         return EntityInfo.DEFAULT_CREATE_TIME_FIELD;
+      }
+
+      @Override
+      public String getColumn() {
+        return AbstractEntityPoJo.CREATE_TIME_COLUMN_NAME;
       }
     },
     /** {@link AbstractEntityPoJo#updateTime}. */
@@ -118,8 +153,15 @@ public class WindConfiguration {
       public Field getField() {
         return EntityInfo.DEFAULT_UPDATE_TIME_FIELD;
       }
+
+      @Override
+      public String getColumn() {
+        return AbstractEntityPoJo.UPDATE_TIME_COLUMN_NAME;
+      }
     };
 
     public abstract Field getField();
+
+    public abstract String getColumn();
   }
 }

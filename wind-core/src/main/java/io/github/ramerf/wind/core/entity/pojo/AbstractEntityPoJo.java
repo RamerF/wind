@@ -26,8 +26,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 public class AbstractEntityPoJo implements AbstractEntity {
   public static final String LOGIC_DELETE_FIELD_NAME = "deleted";
   public static final String LOGIC_DELETE_COLUMN_NAME = "deleted";
+
   public static final String CREATE_TIME_FIELD_NAME = "createTime";
+  public static final String CREATE_TIME_COLUMN_NAME = "create_time";
+
   public static final String UPDATE_TIME_FIELD_NAME = "updateTime";
+  public static final String UPDATE_TIME_COLUMN_NAME = "update_time";
 
   // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
 
