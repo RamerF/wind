@@ -28,7 +28,7 @@ public class FooUpdateController {
 
   @GetMapping
   @ApiOperation("使用Update")
-  public ResponseEntity<Rs<Object>> update() {
+  public ResponseEntity<Rs<Integer>> update() {
     final Foo foo = Foo.builder().name("name").build();
     final int affectRow =
         prototypeBean

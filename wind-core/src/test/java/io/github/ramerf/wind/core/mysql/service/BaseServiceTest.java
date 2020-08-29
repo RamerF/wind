@@ -23,10 +23,10 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * service层测试.
+ * Service层测试.
  *
- * @author ramer
- * @since 05/08/2020
+ * @author Tang Xiaofeng
+ * @since 2020.8.29
  */
 @Slf4j
 @Sql("classpath:db-mysql.sql")

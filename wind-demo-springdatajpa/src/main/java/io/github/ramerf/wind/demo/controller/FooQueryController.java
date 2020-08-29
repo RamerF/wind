@@ -32,7 +32,7 @@ public class FooQueryController {
 
   @GetMapping
   @ApiOperation("使用Query")
-  public ResponseEntity<Rs<Object>> query() {
+  public ResponseEntity<Rs<List<Long>>> query() {
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumnFactory.getInstance(Foo.class);
     final Condition<Foo> condition = queryColumn.getCondition();
@@ -47,7 +47,7 @@ public class FooQueryController {
 
   @GetMapping(params = "type=2")
   @ApiOperation("使用Query,groupBy,sum")
-  public ResponseEntity<Rs<Object>> query2() {
+  public ResponseEntity<Rs<List<GroupBySum>>> query2() {
     QueryColumn<Foo> queryColumn = QueryColumnFactory.getInstance(Foo.class);
     Condition<Foo> condition = queryColumn.getCondition().gt(Foo::setId, 0L);
     final QueryEntityMetaData<Foo> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
@@ -64,7 +64,7 @@ public class FooQueryController {
 
   @GetMapping("/diy")
   @ApiOperation("使用Query,DIY)")
-  public ResponseEntity<Rs<Object>> query3() {
+  public ResponseEntity<Rs<List<Foo>>> query3() {
     /*
      * 说明: 由于设计用于分布式系统,应避免多表查询,故设计时未考虑支持🤣🤣,只支持inner join方式连表
      * 已知的问题,在Query中已经标明(但不完全😅,没想到吧)
