@@ -28,7 +28,7 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public E handle(Map<String, Object> map) {
     if (CollectionUtils.isEmpty(map)) {
       return null;
@@ -49,7 +49,7 @@ public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String,
     }
     if (InterEnum.class.isAssignableFrom(clazz)) {
       final Class<? extends InterEnum> cls = (Class<? extends InterEnum>) clazz;
-      return (E) InterEnum.of(cls, Integer.valueOf(value.toString()));
+      return (E) InterEnum.ofNullable(value, cls);
     }
     if (valueClass.isArray()) {
       return (E) value;

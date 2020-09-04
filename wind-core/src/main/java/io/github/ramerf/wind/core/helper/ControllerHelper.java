@@ -28,6 +28,7 @@ import static io.github.ramerf.wind.core.entity.response.Rs.*;
 import static io.github.ramerf.wind.core.util.BeanUtils.getNullProp;
 import static io.github.ramerf.wind.core.util.BeanUtils.initial;
 import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
+import static io.github.ramerf.wind.core.validation.ValidateUtil.collect;
 
 /**
  * 简化Controller操作.
@@ -71,7 +72,7 @@ public final class ControllerHelper {
           final S invoke, final T entity, final BindingResult bindingResult) {
     log.info("create:[{}]", entity);
     if (bindingResult.hasErrors()) {
-      return fail(collectBindingResult(bindingResult));
+      return fail(collect(bindingResult));
     }
     try {
       return ok(json().put("id", invoke.create(entity)), ResultCode.API_SUCCESS_EXEC_CREATE.desc());
@@ -175,7 +176,7 @@ public final class ControllerHelper {
       return wrongFormat("id");
     }
     if (Objects.nonNull(bindingResult) && bindingResult.hasErrors()) {
-      return fail(collectBindingResult(bindingResult));
+      return fail(collect(bindingResult));
     }
     entity.setId(id);
     try {
@@ -413,42 +414,6 @@ public final class ControllerHelper {
   }
 
   /**
-   * Collect first binding result string.
-   *
-   * @param bindingResult the binding result
-   * @return the string
-   */
-  public static String collectFirstBindingResult(BindingResult bindingResult) {
-    ObjectError error = bindingResult.getAllErrors().get(0);
-    return Objects.requireNonNull(error.getDefaultMessage()).contains("Failed to convert property")
-        ? ((FieldError) error).getField() + " 格式不正确"
-        : error.getDefaultMessage();
-  }
-
-  /**
-   * Collect binding result string.
-   *
-   * @param bindingResult the binding result
-   * @return the string
-   */
-  public static String collectBindingResult(BindingResult bindingResult) {
-    StringBuilder errorMsg = new StringBuilder();
-    bindingResult
-        .getAllErrors()
-        .forEach(
-            error ->
-                errorMsg
-                    .append("<br/>")
-                    .append(
-                        Objects.requireNonNull(error.getDefaultMessage())
-                                .contains("Failed to convert property")
-                            ? ((FieldError) error).getField() + " 格式不正确"
-                            : error.getDefaultMessage()));
-    final String msg = errorMsg.toString().replaceFirst("<br/>", "");
-    return msg.contains("<br/>") ? "提交信息有误: <br/>".concat(msg) : msg;
-  }
-
-  /**
    * 创建或更新.
    *
    * @param invoke 服务层实现类.
@@ -484,7 +449,7 @@ public final class ControllerHelper {
               stack -> log.info("\n\t{}:[entity:{},includeNulls:{}]", stack, entity, includeNulls));
     }
     if (Objects.nonNull(bindingResult) && bindingResult.hasErrors()) {
-      return fail(collectBindingResult(bindingResult));
+      return fail(collect(bindingResult));
     }
     final Long id = entity.getId();
     // 创建对象时id置为空
