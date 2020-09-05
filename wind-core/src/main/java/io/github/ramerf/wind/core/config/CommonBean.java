@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.cache.DefaultRedisCache;
-import io.github.ramerf.wind.core.cache.RedisCache;
+import io.github.ramerf.wind.core.cache.*;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.executor.Executor;
@@ -108,8 +107,20 @@ public class CommonBean {
   @ConditionalOnMissingBean(RedisCache.class)
   @DependsOn("redisCacheRedisTemplate")
   @ConditionalOnProperty(value = "wind.redis-cache.enable", havingValue = "true")
-  public RedisCache defaultRedisCache() {
-    return new DefaultRedisCache();
+  public Cache defaultRedisCache(WindConfiguration configuration) {
+    return new DefaultRedisCache(configuration);
+  }
+
+  /**
+   * Default redis cache redis cache.
+   *
+   * @return the redis cache
+   */
+  @Bean
+  @ConditionalOnMissingBean(Cache.class)
+  @ConditionalOnProperty(value = "wind.redis-cache.enable", havingValue = "false")
+  public Cache inMemoryCache(WindConfiguration configuration) {
+    return new InMemoryCache(configuration);
   }
 
   /**

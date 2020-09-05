@@ -1,14 +1,16 @@
 package io.github.ramerf.wind.core.cache;
 
 import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.CollectionUtils;
-import java.util.Objects;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.serializer.RedisSerializer;
 
 /**
  * 用于查询redis缓存.
@@ -17,15 +19,12 @@ import org.springframework.data.redis.core.ValueOperations;
  * @since 2020 /5/26
  */
 @Slf4j
-public class DefaultRedisCache implements RedisCache {
+public class DefaultRedisCache extends AbstractCache {
   @Resource(name = "redisCacheRedisTemplate")
   private RedisTemplate<String, Object> redisTemplate;
 
-  @Resource private WindConfiguration windConfiguration;
-
-  @Override
-  public String getKeyPrefix(@Nonnull final Class<?> clazz) {
-    return windConfiguration.getRedisCache().getKeyPrefix();
+  public DefaultRedisCache(final WindConfiguration configuration) {
+    super(configuration);
   }
 
   @Override
@@ -45,17 +44,37 @@ public class DefaultRedisCache implements RedisCache {
 
   @Override
   public void clear(@Nonnull final String key) {
-    CollectionUtils.doIfNonEmpty(
-        redisTemplate.keys(key + "*"), o -> o.forEach(k -> redisTemplate.delete(k)));
+    CollectionUtils.doIfNonEmpty(scan(key + "*"), o -> o.forEach(k -> redisTemplate.delete(k)));
   }
 
   @Override
   public boolean isKeyExist(@Nonnull final String key) {
-    final Boolean hasKey = redisTemplate.hasKey(key);
-    return Objects.nonNull(hasKey) && hasKey;
+    return scan(key + "*").size() > 0;
   }
 
   private ValueOperations<String, Object> getOperations() {
     return redisTemplate.opsForValue();
+  }
+
+  private List<String> scan(String pattern) throws CommonException {
+    ScanOptions options = ScanOptions.scanOptions().match(pattern).count(Integer.MAX_VALUE).build();
+    @SuppressWarnings("unchecked")
+    RedisSerializer<String> keySerializer =
+        (RedisSerializer<String>) redisTemplate.getKeySerializer();
+    try (final ConvertingCursor<byte[], String> cursor =
+        redisTemplate.executeWithStickyConnection(
+            connection ->
+                new ConvertingCursor<>(connection.scan(options), keySerializer::deserialize))) {
+      if (cursor == null) {
+        return Collections.emptyList();
+      }
+      List<String> keys = new ArrayList<>();
+      while (cursor.hasNext()) {
+        keys.add(cursor.next());
+      }
+      return keys;
+    } catch (IOException e) {
+      throw CommonException.of(e);
+    }
   }
 }

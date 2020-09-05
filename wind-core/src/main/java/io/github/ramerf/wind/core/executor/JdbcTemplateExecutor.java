@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.executor;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.github.ramerf.wind.core.cache.RedisCache;
+import io.github.ramerf.wind.core.cache.Cache;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
@@ -33,10 +33,10 @@ import static java.util.stream.Collectors.toList;
 public class JdbcTemplateExecutor implements Executor {
   @Resource @Getter private JdbcTemplate jdbcTemplate;
 
-  private final RedisCache redisCache;
+  private final Cache cache;
 
-  public JdbcTemplateExecutor(RedisCache redisCache) {
-    this.redisCache = redisCache;
+  public JdbcTemplateExecutor(Cache cache) {
+    this.cache = cache;
   }
 
   @Override
@@ -161,6 +161,7 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @Override
+  @SuppressWarnings("ConstantConditions")
   public long fetchCount(@Nonnull final SqlParam sqlParam) {
     return cacheIfAbsent(
         sqlParam,
@@ -244,16 +245,16 @@ public class JdbcTemplateExecutor implements Executor {
   private <T> T cacheIfAbsent(
       @Nonnull final SqlParam sqlParam, Supplier<T> supplier, final String methodName) {
     // 未开启缓存
-    if (Objects.isNull(redisCache)) {
+    if (Objects.isNull(cache)) {
       return supplier.get();
     }
-    final String key = redisCache.generateKey(sqlParam, methodName);
+    final String key = cache.generateKey(sqlParam, methodName);
     // 命中缓存
-    if (redisCache.isKeyExist(key)) {
+    if (cache.isKeyExist(key)) {
       if (log.isDebugEnabled()) {
         log.debug("cacheIfAbsent:Hit cache[{}]", key);
       }
-      final Object exist = redisCache.get(key);
+      final Object exist = cache.get(key);
       if (exist == null) {
         return null;
       }
@@ -271,23 +272,23 @@ public class JdbcTemplateExecutor implements Executor {
     if (log.isDebugEnabled()) {
       log.debug("cacheIfAbsent:Put cache[{}]", key);
     }
-    // 空数据缓存100ms,防止穿透数据库,这个数值可能应该允许让用户自定义
+    // 空数据缓存50ms,防止穿透数据库,这个数值可能应该允许让用户自定义
     if (Objects.isNull(t)) {
-      redisCache.put(key, null, 100, TimeUnit.MILLISECONDS);
+      cache.put(key, null, 50, TimeUnit.MILLISECONDS);
     } else {
       // Page对象需要单独处理
       final Object putRedis = t instanceof Page ? new PageInRedis<>((Page<?>) t) : t;
-      redisCache.put(key, putRedis);
+      cache.put(key, putRedis);
     }
     return t;
   }
 
   private <T> T execAndClear(@Nonnull final Class<?> clazz, Supplier<T> supplier) {
     // 未开启缓存
-    if (Objects.isNull(redisCache)) {
+    if (Objects.isNull(cache)) {
       return supplier.get();
     }
-    redisCache.clear(clazz);
+    cache.clear(clazz);
     return supplier.get();
   }
 

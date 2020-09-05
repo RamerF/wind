@@ -363,7 +363,7 @@ public class Query {
             .queryColumns(queryColumns)
             .startIndex(new AtomicInteger(1))
             .build(),
-        fetchCount(),
+        fetchCount(clazz),
         pageable);
   }
 
@@ -372,7 +372,7 @@ public class Query {
    *
    * @return long long
    */
-  public long fetchCount() {
+  public long fetchCount(final Class<?> clazz) {
     doIfNonEmpty(afterWhereString.toString(), str -> countString = countString.concat(str));
     final boolean nonEmpty = StringUtils.nonEmpty(countString);
     final String sql =
@@ -383,6 +383,7 @@ public class Query {
         SqlParam.builder()
             .sql(String.format(sql, countString))
             .clazz(Long.class)
+            .entityClazz(clazz)
             .aggregateFunction(SqlAggregateFunction.COUNT)
             .conditions(conditions)
             .startIndex(new AtomicInteger(1))
