@@ -59,7 +59,10 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       final Consumer<QueryColumn<T>> queryConsumer,
       final Consumer<ICondition<T>> conditionConsumer) {
     final QueryBound<T> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
-    return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchCount();
+    return getQuery()
+        .select(queryBound.queryColumn)
+        .where(queryBound.condition)
+        .fetchCount(getPoJoClass());
   }
 
   /**

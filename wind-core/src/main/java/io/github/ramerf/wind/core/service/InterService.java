@@ -33,7 +33,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * @return the query column
    */
   default QueryColumn<T> getQueryColumn() {
-    return QueryColumnFactory.getInstance(getPoJoClass());
+    return QueryColumnFactory.fromClass(getPoJoClass());
   }
 
   /**

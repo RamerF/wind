@@ -91,10 +91,10 @@ wind:
   batch-size: 30
   # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
   custom-enum-deserializer: false
-  redis-cache:
-    # 默认开启redis缓存
-    enable: false
-    # redis key前缀
+  cache:
+    # 缓存类型.可选值: redis,memory 默认使用内存缓存
+    type: memory
+    # key前缀
     key-prefix: io.github.ramerf.wind
   # 用于分布式id雪花算法
   snowflake-prop:

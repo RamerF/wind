@@ -97,7 +97,7 @@ public final class EntityUtils {
       @Nonnull final T t, final List<Field> fields) {
     final Class<? extends AbstractEntityPoJo> clazz;
     if (t instanceof AbstractEntityRequest) {
-      clazz = ((AbstractEntityRequest<? extends AbstractEntityPoJo>) t).getPoJoClass();
+      clazz = ((AbstractEntityRequest<? extends AbstractEntityPoJo>) t).poJoClass();
     } else {
       clazz = (Class<? extends AbstractEntityPoJo>) t.getClass();
     }

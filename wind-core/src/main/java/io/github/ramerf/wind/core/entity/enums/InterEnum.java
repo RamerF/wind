@@ -5,17 +5,18 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.EnumUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The interface inter enum.
  *
+ * @param <V> the type parameter
  * @author Tang Xiaofeng
- * @since 2020/3/28
+ * @since 2020 /3/28
  */
-public interface InterEnum extends Serializable {
+public interface InterEnum<V> extends Serializable {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(InterEnum.class);
 
@@ -24,7 +25,7 @@ public interface InterEnum extends Serializable {
    *
    * @return the integer
    */
-  Integer value();
+  V value();
 
   /**
    * Desc string.
@@ -34,36 +35,38 @@ public interface InterEnum extends Serializable {
   String desc();
 
   /**
-   * 通过枚举值获取枚举实例
+   * 通过value获取枚举,可能为null.
    *
-   * @param <T> the type parameter
-   * @param enumType 枚举类
+   * @param <V> the type parameter
+   * @param <E> the type parameter
    * @param value 枚举值
-   * @param allowNull 是否允许获取到的枚举实例为null<br>
-   *     设置为true时,如果枚举实例为null,将会抛出{@link CommonException}
-   * @return 枚举实例 {@link InterEnum}
-   * @throws CommonException the {@link CommonException}
+   * @param clazz 实现{@link InterEnum}的枚举类
+   * @return 枚举实例 e
    */
-  static <T extends InterEnum> T of(Class<T> enumType, final Integer value, final boolean allowNull)
-      throws CommonException {
-    final T t = EnumUtils.of(enumType, value);
-    if (Objects.isNull(t) && !allowNull) {
-      throw CommonException.of(
-          ResultCode.API_PARAM_INVALID.desc(StringUtils.firstLowercase(enumType.getSimpleName())));
-    }
-    return t;
+  static <V, E extends InterEnum<V>> E ofNullable(final V value, Class<E> clazz) {
+    return EnumUtils.of(value, clazz);
   }
 
   /**
-   * Of t.
+   * 通过value获取枚举,当返回null时,抛出包含<code>message</code>的异常.
    *
-   * @param <T> the type parameter
-   * @param enumType the enum type
-   * @param value the value
-   * @return the t
-   * @see InterEnum#of(Class, Integer, boolean) InterEnum#of(Class, Integer, boolean)
+   * @param <V> the type parameter
+   * @param <E> the type parameter
+   * @param value 枚举值
+   * @param clazz the clazz
+   * @return 枚举实例 e
+   * @throws CommonException the common exception
    */
-  static <T extends InterEnum> T of(Class<T> enumType, final Integer value) {
-    return of(enumType, value, true);
+  static <V, E extends InterEnum<V>> E of(final V value, Class<E> clazz, Supplier<String> message)
+      throws CommonException {
+    E e = EnumUtils.of(value, clazz);
+    if (e == null) {
+      throw CommonException.of(
+          ResultCode.API_PARAM_INVALID.desc(
+              message != null && message.get() != null
+                  ? message.get()
+                  : StringUtils.firstLowercase(clazz.getSimpleName())));
+    }
+    return e;
   }
 }

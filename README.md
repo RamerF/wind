@@ -13,8 +13,20 @@
  - 支持自动建表
  - 可定制: 
    - 自定义ID生成策略,默认使用雪花算法
-   - 查询默认开启redis缓存
+   - 缓存: 支持缓存扩展,目前支持内存和redis缓存
    - 禁用公共字段
+
+#### 迭代计划
+
+ - [X] InterEnum枚举值由整型改为泛型. 
+ - [X] controller枚举支持接收名称和value值,自动校验正确性
+ - [X] 校验器工具类
+ - [x] 全局异常处理
+ - [x] 支持缓存扩展,目前支持内存和redis缓存
+ - [x] 清除`redis`缓存改为scan指令
+ - [ ] 支持关系映射
+ - [ ] 前后端分离跨域配置,引入JWT
+
 #### 测试项
 
 ![Mysql](Mysql-test.png?raw=true)
@@ -583,13 +595,13 @@ redisCache.clear(Foo.class);
 ```yaml
 wind:
   logic-delete-prop:
-      # 是否启用逻辑删除,可以在类上使用@TableInfo(logicDelete = @LogicDelete(enable = true))属性覆盖,添加@TableInfo注解会使该配置失效
+      # 是否启用逻辑删除,可以在类上使用@TableInfo(logicDelete = @LogicDelete(enable = true))属性覆盖
       enable: false
-      # 逻辑删除字段名,添加@TableInfo注解会使该配置失效
+      # 逻辑删除字段名,@TableInfo会覆盖该配置
       column: deleted
-      # 逻辑未删除值(默认为 false),添加@TableInfo注解会使该配置失效
+      # 逻辑未删除值(默认为 false),@TableInfo会覆盖该配置
       not-delete: false
-      # 逻辑已删除值(默认为 true),添加@TableInfo注解会使该配置失效
+      # 逻辑已删除值(默认为 true),@TableInfo会覆盖该配置
       deleted: true
   # entity所在包路径,多个以,分割
   entity-package: io.github.ramerf.wind.demo.entity.pojo
@@ -601,10 +613,10 @@ wind:
   batch-size: 500
   # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
   custom-enum-deserializer: false
-  redis-cache:
-    # 默认开启redis缓存
-    enable: true
-    # redis key前缀
+  cache:
+    # 缓存类型.可选值: redis,memory 默认memory
+    type: redis
+    # 缓存key前缀
     key-prefix: io.github.ramerf.wind
   # 用于分布式id雪花算法
   snowflake-prop:

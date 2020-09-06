@@ -75,7 +75,7 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    * 获取PoJo的class对象.<br>
    * 注意: 使用该方法,需要<code>request</code>对象指定<code>pojo</code>泛型.<br>
    */
-  public final Class<? extends AbstractEntityPoJo> getPoJoClass() {
+  public final Class<? extends AbstractEntityPoJo> poJoClass() {
     final Type genericSuperclass = this.getClass().getGenericSuperclass();
     if (!(genericSuperclass instanceof ParameterizedType)) {
       throw CommonException.of("无法获取pojo对象,请修改request类,添加pojo泛型");

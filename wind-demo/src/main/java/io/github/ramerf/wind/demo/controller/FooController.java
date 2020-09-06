@@ -6,6 +6,8 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.helper.ControllerHelper;
 import io.github.ramerf.wind.core.util.StringUtils;
+import io.github.ramerf.wind.core.validation.ValidateUtil;
+import io.github.ramerf.wind.core.validation.ValidateUtil.ViolationResult;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.request.FooRequest;
 import io.github.ramerf.wind.demo.entity.response.FooResponse;
@@ -21,6 +23,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import static io.github.ramerf.wind.core.validation.ValidateUtil.collect;
 
 /**
  * 该类用于辅助测试.
@@ -42,7 +46,7 @@ public class FooController {
   public ResponseEntity<Rs<Object>> create(
       @Valid @RequestBody final FooRequest fooRequest, final BindingResult bindingResult) {
     if (bindingResult.hasErrors()) {
-      return Rs.fail(ControllerHelper.collectBindingResult(bindingResult));
+      return Rs.fail(collect(bindingResult));
     }
     return ControllerHelper.create(service, fooRequest.poJo(), ResultCode.ERROR);
   }
@@ -120,7 +124,7 @@ public class FooController {
       final BindingResult bindingResult) {
     // 收集校验错误信息
     if (bindingResult.hasErrors()) {
-      return Rs.fail(ControllerHelper.collectFirstBindingResult(bindingResult));
+      return Rs.fail(collect(bindingResult));
     }
     // 获取对应的poJo,处理其它业务逻辑
     final Foo foo = fooRequest.poJo(id);
@@ -135,7 +139,7 @@ public class FooController {
       final BindingResult bindingResult) {
     // 收集校验错误信息
     if (bindingResult.hasErrors()) {
-      return Rs.fail(ControllerHelper.collectFirstBindingResult(bindingResult));
+      return Rs.fail(collect(bindingResult));
     }
     // 获取对应的poJo,处理其它业务逻辑
     final Foo foo = fooRequest.poJo(id);
@@ -150,7 +154,7 @@ public class FooController {
       final BindingResult bindingResult) {
     // 收集校验错误信息
     if (bindingResult.hasErrors()) {
-      return Rs.fail(ControllerHelper.collectFirstBindingResult(bindingResult));
+      return Rs.fail(collect(bindingResult));
     }
     // 获取对应的poJo,处理其它业务逻辑
     final Foo foo = fooRequest.poJo(id);
@@ -165,7 +169,7 @@ public class FooController {
       final BindingResult bindingResult) {
     // 收集校验错误信息
     if (bindingResult.hasErrors()) {
-      return Rs.fail(ControllerHelper.collectFirstBindingResult(bindingResult));
+      return Rs.fail(collect(bindingResult));
     }
     // 获取对应的poJo,处理其它业务逻辑
     final Foo foo = fooRequest.poJo(id);
@@ -216,5 +220,15 @@ public class FooController {
   @ApiOperation("删除,根据id批量删除")
   public ResponseEntity<Rs<String>> deleteByIds(@RequestParam("ids") final List<Long> ids) {
     return ControllerHelper.deleteByIds(service, ids);
+  }
+
+  @PostMapping("/paramValid")
+  @ApiOperation("接收枚举,手动校验")
+  public ResponseEntity<Rs<List<FooRequest>>> paramValid(@RequestBody List<FooRequest> foos) {
+    ViolationResult violationResult = ValidateUtil.validate(foos);
+    if (violationResult.hasErrors()) {
+      return Rs.fail(collect(violationResult));
+    }
+    return Rs.ok(foos);
   }
 }

@@ -68,27 +68,27 @@ public final class LambdaUtils {
     }
     return Optional.ofNullable(LAMBDA_MAP.get(beanFunction.getClass()))
         .map(WeakReference::get)
-        .orElseGet(
-            () -> {
-              try (ObjectInputStream objectInputStream =
-                  new ObjectInputStream(new ByteArrayInputStream(serialize(beanFunction))) {
-                    @Override
-                    protected Class<?> resolveClass(ObjectStreamClass objectStreamClass)
-                        throws IOException, ClassNotFoundException {
-                      Class<?> clazz = super.resolveClass(objectStreamClass);
-                      return clazz == java.lang.invoke.SerializedLambda.class
-                          ? SerializedLambda.class
-                          : clazz;
-                    }
-                  }) {
-                final SerializedLambda serializedLambda =
-                    (SerializedLambda) objectInputStream.readObject();
-                LAMBDA_MAP.put(beanFunction.getClass(), new WeakReference<>(serializedLambda));
-                return serializedLambda;
-              } catch (ClassNotFoundException | IOException e) {
-                throw CommonException.of(e);
-              }
-            });
+        .orElseGet(() -> getSerializedLambda(beanFunction));
+  }
+
+  private static SerializedLambda getSerializedLambda(final BeanFunction beanFunction) {
+    try (ObjectInputStream objectInputStream =
+        new ObjectInputStream(new ByteArrayInputStream(serialize(beanFunction))) {
+          @Override
+          protected Class<?> resolveClass(ObjectStreamClass objectStreamClass)
+              throws IOException, ClassNotFoundException {
+            Class<?> clazz = super.resolveClass(objectStreamClass);
+            return clazz == java.lang.invoke.SerializedLambda.class
+                ? SerializedLambda.class
+                : clazz;
+          }
+        }) {
+      final SerializedLambda serializedLambda = (SerializedLambda) objectInputStream.readObject();
+      LAMBDA_MAP.put(beanFunction.getClass(), new WeakReference<>(serializedLambda));
+      return serializedLambda;
+    } catch (ClassNotFoundException | IOException e) {
+      throw CommonException.of(e);
+    }
   }
 
   private static byte[] serialize(BeanFunction lambda) {

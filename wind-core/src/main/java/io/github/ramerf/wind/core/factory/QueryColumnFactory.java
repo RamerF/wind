@@ -17,25 +17,30 @@ import java.util.Objects;
  */
 public class QueryColumnFactory {
 
-  public static <T extends AbstractEntity> QueryColumn<T> getInstance(final Class<T> clazz) {
+  public static <T extends AbstractEntity> QueryColumn<T> fromClass(final Class<T> clazz) {
     return getInstance(clazz, null, null);
   }
 
-  public static <T extends AbstractEntity> QueryColumn<T> getInstance(
+  public static <T extends AbstractEntity> QueryColumn<T> fromClassAndTableName(
+      final Class<T> clazz, final String tableName) {
+    return getInstance(clazz, tableName, null);
+  }
+
+  public static <T extends AbstractEntity> QueryColumn<T> fromClassAndTableAlia(
       final Class<T> clazz, final String tableAlia) {
     return getInstance(clazz, null, tableAlia);
   }
 
-  public static <T extends AbstractEntity> QueryColumn<T> getInstance(final String tableName) {
+  public static <T extends AbstractEntity> QueryColumn<T> fromTableName(final String tableName) {
     return getInstance(null, tableName, null);
   }
 
-  public static <T extends AbstractEntity> QueryColumn<T> getInstance(
+  public static <T extends AbstractEntity> QueryColumn<T> fromTableNameAndAlia(
       final String tableName, final String tableAlia) {
     return getInstance(null, tableName, tableAlia);
   }
 
-  public static <T extends AbstractEntity> QueryColumn<T> getInstance(
+  private static <T extends AbstractEntity> QueryColumn<T> getInstance(
       final Class<T> clazz, String tableName, String tableAlia) {
     final QueryColumn<T> queryColumn =
         QueryColumn.of(AppContextInject.getBean(WindConfiguration.class));

@@ -107,7 +107,7 @@ public final class Update {
     if (Objects.isNull(clazz) && StringUtils.isEmpty(tableName)) {
       throw CommonException.of("[clazz,tableName]不能同时为空");
     }
-    this.condition = QueryColumnFactory.getInstance(clazz, tableName, null).getCondition();
+    this.condition = QueryColumnFactory.fromClassAndTableName(clazz, tableName).getCondition();
     this.clazz = clazz;
     if (clazz == null) {
       this.entityInfo = EntityInfo.of(configuration);
@@ -449,7 +449,7 @@ public final class Update {
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
-                      Condition.of(QueryColumnFactory.getInstance((Class<T>) clazz))
+                      Condition.of(QueryColumnFactory.fromClass((Class<T>) clazz))
                           .eq(T::setId, obj.getId())
                           .getValues(index)
                           .forEach(val -> val.accept(ps));

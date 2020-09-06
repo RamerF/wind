@@ -52,6 +52,10 @@ public class Foo extends AbstractEntityPoJo {
   @Column(columnDefinition = "smallint")
   private Type type;
 
+  /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 varchar */
+  @Column(columnDefinition = "varchar(1)")
+  private Alphabet alphabet;
+
   @Column(columnDefinition = "numeric(5,2)")
   private BigDecimal bigDecimal;
 
@@ -65,8 +69,8 @@ public class Foo extends AbstractEntityPoJo {
   /** Integer[]可对应数据库类型 int[] */
   private Integer[] intArr;
 
-  public enum Type implements InterEnum {
-    /** 商品类别 */
+  public enum Type implements InterEnum<Integer> {
+    /** Type. */
     PHONE(0, "手机"),
     SPORT(1, "运动");
 
@@ -80,6 +84,30 @@ public class Foo extends AbstractEntityPoJo {
 
     @Override
     public Integer value() {
+      return this.value;
+    }
+
+    @Override
+    public String desc() {
+      return this.desc;
+    }
+  }
+
+  public enum Alphabet implements InterEnum<String> {
+    /** Alphabet. */
+    _A("A", "A"),
+    _B("B", "B");
+
+    private final String value;
+    private final String desc;
+
+    Alphabet(String value, String desc) {
+      this.value = value;
+      this.desc = desc;
+    }
+
+    @Override
+    public String value() {
       return this.value;
     }
 

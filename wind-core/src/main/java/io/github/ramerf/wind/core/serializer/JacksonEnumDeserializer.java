@@ -5,19 +5,22 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.EnumUtils;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Objects;
+import java.lang.reflect.Field;
+import java.util.*;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Jackson 枚举反序列化,格式: {value: "值",desc: "描述"}.
+ * Jackson枚举反序列化.格式:{value:"值",desc:"描述"}.
  *
  * @param <T> the type parameter
  * @author ramer
  */
 @Slf4j
+@SuppressWarnings("rawtypes")
 public class JacksonEnumDeserializer<T extends InterEnum> extends JsonDeserializer<T> {
   private final Class<T> clazz;
 
@@ -38,11 +41,11 @@ public class JacksonEnumDeserializer<T extends InterEnum> extends JsonDeserializ
       jsonToken = parser.nextToken();
       return deserializeKeyVal(parser, jsonToken);
     }
-    // 仅返回值
+    // 匹配值
     if (jsonToken == JsonToken.VALUE_NUMBER_INT) {
       return deserializeValue(parser);
     }
-    // 仅返回枚举名称
+    // 匹配值名或名称
     if (jsonToken == JsonToken.VALUE_STRING) {
       return deserializeName(parser);
     }
@@ -50,6 +53,25 @@ public class JacksonEnumDeserializer<T extends InterEnum> extends JsonDeserializ
     return null;
   }
 
+  private String getErrorMessage(final JsonParser parser) {
+    Object entity = parser.getCurrentValue();
+    String prop;
+    try {
+      prop = parser.getCurrentName();
+      Field field = Objects.requireNonNull(BeanUtils.getDeclaredField(entity.getClass(), prop));
+      NotNull annotation = field.getAnnotation(NotNull.class);
+      final String text = parser.getText();
+      return annotation != null
+          ? String.format(annotation.message(), text)
+          : String.format("Invalid value [%s] for %s.", text, prop);
+    } catch (IOException e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+    }
+    return null;
+  }
+
+  @SuppressWarnings({"unchecked", "UnusedAssignment"})
   private T deserializeKeyVal(final JsonParser parser, JsonToken jsonToken) throws IOException {
     int value = 0;
     while (jsonToken == JsonToken.FIELD_NAME) {
@@ -60,26 +82,31 @@ public class JacksonEnumDeserializer<T extends InterEnum> extends JsonDeserializ
       }
       jsonToken = parser.nextToken();
     }
-    return EnumUtils.of(clazz, value);
+    return (T) EnumUtils.of(value, clazz);
   }
 
-  private T deserializeValue(final JsonParser p) throws IOException {
-    return EnumUtils.of(clazz, Integer.valueOf(p.getText()));
+  @SuppressWarnings("unchecked")
+  private T deserializeValue(final JsonParser parser) throws IOException {
+    String text = parser.getText();
+    if (text == null) {
+      return null;
+    }
+    return (T) InterEnum.of(text, clazz, () -> getErrorMessage(parser));
   }
 
-  private T deserializeName(final JsonParser p) throws IOException {
-    return Arrays.stream(clazz.getEnumConstants())
-        .filter(
-            o -> {
-              try {
-                return Objects.equals(o.toString(), p.getText());
-              } catch (IOException e) {
-                log.warn(e.getMessage());
-                log.error(e.getMessage(), e);
-              }
-              return false;
-            })
-        .findFirst()
-        .orElse(null);
+  @SuppressWarnings("unchecked")
+  private T deserializeName(final JsonParser parser) throws IOException {
+    final String text = parser.getText();
+    if (text == null) {
+      return null;
+    }
+    Optional<T> optional =
+        Arrays.stream(clazz.getEnumConstants())
+            .filter(o -> Objects.equals(o.toString(), text))
+            .findFirst();
+    //noinspection OptionalIsPresent
+    return optional.isPresent()
+        ? optional.get()
+        : (T) InterEnum.of(text, clazz, () -> getErrorMessage(parser));
   }
 }

@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.cache.DefaultRedisCache;
-import io.github.ramerf.wind.core.cache.RedisCache;
+import io.github.ramerf.wind.core.cache.*;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.executor.Executor;
@@ -76,6 +75,7 @@ public class CommonBean {
 
       @Override
       public void addCorsMappings(@Nonnull CorsRegistry registry) {
+        // TODO-WARN 这个跨域配置有问题
         final long maxAge = 3600L;
         registry
             .addMapping("/**")
@@ -106,9 +106,21 @@ public class CommonBean {
   @Bean
   @ConditionalOnMissingBean(RedisCache.class)
   @DependsOn("redisCacheRedisTemplate")
-  @ConditionalOnProperty(value = "wind.redis-cache.enable", havingValue = "true")
-  public RedisCache defaultRedisCache() {
-    return new DefaultRedisCache();
+  @ConditionalOnProperty(value = "wind.cache.type", havingValue = "redis")
+  public Cache defaultRedisCache(WindConfiguration configuration) {
+    return new DefaultRedisCache(configuration);
+  }
+
+  /**
+   * Default redis cache redis cache.
+   *
+   * @return the redis cache
+   */
+  @Bean
+  @ConditionalOnMissingBean(Cache.class)
+  @ConditionalOnProperty(value = "wind.cache.type", havingValue = "memory")
+  public Cache inMemoryCache(WindConfiguration configuration) {
+    return new InMemoryCache(configuration);
   }
 
   /**

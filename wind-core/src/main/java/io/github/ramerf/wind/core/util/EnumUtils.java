@@ -1,10 +1,12 @@
 package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * 枚举工具类.
@@ -14,120 +16,35 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class EnumUtils {
+  @SuppressWarnings("rawtypes")
+  private static final Map<Class<? extends InterEnum<?>>, WeakReference<Map>> MAP = new HashMap<>();
+
   /**
-   * Desc string.
+   * 通过值获取枚举实例.<b>注意:匹配时值会被转换成字符串</b>
    *
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param clazz the clazz
+   * @param <V> the type parameter
+   * @param <E> the type parameter
    * @param value the value
-   * @return the string
-   */
-  public static <T extends InterEnum, R> String desc(Class<T> clazz, final R value) {
-    return map(clazz).get(value);
-  }
-
-  /**
-   * 获取枚举实例, 返回null 值无效.
-   *
-   * @param <T> the type parameter
-   * @param <R> the type parameter
    * @param clazz the clazz
-   * @param value the value
-   * @return t t
+   * @return the e
    */
-  public static <T, R> T of(Class<T> clazz, final R value) {
-    return Objects.isNull(value)
-        ? null
-        : Stream.of(clazz.getEnumConstants())
-            .filter(
-                o -> {
-                  try {
-                    return Objects.equals(clazz.getDeclaredMethod("value").invoke(o), value);
-                  } catch (Exception e) {
-                    e.printStackTrace();
-                  }
-                  return false;
-                })
-            .findFirst()
-            .orElse(null);
-  }
-
-  /**
-   * Map of value:desc.
-   *
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param clazz the clazz
-   * @return the map
-   */
-  @SuppressWarnings("unchecked")
-  public static <T extends InterEnum, R> Map<R, String> map(Class<T> clazz) {
-    return Stream.of(clazz.getEnumConstants())
-        .collect(
-            Collectors.toMap(
-                o -> {
-                  try {
-                    return (R) clazz.getDeclaredMethod("value").invoke(o);
-                  } catch (Exception ignored) {
-                    return null;
-                  }
-                },
-                o -> {
-                  try {
-                    return (String) clazz.getDeclaredMethod("desc").invoke(o);
-                  } catch (Exception ignored) {
-                    return "";
-                  }
-                }));
-  }
-
-  /**
-   * Values list.
-   *
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param clazz the clazz
-   * @return the list
-   */
-  @SuppressWarnings("unchecked")
-  public static <T extends InterEnum, R> List<R> values(Class<T> clazz) {
-    return Stream.of(clazz.getEnumConstants())
-        .map(
-            o -> {
-              try {
-                return (R) clazz.getDeclaredMethod("value").invoke(o);
-              } catch (Exception ignored) {
-                return null;
-              }
-            })
-        .collect(Collectors.toList());
-  }
-
-  /**
-   * 校验给定的值是否是枚举类的有效值.<br>
-   * 注意: 只能校验枚举类value属性
-   *
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param clazz 枚举类
-   * @param v 校验值
-   * @return true,有效值
-   */
-  @SuppressWarnings("unchecked")
-  public static <T extends InterEnum, R> boolean valid(Class<T> clazz, final R v) {
-    return Stream.of(clazz.getEnumConstants())
-        .map(
-            o -> {
-              try {
-                return (R) clazz.getDeclaredMethod("value").invoke(o);
-              } catch (Exception ignored) {
-                log.warn("valid:[枚举类中必须定义value方法]");
-                return null;
-              }
-            })
-        .collect(Collectors.toList()).stream()
-        .anyMatch(o -> Objects.equals(o, v));
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public static <V, E extends InterEnum<V>> E of(V value, Class<E> clazz) {
+    if (value == null) {
+      return null;
+    }
+    return (E)
+        Optional.ofNullable(MAP.get(clazz))
+            .map(Reference::get)
+            .map(o -> o.get(value.toString()))
+            .orElseGet(
+                () -> {
+                  final Map clazzMap =
+                      Arrays.stream(clazz.getEnumConstants())
+                          .collect(toMap(o -> o.value().toString(), o -> o));
+                  MAP.put(clazz, new WeakReference<>(clazzMap));
+                  return clazzMap.get(value.toString());
+                });
   }
 
   /**
@@ -136,15 +53,14 @@ public class EnumUtils {
    * @param args the input arguments
    */
   public static void main(String[] args) {
-    log.info("main:map[{}]", EnumUtils.map(Type.class));
-    log.info("main:of[{}]", EnumUtils.of(Type.class, 1));
-    log.info("main:values[{}]", EnumUtils.values(Type.class));
-    log.info("main:valid[{}]", EnumUtils.valid(Type.class, 2));
+    log.info("main:valid[{}]", EnumUtils.of(2, Type.class));
   }
 
-  public enum Type implements InterEnum {
+  /** The enum Type. */
+  public enum Type implements InterEnum<Integer> {
     /** 类别 */
     PHONE(0, "手机"),
+    /** Sport type. */
     SPORT(1, "运动");
 
     private final int value;

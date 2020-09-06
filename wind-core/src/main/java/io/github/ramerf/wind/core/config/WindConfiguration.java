@@ -58,8 +58,8 @@ public class WindConfiguration {
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
 
-  /** Redis分布式缓存配置. */
-  @NestedConfigurationProperty private RedisCache redisCache = new RedisCache();
+  /** 缓存配置. */
+  @NestedConfigurationProperty private CacheConfig cache = new CacheConfig();
 
   public void setLogicDeleteProp(final LogicDeleteProp logicDeleteProp) {
     this.logicDeleteProp = logicDeleteProp;
@@ -93,12 +93,19 @@ public class WindConfiguration {
    */
   @Setter
   @Getter
-  public static class RedisCache {
+  public static class CacheConfig {
     /** 是否启用. */
-    private boolean enable = true;
+    private CacheType type = CacheType.MEMORY;
 
     /** 缓存key前缀. */
     private String keyPrefix = "io.github.ramerf.wind";
+  }
+
+  public enum CacheType {
+    /** redis. */
+    REDIS,
+    /** memory. */
+    MEMORY
   }
 
   /**

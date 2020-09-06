@@ -181,6 +181,8 @@ public interface Executor {
     protected String sql;
     /** 返回对象. */
     protected Class<?> clazz;
+    /** 查询的实体对象,用于缓存操作. */
+    protected Class<?> entityClazz;
     /** 查询列,用于映射查询列和bean字段名,填充返回对象. */
     protected List<QueryColumn<?>> queryColumns;
     /** 参数填充起始位置. */
@@ -189,5 +191,9 @@ public interface Executor {
     protected List<ICondition<?>> conditions;
     /** 执行聚合函数,可为空. */
     protected SqlAggregateFunction aggregateFunction;
+
+    public Class<?> getEntityClazz() {
+      return entityClazz == null ? clazz : entityClazz;
+    }
   }
 }
