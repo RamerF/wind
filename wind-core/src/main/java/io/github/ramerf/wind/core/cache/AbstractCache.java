@@ -68,7 +68,7 @@ public abstract class AbstractCache implements RedisCache {
    * @return 包含 :的key前缀
    */
   private String getFixedKeyPrefix(final Class<?> clazz) {
-    String keyPrefix = getConfiguration().getRedisCache().getKeyPrefix();
+    String keyPrefix = getConfiguration().getCache().getKeyPrefix();
     // 如果结尾没有包含冒号,加上
     final String name = clazz == null ? "null" : clazz.getName();
     return StringUtils.isEmpty(keyPrefix)

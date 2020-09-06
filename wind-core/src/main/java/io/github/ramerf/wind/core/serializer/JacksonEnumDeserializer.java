@@ -7,10 +7,10 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.EnumUtils;
-import io.github.ramerf.wind.core.validation.InterEnumConstraint;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -59,10 +59,11 @@ public class JacksonEnumDeserializer<T extends InterEnum> extends JsonDeserializ
     try {
       prop = parser.getCurrentName();
       Field field = Objects.requireNonNull(BeanUtils.getDeclaredField(entity.getClass(), prop));
-      InterEnumConstraint annotation = field.getAnnotation(InterEnumConstraint.class);
-      if (annotation != null) {
-        return annotation.message();
-      }
+      NotNull annotation = field.getAnnotation(NotNull.class);
+      final String text = parser.getText();
+      return annotation != null
+          ? String.format(annotation.message(), text)
+          : String.format("Invalid value [%s] for %s.", text, prop);
     } catch (IOException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);

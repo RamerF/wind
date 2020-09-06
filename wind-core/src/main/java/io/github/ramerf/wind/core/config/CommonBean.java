@@ -106,7 +106,7 @@ public class CommonBean {
   @Bean
   @ConditionalOnMissingBean(RedisCache.class)
   @DependsOn("redisCacheRedisTemplate")
-  @ConditionalOnProperty(value = "wind.redis-cache.enable", havingValue = "true")
+  @ConditionalOnProperty(value = "wind.cache.type", havingValue = "redis")
   public Cache defaultRedisCache(WindConfiguration configuration) {
     return new DefaultRedisCache(configuration);
   }
@@ -118,7 +118,7 @@ public class CommonBean {
    */
   @Bean
   @ConditionalOnMissingBean(Cache.class)
-  @ConditionalOnProperty(value = "wind.redis-cache.enable", havingValue = "false")
+  @ConditionalOnProperty(value = "wind.cache.type", havingValue = "memory")
   public Cache inMemoryCache(WindConfiguration configuration) {
     return new InMemoryCache(configuration);
   }

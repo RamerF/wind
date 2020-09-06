@@ -53,7 +53,7 @@ public class Foo extends AbstractEntityPoJo {
   private Type type;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 varchar */
-  @Column(columnDefinition = "varchar(2)")
+  @Column(columnDefinition = "varchar(1)")
   private Alphabet alphabet;
 
   @Column(columnDefinition = "numeric(5,2)")

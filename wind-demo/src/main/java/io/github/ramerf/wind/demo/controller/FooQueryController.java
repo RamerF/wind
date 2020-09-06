@@ -36,7 +36,7 @@ public class FooQueryController {
   @ApiOperation("使用Query")
   public ResponseEntity<Rs<Object>> query() {
     // 获取查询列和查询条件对象
-    final QueryColumn<Foo> queryColumn = QueryColumnFactory.getInstance(Foo.class);
+    final QueryColumn<Foo> queryColumn = QueryColumnFactory  .fromClass(Foo.class);
     final Condition<Foo> condition = queryColumn.getCondition();
     // 指定查询列
     queryColumn.col(Foo::getId);
@@ -50,7 +50,7 @@ public class FooQueryController {
   @GetMapping(params = "type=2")
   @ApiOperation("使用Query,groupBy,sum")
   public ResponseEntity<Rs<Object>> query2() {
-    QueryColumn<Foo> queryColumn = QueryColumnFactory.getInstance(Foo.class);
+    QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
     Condition<Foo> condition = queryColumn.getCondition().gt(Foo::setId, 0L);
     final QueryEntityMetaData<Foo> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
     final GroupByClause<Foo> clause = queryEntityMetaData.getGroupByClause();
@@ -73,8 +73,8 @@ public class FooQueryController {
      */
 
     // 获取查询列和查询条件对象
-    final QueryColumn<Foo> queryColumn = QueryColumnFactory.getInstance(Foo.class);
-    final QueryColumn<OoO> queryColumn2 = QueryColumnFactory.getInstance(OoO.class);
+    final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
+    final QueryColumn<OoO> queryColumn2 = QueryColumnFactory.fromClass(OoO.class);
     final Condition<Foo> condition = queryColumn.getCondition();
     // 指定查询列
     queryColumn.col(Foo::getId);
@@ -95,7 +95,7 @@ public class FooQueryController {
   public ResponseEntity<Rs<Object>> query4() {
     // 获取查询列和查询条件对象
     final QueryColumn<IdNameResponse> queryColumn =
-        QueryColumnFactory.getInstance(IdNameResponse.class, "foo", "");
+        QueryColumnFactory.fromClassAndTableName(IdNameResponse.class, "foo");
     final Condition<IdNameResponse> condition = queryColumn.getCondition();
     final Query query = prototypeBean.query();
     final List<IdNameResponse> list =
