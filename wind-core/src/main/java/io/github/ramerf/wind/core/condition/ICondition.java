@@ -28,7 +28,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @return the Condition
    * @see Condition#of(QueryColumn)
    */
-  default Condition<T> condition() {
+  default ICondition<T> condition() {
     return condition(false);
   }
 
@@ -39,7 +39,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @return the Condition
    * @see Condition#of(QueryColumn)
    */
-  Condition<T> condition(final boolean genAlia);
+  ICondition<T> condition(final boolean genAlia);
 
   /**
    * Eq condition.
@@ -49,7 +49,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> eq(final IConsumer<T, V> field, final V value);
+  <V> ICondition<T> eq(final IConsumer<T, V> field, final V value);
 
   /**
    * Eq condition.
@@ -60,7 +60,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> eq(final boolean condition, final IConsumer<T, V> field, final V value);
+  <V> ICondition<T> eq(final boolean condition, final IConsumer<T, V> field, final V value);
 
   /**
    * Ne condition.
@@ -70,7 +70,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> ne(IConsumer<T, V> field, V value);
+  <V> ICondition<T> ne(IConsumer<T, V> field, V value);
 
   /**
    * In condition.
@@ -80,7 +80,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param values the values
    * @return the condition
    */
-  <V> Condition<T> in(IConsumer<T, V> field, Collection<V> values);
+  <V> ICondition<T> in(IConsumer<T, V> field, Collection<V> values);
 
   /**
    * In condition.
@@ -91,7 +91,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param values the values
    * @return the condition
    */
-  <V> Condition<T> in(boolean condition, IConsumer<T, V> field, Collection<V> values);
+  <V> ICondition<T> in(boolean condition, IConsumer<T, V> field, Collection<V> values);
 
   /**
    * Not in condition.
@@ -101,7 +101,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param values the values
    * @return the condition
    */
-  <V> Condition<T> notIn(IConsumer<T, V> field, Collection<V> values);
+  <V> ICondition<T> notIn(IConsumer<T, V> field, Collection<V> values);
 
   /**
    * Not in condition.
@@ -112,7 +112,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param values the values
    * @return the condition
    */
-  <V> Condition<T> notIn(boolean condition, IConsumer<T, V> field, Collection<V> values);
+  <V> ICondition<T> notIn(boolean condition, IConsumer<T, V> field, Collection<V> values);
 
   /**
    * 连表条件.
@@ -124,7 +124,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param field2 the field 2
    * @return the condition
    */
-  <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
+  <R extends AbstractEntity, Q extends AbstractEntity> ICondition<T> eq(
       final IFunction<T, ?> field,
       final AbstractQueryEntity<Q> queryColumn,
       final IFunction<R, ?> field2);
@@ -140,7 +140,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param field2 the field 2
    * @return the condition
    */
-  <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
+  <R extends AbstractEntity, Q extends AbstractEntity> ICondition<T> eq(
       final boolean condition,
       final IFunction<T, ?> field,
       final AbstractQueryEntity<Q> queryColumn,
@@ -155,7 +155,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> ne(boolean condition, IConsumer<T, V> field, V value);
+  <V> ICondition<T> ne(boolean condition, IConsumer<T, V> field, V value);
 
   /**
    * Gt condition.
@@ -165,7 +165,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> gt(IConsumer<T, V> field, V value);
+  <V> ICondition<T> gt(IConsumer<T, V> field, V value);
 
   /**
    * Gt condition.
@@ -176,7 +176,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> gt(boolean condition, IConsumer<T, V> field, V value);
+  <V> ICondition<T> gt(boolean condition, IConsumer<T, V> field, V value);
 
   /**
    * Ge condition.
@@ -186,7 +186,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> ge(IConsumer<T, V> field, V value);
+  <V> ICondition<T> ge(IConsumer<T, V> field, V value);
 
   /**
    * Ge condition.
@@ -197,7 +197,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> ge(boolean condition, IConsumer<T, V> field, V value);
+  <V> ICondition<T> ge(boolean condition, IConsumer<T, V> field, V value);
 
   /**
    * Lt condition.
@@ -207,7 +207,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> lt(IConsumer<T, V> field, V value);
+  <V> ICondition<T> lt(IConsumer<T, V> field, V value);
 
   /**
    * Lt condition.
@@ -218,7 +218,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> lt(boolean condition, IConsumer<T, V> field, V value);
+  <V> ICondition<T> lt(boolean condition, IConsumer<T, V> field, V value);
 
   /**
    * Le condition.
@@ -228,7 +228,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> le(IConsumer<T, V> field, V value);
+  <V> ICondition<T> le(IConsumer<T, V> field, V value);
 
   /**
    * Le condition.
@@ -239,7 +239,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> le(boolean condition, IConsumer<T, V> field, V value);
+  <V> ICondition<T> le(boolean condition, IConsumer<T, V> field, V value);
 
   /**
    * Like condition.
@@ -249,7 +249,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> like(IConsumer<T, V> field, @Nonnull V value);
+  <V> ICondition<T> like(IConsumer<T, V> field, @Nonnull V value);
 
   /**
    * Like condition.
@@ -260,7 +260,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> like(boolean condition, IConsumer<T, V> field, V value);
+  <V> ICondition<T> like(boolean condition, IConsumer<T, V> field, V value);
 
   /**
    * Not like condition.
@@ -270,7 +270,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> notLike(IConsumer<T, V> field, V value);
+  <V> ICondition<T> notLike(IConsumer<T, V> field, V value);
 
   /**
    * Not like condition.
@@ -281,7 +281,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param value the value
    * @return the condition
    */
-  <V> Condition<T> notLike(boolean condition, IConsumer<T, V> field, V value);
+  <V> ICondition<T> notLike(boolean condition, IConsumer<T, V> field, V value);
 
   /**
    * Between condition.
@@ -292,7 +292,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param end the end
    * @return the condition
    */
-  <V> Condition<T> between(IConsumer<T, V> field, V start, V end);
+  <V> ICondition<T> between(IConsumer<T, V> field, V start, V end);
 
   /**
    * Between condition.
@@ -304,7 +304,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param end the end
    * @return the condition
    */
-  <V> Condition<T> between(boolean condition, IConsumer<T, V> field, V start, V end);
+  <V> ICondition<T> between(boolean condition, IConsumer<T, V> field, V start, V end);
 
   /**
    * Not between condition.
@@ -315,7 +315,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param end the end
    * @return the condition
    */
-  <V> Condition<T> notBetween(IConsumer<T, V> field, V start, V end);
+  <V> ICondition<T> notBetween(IConsumer<T, V> field, V start, V end);
 
   /**
    * Not between condition.
@@ -327,7 +327,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param end the end
    * @return the condition
    */
-  <V> Condition<T> notBetween(boolean condition, IConsumer<T, V> field, V start, V end);
+  <V> ICondition<T> notBetween(boolean condition, IConsumer<T, V> field, V start, V end);
 
   /**
    * Is null condition.
@@ -336,7 +336,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param field the field
    * @return the condition
    */
-  <V> Condition<T> isNull(IConsumer<T, V> field);
+  <V> ICondition<T> isNull(IConsumer<T, V> field);
 
   /**
    * Is null condition.
@@ -346,7 +346,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param field the field
    * @return the condition
    */
-  <V> Condition<T> isNull(boolean condition, IConsumer<T, V> field);
+  <V> ICondition<T> isNull(boolean condition, IConsumer<T, V> field);
 
   /**
    * Is not null condition.
@@ -355,7 +355,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param field the field
    * @return the condition
    */
-  <V> Condition<T> isNotNull(IConsumer<T, V> field);
+  <V> ICondition<T> isNotNull(IConsumer<T, V> field);
 
   /**
    * Is not null condition.
@@ -365,7 +365,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param field the field
    * @return the condition
    */
-  <V> Condition<T> isNotNull(boolean condition, IConsumer<T, V> field);
+  <V> ICondition<T> isNotNull(boolean condition, IConsumer<T, V> field);
 
   /**
    * Exists condition.
@@ -373,7 +373,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param childConditions the child conditions
    * @return the condition
    */
-  Condition<T> exists(final Condition<T> childConditions);
+  ICondition<T> exists(final ICondition<T> childConditions);
 
   // TODO-WARN 很明显这里的拼接有问题,要传递的参数是(Query+Condition)最上层的接口,能够获取到每个段的sql.
   //  因为涉及到整个模式调整,暂时不动
@@ -384,7 +384,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param childConditions the child conditions
    * @return the condition
    */
-  Condition<T> exists(final boolean condition, final Condition<T> childConditions);
+  ICondition<T> exists(final boolean condition, final ICondition<T> childConditions);
 
   /**
    * And condition.
@@ -392,7 +392,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param consumer the consumer
    * @return the condition
    */
-  Condition<T> and(@Nonnull Consumer<Condition<T>> consumer);
+  ICondition<T> and(@Nonnull Consumer<ICondition<T>> consumer);
 
   /**
    * And condition.
@@ -401,7 +401,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param consumer the consumer
    * @return the condition
    */
-  Condition<T> and(final boolean condition, @Nonnull Consumer<Condition<T>> consumer);
+  ICondition<T> and(final boolean condition, @Nonnull Consumer<ICondition<T>> consumer);
 
   /**
    * And condition.
@@ -409,7 +409,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param children the children
    * @return the condition
    */
-  Condition<T> and(Condition<T> children);
+  ICondition<T> and(ICondition<T> children);
 
   /**
    * And condition.
@@ -418,7 +418,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param children the children
    * @return the condition
    */
-  Condition<T> and(final boolean condition, @Nonnull final Condition<T> children);
+  ICondition<T> and(final boolean condition, @Nonnull final ICondition<T> children);
 
   /**
    * Or condition.
@@ -426,7 +426,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param consumer the consumer
    * @return the condition
    */
-  Condition<T> or(@Nonnull Consumer<Condition<T>> consumer);
+  ICondition<T> or(@Nonnull Consumer<ICondition<T>> consumer);
 
   /**
    * Or condition.
@@ -435,7 +435,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param consumer the consumer
    * @return the condition
    */
-  Condition<T> or(final boolean condition, @Nonnull Consumer<Condition<T>> consumer);
+  ICondition<T> or(final boolean condition, @Nonnull Consumer<ICondition<T>> consumer);
 
   /**
    * Or condition.
@@ -443,7 +443,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param children the children
    * @return the condition
    */
-  Condition<T> or(Condition<T> children);
+  ICondition<T> or(ICondition<T> children);
 
   /**
    * Or condition.
@@ -452,7 +452,7 @@ public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
    * @param children the children
    * @return the condition
    */
-  Condition<T> or(final boolean condition, @Nonnull final Condition<T> children);
+  ICondition<T> or(final boolean condition, @Nonnull final ICondition<T> children);
 
   /**
    * 获取占位符值.<br>

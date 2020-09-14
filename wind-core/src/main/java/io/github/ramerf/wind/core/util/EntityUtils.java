@@ -58,11 +58,12 @@ public final class EntityUtils {
    */
   public static List<Field> getAllColumnFields(@Nonnull final Class<?> obj) {
     final List<Field> fields =
-        BeanUtils.retrievePrivateFields(obj, new ArrayList<>()).stream()
+        BeanUtils.retrievePrivateFields(obj, ArrayList::new).stream()
             .filter(EntityUtils::isNotDisabled)
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
+            .filter(field -> BeanUtils.isPrimitiveType(field.getType()))
             .collect(toList());
     if (log.isTraceEnabled()) {
       log.trace("getAllColumnFields:[{}]", fields);
@@ -79,11 +80,12 @@ public final class EntityUtils {
    */
   public static <T extends AbstractEntity> List<Field> getNonNullColumnFields(@Nonnull final T t) {
     final List<Field> fields =
-        BeanUtils.retrievePrivateFields(t.getClass(), new ArrayList<>()).stream()
+        BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
             .filter(EntityUtils::isNotDisabled)
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
+            .filter(field -> BeanUtils.isPrimitiveType(field.getType()))
             .filter(field -> Objects.nonNull(BeanUtils.getValue(t, field, null)))
             .collect(toList());
     if (log.isTraceEnabled()) {
@@ -140,11 +142,12 @@ public final class EntityUtils {
    */
   public static <T> List<Field> getNullColumnFields(@Nonnull final T t) {
     final List<Field> fields =
-        BeanUtils.retrievePrivateFields(t.getClass(), new ArrayList<>()).stream()
+        BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
             .filter(EntityUtils::isNotDisabled)
             .filter(field -> Modifier.isPrivate(field.getModifiers()))
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .filter(field -> !Modifier.isTransient(field.getModifiers()))
+            .filter(field -> BeanUtils.isPrimitiveType(field.getType()))
             .filter(field -> Objects.isNull(BeanUtils.getValue(t, field, ex -> -1)))
             .collect(toList());
     log.debug("getNullColumnFields:[{}]", fields);

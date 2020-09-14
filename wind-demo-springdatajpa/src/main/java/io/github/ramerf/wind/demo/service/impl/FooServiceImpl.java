@@ -3,7 +3,7 @@ package io.github.ramerf.wind.demo.service.impl;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.BaseServiceImpl;
-import io.github.ramerf.wind.demo.entity.pojo.Foo;
+import io.github.ramerf.wind.demo.entity.pojo.FooPoJo;
 import io.github.ramerf.wind.demo.repository.FooRepository;
 import io.github.ramerf.wind.demo.service.FooService;
 import javax.annotation.Resource;
@@ -26,7 +26,7 @@ public class FooServiceImpl implements FooService {
   @Resource private FooRepository repository;
 
   @Resource(name = "fooBs")
-  private BaseService<Foo> baseService;
+  private BaseService<FooPoJo> baseService;
   //
   //  @Override
   //  public long create(@Nonnull Foo foo, IFunction<Foo, ?>... includeNullProps)
@@ -38,7 +38,7 @@ public class FooServiceImpl implements FooService {
   //  }
 
   @Override
-  public Foo enableCache(final long id) {
+  public FooPoJo enableCache(final long id) {
     return getById(id);
   }
 
@@ -46,7 +46,7 @@ public class FooServiceImpl implements FooService {
       value = "io.github.ramerf.wind.demo.service.impl.FooServiceImpl",
       key = "caches[0].name+'('+#id+')'")
   @Override
-  public Foo redisCache(final long id) {
+  public FooPoJo redisCache(final long id) {
     return getById(id);
   }
 
@@ -55,7 +55,7 @@ public class FooServiceImpl implements FooService {
       value = "io.github.ramerf.wind.demo.service.impl.FooServiceImpl",
       key = "caches[0].name+'('+#poJo.id+')'")
   @Transactional(rollbackFor = Exception.class)
-  public void redisCacheClear(final Foo poJo) {
+  public void redisCacheClear(final FooPoJo poJo) {
     final int update = update(poJo);
     log.info("redisCacheClear:[{}]", update);
   }
@@ -69,7 +69,7 @@ public class FooServiceImpl implements FooService {
   }
 
   @Bean("fooBs")
-  public BaseService<Foo> setBaseService(@Autowired FooRepository repository) {
+  public BaseService<FooPoJo> setBaseService(@Autowired FooRepository repository) {
     return new BaseServiceImpl<>(repository, this);
   }
 

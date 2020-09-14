@@ -38,7 +38,7 @@ import static java.util.stream.Collectors.toCollection;
  */
 @Slf4j
 @ToString
-public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
+public class StringCondition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     implements ICondition<T> {
   /** where后的字符串,参数占位符为 ?. */
   private final List<String> conditionSql = new LinkedList<>();
@@ -47,20 +47,20 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
 
   private boolean containLogicNotDelete = false;
 
-  private Condition() {}
+  private StringCondition() {}
 
-  public static <T extends AbstractEntity> Condition<T> of(QueryColumn<T> queryColumn) {
-    final Condition<T> condition = new Condition<>();
+  public static <T extends AbstractEntity> StringCondition<T> of(QueryColumn<T> queryColumn) {
+    final StringCondition<T> condition = new StringCondition<>();
     condition.setEntityInfo(queryColumn.getEntityInfo());
     condition.setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
     return condition;
   }
 
   @Override
-  public Condition<T> condition(final boolean genAlia) {
+  public StringCondition<T> condition(final boolean genAlia) {
     this.getQueryEntityMetaData().setContainTableAlia(true);
 
-    final Condition<T> condition = new Condition<>();
+    final StringCondition<T> condition = new StringCondition<>();
     final EntityInfo entityInfo = new EntityInfo();
     BeanUtils.copyProperties(getEntityInfo(), entityInfo);
     condition.setEntityInfo(entityInfo);
@@ -78,12 +78,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> eq(@Nonnull final IConsumer<T, V> field, final V value) {
+  public <V> StringCondition<T> eq(@Nonnull final IConsumer<T, V> field, final V value) {
     return eq(true, field, value);
   }
 
   @Override
-  public <V> Condition<T> eq(
+  public <V> StringCondition<T> eq(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
@@ -99,12 +99,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> ne(@Nonnull final IConsumer<T, V> field, final V value) {
+  public <V> StringCondition<T> ne(@Nonnull final IConsumer<T, V> field, final V value) {
     return ne(true, field, value);
   }
 
   @Override
-  public <V> Condition<T> ne(
+  public <V> StringCondition<T> ne(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
@@ -120,12 +120,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> gt(@Nonnull final IConsumer<T, V> field, final V value) {
+  public <V> StringCondition<T> gt(@Nonnull final IConsumer<T, V> field, final V value) {
     return gt(true, field, value);
   }
 
   @Override
-  public <V> Condition<T> gt(
+  public <V> StringCondition<T> gt(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
@@ -141,12 +141,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> ge(@Nonnull final IConsumer<T, V> field, final V value) {
+  public <V> StringCondition<T> ge(@Nonnull final IConsumer<T, V> field, final V value) {
     return ge(true, field, value);
   }
 
   @Override
-  public <V> Condition<T> ge(
+  public <V> StringCondition<T> ge(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
@@ -162,12 +162,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> lt(@Nonnull final IConsumer<T, V> field, final V value) {
+  public <V> StringCondition<T> lt(@Nonnull final IConsumer<T, V> field, final V value) {
     return lt(true, field, value);
   }
 
   @Override
-  public <V> Condition<T> lt(
+  public <V> StringCondition<T> lt(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
@@ -183,12 +183,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> le(@Nonnull final IConsumer<T, V> field, final V value) {
+  public <V> StringCondition<T> le(@Nonnull final IConsumer<T, V> field, final V value) {
     return le(true, field, value);
   }
 
   @Override
-  public <V> Condition<T> le(
+  public <V> StringCondition<T> le(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
@@ -204,12 +204,12 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> like(@Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+  public <V> StringCondition<T> like(@Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     return like(true, field, value);
   }
 
   @Override
-  public <V> Condition<T> like(
+  public <V> StringCondition<T> like(
       final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     if (condition) {
       conditionSql.add(
@@ -217,19 +217,20 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
-              .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
+              .concat(String.format(LIKE_PLAIN.operator(), QUESTION_MARK.operator)));
       valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
 
   @Override
-  public <V> Condition<T> notLike(@Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+  public <V> StringCondition<T> notLike(
+      @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     return notLike(true, field, value);
   }
 
   @Override
-  public <V> Condition<T> notLike(
+  public <V> StringCondition<T> notLike(
       final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     if (condition) {
       conditionSql.add(
@@ -237,20 +238,20 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
-              .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
+              .concat(String.format(NOT_LIKE_PLAIN.operator(), QUESTION_MARK.operator)));
       valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }
 
   @Override
-  public <V> Condition<T> between(
+  public <V> StringCondition<T> between(
       @Nonnull final IConsumer<T, V> field, @Nonnull final V start, @Nonnull final V end) {
     return between(true, field, start, end);
   }
 
   @Override
-  public <V> Condition<T> between(
+  public <V> StringCondition<T> between(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
       @Nonnull final V start,
@@ -273,13 +274,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> notBetween(
+  public <V> StringCondition<T> notBetween(
       @Nonnull final IConsumer<T, V> field, @Nonnull final V start, @Nonnull final V end) {
     return notBetween(true, field, start, end);
   }
 
   @Override
-  public <V> Condition<T> notBetween(
+  public <V> StringCondition<T> notBetween(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
       @Nonnull final V start,
@@ -292,7 +293,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(field.getColumn())
               .concat(
                   String.format(
-                      NOT_BETWEEN.operator, toPreFormatSqlVal(start), toPreFormatSqlVal(end))));
+                      NOT_BETWEEN.operator(), toPreFormatSqlVal(start), toPreFormatSqlVal(end))));
       valueTypes.add(ValueType.of(start, field));
       valueTypes.add(ValueType.of(end, field));
     }
@@ -300,12 +301,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> isNull(@Nonnull final IConsumer<T, V> field) {
+  public <V> StringCondition<T> isNull(@Nonnull final IConsumer<T, V> field) {
     return isNull(true, field);
   }
 
   @Override
-  public <V> Condition<T> isNull(final boolean condition, @Nonnull final IConsumer<T, V> field) {
+  public <V> StringCondition<T> isNull(
+      final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -318,12 +320,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> isNotNull(@Nonnull final IConsumer<T, V> field) {
+  public <V> StringCondition<T> isNotNull(@Nonnull final IConsumer<T, V> field) {
     return isNotNull(true, field);
   }
 
   @Override
-  public <V> Condition<T> isNotNull(final boolean condition, @Nonnull final IConsumer<T, V> field) {
+  public <V> StringCondition<T> isNotNull(
+      final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -336,13 +339,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> in(
+  public <V> StringCondition<T> in(
       @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
     return in(true, field, values);
   }
 
   @Override
-  public <V> Condition<T> in(
+  public <V> StringCondition<T> in(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
       @Nonnull final Collection<V> values) {
@@ -364,13 +367,13 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <V> Condition<T> notIn(
+  public <V> StringCondition<T> notIn(
       @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
     return notIn(true, field, values);
   }
 
   @Override
-  public <V> Condition<T> notIn(
+  public <V> StringCondition<T> notIn(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
       @Nonnull final Collection<V> values) {
@@ -382,7 +385,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
               .concat(field.getColumn())
               .concat(
                   String.format(
-                      NOT_IN.operator,
+                      NOT_IN.operator(),
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
@@ -392,7 +395,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
+  public <R extends AbstractEntity, Q extends AbstractEntity> StringCondition<T> eq(
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final AbstractQueryEntity<Q> queryColumn,
       @Nonnull final IFunction<R, ?> field2) {
@@ -400,7 +403,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
+  public <R extends AbstractEntity, Q extends AbstractEntity> StringCondition<T> eq(
       final boolean condition,
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final AbstractQueryEntity<Q> queryColumn,
@@ -420,7 +423,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public Condition<T> exists(@Nonnull final ICondition<T> childConditions) {
+  public ICondition<T> exists(@Nonnull final ICondition<T> childConditions) {
     return exists(true, childConditions);
   }
 
@@ -428,7 +431,7 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   //  因为涉及到整个模式调整,暂时不动
 
   @Override
-  public Condition<T> exists(
+  public StringCondition<T> exists(
       final boolean condition, @Nonnull final ICondition<T> childConditions) {
     if (condition) {
       final String childConditionsSql = childConditions.getString();
@@ -439,21 +442,22 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
                 "SELECT 1 FROM ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
 
         conditionSql.add(childQuery);
-        valueTypes.addAll(((Condition<T>) childConditions).valueTypes);
+        valueTypes.addAll(((StringCondition<T>) childConditions).valueTypes);
       }
     }
     return this;
   }
 
   @Override
-  public Condition<T> and(@Nonnull Consumer<ICondition<T>> consumer) {
+  public StringCondition<T> and(@Nonnull Consumer<ICondition<T>> consumer) {
     return and(true, consumer);
   }
 
   @Override
-  public Condition<T> and(final boolean condition, @Nonnull Consumer<ICondition<T>> consumer) {
+  public StringCondition<T> and(
+      final boolean condition, @Nonnull Consumer<ICondition<T>> consumer) {
     if (condition) {
-      final Condition<T> children = (Condition<T>) this.condition();
+      final StringCondition<T> children = (StringCondition<T>) this.condition();
       consumer.accept(children);
       return and(true, children);
     }
@@ -461,30 +465,30 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public Condition<T> and(@Nonnull ICondition<T> children) {
+  public StringCondition<T> and(@Nonnull ICondition<T> children) {
     return and(true, children);
   }
 
   @Override
-  public Condition<T> and(final boolean condition, @Nonnull ICondition<T> children) {
+  public StringCondition<T> and(final boolean condition, @Nonnull ICondition<T> children) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(PARENTHESIS_FORMAT.format(children.getString())));
-      valueTypes.addAll(((Condition<T>) children).valueTypes);
+      valueTypes.addAll(((StringCondition<T>) children).valueTypes);
     }
     return this;
   }
 
   @Override
-  public Condition<T> or(@Nonnull Consumer<ICondition<T>> consumer) {
+  public StringCondition<T> or(@Nonnull Consumer<ICondition<T>> consumer) {
     return or(true, consumer);
   }
 
   @Override
-  public Condition<T> or(final boolean condition, @Nonnull Consumer<ICondition<T>> consumer) {
+  public StringCondition<T> or(final boolean condition, @Nonnull Consumer<ICondition<T>> consumer) {
     if (condition) {
-      final Condition<T> children = (Condition<T>) this.condition();
+      final StringCondition<T> children = (StringCondition<T>) this.condition();
       consumer.accept(children);
       return or(true, children);
     }
@@ -492,17 +496,17 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
   }
 
   @Override
-  public Condition<T> or(@Nonnull ICondition<T> children) {
+  public StringCondition<T> or(@Nonnull ICondition<T> children) {
     return or(true, children);
   }
 
   @Override
-  public Condition<T> or(final boolean condition, @Nonnull ICondition<T> children) {
+  public StringCondition<T> or(final boolean condition, @Nonnull ICondition<T> children) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
               .concat(PARENTHESIS_FORMAT.format(children.getString())));
-      valueTypes.addAll(((Condition<T>) children).valueTypes);
+      valueTypes.addAll(((StringCondition<T>) children).valueTypes);
     }
     return this;
   }
@@ -618,10 +622,6 @@ public class Condition<T extends AbstractEntity> extends AbstractQueryEntity<T>
     LE_ANY(" <=ANY(%s)");
 
     private final String operator;
-
-    public String operator() {
-      return operator;
-    }
 
     MatchPattern(final String operator) {
       this.operator = operator;

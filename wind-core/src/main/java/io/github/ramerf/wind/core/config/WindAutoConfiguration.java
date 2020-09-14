@@ -14,11 +14,14 @@ import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.agent.ByteBuddyAgent;
+import net.bytebuddy.dynamic.loading.ClassReloadingStrategy;
+import net.bytebuddy.implementation.MethodDelegation;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
@@ -29,6 +32,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.*;
 import org.springframework.context.annotation.Configuration;
+
+import static net.bytebuddy.matcher.ElementMatchers.named;
 
 /**
  * 初始化配置.
@@ -145,8 +150,30 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       // 下面这行确保查询指定公共列时lambda可以使用AbstractEntityPoJo指定.如: AbstractEntityPoJo::getId
       entities.add(AbstractEntityPoJo.class);
       entities.forEach(EntityHelper::initEntity);
+      entities.forEach(this::enhance);
     } catch (IOException e) {
       log.warn("initEntityInfo:fail to init entity info[{}]", e.getMessage());
+    }
+  }
+
+  private void enhance(final Class clazz) {
+    if (clazz.getSimpleName().equals("ProductPoJo")) {
+      ByteBuddyAgent.install();
+      new ByteBuddy()
+          .subclass(clazz)
+          .method(named("getCategories"))
+          .intercept(MethodDelegation.to(Target.class))
+          .make()
+          .load(
+              WindAutoConfiguration.class.getClassLoader(),
+              ClassReloadingStrategy.fromInstalledAgent());
+    }
+  }
+
+  static class Target {
+    public static List<?> getCategories() {
+      log.info("getCategories:[{}]", "===================");
+      return Collections.emptyList();
     }
   }
 

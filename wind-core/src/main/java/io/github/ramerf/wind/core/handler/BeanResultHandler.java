@@ -1,19 +1,26 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.executor.Query;
+import io.github.ramerf.wind.core.factory.QueryColumnFactory;
+import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.bind.annotation.*;
+import net.bytebuddy.matcher.ElementMatchers;
 
 /**
  * @author Tang Xiaofeng
@@ -35,9 +42,26 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     if (CollectionUtils.isEmpty(map)) {
       return null;
     }
-    final E obj = BeanUtils.initial(clazz);
+    E obj = BeanUtils.initial(clazz);
 
+    // TODO-WARN ASM
+    if (obj instanceof AbstractEntityPoJo) {
+      obj = createByteBuddyDynamicProxy(clazz, obj);
+    }
+    // TODO-WARN ASM
     for (Method method : super.methods) {
+      // TODO-WARN ASM
+      if (method.getParameterTypes().length == 1
+          && !BeanUtils.isPrimitiveType(method.getParameterTypes()[0])) {
+        try {
+          method.invoke(obj, (Object) null);
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+        } catch (InvocationTargetException e) {
+          e.printStackTrace();
+        }
+      }
+      // TODO-WARN ASM
       final String fieldName = BeanUtils.methodToProperty(method.getName());
       final String columnAlia = fieldAliaMap.get(fieldName);
       Object value =
@@ -86,5 +110,75 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
               METHODS_FIELD_MAP.put(method, new WeakReference<>(field));
               return field;
             });
+  }
+
+  @SuppressWarnings("unchecked")
+  private E createByteBuddyDynamicProxy(Class<E> clazz, E instance) {
+    try {
+      return (E)
+          new ByteBuddy()
+              .subclass(clazz)
+              // .implement(AbstractEntity.class)
+              .method(ElementMatchers.any().and(ElementMatchers.takesArguments(1)))
+              .intercept(MethodDelegation.to(new SingerAgentInterceptor(instance)))
+              .make()
+              .load(BeanResultHandler.class.getClassLoader())
+              .getLoaded()
+              .newInstance();
+    } catch (Exception e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+      return null;
+    }
+  }
+
+  public static class SingerAgentInterceptor {
+    private Object delegate;
+
+    public SingerAgentInterceptor(Object delegate) {
+      this.delegate = delegate;
+    }
+
+    /**
+     * @param proxy 代理对象
+     * @param method 代理方法
+     * @param args 方法参数
+     */
+    @RuntimeType
+    public Object intercept(
+        @This Object proxy, @Origin Method method, @AllArguments Object[] args) {
+      System.out.println("bytebuddy delegate proxy before sing " + method.getName());
+      try {
+        if (BeanUtils.isPrimitiveType(method.getParameterTypes()[0])) {
+          return method.invoke(delegate, args);
+        }
+        // 注入
+        log.info("intercept:[{}]", "注入");
+        return method.invoke(delegate, args);
+      } catch (Exception e) {
+        log.warn(e.getMessage());
+        log.error(e.getMessage(), e);
+        return null;
+      }
+      // Object ret = method.invoke(delegate, args);
+      // log.info("intercept:[{}]", args);
+      // return null;
+    }
+
+    public Account getAccount() {
+      if (account != null) {
+        return account;
+      }
+      final Query query = Query.getInstance();
+      final QueryColumn column = QueryColumnFactory.fromClass(Account.class);
+      final IConsumer date = (IConsumer<Account, Long>) Account::setFooId;
+      final Account account =
+          query
+              .select(column)
+              .stringWhere(condition -> condition.eq("date", getId()))
+              .fetchOne(Account.class);
+      setAccount(account);
+      return account;
+    }
   }
 }

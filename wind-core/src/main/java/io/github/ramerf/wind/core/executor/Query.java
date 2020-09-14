@@ -204,6 +204,38 @@ public class Query {
     return this;
   }
 
+  public final Query stringWhere(final Consumer<StringCondition<?>>... consumers) {
+    this.conditions =
+        consumers.length > 0
+            ? IntStream.range(0, consumers.length)
+                .mapToObj(
+                    i -> {
+                      Optional.ofNullable(consumers[i])
+                          .ifPresent(
+                              consumer -> consumer.accept(queryColumns.get(i).getStrCondition()));
+                      return queryColumns.get(i).getCondition();
+                    })
+                .collect(toCollection(LinkedList::new))
+            : new LinkedList<>();
+    String conditionString =
+        this.conditions.stream()
+            .map(ICondition::getString)
+            .collect(Collectors.joining(AND.operator()));
+
+    if (conditionString.endsWith(AND.operator())) {
+      conditionString =
+          conditionString.substring(0, conditionString.length() - AND.operator().length());
+    }
+    this.conditionString =
+        this.conditions.stream()
+            .map(o -> o.getQueryEntityMetaData().getFromTable())
+            .collect(Collectors.joining(SEMICOLON.operator()));
+    if (StringUtils.nonEmpty(conditionString)) {
+      this.conditionString = this.conditionString.concat(WHERE.operator()).concat(conditionString);
+    }
+    return this;
+  }
+
   /**
    * Group by 语句.<br>
    *

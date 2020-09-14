@@ -219,4 +219,13 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
     }
     return condition;
   }
+
+  /**
+   * Gets condition.
+   *
+   * @return the condition
+   */
+  public StringCondition<T> getStrCondition() {
+    return StringCondition.of(this);
+  }
 }

@@ -3,10 +3,16 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.factory.QueryColumnFactory;
+import io.github.ramerf.wind.core.function.IConsumer;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
+import javax.persistence.OneToOne;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
@@ -126,6 +132,27 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       @Nonnull final Class<R> clazz) {
     final QueryBound<T> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
+  }
+
+  /** 查询关联对象. */
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  default <P, V> V getOne(final V id, final IConsumer<P, V> field) {
+    final Field f = field.getField();
+    final OneToOne relation = f.getAnnotation(OneToOne.class);
+    if (relation == null) {
+      throw CommonException.of("关联关系不正确,需要OneToOne");
+    }
+    Class linkClass = relation.targetEntity();
+    if (linkClass == void.class) {
+      linkClass = f.getType();
+    }
+    final String column = EntityHelper.getColumn(field);
+    final QueryColumn queryColumn = QueryColumnFactory.fromClass(linkClass);
+    getQuery()
+        .select(queryColumn)
+        .where(condition -> condition.eq((IConsumer) field, id))
+        .fetchOne(linkClass);
+    return null;
   }
 
   /**

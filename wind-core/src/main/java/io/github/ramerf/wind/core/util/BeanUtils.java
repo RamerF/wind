@@ -130,12 +130,12 @@ public final class BeanUtils {
    * @return the list
    */
   public static List<Field> retrievePrivateFields(
-      @Nonnull final Class<?> clazz, @Nonnull final List<Field> fields) {
+      @Nonnull final Class<?> clazz, @Nonnull final Supplier<List<Field>> fields) {
     return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
         .map(Reference::get)
         .orElseGet(
             () -> {
-              final List<Field> list = getPrivateFields(clazz, fields);
+              final List<Field> list = getPrivateFields(clazz, fields.get());
               PRIVATE_FIELDS_MAP.put(clazz, new WeakReference<>(list));
               return list;
             });
@@ -428,7 +428,7 @@ public final class BeanUtils {
     invoke(null, String.class.getMethods()[0], "string");
     invoke(null, String.class.getMethods()[0], "string")
         .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
-    log.info("main:[{}]", retrievePrivateFields(Ts.class, new ArrayList<>()));
+    log.info("main:[{}]", retrievePrivateFields(Ts.class, ArrayList::new));
     log.info("main:[{}]", getDeclaredField(Ts.class, "name"));
   }
 }

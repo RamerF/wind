@@ -7,8 +7,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -68,6 +67,26 @@ public class Foo extends AbstractEntityPoJo {
 
   /** Integer[]可对应数据库类型 int[] */
   private Integer[] intArr;
+
+  @OneToOne
+  @JoinColumn(name = "foo_id")
+  private Account account;
+
+  // public Account getAccount() {
+  //   if (account != null) {
+  //     return account;
+  //   }
+  //   final Query query = Query.getInstance();
+  //   final QueryColumn column = QueryColumnFactory.fromClass(Account.class);
+  //   final IConsumer date = (IConsumer<Account, Long>) Account::setFooId;
+  //   final Account account =
+  //       query
+  //           .select(column)
+  //           .where(condition -> condition.eq(date, getId()))
+  //           .fetchOne(Account.class);
+  //   setAccount(account);
+  //   return account;
+  // }
 
   public enum Type implements InterEnum<Integer> {
     /** Type. */
