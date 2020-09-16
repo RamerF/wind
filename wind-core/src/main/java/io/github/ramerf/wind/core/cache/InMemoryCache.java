@@ -33,7 +33,6 @@ public class InMemoryCache extends AbstractCache {
 
   @Override
   public Object get(final String key) {
-    cacheMap.clear();
     final InMemoryCacheObj exist = cacheMap.get(key);
     if (exist == null) {
       return null;

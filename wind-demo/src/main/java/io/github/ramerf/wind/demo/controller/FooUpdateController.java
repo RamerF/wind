@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.demo.controller;
 
-import io.github.ramerf.wind.core.condition.ICondition;
+import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.config.PrototypeBean;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
@@ -34,7 +34,7 @@ public class FooUpdateController {
         prototypeBean
             .update()
             .from(Foo.class)
-            .where((Consumer<ICondition<Foo>>) condition -> condition.eq(Foo::setId, 1L))
+            .lambdaWhere((Consumer<Condition<Foo>>) condition -> condition.eq(Foo::setId, 1L))
             .update(foo);
     return Rs.ok(affectRow);
   }

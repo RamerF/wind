@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.condition.ICondition;
+import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
@@ -124,9 +124,9 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @return 实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  default int update(@Nonnull final Consumer<ICondition<T>> consumer, final T t)
+  default int update(@Nonnull final Consumer<Condition<T>> consumer, final T t)
       throws DataAccessException {
-    return getUpdate().where(consumer).update(t);
+    return getUpdate().lambdaWhere(consumer).update(t);
   }
 
   /**
@@ -141,11 +141,11 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果执行失败
    */
   default int updateWithNull(
-      @Nonnull final Consumer<ICondition<T>> consumer,
+      @Nonnull final Consumer<Condition<T>> consumer,
       final T t,
       List<IFunction<T, ?>> includeNullProps)
       throws DataAccessException {
-    return getUpdate().where(consumer).updateWithNull(t, includeNullProps);
+    return getUpdate().lambdaWhere(consumer).updateWithNull(t, includeNullProps);
   }
 
   /**
@@ -190,7 +190,9 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @see CommonException
    */
   default int delete(final long id) throws DataAccessException {
-    return getUpdate().where(condition -> condition.eq(AbstractEntityPoJo::setId, id)).delete();
+    return getUpdate()
+        .lambdaWhere(condition -> condition.eq(AbstractEntityPoJo::setId, id))
+        .delete();
   }
 
   /**
@@ -202,8 +204,8 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
-  default int delete(Consumer<ICondition<T>> consumer) throws DataAccessException {
-    return getUpdate().where(consumer).delete();
+  default int delete(Consumer<Condition<T>> consumer) throws DataAccessException {
+    return getUpdate().lambdaWhere(consumer).delete();
   }
 
   /**
@@ -220,7 +222,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
       return Optional.empty();
     }
     final int affectRow =
-        getUpdate().where(condition -> condition.in(AbstractEntityPoJo::setId, ids)).delete();
+        getUpdate().lambdaWhere(condition -> condition.in(AbstractEntityPoJo::setId, ids)).delete();
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);
   }
 }

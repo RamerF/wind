@@ -47,11 +47,11 @@ public class TypeHandlerHelper {
   }
 
   public static class ValueType {
-    /** 原始值,可能是java值或数据库值 */
+    /** 原始值,可能是java值或数据库值. */
     @Getter private final Object originVal;
-    /** 对应的字段,用于获取{@link Column#columnDefinition()},也可以获取自定义注解 */
+    /** 对应的字段,用于获取{@link Column#columnDefinition()},也可以获取自定义注解. */
     @Getter private final Field field;
-    /** 泛型参数类型,可能是{@link Field#getGenericType()}或者{@link Method#getGenericParameterTypes()}[0] */
+    /** 泛型参数类型,可能是{@link Field#getGenericType()}或者{@link Method#getGenericParameterTypes()}[0]. */
     @Getter private final Type genericParameterType;
 
     private ValueType(final Object originVal, final Type genericParameterType, final Field field) {

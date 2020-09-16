@@ -213,7 +213,7 @@ public class Query {
                       Optional.ofNullable(consumers[i])
                           .ifPresent(
                               consumer -> consumer.accept(queryColumns.get(i).getStrCondition()));
-                      return queryColumns.get(i).getCondition();
+                      return queryColumns.get(i).getStrCondition();
                     })
                 .collect(toCollection(LinkedList::new))
             : new LinkedList<>();

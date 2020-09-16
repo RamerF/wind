@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.executor;
 
-import io.github.ramerf.wind.core.condition.Condition;
-import io.github.ramerf.wind.core.condition.ICondition;
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.dialect.Dialect;
@@ -53,7 +52,7 @@ import org.springframework.jdbc.support.KeyHolder;
 public final class Update {
 
   private Class<?> clazz;
-  private Condition<?> condition;
+  private ICondition<?> condition;
 
   private EntityInfo entityInfo;
 
@@ -126,9 +125,23 @@ public final class Update {
    * @return the update
    */
   @SuppressWarnings("unchecked")
-  public <T extends AbstractEntityPoJo> Update where(
-      @Nonnull final Consumer<ICondition<T>> consumer) {
-    consumer.accept((ICondition<T>) this.condition);
+  public <T extends AbstractEntityPoJo> Update lambdaWhere(
+      @Nonnull final Consumer<Condition<T>> consumer) {
+    consumer.accept((Condition<T>) this.condition);
+    return this;
+  }
+
+  /**
+   * Where update.
+   *
+   * @param <T> the type parameter
+   * @param consumer the consumer
+   * @return the update
+   */
+  @SuppressWarnings("unchecked")
+  public <T extends AbstractEntityPoJo> Update strWhere(
+      @Nonnull final Consumer<StringCondition<T>> consumer) {
+    consumer.accept((StringCondition<T>) this.condition);
     return this;
   }
 
@@ -367,7 +380,7 @@ public final class Update {
       if (Objects.isNull(t.getId())) {
         throw new IllegalArgumentException("id could not be null");
       }
-      where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+      lambdaWhere(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     }
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
@@ -425,7 +438,7 @@ public final class Update {
       throw new IllegalArgumentException("id could not be null");
     }
     // 保证占位符对应
-    where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+    lambdaWhere(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
