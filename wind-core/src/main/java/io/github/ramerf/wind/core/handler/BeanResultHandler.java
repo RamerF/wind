@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
+import javax.persistence.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.*;
 
@@ -40,11 +41,12 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       return null;
     }
     final E obj;
-    // 如果是poJo子类,返回代理
+    // 如果是AbstractEntityPoJo子类,返回代理,查询关联对象
     if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {
       Enhancer enhancer = new Enhancer();
       enhancer.setSuperclass(clazz);
-      enhancer.setCallback(new FetchMethodInterceptor(this));
+      enhancer.setCallback(new FetchMappingInterceptor<>(this));
+      //noinspection unchecked
       obj = (E) enhancer.create();
     } else {
       obj = BeanUtils.initial(clazz);
@@ -100,46 +102,117 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
             });
   }
 
-  public static class FetchMethodInterceptor<E> implements MethodInterceptor {
+  public static class FetchMappingInterceptor<E> implements MethodInterceptor {
     private final BeanResultHandler<?> resultHandler;
 
-    public FetchMethodInterceptor(final BeanResultHandler<?> resultHandler) {
+    public FetchMappingInterceptor(final BeanResultHandler<?> resultHandler) {
       this.resultHandler = resultHandler;
     }
 
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy)
         throws Throwable {
-      if (BeanUtils.isPrimitiveType(method.getReturnType())
-          || !method.getName().contains("ccount")) {
+      // 只处理getXxx方法
+      if (!method.getName().startsWith("get")) {
         return proxy.invokeSuper(obj, args);
       }
-      log.info("这里是对目标类进行增强:[{}]", method.getName());
-      return getRelation(obj, method);
+      final Field field =
+          resultHandler.getField(method, BeanUtils.methodToProperty(method.getName()));
+      // 只处理AbstractEntityPoJo子类和未标记为不抓取的字段
+      if (!AbstractEntityPoJo.class.isAssignableFrom(method.getReturnType())
+          || !EntityUtils.isNotDontFetch(field)) {
+        return proxy.invokeSuper(obj, args);
+      }
+
+      // 查询关联字段
+      log.trace("get relation:[{}]", method.getName());
+      return MappingType.of(field).fetchMapping(obj, method, field);
     }
 
-    @SuppressWarnings("unchecked")
-    public Object getRelation(Object obj, final Method method) {
+    private Object fetchMapping(Object obj, final Method method, final Field field) {
       if (!(obj instanceof AbstractEntityPoJo)) {
         return obj;
       }
 
       AbstractEntityPoJo poJo = (AbstractEntityPoJo) obj;
       if (poJo.getId() == null) {
-        log.info("getRelation:[{}]", "id为空");
         return null;
       }
+
       final Query query = Query.getInstance();
       final Class<?> type = method.getReturnType();
-      final Field field =
-          resultHandler.getField(method, BeanUtils.methodToProperty(method.getName()));
-      final Object o =
+
+      @SuppressWarnings("unchecked")
+      final Object mapping =
           query
               .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
               .stringWhere(condition -> condition.eq(field, poJo.getId()))
               .fetchOne(type);
-      log.info("getRelation:[{}]", o);
-      return o;
+      return mapping;
+    }
+
+    @SuppressWarnings("unchecked")
+    private enum MappingType {
+      ONE_TO_ONE {
+        @Override
+        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
+          AbstractEntityPoJo poJo = (AbstractEntityPoJo) obj;
+          if (poJo.getId() == null) {
+            return null;
+          }
+          final Query query = Query.getInstance();
+          final Class<?> type = method.getReturnType();
+          @SuppressWarnings("unchecked")
+          final Object mapping =
+              query
+                  .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
+                  .stringWhere(condition -> condition.eq(field, poJo.getId()))
+                  .fetchOne(type);
+          return (T) mapping;
+        }
+      },
+      ONE_TO_MANY {
+        @Override
+        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
+          return null;
+        }
+      },
+      MANY_TO_ONE {
+        @Override
+        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
+          return null;
+        }
+      },
+      MANY_TO_MANY {
+        @Override
+        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
+          return null;
+        }
+      },
+      NONE {
+        @Override
+        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
+          return null;
+        }
+      };
+
+      public abstract <T> T fetchMapping(Object obj, final Method method, final Field field);
+
+      public static @Nonnull MappingType of(final Field field) {
+        if (field.isAnnotationPresent(OneToOne.class)) {
+          return ONE_TO_ONE;
+        }
+        if (field.isAnnotationPresent(OneToMany.class)) {
+          return ONE_TO_MANY;
+        }
+        if (field.isAnnotationPresent(ManyToOne.class)) {
+          return MANY_TO_ONE;
+        }
+        if (field.isAnnotationPresent(ManyToMany.class)) {
+          return MANY_TO_MANY;
+        }
+        return NONE;
+      }
     }
   }
 }

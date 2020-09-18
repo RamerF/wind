@@ -16,7 +16,6 @@ import io.github.ramerf.wind.core.util.EntityUtils;
  * @author Tang Xiaofeng
  * @since 2020 /1/5
  */
-@SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface InterService<T extends AbstractEntityPoJo> {
 
   /**

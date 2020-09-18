@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2020/3/28
  */
 @Slf4j
-@SuppressWarnings({"rawtypes", "unused"})
+@SuppressWarnings({"rawtypes"})
 public class TypeHandlerRegistryFactory {
   private Set<ITypeHandler> typeHandlers =
       new TreeSet<>(((o1, o2) -> Objects.equals(o1.getClass(), o2.getClass()) ? 0 : 1));

@@ -70,6 +70,7 @@ public class Foo extends AbstractEntityPoJo {
 
   @OneToOne
   @JoinColumn(name = "foo_id")
+  @TableColumn(dontFetch = true)
   private Account account;
 
   // public Account getAccount() {
