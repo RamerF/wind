@@ -126,16 +126,16 @@ public final class BeanUtils {
    * 获取所有(包含父类)private属性.
    *
    * @param clazz the clazz
-   * @param fields the fields
+   * @param container the container
    * @return the list
    */
   public static List<Field> retrievePrivateFields(
-      @Nonnull final Class<?> clazz, @Nonnull final Supplier<List<Field>> fields) {
+      @Nonnull final Class<?> clazz, @Nonnull final Supplier<List<Field>> container) {
     return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
         .map(Reference::get)
         .orElseGet(
             () -> {
-              final List<Field> list = getPrivateFields(clazz, fields.get());
+              final List<Field> list = getPrivateFields(clazz, container.get());
               PRIVATE_FIELDS_MAP.put(clazz, new WeakReference<>(list));
               return list;
             });

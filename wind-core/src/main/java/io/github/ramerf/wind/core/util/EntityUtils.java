@@ -17,10 +17,10 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.persistence.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AdvisedSupport;
 import org.springframework.aop.framework.AopProxy;
@@ -37,7 +37,6 @@ import static java.util.stream.Collectors.toList;
  * @since 2019 /12/26
  */
 @Slf4j
-@SuppressWarnings({"unused"})
 public final class EntityUtils {
   private static WindConfiguration configuration;
   /** {@link BaseService} 泛型{@link AbstractEntityPoJo} */
@@ -49,7 +48,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有{@code private && !static && !transient}保存到数据库的属性.<br>
+   * 获取对象映射到数据库的属性.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
@@ -59,11 +58,7 @@ public final class EntityUtils {
   public static List<Field> getAllColumnFields(@Nonnull final Class<?> obj) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(obj, ArrayList::new).stream()
-            .filter(EntityUtils::isNotDisabled)
-            .filter(field -> Modifier.isPrivate(field.getModifiers()))
-            .filter(field -> !Modifier.isStatic(field.getModifiers()))
-            .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .filter(field -> BeanUtils.isPrimitiveType(field.getType()))
+            .filter(filterColumnField())
             .collect(toList());
     if (log.isTraceEnabled()) {
       log.trace("getAllColumnFields:[{}]", fields);
@@ -72,7 +67,24 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有{@code private && !static && !transient}保存到数据库且值不为null的属性.<br>
+   * <pre>
+   * 列必须符合以下条件:
+   *  1. 未禁用
+   *  2. 非static
+   *  3. 非transient
+   *  4. 基本类型(对应的包装类型) 或 AbstractEntityPoJo的子类并且标记有注解({@link OneToOne},{@link OneToMany},{@link ManyToOne},{@link ManyToMany})中的一个
+   */
+  private static Predicate<Field> filterColumnField() {
+    return field ->
+        EntityUtils.isNotDisabled(field)
+            && !Modifier.isStatic(field.getModifiers())
+            && !Modifier.isTransient(field.getModifiers())
+            && (BeanUtils.isPrimitiveType(field.getType())
+                || AbstractEntityPoJo.class.isAssignableFrom(field.getType()));
+  }
+
+  /**
+   * 获取对象映射到数据库且值不为null的属性.<br>
    *
    * @param <T> the type parameter
    * @param t the t
@@ -81,11 +93,7 @@ public final class EntityUtils {
   public static <T extends AbstractEntity> List<Field> getNonNullColumnFields(@Nonnull final T t) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
-            .filter(EntityUtils::isNotDisabled)
-            .filter(field -> Modifier.isPrivate(field.getModifiers()))
-            .filter(field -> !Modifier.isStatic(field.getModifiers()))
-            .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .filter(field -> BeanUtils.isPrimitiveType(field.getType()))
+            .filter(filterColumnField())
             .filter(field -> Objects.nonNull(BeanUtils.getValue(t, field, null)))
             .collect(toList());
     if (log.isTraceEnabled()) {
@@ -134,7 +142,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有{@code private && !static && !transient}保存到数据库且值为null的属性.
+   * 获取对象映射到数据库且值为null的属性.
    *
    * @param <T> the type parameter
    * @param t the t
@@ -143,11 +151,7 @@ public final class EntityUtils {
   public static <T> List<Field> getNullColumnFields(@Nonnull final T t) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
-            .filter(EntityUtils::isNotDisabled)
-            .filter(field -> Modifier.isPrivate(field.getModifiers()))
-            .filter(field -> !Modifier.isStatic(field.getModifiers()))
-            .filter(field -> !Modifier.isTransient(field.getModifiers()))
-            .filter(field -> BeanUtils.isPrimitiveType(field.getType()))
+            .filter(filterColumnField())
             .filter(field -> Objects.isNull(BeanUtils.getValue(t, field, ex -> -1)))
             .collect(toList());
     log.debug("getNullColumnFields:[{}]", fields);
@@ -155,7 +159,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有{@code private && !static && !transient}属性对应的数据库列名.<br>
+   * 获取对象映射到数据库的列名.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
@@ -173,7 +177,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有非空{@code private && !static && !transient}属性对应的数据库列名.<br>
+   * 获取对象映射到数据库的非空属性的列名.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
@@ -192,7 +196,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象所有非空{@code private && !static && !transient}属性对应的数据库列名,以逗号分割.<br>
+   * 获取对象映射到数据库的非空属性的列名,以逗号分割.<br>
    * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
@@ -210,13 +214,13 @@ public final class EntityUtils {
     return nonNullColumn;
   }
 
-  /** 断言给定的字段未被禁用.false:已被禁用 */
+  /** 给定的字段未被禁用.false:已被禁用 */
   public static boolean isNotDisabled(final Field field) {
     return configuration.getDisableFields().stream()
         .noneMatch(disableField -> disableField.getField().equals(field));
   }
 
-  /** 断言给定的字段未被标记默认不抓取.false:不抓取 */
+  /** 给定的字段未被标记默认不抓取.false:不抓取 */
   public static boolean isNotDontFetch(final Field field) {
     final TableColumn annotation = field.getAnnotation(TableColumn.class);
     return annotation == null || !annotation.dontFetch();
@@ -234,11 +238,19 @@ public final class EntityUtils {
    * @see Field#getName() Field#getName()
    */
   public static String fieldToColumn(@Nonnull final Field field) {
-    String column = null;
-    final Column columnAnnotation = field.getAnnotation(Column.class);
-    return columnAnnotation != null && StringUtils.nonEmpty(columnAnnotation.name())
-        ? columnAnnotation.name()
-        : camelToUnderline(field.getName());
+    final Column column = field.getAnnotation(Column.class);
+    if (column != null && StringUtils.nonEmpty(column.name())) {
+      return column.name();
+    }
+    final JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
+    if (joinColumn != null && StringUtils.nonEmpty(joinColumn.name())) {
+      return joinColumn.name();
+    }
+    // 关系字段默认是 nameId
+    if (AbstractEntityPoJo.class.isAssignableFrom(field.getType())) {
+      return camelToUnderline(field.getName()).concat("Id");
+    }
+    return camelToUnderline(field.getName());
   }
 
   /**

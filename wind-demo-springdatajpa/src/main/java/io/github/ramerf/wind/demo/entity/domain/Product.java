@@ -21,6 +21,10 @@ public class Product extends AbstractEntityPoJo {
 
   private String name;
 
+  @OneToOne
+  @JoinColumn(referencedColumnName = "product_id")
+  private ProductSpu productSpu;
+
   @Setter @ManyToMany @JoinTable private List<ProductCategory> categories;
 
   public List<ProductCategory> getCategories() {

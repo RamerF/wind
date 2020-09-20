@@ -8,6 +8,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
@@ -15,8 +16,7 @@ import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import javax.persistence.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -50,6 +50,14 @@ public class EntityHelper {
     CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), entityInfo);
     // 这里进行表定义更新
     ddlAuto(entityInfo);
+  }
+
+  /** 初始化关系映射. */
+  public static void initEntityMapping() {
+    CLAZZ_ENTITY_MAP.values().stream()
+        .filter(o -> !o.getClazz().equals(AbstractEntityPoJo.class))
+        .filter(o -> AbstractEntityPoJo.class.isAssignableFrom(o.getClazz()))
+        .forEach(EntityMapping::initial);
   }
 
   /**

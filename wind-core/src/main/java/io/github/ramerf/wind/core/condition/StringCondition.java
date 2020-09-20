@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
 import javax.annotation.Nonnull;
@@ -33,6 +34,25 @@ public class StringCondition<T extends AbstractEntity> extends AbstractCondition
     condition.setEntityInfo(queryColumn.getEntityInfo());
     condition.setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
     return condition;
+  }
+
+  public <V> StringCondition<T> eq(@Nonnull final MappingInfo mappingInfo, final V value) {
+    return eq(true, mappingInfo, value);
+  }
+
+  public <V> StringCondition<T> eq(
+      final boolean condition, @Nonnull final MappingInfo mappingInfo, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(mappingInfo.getKey())
+              .concat(EQUAL.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, mappingInfo.getField()));
+    }
+    return this;
   }
 
   public <V> StringCondition<T> eq(@Nonnull final Field field, final V value) {

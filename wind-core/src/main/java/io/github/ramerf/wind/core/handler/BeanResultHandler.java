@@ -2,10 +2,9 @@ package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.executor.Query;
-import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.mapping.MappingType;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -16,7 +15,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
-import javax.persistence.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.*;
 
@@ -42,10 +40,10 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     }
     final E obj;
     // 如果是AbstractEntityPoJo子类,返回代理,查询关联对象
-    if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {
+    if (AbstractEntityPoJo.class.isAssignableFrom(clazz) && fieldAliaMap.size() > 0) {
       Enhancer enhancer = new Enhancer();
       enhancer.setSuperclass(clazz);
-      enhancer.setCallback(new FetchMappingInterceptor<>(this));
+      enhancer.setCallback(new FetchMappingInterceptor<>(this, map));
       //noinspection unchecked
       obj = (E) enhancer.create();
     } else {
@@ -104,9 +102,12 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
 
   public static class FetchMappingInterceptor<E> implements MethodInterceptor {
     private final BeanResultHandler<?> resultHandler;
+    final Map<String, Object> map;
 
-    public FetchMappingInterceptor(final BeanResultHandler<?> resultHandler) {
+    public FetchMappingInterceptor(
+        final BeanResultHandler<?> resultHandler, final Map<String, Object> map) {
       this.resultHandler = resultHandler;
+      this.map = map;
     }
 
     @Override
@@ -118,101 +119,21 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       }
       final Field field =
           resultHandler.getField(method, BeanUtils.methodToProperty(method.getName()));
+
       // 只处理AbstractEntityPoJo子类和未标记为不抓取的字段
       if (!AbstractEntityPoJo.class.isAssignableFrom(method.getReturnType())
           || !EntityUtils.isNotDontFetch(field)) {
         return proxy.invokeSuper(obj, args);
       }
+      final Object relationValue = map.get(resultHandler.fieldAliaMap.get(field.getName()));
+      if (relationValue == null) {
+        return proxy.invokeSuper(obj, args);
+      }
 
       // 查询关联字段
       log.trace("get relation:[{}]", method.getName());
-      return MappingType.of(field).fetchMapping(obj, method, field);
-    }
-
-    private Object fetchMapping(Object obj, final Method method, final Field field) {
-      if (!(obj instanceof AbstractEntityPoJo)) {
-        return obj;
-      }
-
-      AbstractEntityPoJo poJo = (AbstractEntityPoJo) obj;
-      if (poJo.getId() == null) {
-        return null;
-      }
-
-      final Query query = Query.getInstance();
-      final Class<?> type = method.getReturnType();
-
-      @SuppressWarnings("unchecked")
-      final Object mapping =
-          query
-              .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
-              .stringWhere(condition -> condition.eq(field, poJo.getId()))
-              .fetchOne(type);
-      return mapping;
-    }
-
-    @SuppressWarnings("unchecked")
-    private enum MappingType {
-      ONE_TO_ONE {
-        @Override
-        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
-          AbstractEntityPoJo poJo = (AbstractEntityPoJo) obj;
-          if (poJo.getId() == null) {
-            return null;
-          }
-          final Query query = Query.getInstance();
-          final Class<?> type = method.getReturnType();
-          @SuppressWarnings("unchecked")
-          final Object mapping =
-              query
-                  .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
-                  .stringWhere(condition -> condition.eq(field, poJo.getId()))
-                  .fetchOne(type);
-          return (T) mapping;
-        }
-      },
-      ONE_TO_MANY {
-        @Override
-        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
-          return null;
-        }
-      },
-      MANY_TO_ONE {
-        @Override
-        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
-          return null;
-        }
-      },
-      MANY_TO_MANY {
-        @Override
-        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
-          return null;
-        }
-      },
-      NONE {
-        @Override
-        public <T> T fetchMapping(final Object obj, final Method method, final Field field) {
-          return null;
-        }
-      };
-
-      public abstract <T> T fetchMapping(Object obj, final Method method, final Field field);
-
-      public static @Nonnull MappingType of(final Field field) {
-        if (field.isAnnotationPresent(OneToOne.class)) {
-          return ONE_TO_ONE;
-        }
-        if (field.isAnnotationPresent(OneToMany.class)) {
-          return ONE_TO_MANY;
-        }
-        if (field.isAnnotationPresent(ManyToOne.class)) {
-          return MANY_TO_ONE;
-        }
-        if (field.isAnnotationPresent(ManyToMany.class)) {
-          return MANY_TO_MANY;
-        }
-        return NONE;
-      }
+      return MappingType.of(field)
+          .fetchMapping((AbstractEntityPoJo) obj, relationValue, method, field, proxy, args);
     }
   }
 }

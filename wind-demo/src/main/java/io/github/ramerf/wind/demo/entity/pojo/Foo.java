@@ -69,8 +69,8 @@ public class Foo extends AbstractEntityPoJo {
   private Integer[] intArr;
 
   @OneToOne
-  @JoinColumn(name = "foo_id")
-  @TableColumn(dontFetch = true)
+  @JoinColumn(name = "account_id")
+  // @TableColumn(dontFetch = true)
   private Account account;
 
   // public Account getAccount() {
