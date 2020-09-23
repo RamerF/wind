@@ -95,37 +95,24 @@ public final class EntityInfo {
             .map(TableInfo::comment)
             .orElse(null));
 
+    final List<Field> columnFields = EntityUtils.getAllColumnFields(clazz);
     Map<String, String> fieldColumnMap = new HashMap<>(10);
     // 0:创建时间 1:更新时间
     final Field[] timeField = new Field[2];
-    final List<Field> columnFields = EntityUtils.getAllColumnFields(clazz);
-    columnFields.forEach(
-        field -> {
-          if (field.getAnnotation(CreateTimestamp.class) != null) {
-            timeField[0] = field;
-          }
-          if (field.getAnnotation(UpdateTimestamp.class) != null) {
-            timeField[1] = field;
-          }
-          fieldColumnMap.put(field.getName(), EntityUtils.fieldToColumn(field));
-        });
-    getCreateUpdateTimeFields(timeField, configuration);
-    entityInfo.setCreateTimeField(timeField[0]);
-    entityInfo.setUpdateTimeField(timeField[1]);
-    entityInfo.setFieldColumnMap(fieldColumnMap);
-    final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
-    if (tableInfo != null) {
-      entityInfo.setLogicDeleteProp(LogicDeleteProp.of(tableInfo, configuration));
-    } else {
-      entityInfo.setLogicDeleteProp(LogicDeleteProp.of(configuration));
-    }
-    if (!entityInfo.getLogicDeleteProp().isEnable() && entityInfo.isMapToTable()) {
-      log.warn("表[{}]将使用物理删除!", entityInfo.name);
-    }
+
     List<EntityColumn> primaryKeys = new ArrayList<>();
     List<EntityColumn> entityColumns = new ArrayList<>();
     for (Field field : columnFields) {
+      // 创建/更新时间
+      if (field.getAnnotation(CreateTimestamp.class) != null) {
+        timeField[0] = field;
+      }
+      if (field.getAnnotation(UpdateTimestamp.class) != null) {
+        timeField[1] = field;
+      }
+      // 列信息
       final EntityColumn entityColumn = EntityColumn.of(field, dialect);
+      fieldColumnMap.put(field.getName(), entityColumn.getName());
       if (entityColumn.isPrimaryKey()) {
         primaryKeys.add(entityColumn);
       }
@@ -133,6 +120,17 @@ public final class EntityInfo {
     }
     entityInfo.setPrimaryKeys(primaryKeys);
     entityInfo.setEntityColumns(entityColumns);
+
+    getCreateUpdateTimeFields(timeField, configuration);
+    entityInfo.setCreateTimeField(timeField[0]);
+    entityInfo.setUpdateTimeField(timeField[1]);
+    entityInfo.setFieldColumnMap(fieldColumnMap);
+
+    entityInfo.setLogicDeleteProp(
+        LogicDeleteProp.of(clazz.getAnnotation(TableInfo.class), configuration));
+    if (!entityInfo.getLogicDeleteProp().isEnable() && entityInfo.isMapToTable()) {
+      log.warn("表[{}]将使用物理删除!", entityInfo.name);
+    }
     return entityInfo;
   }
 

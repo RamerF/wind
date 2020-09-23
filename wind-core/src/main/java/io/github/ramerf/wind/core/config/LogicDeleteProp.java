@@ -40,7 +40,10 @@ public class LogicDeleteProp {
   }
 
   public static LogicDeleteProp of(
-      @Nonnull final TableInfo tableInfo, @Nonnull final WindConfiguration configuration) {
+      final TableInfo tableInfo, @Nonnull final WindConfiguration configuration) {
+    if (tableInfo == null) {
+      return of(configuration);
+    }
     LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
     logicDeleteProp.setEnable(tableInfo.logicDelete().enable());
     logicDeleteProp.setColumn(tableInfo.logicDelete().column());

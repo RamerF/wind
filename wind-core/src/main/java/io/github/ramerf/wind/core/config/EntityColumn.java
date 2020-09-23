@@ -142,57 +142,58 @@ public class EntityColumn {
       if (entityColumn.isPrimaryKey()) {
         entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn);
       }
-      return entityColumn;
-    }
-
-    StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
-    StringUtils.doIfNonEmpty(
-        column.columnDefinition(),
-        columnDefinition -> {
-          final String defaultRegex = "default[ ]+\\w+[ ]?";
-          final String commentRegex = "comment.*";
-          final String lowerCaseDefinition = columnDefinition.toLowerCase();
-          if (tableColumn == null) {
-            entityColumn.columnDefinition = columnDefinition;
-            return;
-          }
-          // TableColumn#defaultValue优先级高于Column#columnDefinition中的default值
-          String defaultValue = entityColumn.defaultValue;
-          if (StringUtils.nonEmpty(defaultValue)) {
-            String replacement = " default '" + defaultValue + "'";
-            entityColumn.columnDefinition = columnDefinition.replaceAll(defaultRegex, replacement);
-            if (!entityColumn.columnDefinition.contains("default")) {
-              entityColumn.columnDefinition += replacement;
+    } else {
+      StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
+      StringUtils.doIfNonEmpty(
+          column.columnDefinition(),
+          columnDefinition -> {
+            final String defaultRegex = "default[ ]+\\w+[ ]?";
+            final String commentRegex = "comment.*";
+            final String lowerCaseDefinition = columnDefinition.toLowerCase();
+            if (tableColumn == null) {
+              entityColumn.columnDefinition = columnDefinition;
+              return;
             }
-          }
-          String comment = entityColumn.comment;
-          if (StringUtils.nonEmpty(comment)) {
-            String replacement = " comment '" + comment + "'";
-            entityColumn.columnDefinition = columnDefinition.replaceAll(commentRegex, replacement);
-            if (!dialect.isSupportCommentOn()
-                && !entityColumn.columnDefinition.contains("comment")) {
-              entityColumn.columnDefinition += replacement;
+            // TableColumn#defaultValue优先级高于Column#columnDefinition中的default值
+            String defaultValue = entityColumn.defaultValue;
+            if (StringUtils.nonEmpty(defaultValue)) {
+              String replacement = " default '" + defaultValue + "'";
+              entityColumn.columnDefinition =
+                  columnDefinition.replaceAll(defaultRegex, replacement);
+              if (!entityColumn.columnDefinition.contains("default")) {
+                entityColumn.columnDefinition += replacement;
+              }
             }
-          }
-        });
+            String comment = entityColumn.comment;
+            if (StringUtils.nonEmpty(comment)) {
+              String replacement = " comment '" + comment + "'";
+              entityColumn.columnDefinition =
+                  columnDefinition.replaceAll(commentRegex, replacement);
+              if (!dialect.isSupportCommentOn()
+                  && !entityColumn.columnDefinition.contains("comment")) {
+                entityColumn.columnDefinition += replacement;
+              }
+            }
+          });
 
-    entityColumn.length = column.length();
-    // 使用默认值而不是0
-    NumberUtils.doIfGreaterThanZero(column.precision(), o -> entityColumn.precision = o);
-    NumberUtils.doIfGreaterThanZero(column.scale(), o -> entityColumn.scale = o);
+      entityColumn.length = column.length();
+      // 使用默认值而不是0
+      NumberUtils.doIfGreaterThanZero(column.precision(), o -> entityColumn.precision = o);
+      NumberUtils.doIfGreaterThanZero(column.scale(), o -> entityColumn.scale = o);
 
-    entityColumn.nullable = entityColumn.nullable && column.nullable();
-    entityColumn.unique = column.unique();
+      entityColumn.nullable = entityColumn.nullable && column.nullable();
+      entityColumn.unique = column.unique();
 
-    if (entityColumn.columnDefinition == null) {
-      entityColumn.typeName =
-          entityColumn.supported
-              ? dialect.getTypeName(
-                  entityColumn.type,
-                  entityColumn.length,
-                  entityColumn.precision,
-                  entityColumn.scale)
-              : null;
+      if (entityColumn.columnDefinition == null) {
+        entityColumn.typeName =
+            entityColumn.supported
+                ? dialect.getTypeName(
+                    entityColumn.type,
+                    entityColumn.length,
+                    entityColumn.precision,
+                    entityColumn.scale)
+                : null;
+      }
     }
     return entityColumn;
   }

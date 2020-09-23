@@ -28,7 +28,7 @@ import static io.github.ramerf.wind.core.factory.QueryColumnFactory.fromClass;
  *    @ManyToMany
  *    private List<Foo> foos;
  *  }
- * }*
+ * }
  *
  * @author Tang Xiaofeng
  * @since 2020.09.19
