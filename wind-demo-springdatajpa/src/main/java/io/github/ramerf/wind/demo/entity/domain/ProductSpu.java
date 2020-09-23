@@ -1,8 +1,7 @@
 package io.github.ramerf.wind.demo.entity.domain;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import javax.persistence.Entity;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -21,7 +20,9 @@ public class ProductSpu extends AbstractEntityPoJo {
 
   private String address;
 
-  @OneToOne private Product product;
+  @OneToOne
+  @JoinColumn(name = "",referencedColumnName = "")
+  private Product product;
 
   private Long productId;
 }

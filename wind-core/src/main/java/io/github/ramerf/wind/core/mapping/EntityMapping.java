@@ -57,32 +57,36 @@ public class EntityMapping {
         clazz,
         BeanUtils.retrievePrivateFields(clazz, ArrayList::new).stream()
             .filter(field -> AbstractEntityPoJo.class.isAssignableFrom(field.getType()))
-            .map(field -> MappingInfo.of(field, getMappingKey(field, entityInfo)))
+            .map(MappingInfo::of)
             .collect(Collectors.toList()));
-  }
-
-  private static String getMappingKey(final Field field, final EntityInfo entityInfo) {
-    final JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
-    if (joinColumn != null) {
-      return joinColumn.referencedColumnName();
-    }
-    return EntityUtils.fieldToColumn(field);
   }
 
   @Data
   public static class MappingInfo {
+    private Class<?> clazz;
     private Field field;
 
     private String key;
 
     private MappingType mappingType;
 
-    public static MappingInfo of(final Field field, final String key) {
+    private MappingInfo() {}
+
+    public static MappingInfo of(final Field field) {
       final MappingInfo info = new MappingInfo();
+      info.setClazz(field.getType());
       info.setField(field);
       info.setMappingType(MappingType.of(field));
-      info.setKey(key);
+      info.setKey(getMappingKey(field));
       return info;
+    }
+
+    private static String getMappingKey(final Field field) {
+      final JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
+      if (joinColumn != null) {
+        return joinColumn.referencedColumnName();
+      }
+      return EntityUtils.fieldToColumn(field);
     }
   }
 }
