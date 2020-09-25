@@ -21,21 +21,21 @@ import lombok.Data;
 @Data
 public class EntityMapping {
   /** List不支持更新操作. */
-  private static Map<Class<? extends AbstractEntityPoJo>, List<MappingInfo>> mapping =
+  private static Map<Class<? extends AbstractEntityPoJo>, List<MappingInfo>> ENTITY_MAPPING =
       new ConcurrentHashMap<>();
 
   public static List<MappingInfo> get(@Nonnull Class<? extends AbstractEntityPoJo> clazz) {
-    return mapping.get(clazz);
+    return ENTITY_MAPPING.get(clazz);
   }
 
   public static Optional<MappingInfo> get(
       @Nonnull Class<? extends AbstractEntityPoJo> clazz, final Field field) {
-    return mapping.get(clazz).stream().filter(o -> o.field.equals(field)).findFirst();
+    return ENTITY_MAPPING.get(clazz).stream().filter(o -> o.field.equals(field)).findFirst();
   }
 
   public static void put(
       @Nonnull Class<? extends AbstractEntityPoJo> clazz, @Nonnull final MappingInfo mappingInfo) {
-    mapping.merge(
+    ENTITY_MAPPING.merge(
         clazz,
         Collections.singletonList(mappingInfo),
         (old, newVal) -> {
@@ -47,7 +47,7 @@ public class EntityMapping {
   public static void put(
       @Nonnull Class<? extends AbstractEntityPoJo> clazz,
       @Nonnull final List<MappingInfo> mappingInfos) {
-    mapping.put(clazz, mappingInfos);
+    ENTITY_MAPPING.put(clazz, mappingInfos);
   }
 
   public static void initial(final EntityInfo entityInfo) {
@@ -66,7 +66,7 @@ public class EntityMapping {
     private Class<?> clazz;
     private Field field;
 
-    private String key;
+    private String referenceKey;
 
     private MappingType mappingType;
 
@@ -77,7 +77,7 @@ public class EntityMapping {
       info.setClazz(field.getType());
       info.setField(field);
       info.setMappingType(MappingType.of(field));
-      info.setKey(getMappingKey(field));
+      info.setReferenceKey(getMappingKey(field));
       return info;
     }
 

@@ -47,7 +47,7 @@ public class StringCondition<T extends AbstractEntity> extends AbstractCondition
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
-              .concat(mappingInfo.getKey())
+              .concat(mappingInfo.getReferenceKey())
               .concat(EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
       valueTypes.add(ValueType.of(value, mappingInfo.getField()));
