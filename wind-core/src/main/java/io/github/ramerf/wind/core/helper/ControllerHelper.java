@@ -37,7 +37,7 @@ import static io.github.ramerf.wind.core.validation.ValidateUtil.collect;
  * @since 2019 /12/26
  */
 @Slf4j
-@SuppressWarnings({"unused", "rawtypes", "unchecked"})
+@SuppressWarnings({"rawtypes", "unchecked"})
 public final class ControllerHelper {
   /**
    * 执行创建.
@@ -51,7 +51,7 @@ public final class ControllerHelper {
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
       ResponseEntity<Rs<Object>> create(final S invoke, final T entity, final ResultCode error) {
     try {
-      return Rs.ok(invoke.create(entity));
+      return Rs.ok(json().put("id", invoke.create(entity)));
     } catch (Exception e) {
       return Rs.fail(Objects.nonNull(error) ? error : ResultCode.API_FAIL_EXEC_CREATE);
     }
@@ -244,7 +244,9 @@ public final class ControllerHelper {
       final int update = invoke.update(entity);
       return update == 1
           ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
-          : Objects.nonNull(successCode) ? ok(entity.getId(), successCode) : ok();
+          : Objects.nonNull(successCode)
+              ? ok(json().put("id", entity.getId()), successCode)
+              : ok(json().put("id", entity.getId()));
     } catch (Exception e) {
       return fail(Objects.nonNull(errorCode) ? errorCode : ResultCode.API_FAIL_EXEC_UPDATE);
     }
