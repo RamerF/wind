@@ -47,10 +47,10 @@ public class StringCondition<T extends AbstractEntity> extends AbstractCondition
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
-              .concat(mappingInfo.getReferenceKey())
+              .concat(mappingInfo.getReferenceColumn())
               .concat(EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, mappingInfo.getField()));
+      valueTypes.add(ValueType.of(value, mappingInfo.getReferenceField()));
     }
     return this;
   }

@@ -15,7 +15,8 @@ import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
+import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.AS;
+import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.DOT;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -36,6 +37,8 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   //  private List<QueryColumn<T>> children = new ArrayList<>();
 
   private Condition<T> condition = null;
+
+  private StringCondition<T> stringCondition = null;
 
   private QueryColumn(final EntityInfo entityInfo) {
     setEntityInfo(entityInfo);
@@ -172,26 +175,38 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
       final IFunction<T, ?> function, final String alia, final SqlFunction sqlFunction) {
     getQueryEntityMetaData()
         .queryAlias
-        .add(QueryAlia.of(function, alia, getQueryEntityMetaData().getTableAlia(), sqlFunction));
+        .add(
+            QueryAlia.of(
+                function,
+                alia,
+                getQueryEntityMetaData().getTableName(),
+                getQueryEntityMetaData().getTableAlia(),
+                sqlFunction));
+    return this;
+  }
+
+  /** 添加查询对象(列/聚合函数). */
+  public QueryColumn<T> add(final Field field) {
+    getQueryEntityMetaData()
+        .queryAlias
+        .add(
+            QueryAlia.of(
+                field.getName(), // constraint format
+                EntityUtils.fieldToColumn(field),
+                getQueryEntityMetaData().getTableName(),
+                getQueryEntityMetaData().getTableAlia()));
     return this;
   }
 
   @Override
   public String getString() {
     final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
-    return CollectionUtils.isEmpty(metaData.queryAlias)
-        ? EntityUtils.getAllColumnFields(metaData.clazz).stream()
-            .filter(EntityUtils::isNotDontFetch)
-            .map(this::fieldToColumnWithAlia)
-            .collect(joining(","))
-        : metaData.queryAlias.stream().map(QueryColumn::toColumnWithAlia).collect(joining(","));
-  }
-
-  private String fieldToColumnWithAlia(final Field field) {
-    return getQueryEntityMetaData()
-        .tableAlia
-        .concat(DOT.operator())
-        .concat(EntityUtils.fieldToColumn(field));
+    if (CollectionUtils.isEmpty(metaData.queryAlias)) {
+      EntityUtils.getAllColumnFields(metaData.clazz).stream()
+          .filter(EntityUtils::isNotDontFetch)
+          .forEach(this::add);
+    }
+    return metaData.queryAlias.stream().map(QueryColumn::toColumnWithAlia).collect(joining(","));
   }
 
   /** 增加额外的表别名前缀 */
@@ -226,6 +241,9 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    * @return the condition
    */
   public StringCondition<T> getStrCondition() {
-    return StringCondition.of(this);
+    if (Objects.isNull(stringCondition)) {
+      stringCondition = StringCondition.of(this);
+    }
+    return stringCondition;
   }
 }

@@ -41,6 +41,13 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   public <R> R fetchOne(@Nonnull final SqlParam sqlParam) throws DataAccessException {
+    return fetchOne(sqlParam, null);
+  }
+
+  @Override
+  public <R> R fetchOne(
+      @Nonnull final SqlParam sqlParam, ResultHandler<Map<String, Object>, R> resultHandler)
+      throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
         () -> {
@@ -60,11 +67,12 @@ public class JdbcTemplateExecutor implements Executor {
           }
           @SuppressWarnings("unchecked")
           final Class<R> clazz = (Class<R>) sqlParam.getClazz();
-          ResultHandler<Map<String, Object>, R> resultHandler =
-              BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-                  ? new PrimitiveResultHandler<>(clazz)
-                  : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
-          return resultHandler.handle(result.get(0));
+          return (resultHandler != null
+                  ? resultHandler
+                  : (BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
+                      ? new PrimitiveResultHandler<>(clazz)
+                      : new BeanResultHandler<>(clazz, sqlParam.queryColumns)))
+              .handle(result.get(0));
         },
         Thread.currentThread().getStackTrace()[1].getMethodName());
   }

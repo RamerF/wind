@@ -36,7 +36,7 @@ public class FooQueryController {
   @ApiOperation("使用Query")
   public ResponseEntity<Rs<Object>> query() {
     // 获取查询列和查询条件对象
-    final QueryColumn<Foo> queryColumn = QueryColumnFactory  .fromClass(Foo.class);
+    final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
     final Condition<Foo> condition = queryColumn.getCondition();
     // 指定查询列
     queryColumn.col(Foo::getId);
@@ -67,11 +67,7 @@ public class FooQueryController {
   @GetMapping("/diy")
   @ApiOperation("使用Query,DIY)")
   public ResponseEntity<Rs<Object>> query3() {
-    /*
-     * 说明: 由于设计用于分布式系统,应避免多表查询,故设计时未考虑支持🤣🤣,只支持inner join方式连表
-     * 已知的问题,在Query中已经标明(但不完全😅,没想到吧)
-     */
-
+    /* 说明:只支持inner join方式连表 */
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
     final QueryColumn<OoO> queryColumn2 = QueryColumnFactory.fromClass(OoO.class);

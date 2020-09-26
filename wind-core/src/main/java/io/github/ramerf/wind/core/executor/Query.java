@@ -61,7 +61,7 @@ public class Query {
    *
    *
    * <pre>
-   * TODO-TXF: 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
+   * TODO-POST 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
    * 思路: 构造OrderByClause,使用sql语法:
    * 1. orderBy id <> ?
    * 2. orderBy id not in (?,?) 特性
@@ -110,6 +110,7 @@ public class Query {
       this.queryString =
           Arrays.stream(queryString.split(","))
               .map(col -> col.substring(col.lastIndexOf(" ") + 1))
+              .map(col -> col.substring(col.indexOf(".") + 1))
               .collect(Collectors.joining(","));
     }
     return this;
@@ -269,6 +270,18 @@ public class Query {
    * @return the r
    */
   public <R> R fetchOne(final Class<R> clazz) {
+    return fetchOne(clazz, null);
+  }
+
+  /**
+   * 查询单条记录.
+   *
+   * @param <R> the type parameter
+   * @param clazz the clazz
+   * @return the r
+   */
+  public <R> R fetchOne(
+      final Class<R> clazz, final ResultHandler<Map<String, Object>, R> resultHandler) {
     doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
     final String sql = "SELECT %s FROM %s";
     final String queryString =
@@ -280,7 +293,8 @@ public class Query {
             .conditions(conditions)
             .queryColumns(queryColumns)
             .startIndex(new AtomicInteger(1))
-            .build());
+            .build(),
+        resultHandler);
   }
 
   /**

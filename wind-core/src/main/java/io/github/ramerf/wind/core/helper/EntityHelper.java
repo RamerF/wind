@@ -58,6 +58,7 @@ public class EntityHelper {
         .filter(o -> !o.getClazz().equals(AbstractEntityPoJo.class))
         .filter(o -> AbstractEntityPoJo.class.isAssignableFrom(o.getClazz()))
         .forEach(EntityMapping::initial);
+    EntityMapping.valid(CLAZZ_ENTITY_MAP);
   }
 
   /**

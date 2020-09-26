@@ -7,6 +7,7 @@ import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -50,6 +51,9 @@ public final class EntityInfo {
 
   /** 主键. */
   private List<EntityColumn> primaryKeys;
+
+  /** 关联对象. */
+  private List<MappingInfo> mappingInfos = new ArrayList<>();
 
   private Dialect dialect;
 

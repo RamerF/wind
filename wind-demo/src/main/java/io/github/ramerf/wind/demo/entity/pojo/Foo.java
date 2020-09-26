@@ -68,27 +68,6 @@ public class Foo extends AbstractEntityPoJo {
   /** Integer[]可对应数据库类型 int[] */
   private Integer[] intArr;
 
-  @OneToOne
-  @JoinColumn(name = "account_id")
-  // @TableColumn(dontFetch = true)
-  private Account account;
-
-  // public Account getAccount() {
-  //   if (account != null) {
-  //     return account;
-  //   }
-  //   final Query query = Query.getInstance();
-  //   final QueryColumn column = QueryColumnFactory.fromClass(Account.class);
-  //   final IConsumer date = (IConsumer<Account, Long>) Account::setFooId;
-  //   final Account account =
-  //       query
-  //           .select(column)
-  //           .where(condition -> condition.eq(date, getId()))
-  //           .fetchOne(Account.class);
-  //   setAccount(account);
-  //   return account;
-  // }
-
   public enum Type implements InterEnum<Integer> {
     /** Type. */
     PHONE(0, "手机"),

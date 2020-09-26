@@ -28,9 +28,10 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
   /** The Clazz. */
   final Class<E> clazz;
   /** columnAlia:fieldName} */
-  Map<String, String> fieldAliaMap;
+  Map<String, String> fieldAliaMap = new HashMap<>();
 
-  private static final Map<Class<?>, WeakReference<List<Method>>> METHODS_MAP = new ConcurrentHashMap<>();
+  private static final Map<Class<?>, WeakReference<List<Method>>> METHODS_MAP =
+      new ConcurrentHashMap<>();
 
   /**
    * Instantiates a new Abstract result handler.
@@ -64,10 +65,12 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
                     return methods;
                   });
       // 这里由于查询所有字段使用了*,所以字段名不匹配的时候,无法赋值,为了兼容性,需要把*转换为具体的字段
-      this.fieldAliaMap =
-          queryColumns.stream()
-              .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
-              .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
+      if (queryColumns != null) {
+        this.fieldAliaMap =
+            queryColumns.stream()
+                .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
+                .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
+      }
     }
   }
 

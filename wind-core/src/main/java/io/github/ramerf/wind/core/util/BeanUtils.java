@@ -39,7 +39,6 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
  * @since 2019 /12/26
  */
 @Slf4j
-@SuppressWarnings({"unused"})
 public final class BeanUtils {
   /** 对象所有(包含父类)私有字段. */
   private static final Map<Class<?>, WeakReference<List<Field>>> PRIVATE_FIELDS_MAP =
@@ -198,10 +197,9 @@ public final class BeanUtils {
    * @param classPath the class path
    * @return the t
    */
-  @SuppressWarnings("unchecked")
   public static <T> T initial(final String classPath) {
     try {
-      return (T) initial(getClazz(classPath));
+      return initial(getClazz(classPath));
     } catch (Exception e) {
       log.warn("initial:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
@@ -434,7 +432,6 @@ public final class BeanUtils {
 }
 
 /** The type Ts. */
-@SuppressWarnings("unused")
 class Ts extends AbstractEntityPoJo {
   @Column(name = "alia")
   private String name;

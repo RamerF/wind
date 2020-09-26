@@ -59,13 +59,33 @@ public interface ResultHandler<T, E> {
     /** {@link BeanFunction#getImplClassFullPath()} :tableName */
     private static Map<String, WeakReference<String>> TABLE_NAME_MAP = new HashMap<>();
 
-    public static QueryAlia of(BeanFunction function, final String alia, String tableAlia) {
-      return of(function, alia, tableAlia, null);
+    public static QueryAlia of(BeanFunction function, final String columnAlia, String tableAlia) {
+      return of(function, columnAlia, null, tableAlia, null);
     }
 
     public static QueryAlia of(
         BeanFunction function,
-        final String alia,
+        final String columnAlia,
+        final String tableName,
+        final String tableAlia) {
+      return of(function, columnAlia, tableName, tableAlia, null);
+    }
+
+    public static QueryAlia of(
+        final String fieldName, final String columnAlia, String tableName, final String tableAlia) {
+      final QueryAlia queryAlia = new QueryAlia();
+      queryAlia.setFieldName(fieldName);
+      queryAlia.setColumnName(fieldName);
+      queryAlia.setColumnAlia(columnAlia);
+      queryAlia.setTableName(tableName);
+      queryAlia.setTableAlia(tableAlia);
+      return queryAlia;
+    }
+
+    public static QueryAlia of(
+        BeanFunction function,
+        final String columnAlia,
+        String tableName,
         final String tableAlia,
         final SqlFunction sqlFunction) {
       final QueryAlia queryAlia = new QueryAlia();
@@ -82,27 +102,30 @@ public interface ResultHandler<T, E> {
       */
       final String underlineField = StringUtils.camelToUnderline(fieldName);
       queryAlia.setColumnAlia(
-          StringUtils.nonEmpty(alia)
-              ? alia
+          StringUtils.nonEmpty(columnAlia)
+              ? columnAlia
               : columnName.equals(fieldName) ? columnName : underlineField);
 
       final String classFullPath = function.getImplClassFullPath();
       final String className = function.getImplClassName();
-      final String tableName =
-          Optional.ofNullable(TABLE_NAME_MAP.get(classFullPath))
-              .map(Reference::get)
-              .orElseGet(
-                  () -> {
-                    final Class<Object> clazz = BeanUtils.getClazz(function.getImplClassFullPath());
-                    final Entity entity = clazz.getAnnotation(Entity.class);
-                    // 表名: @Entity#name > 类名(驼封转下划线)
-                    final String name =
-                        Objects.nonNull(entity) && StringUtils.nonEmpty(entity.name())
-                            ? entity.name()
-                            : StringUtils.camelToUnderline(className);
-                    TABLE_NAME_MAP.put(classFullPath, new WeakReference<>(name));
-                    return name;
-                  });
+      if (StringUtils.isEmpty(tableName)) {
+        tableName =
+            Optional.ofNullable(TABLE_NAME_MAP.get(classFullPath))
+                .map(Reference::get)
+                .orElseGet(
+                    () -> {
+                      final Class<Object> clazz =
+                          BeanUtils.getClazz(function.getImplClassFullPath());
+                      final Entity entity = clazz.getAnnotation(Entity.class);
+                      // 表名: @Entity#name > 类名(驼封转下划线)
+                      final String name =
+                          Objects.nonNull(entity) && StringUtils.nonEmpty(entity.name())
+                              ? entity.name()
+                              : StringUtils.camelToUnderline(className);
+                      TABLE_NAME_MAP.put(classFullPath, new WeakReference<>(name));
+                      return name;
+                    });
+      }
       queryAlia.setTableName(tableName);
       queryAlia.setTableAlia(StringUtils.isEmpty(tableAlia) ? tableName : tableAlia);
       queryAlia.setSqlFunction(sqlFunction);

@@ -248,7 +248,7 @@ public final class EntityUtils {
     }
     // 关系字段默认是 nameId
     if (AbstractEntityPoJo.class.isAssignableFrom(field.getType())) {
-      return camelToUnderline(field.getName()).concat("Id");
+      return camelToUnderline(field.getName().concat("Id"));
     }
     return camelToUnderline(field.getName());
   }

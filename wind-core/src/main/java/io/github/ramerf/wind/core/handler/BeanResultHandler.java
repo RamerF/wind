@@ -2,9 +2,9 @@ package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.mapping.MappingType;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -15,8 +15,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.proxy.*;
 
 /**
  * @author Tang Xiaofeng
@@ -24,12 +24,15 @@ import org.springframework.cglib.proxy.*;
  */
 @Slf4j
 public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
+  /** 返回代理对象,支持自动查询关联对象. */
+  @Setter private boolean proxy;
   /** 方法对应的字段. */
   private static final Map<Method, WeakReference<Field>> METHODS_FIELD_MAP =
       new ConcurrentHashMap<>();
 
   public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
     super(clazz, queryColumns);
+    setProxy(true);
   }
 
   @Override
@@ -38,17 +41,8 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     if (CollectionUtils.isEmpty(map)) {
       return null;
     }
-    final E obj;
-    // 如果是AbstractEntityPoJo子类,返回代理,查询关联对象
-    if (AbstractEntityPoJo.class.isAssignableFrom(clazz) && fieldAliaMap.size() > 0) {
-      Enhancer enhancer = new Enhancer();
-      enhancer.setSuperclass(clazz);
-      enhancer.setCallback(new FetchMappingInterceptor<>(this, map));
-      //noinspection unchecked
-      obj = (E) enhancer.create();
-    } else {
-      obj = BeanUtils.initial(clazz);
-    }
+    final E obj = BeanUtils.initial(clazz);
+
     for (Method method : super.methods) {
       final String fieldName = BeanUtils.methodToProperty(method.getName());
       final String columnAlia = fieldAliaMap.get(fieldName);
@@ -86,6 +80,20 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
                           .map(Class::getSimpleName)
                           .orElse(null)));
     }
+    if (obj instanceof AbstractEntityPoJo) {
+      // 关联对象设置代理
+      EntityHelper.getEntityInfo(((AbstractEntityPoJo) obj).getClass())
+          .getMappingInfos()
+          .forEach(
+              mappingInfo ->
+                  BeanUtils.setValue(
+                      obj,
+                      mappingInfo.getField(),
+                      mappingInfo
+                          .getMappingType()
+                          .fetchMapping((AbstractEntityPoJo) obj, mappingInfo),
+                      null));
+    }
     return obj;
   }
 
@@ -98,42 +106,5 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
               METHODS_FIELD_MAP.put(method, new WeakReference<>(field));
               return field;
             });
-  }
-
-  public static class FetchMappingInterceptor<E> implements MethodInterceptor {
-    private final BeanResultHandler<?> resultHandler;
-    final Map<String, Object> map;
-
-    public FetchMappingInterceptor(
-        final BeanResultHandler<?> resultHandler, final Map<String, Object> map) {
-      this.resultHandler = resultHandler;
-      this.map = map;
-    }
-
-    @Override
-    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy)
-        throws Throwable {
-      // 只处理getXxx方法
-      if (!method.getName().startsWith("get")) {
-        return proxy.invokeSuper(obj, args);
-      }
-      final Field field =
-          resultHandler.getField(method, BeanUtils.methodToProperty(method.getName()));
-
-      // 只处理AbstractEntityPoJo子类和未标记为不抓取的字段
-      if (!AbstractEntityPoJo.class.isAssignableFrom(method.getReturnType())
-          || !EntityUtils.isNotDontFetch(field)) {
-        return proxy.invokeSuper(obj, args);
-      }
-      final Object relationValue = map.get(resultHandler.fieldAliaMap.get(field.getName()));
-      if (relationValue == null) {
-        return proxy.invokeSuper(obj, args);
-      }
-
-      // 查询关联字段
-      log.trace("get relation:[{}]", method.getName());
-      return MappingType.of(field)
-          .fetchMapping((AbstractEntityPoJo) obj, relationValue, method, field, proxy, args);
-    }
   }
 }

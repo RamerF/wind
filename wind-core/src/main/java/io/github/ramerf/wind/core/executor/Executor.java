@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.ICondition;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
+import io.github.ramerf.wind.core.handler.ResultHandler;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,6 +33,16 @@ public interface Executor {
    * @throws DataAccessException the data access exception
    */
   <R> R fetchOne(@Nonnull SqlParam sqlParam) throws DataAccessException;
+  /**
+   * Fetch one r.
+   *
+   * @param <R> the type parameter
+   * @param sqlParam the sql param
+   * @return the r
+   * @throws DataAccessException the data access exception
+   */
+  <R> R fetchOne(@Nonnull SqlParam sqlParam, ResultHandler<Map<String, Object>, R> resultHandler)
+      throws DataAccessException;
 
   /**
    * Fetch all list.
