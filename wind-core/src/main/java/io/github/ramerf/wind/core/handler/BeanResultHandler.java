@@ -15,7 +15,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -25,14 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
   /** 返回代理对象,支持自动查询关联对象. */
-  @Setter private boolean proxy;
   /** 方法对应的字段. */
   private static final Map<Method, WeakReference<Field>> METHODS_FIELD_MAP =
       new ConcurrentHashMap<>();
 
   public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
     super(clazz, queryColumns);
-    setProxy(true);
   }
 
   @Override
@@ -44,6 +41,11 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     final E obj = BeanUtils.initial(clazz);
 
     for (Method method : super.methods) {
+      // 跳过? !BeanUtils.isPrimitiveType(method.getReturnType())
+      if (AbstractEntityPoJo.class.isAssignableFrom(method.getParameterTypes()[0])) {
+        continue;
+      }
+
       final String fieldName = BeanUtils.methodToProperty(method.getName());
       final String columnAlia = fieldAliaMap.get(fieldName);
       Object value =
@@ -91,7 +93,10 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
                       mappingInfo.getField(),
                       mappingInfo
                           .getMappingType()
-                          .fetchMapping((AbstractEntityPoJo) obj, mappingInfo),
+                          .fetchMapping(
+                              (AbstractEntityPoJo) obj,
+                              mappingInfo,
+                              map.get(mappingInfo.getColumn())),
                       null));
     }
     return obj;

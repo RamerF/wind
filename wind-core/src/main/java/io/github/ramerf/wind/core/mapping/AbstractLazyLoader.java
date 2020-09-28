@@ -11,9 +11,11 @@ import org.springframework.cglib.proxy.LazyLoader;
 public abstract class AbstractLazyLoader implements LazyLoader {
   final AbstractEntityPoJo poJo;
   final MappingInfo mappingInfo;
+  final Object relationValue;
 
   public AbstractLazyLoader(final OneToOneFetch fetch) {
     this.poJo = fetch.poJo;
     this.mappingInfo = fetch.mappingInfo;
+    this.relationValue = fetch.relationValue;
   }
 }

@@ -32,35 +32,40 @@ public enum MappingType {
   /** The One to one. */
   ONE_TO_ONE {
     @Override
-    public <T> T fetchMapping(final AbstractEntityPoJo poJo, final MappingInfo mappingInfo) {
-      return (T) new OneToOneFetch(poJo, mappingInfo).getFetchProxy();
+    public <T> T fetchMapping(
+        final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
+      return (T) new OneToOneFetch(poJo, mappingInfo, relationValue).getFetchProxy();
     }
   },
   /** The One to many. */
   ONE_TO_MANY {
     @Override
-    public <T> T fetchMapping(final AbstractEntityPoJo poJo, final MappingInfo field) {
+    public <T> T fetchMapping(
+        final AbstractEntityPoJo poJo, final MappingInfo field, final Object relationValue) {
       return null;
     }
   },
   /** The Many to one. */
   MANY_TO_ONE {
     @Override
-    public <T> T fetchMapping(final AbstractEntityPoJo obj, final MappingInfo field) {
+    public <T> T fetchMapping(
+        final AbstractEntityPoJo obj, final MappingInfo field, final Object relationValue) {
       return null;
     }
   },
   /** The Many to many. */
   MANY_TO_MANY {
     @Override
-    public <T> T fetchMapping(final AbstractEntityPoJo obj, final MappingInfo field) {
+    public <T> T fetchMapping(
+        final AbstractEntityPoJo obj, final MappingInfo field, final Object relationValue) {
       return null;
     }
   },
   /** The None. */
   NONE {
     @Override
-    public <T> T fetchMapping(final AbstractEntityPoJo obj, final MappingInfo field) {
+    public <T> T fetchMapping(
+        final AbstractEntityPoJo obj, final MappingInfo field, final Object relationValue) {
       return null;
     }
   };
@@ -71,9 +76,11 @@ public enum MappingType {
    * @param <T> the type parameter
    * @param obj the obj
    * @param field the field
+   * @param relationValue
    * @return the t
    */
-  public abstract <T> T fetchMapping(final AbstractEntityPoJo obj, final MappingInfo field);
+  public abstract <T> T fetchMapping(
+      final AbstractEntityPoJo obj, final MappingInfo field, final Object relationValue);
 
   /**
    * Of mapping type.

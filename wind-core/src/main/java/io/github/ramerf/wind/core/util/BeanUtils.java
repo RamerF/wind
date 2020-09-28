@@ -5,6 +5,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.*;
 import java.beans.FeatureDescriptor;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -159,14 +160,11 @@ public final class BeanUtils {
         .map(Reference::get)
         .orElseGet(
             () -> {
+              final BeanWrapperImpl wrapper = new BeanWrapperImpl(clazz);
               final List<Method> methods =
-                  Arrays.stream(clazz.getMethods())
-                      .filter(method -> method.getParameterTypes().length > 0)
-                      .filter(
-                          method -> {
-                            final String name = method.getName();
-                            return name.startsWith("set") || name.startsWith("is");
-                          })
+                  Arrays.stream(wrapper.getPropertyDescriptors())
+                      .filter(o -> wrapper.isWritableProperty(o.getName()))
+                      .map(PropertyDescriptor::getWriteMethod)
                       .collect(toList());
               WRITE_METHOD_MAP.put(clazz, new WeakReference<>(methods));
               return methods;

@@ -18,6 +18,7 @@ import static io.github.ramerf.wind.core.factory.QueryColumnFactory.fromClass;
  * @since 2020.09.26
  * @author Tang Xiaofeng
  */
+@Slf4j
 public class OneToOneFetch {
   /** The Po jo. */
   @Getter final AbstractEntityPoJo poJo;
@@ -25,15 +26,22 @@ public class OneToOneFetch {
   /** The Field. */
   @Getter final MappingInfo mappingInfo;
 
+  @Getter final Object relationValue;
+
   /**
    * Instantiates a new One to one fetch.
    *
    * @param poJo the po jo
    * @param mappingInfo the mappingInfo
+   * @param relationValue the relation value
+   * @since 2020.09.28
+   * @author Tang Xiaofeng
    */
-  public OneToOneFetch(final AbstractEntityPoJo poJo, final MappingInfo mappingInfo) {
+  public OneToOneFetch(
+      final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
     this.poJo = poJo;
     this.mappingInfo = mappingInfo;
+    this.relationValue = relationValue;
   }
 
   /**
@@ -42,6 +50,11 @@ public class OneToOneFetch {
    * @return the fetch proxy
    */
   public Object getFetchProxy() {
+    log.info("add:[{}]", Thread.currentThread().getName());
+    if (ThreadLocalMappingFetch.loopFetch(mappingInfo, relationValue)) {
+      ThreadLocalMappingFetch.clear();
+      return null;
+    }
     return Enhancer.create(mappingInfo.getReferenceClazz(), new OneToOneLazyLoader(this));
   }
 
@@ -64,22 +77,22 @@ public class OneToOneFetch {
 
     @Override
     public Object loadObject() {
+      ThreadLocalMappingFetch.add(poJo, mappingInfo, relationValue);
+      @SuppressWarnings("unchecked")
+      final Class<AbstractEntityPoJo> clazz =
+          (Class<AbstractEntityPoJo>) mappingInfo.getReferenceClazz();
       final Optional<MappingInfo> optional =
           EntityMapping.get(poJo.getClass(), mappingInfo.getReferenceField());
       if (!optional.isPresent()) {
         return null;
       }
-
       final MappingInfo mappingInfo = optional.get();
+      // TODO-WARN 这里有问题 relationValue
       final Object value =
           mappingInfo.getReferenceColumn().equals("id")
               ? poJo.getId()
               : BeanUtils.getValue(poJo, mappingInfo.getField(), null);
-      @SuppressWarnings("unchecked")
-      final Class<AbstractEntityPoJo> clazz =
-          (Class<AbstractEntityPoJo>) mappingInfo.getReferenceClazz();
       final BeanResultHandler<AbstractEntityPoJo> handler = new BeanResultHandler<>(clazz, null);
-      handler.setProxy(false);
       @SuppressWarnings("unchecked")
       final Object mapping =
           Query.getInstance()
