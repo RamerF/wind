@@ -87,10 +87,9 @@ public class OneToOneFetch {
         return null;
       }
       final MappingInfo mappingInfo = optional.get();
-      // TODO-WARN 这里有问题 relationValue
       final Object value =
           mappingInfo.getReferenceColumn().equals("id")
-              ? poJo.getId()
+              ? relationValue
               : BeanUtils.getValue(poJo, mappingInfo.getField(), null);
       final BeanResultHandler<AbstractEntityPoJo> handler = new BeanResultHandler<>(clazz, null);
       @SuppressWarnings("unchecked")
