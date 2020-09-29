@@ -1,10 +1,12 @@
 package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.executor.Query;
+import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import java.lang.reflect.Field;
 import javax.annotation.Nonnull;
-import javax.persistence.*;
+import javax.persistence.OneToOne;
 
 /**
  * The enum Mapping type.
@@ -28,20 +30,27 @@ import javax.persistence.*;
  */
 @SuppressWarnings({"unchecked", "DuplicatedCode"})
 public enum MappingType {
-
   /** The One to one. */
   ONE_TO_ONE {
     @Override
     public <T> T fetchMapping(
         final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
-      return (T) new OneToOneFetch(poJo, mappingInfo, relationValue).getFetchProxy();
+      final Class<?> type = mappingInfo.getReferenceClazz();
+      @SuppressWarnings("unchecked")
+      final Object mapping =
+          Query.getInstance()
+              .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
+              .stringWhere(
+                  condition -> condition.eq(mappingInfo.getReferenceField(), relationValue))
+              .fetchOne(type);
+      return (T) mapping;
     }
   },
   /** The One to many. */
   ONE_TO_MANY {
     @Override
     public <T> T fetchMapping(
-        final AbstractEntityPoJo poJo, final MappingInfo field, final Object relationValue) {
+        final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
       return null;
     }
   },
@@ -49,7 +58,7 @@ public enum MappingType {
   MANY_TO_ONE {
     @Override
     public <T> T fetchMapping(
-        final AbstractEntityPoJo obj, final MappingInfo field, final Object relationValue) {
+        final AbstractEntityPoJo obj, final MappingInfo mappingInfo, final Object relationValue) {
       return null;
     }
   },
@@ -57,7 +66,7 @@ public enum MappingType {
   MANY_TO_MANY {
     @Override
     public <T> T fetchMapping(
-        final AbstractEntityPoJo obj, final MappingInfo field, final Object relationValue) {
+        final AbstractEntityPoJo obj, final MappingInfo mappingInfo, final Object relationValue) {
       return null;
     }
   },
@@ -65,22 +74,23 @@ public enum MappingType {
   NONE {
     @Override
     public <T> T fetchMapping(
-        final AbstractEntityPoJo obj, final MappingInfo field, final Object relationValue) {
+        final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
       return null;
     }
-  };
+  },
+  ;
 
   /**
    * Fetch mapping t.
    *
    * @param <T> the type parameter
-   * @param obj the obj
-   * @param field the field
-   * @param relationValue
+   * @param poJo the po jo
+   * @param mappingInfo the mapping info
+   * @param relationValue the relation value
    * @return the t
    */
   public abstract <T> T fetchMapping(
-      final AbstractEntityPoJo obj, final MappingInfo field, final Object relationValue);
+      final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue);
 
   /**
    * Of mapping type.
@@ -92,15 +102,15 @@ public enum MappingType {
     if (field.isAnnotationPresent(OneToOne.class)) {
       return ONE_TO_ONE;
     }
-    if (field.isAnnotationPresent(OneToMany.class)) {
-      return ONE_TO_MANY;
-    }
-    if (field.isAnnotationPresent(ManyToOne.class)) {
-      return MANY_TO_ONE;
-    }
-    if (field.isAnnotationPresent(ManyToMany.class)) {
-      return MANY_TO_MANY;
-    }
+    // if (field.isAnnotationPresent(OneToMany.class)) {
+    //   return ONE_TO_MANY;
+    // }
+    // if (field.isAnnotationPresent(ManyToOne.class)) {
+    //   return MANY_TO_ONE;
+    // }
+    // if (field.isAnnotationPresent(ManyToMany.class)) {
+    //   return MANY_TO_MANY;
+    // }
     return NONE;
   }
 }

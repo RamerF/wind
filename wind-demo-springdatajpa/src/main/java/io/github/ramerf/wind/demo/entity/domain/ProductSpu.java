@@ -10,19 +10,20 @@ import lombok.experimental.SuperBuilder;
  * @since 12/09/2020
  */
 @Entity
-// @Data
+@Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = "product")
 public class ProductSpu extends AbstractEntityPoJo {
 
   private String address;
 
   @OneToOne
-  @JoinColumn(name = "",referencedColumnName = "")
+  @JoinColumn(name = "product_id")
   private Product product;
 
+  @Column(name = "product_id", insertable = false, updatable = false)
   private Long productId;
 }

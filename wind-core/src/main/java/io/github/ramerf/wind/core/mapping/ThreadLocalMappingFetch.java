@@ -25,6 +25,9 @@ public class ThreadLocalMappingFetch {
   private static final ThreadLocal<List<LocalFetchObject>> localFetchObject =
       ThreadLocal.withInitial(ArrayList::new);
 
+  private static final ThreadLocal<Map<CachedObject, Object>> localCachedObject =
+      ThreadLocal.withInitial(HashMap::new);
+
   /**
    * Add.
    *
@@ -63,6 +66,7 @@ public class ThreadLocalMappingFetch {
   public static void clear() {
     localChain.remove();
     localFetchObject.remove();
+    localCachedObject.remove();
   }
 
   /**
@@ -120,6 +124,33 @@ public class ThreadLocalMappingFetch {
     @Override
     public int hashCode() {
       return Objects.hash(poJo, mappingInfo, relationValue);
+    }
+  }
+
+  public static void putObject(final AbstractEntityPoJo object, final Object id) {
+    localCachedObject.get().put(CachedObject.of(object.getClass(), id), object);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T extends AbstractEntityPoJo> T getObject(
+      final Class<? extends AbstractEntityPoJo> clazz, final Object id) {
+    return (T) localCachedObject.get().get(CachedObject.of(clazz, id));
+  }
+
+  public static boolean isCached(final Class<? extends AbstractEntityPoJo> clazz, final Object id) {
+    return localCachedObject.get().containsKey(CachedObject.of(clazz, id));
+  }
+
+  public static class CachedObject {
+    private Class<? extends AbstractEntityPoJo> clazz;
+    private Object id;
+
+    public static CachedObject of(
+        final Class<? extends AbstractEntityPoJo> clazz, final Object id) {
+      final CachedObject object = new CachedObject();
+      object.clazz = clazz;
+      object.id = id;
+      return object;
     }
   }
 }

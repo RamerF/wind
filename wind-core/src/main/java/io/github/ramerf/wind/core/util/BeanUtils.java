@@ -3,13 +3,14 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.condition.QueryEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.*;
+import io.github.ramerf.wind.core.function.BeanFunction;
 import java.beans.FeatureDescriptor;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
@@ -19,8 +20,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.*;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -375,10 +375,7 @@ public final class BeanUtils {
    * @param consumer 异常时的处理,默认返回null
    */
   public static void setValue(
-      final Object obj,
-      final Field field,
-      final Object value,
-      Function<Exception, Object> consumer) {
+      final Object obj, final Field field, final Object value, Consumer<Exception> consumer) {
     try {
       if (!field.isAccessible()) {
         field.setAccessible(true);
@@ -386,7 +383,7 @@ public final class BeanUtils {
       field.set(obj, value);
     } catch (Exception e) {
       if (consumer != null) {
-        consumer.apply(e);
+        consumer.accept(e);
       } else {
         throw CommonException.of(e);
       }
@@ -409,6 +406,12 @@ public final class BeanUtils {
         || URL.class == clazz
         || Locale.class == clazz
         || Class.class == clazz);
+  }
+
+  /** Call {@link org.springframework.beans.BeanUtils#copyProperties(Object, Object, String...)} */
+  public static void copyProperties(Object source, Object target, String... ignoreProperties)
+      throws BeansException {
+    org.springframework.beans.BeanUtils.copyProperties(source, target, ignoreProperties);
   }
 
   /**

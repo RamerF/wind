@@ -5,7 +5,7 @@ import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.handler.BeanResultHandler;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.BeanUtils;
-import java.util.Optional;
+import java.util.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.Enhancer;
@@ -49,13 +49,12 @@ public class OneToOneFetch {
    *
    * @return the fetch proxy
    */
-  public Object getFetchProxy() {
-    log.info("add:[{}]", Thread.currentThread().getName());
-    if (ThreadLocalMappingFetch.loopFetch(mappingInfo, relationValue)) {
-      ThreadLocalMappingFetch.clear();
-      return null;
-    }
-    return Enhancer.create(mappingInfo.getReferenceClazz(), new OneToOneLazyLoader(this));
+  public <T extends AbstractEntityPoJo> T getFetchProxy() {
+    // if (ThreadLocalMappingFetch.loopFetch(mappingInfo, relationValue)) {
+    //   ThreadLocalMappingFetch.clear();
+    //   return null;
+    // }
+    return (T) Enhancer.create(mappingInfo.getReferenceClazz(), new OneToOneLazyLoader(this));
   }
 
   /**
@@ -66,6 +65,9 @@ public class OneToOneFetch {
    */
   @Slf4j
   public static class OneToOneLazyLoader extends AbstractLazyLoader {
+    private static final Map<Class<? extends AbstractEntityPoJo>, Object> EMPTY_POJO =
+        new WeakHashMap<>();
+
     /**
      * Instantiates a new One to one lazy loader.
      *
@@ -77,14 +79,14 @@ public class OneToOneFetch {
 
     @Override
     public Object loadObject() {
-      ThreadLocalMappingFetch.add(poJo, mappingInfo, relationValue);
+      // ThreadLocalMappingFetch.add(poJo, mappingInfo, relationValue);
       @SuppressWarnings("unchecked")
       final Class<AbstractEntityPoJo> clazz =
           (Class<AbstractEntityPoJo>) mappingInfo.getReferenceClazz();
       final Optional<MappingInfo> optional =
-          EntityMapping.get(poJo.getClass(), mappingInfo.getReferenceField());
+          EntityMapping.get(poJo.getClass(), mappingInfo.getField());
       if (!optional.isPresent()) {
-        return null;
+        return getEmptyPoJo(clazz);
       }
       final MappingInfo mappingInfo = optional.get();
       final Object value =
@@ -98,7 +100,13 @@ public class OneToOneFetch {
               .select(fromClass(clazz))
               .stringWhere(condition -> condition.eq(mappingInfo, value))
               .fetchOne(clazz, handler);
-      return mapping;
+      return mapping == null ? getEmptyPoJo(clazz) : mapping;
+    }
+
+    public static <T extends AbstractEntityPoJo> T getEmptyPoJo(
+        Class<? extends AbstractEntityPoJo> clazz) {
+      //noinspection unchecked
+      return (T) EMPTY_POJO.putIfAbsent(clazz, BeanUtils.initial(clazz));
     }
   }
 }
