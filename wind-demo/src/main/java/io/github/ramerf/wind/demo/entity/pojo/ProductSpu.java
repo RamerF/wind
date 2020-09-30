@@ -23,4 +23,6 @@ public class ProductSpu extends AbstractEntityPoJo {
   @OneToOne @JoinColumn private Product product;
 
   private Long productId;
+
+  @OneToOne private ProductSpuCode productSpuCode;
 }

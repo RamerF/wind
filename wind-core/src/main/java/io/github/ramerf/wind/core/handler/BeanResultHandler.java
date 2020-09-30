@@ -25,12 +25,24 @@ import org.springframework.cglib.proxy.*;
  */
 @Slf4j
 public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
+  private boolean bindProxy = true;
+
   /** 方法对应的字段. */
   private static final Map<Method, WeakReference<Field>> METHODS_FIELD_MAP =
       new ConcurrentHashMap<>();
 
   public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
     super(clazz, queryColumns);
+  }
+
+  public BeanResultHandler(@Nonnull final Class<E> clazz, final QueryColumn<?>... queryColumns) {
+    super(clazz, queryColumns);
+  }
+
+  public BeanResultHandler(
+      @Nonnull final Class<E> clazz, boolean bindProxy, final QueryColumn<?>... queryColumns) {
+    super(clazz, queryColumns);
+    this.bindProxy = bindProxy;
   }
 
   @Override
@@ -44,7 +56,9 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     for (Method method : super.methods) {
       final String fieldName = BeanUtils.methodToProperty(method.getName());
       final Field field = getField(method, fieldName);
-      if (isPoJo && AbstractEntityPoJo.class.isAssignableFrom(method.getParameterTypes()[0])) {
+      if (bindProxy
+          && isPoJo
+          && AbstractEntityPoJo.class.isAssignableFrom(method.getParameterTypes()[0])) {
         setMappingObject(map, obj, method, fieldName, field);
         continue;
       }

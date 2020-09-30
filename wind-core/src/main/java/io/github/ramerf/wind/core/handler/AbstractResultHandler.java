@@ -46,6 +46,16 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
   }
 
   /**
+   * Instantiates a new Abstract result handler.
+   *
+   * @param clazz the clazz
+   */
+  public AbstractResultHandler(
+      @Nonnull final Class<E> clazz, @Nonnull final QueryColumn<?>... queryColumns) {
+    this(clazz, Arrays.asList(queryColumns), true);
+  }
+
+  /**
    * 初始化数据.
    *
    * @param clazz 支持转换的对象

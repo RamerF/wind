@@ -153,7 +153,7 @@ public class EntityMapping {
   }
 
   /** 获取CGLIB代理目标对象,截取(0,$$)之间的字符. */
-  private static <T extends AbstractEntityPoJo> Class<T> getCglibProxyTarget(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo> Class<T> getCglibProxyTarget(final Class<T> clazz) {
     String name = clazz.getName();
     final int index = name.indexOf("$$");
     return BeanUtils.getClazz(index != -1 ? name.substring(0, index) : name);

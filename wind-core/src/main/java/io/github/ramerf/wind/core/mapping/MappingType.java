@@ -6,7 +6,7 @@ import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import java.lang.reflect.Field;
 import javax.annotation.Nonnull;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
 /**
  * The enum Mapping type.
@@ -102,15 +102,15 @@ public enum MappingType {
     if (field.isAnnotationPresent(OneToOne.class)) {
       return ONE_TO_ONE;
     }
-    // if (field.isAnnotationPresent(OneToMany.class)) {
-    //   return ONE_TO_MANY;
-    // }
-    // if (field.isAnnotationPresent(ManyToOne.class)) {
-    //   return MANY_TO_ONE;
-    // }
-    // if (field.isAnnotationPresent(ManyToMany.class)) {
-    //   return MANY_TO_MANY;
-    // }
+    if (field.isAnnotationPresent(OneToMany.class)) {
+      return ONE_TO_MANY;
+    }
+    if (field.isAnnotationPresent(ManyToOne.class)) {
+      return MANY_TO_ONE;
+    }
+    if (field.isAnnotationPresent(ManyToMany.class)) {
+      return MANY_TO_MANY;
+    }
     return NONE;
   }
 }

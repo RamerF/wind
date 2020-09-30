@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.mapping;
 
+import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.handler.BeanResultHandler;
@@ -93,11 +94,13 @@ public class OneToOneFetch {
           mappingInfo.getReferenceColumn().equals("id")
               ? relationValue
               : BeanUtils.getValue(poJo, mappingInfo.getField(), null);
-      final BeanResultHandler<AbstractEntityPoJo> handler = new BeanResultHandler<>(clazz, null);
+      final QueryColumn<AbstractEntityPoJo> queryColumn = fromClass(clazz);
+      final BeanResultHandler<AbstractEntityPoJo> handler =
+          new BeanResultHandler<>(clazz, false, queryColumn);
       @SuppressWarnings("unchecked")
       final Object mapping =
           Query.getInstance()
-              .select(fromClass(clazz))
+              .select(queryColumn)
               .stringWhere(condition -> condition.eq(mappingInfo, value))
               .fetchOne(clazz, handler);
       return mapping == null ? getEmptyPoJo(clazz) : mapping;

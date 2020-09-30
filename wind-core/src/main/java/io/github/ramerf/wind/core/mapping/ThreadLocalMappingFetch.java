@@ -127,8 +127,11 @@ public class ThreadLocalMappingFetch {
     }
   }
 
-  public static void putObject(final AbstractEntityPoJo object, final Object id) {
-    localCachedObject.get().put(CachedObject.of(object.getClass(), id), object);
+  public static void putObject(final AbstractEntityPoJo object, final Object relationValue) {
+    final Class<? extends AbstractEntityPoJo> target =
+        EntityMapping.getCglibProxyTarget(object.getClass());
+    log.info("putObject:[{}]", target.getName());
+    localCachedObject.get().put(CachedObject.of(target, relationValue), object);
   }
 
   @SuppressWarnings("unchecked")
