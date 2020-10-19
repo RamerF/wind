@@ -1,6 +1,8 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
+import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.lang.ref.Reference;
@@ -44,6 +46,16 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
   }
 
   /**
+   * Instantiates a new Abstract result handler.
+   *
+   * @param clazz the clazz
+   */
+  public AbstractResultHandler(
+      @Nonnull final Class<E> clazz, @Nonnull final QueryColumn<?>... queryColumns) {
+    this(clazz, Arrays.asList(queryColumns), true);
+  }
+
+  /**
    * 初始化数据.
    *
    * @param clazz 支持转换的对象
@@ -69,6 +81,15 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
         this.fieldAliaMap =
             queryColumns.stream()
                 .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
+                .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
+      } else if (AbstractEntity.class.isAssignableFrom(clazz)) {
+        @SuppressWarnings("unchecked")
+        final Class<AbstractEntity> entityClass = (Class<AbstractEntity>) clazz;
+        this.fieldAliaMap =
+            QueryColumnFactory.fromClass(entityClass)
+                .getQueryEntityMetaData()
+                .getQueryAlias()
+                .stream()
                 .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
       }
     }

@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.demo.entity.domain;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import java.util.List;
 import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -11,23 +10,17 @@ import lombok.experimental.SuperBuilder;
  * @since 12/09/2020
  */
 @Entity
-// @Data
+@Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = "productSpu")
 @EqualsAndHashCode(callSuper = true)
 public class Product extends AbstractEntityPoJo {
 
   private String name;
 
-  @OneToOne
-  @JoinColumn(referencedColumnName = "product_id")
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "product_spu_id")
   private ProductSpu productSpu;
-
-  @Setter @ManyToMany @JoinTable private List<ProductCategory> categories;
-
-  public List<ProductCategory> getCategories() {
-    return categories;
-  }
 }

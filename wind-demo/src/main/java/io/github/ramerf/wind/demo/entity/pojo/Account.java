@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.util.Date;
 import javax.persistence.Column;
+import javax.persistence.ManyToOne;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -38,5 +39,5 @@ public class Account extends AbstractEntityPoJo {
   @UpdateTimestamp
   private Date updateDate;
 
-  private Long fooId;
+  @ManyToOne private Organize organize;
 }
