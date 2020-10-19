@@ -2,7 +2,6 @@ package io.github.ramerf.wind.demo.controller;
 
 import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.condition.SortColumn.Order;
-import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.helper.ControllerHelper;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -48,7 +47,7 @@ public class FooController {
     if (bindingResult.hasErrors()) {
       return Rs.fail(collect(bindingResult));
     }
-    return ControllerHelper.create(service, fooRequest.poJo(), ResultCode.ERROR);
+    return ControllerHelper.create(service, fooRequest.poJo());
   }
 
   @PostMapping(value = "/create", params = "type=2")
@@ -75,15 +74,16 @@ public class FooController {
   @GetMapping(value = "/detail/{id}", params = "type=2")
   @ApiOperation("查询,根据id获取详情,并转换为response")
   public ResponseEntity<Rs<FooResponse>> detail2(@PathVariable("id") final long id) {
-    /// 🤔🤔🤔🤔🤔🤔😉
-    // ControllerHelper.detail(
-    //     service,
-    //     id,
-    //     foo -> {
-    //       // foo为方法service.getById的返回值,可以在这里组装业务返回对象
-    //       log.info("detail2:[{}]", foo);
-    //       return foo;
-    //     });
+    /* /
+    ControllerHelper.detail(
+         service,
+         id,
+         foo -> {
+           // foo为方法service.getById的返回值,可以在这里组装业务返回对象
+           log.info("detail2:[{}]", foo);
+           return foo;
+         });
+    */
     return ControllerHelper.detail(service, id, FooResponse::of);
   }
 
@@ -190,30 +190,6 @@ public class FooController {
   @ApiOperation("删除,根据id删除")
   public ResponseEntity<Rs<Object>> delete(@PathVariable("id") final long id) {
     return ControllerHelper.delete(service, id);
-  }
-
-  @PostMapping(value = "/delete/{id}", params = "type=2")
-  @ApiOperation("删除,自定义删除,不带返回值")
-  public ResponseEntity<Rs<String>> delete2(@PathVariable("id") final long id) {
-    return ControllerHelper.exec(
-        () -> service.delete(id),
-        () -> {
-          // 这里处理业务逻辑,成功时的返回信息
-          return Rs.ok(ResCode.FOO_SUCCESS_DELETE);
-        },
-        ResCode.FOO_FAIL_DELETE);
-  }
-
-  @PostMapping(value = "/delete/{id}", params = "type=3")
-  @ApiOperation("删除,自定义删除,带返回值")
-  public ResponseEntity<Rs<String>> delete3(@PathVariable("id") final long id) {
-    return ControllerHelper.exec(
-        service.delete(condition -> condition.eq(Foo::setId, id)),
-        result -> {
-          // 这里处理业务逻辑,成功时的返回信息
-          return Rs.ok(ResCode.FOO_SUCCESS_DELETE);
-        },
-        ResCode.FOO_FAIL_DELETE);
   }
 
   @PostMapping(value = "/deleteByIds")

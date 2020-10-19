@@ -4,10 +4,12 @@ import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
+import lombok.Data;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -178,6 +180,33 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
   default Optional<Integer> updateBatchWithNull(
       final List<T> ts, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
     return getUpdate().updateBatchWithNull(ts, includeNullProps);
+  }
+
+  /** 更新指定字段. */
+  default void updateField(final T obj, final Consumer<EntityFields<T>> fields) {
+    final EntityFields<T> entityFields = new EntityFields<>();
+    fields.accept(entityFields);
+    final List<IFunction<T, ?>> iFunctions = entityFields.getMethodFunctions();
+    iFunctions.get(0).apply(obj);
+    final EntityInfo entityInfo = getUpdate().entityInfo;
+    final String sql = "update %s set %s where %s";
+    final StringBuilder columnBuilder = new StringBuilder();
+    final StringBuilder valueBuilder = new StringBuilder();
+    for (final IFunction<T, ?> function : iFunctions) {
+      final String column = function.getColumn();
+    }
+
+    // TODO-WARN 更新指定字段,走普通update一样的流程就行了,可以多个参数指定更新条件,否则根据id更新
+  }
+
+  @Data
+  class EntityFields<T> {
+    private List<IFunction<T, ?>> methodFunctions;
+
+    public EntityFields<T> add(final IFunction<T, ?> methodFunction) {
+      methodFunctions.add(methodFunction);
+      return this;
+    }
   }
 
   /**

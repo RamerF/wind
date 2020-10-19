@@ -68,6 +68,11 @@ public class Foo extends AbstractEntityPoJo {
   /** Integer[]可对应数据库类型 int[] */
   private Integer[] intArr;
 
+  private boolean isNumber;
+  private boolean string;
+  private Boolean isNull;
+  private Boolean nonNull;
+
   public enum Type implements InterEnum<Integer> {
     /** Type. */
     PHONE(0, "手机"),

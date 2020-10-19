@@ -72,9 +72,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
    * @return the T
    */
   default T getById(final long id) {
-    final QueryColumn<T> queryColumn = getQueryColumn();
-    final ICondition<T> condition = queryColumn.getCondition().eq(AbstractEntityPoJo::setId, id);
-    return getQuery().select(queryColumn).where(condition).fetchOne(getPoJoClass());
+    return getOne(null, condition -> condition.eq(AbstractEntityPoJo::setId, id), getPoJoClass());
   }
 
   /**

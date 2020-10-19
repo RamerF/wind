@@ -54,16 +54,27 @@ public interface BeanFunction extends Serializable {
         .orElseGet(
             () -> {
               final SerializedLambda lambda = LambdaUtils.serializedLambda(this);
-              final Field field;
+              final String methodName = lambda.getImplMethodName();
+              final String classPath = getImplClassFullPath();
+              final String property = BeanUtils.methodToProperty(methodName);
+              Field field;
               try {
-                field =
-                    BeanUtils.getClazz(getImplClassFullPath())
-                        .getDeclaredField(BeanUtils.methodToProperty(lambda.getImplMethodName()));
+                field = BeanUtils.getClazz(classPath).getDeclaredField(property);
                 LAMBDA_FIELD_MAP.put(this, new WeakReference<>(field));
-              } catch (Exception e) {
-                log.warn("getField:cannot get field from lambda[{}]", e.getMessage());
-                log.error(e.getMessage(), e);
-                throw CommonException.of(e.getMessage(), e);
+              } catch (Exception ex) {
+                try {
+                  field =
+                      BeanUtils.getClazz(classPath)
+                          .getDeclaredField("is" + StringUtils.firstUppercase(property));
+                  LAMBDA_FIELD_MAP.put(this, new WeakReference<>(field));
+                } catch (Exception e) {
+                  log.warn(
+                      "getField:cannot get field from lambda[{},{}]",
+                      ex.getMessage(),
+                      e.getMessage());
+                  log.error(e.getMessage(), e);
+                  throw CommonException.of(e.getMessage(), e);
+                }
               }
               return field;
             });

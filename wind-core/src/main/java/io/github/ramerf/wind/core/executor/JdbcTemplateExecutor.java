@@ -258,8 +258,7 @@ public class JdbcTemplateExecutor implements Executor {
     }
     final String key = cache.generateKey(sqlParam, methodName);
     // 命中缓存
-    // TODO-WARN ASM
-    // TODO-WARN ASM
+    // TODO-WARN 测试
     // if (cache.isKeyExist(key)) {
     if (false) {
       if (log.isDebugEnabled()) {

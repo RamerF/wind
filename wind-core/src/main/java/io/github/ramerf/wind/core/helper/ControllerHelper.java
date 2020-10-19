@@ -46,15 +46,10 @@ public final class ControllerHelper {
    * @param <T> the type parameter
    * @param invoke the invoke
    * @param entity the entity
-   * @param error 执行失败时的错误码,可以为null
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<Object>> create(final S invoke, final T entity, final ResultCode error) {
-    try {
-      return Rs.ok(json().put("id", invoke.create(entity)));
-    } catch (Exception e) {
-      return Rs.fail(Objects.nonNull(error) ? error : ResultCode.API_FAIL_EXEC_CREATE);
-    }
+      ResponseEntity<Rs<Object>> create(final S invoke, final T entity) {
+    return Rs.ok(json().put("id", invoke.create(entity)));
   }
 
   /**
@@ -74,11 +69,7 @@ public final class ControllerHelper {
     if (bindingResult.hasErrors()) {
       return fail(collect(bindingResult));
     }
-    try {
-      return ok(json().put("id", invoke.create(entity)), ResultCode.API_SUCCESS_EXEC_CREATE.desc());
-    } catch (Exception e) {
-      return errorResponse(e);
-    }
+    return ok(json().put("id", invoke.create(entity)), ResultCode.API_SUCCESS_EXEC_CREATE.desc());
   }
 
   /**
@@ -179,14 +170,10 @@ public final class ControllerHelper {
       return fail(collect(bindingResult));
     }
     entity.setId(id);
-    try {
-      final int update = invoke.update(entity);
-      return update == 1
-          ? notExist(String.valueOf(id))
-          : ok(json().put("id", entity.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
-    } catch (Exception e) {
-      return errorResponse(e);
-    }
+    final int update = invoke.update(entity);
+    return update == 1
+        ? notExist(String.valueOf(id))
+        : ok(json().put("id", entity.getId()), ResultCode.API_SUCCESS_EXEC_UPDATE.desc());
   }
 
   /**
@@ -240,16 +227,12 @@ public final class ControllerHelper {
           final T entity,
           final ResultCode successCode,
           final ResultCode errorCode) {
-    try {
-      final int update = invoke.update(entity);
-      return update == 1
-          ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
-          : Objects.nonNull(successCode)
-              ? ok(json().put("id", entity.getId()), successCode)
-              : ok(json().put("id", entity.getId()));
-    } catch (Exception e) {
-      return fail(Objects.nonNull(errorCode) ? errorCode : ResultCode.API_FAIL_EXEC_UPDATE);
-    }
+    final int update = invoke.update(entity);
+    return update == 1
+        ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
+        : Objects.nonNull(successCode)
+            ? ok(json().put("id", entity.getId()), successCode)
+            : ok(json().put("id", entity.getId()));
   }
 
   /**
@@ -295,63 +278,8 @@ public final class ControllerHelper {
     if (id < 1) {
       return wrongFormat("id");
     }
-    try {
-      invoke.delete(id);
-    } catch (Exception e) {
-      return errorResponse(e);
-    }
+    invoke.delete(id);
     return ok(ResultCode.API_SUCCESS_EXEC_DELETE);
-  }
-
-  /**
-   * 执行写操作,不包含返回值.
-   *
-   * @param <S> the service
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param runnable 执行写操作
-   * @param success 成功后执行方法
-   * @param errorCode 执行失败时的错误码,可以为null
-   * @return the response entity
-   */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<String>> exec(
-          final Runnable runnable,
-          final Supplier<ResponseEntity<Rs<String>>> success,
-          final ResultCode errorCode) {
-    try {
-      runnable.run();
-      return success.get();
-    } catch (Exception e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
-      return fail(Objects.nonNull(errorCode) ? errorCode : ResultCode.API_FAIL_EXEC_DELETE);
-    }
-  }
-
-  /**
-   * 执行写操作,包含返回值.
-   *
-   * @param <S> the service
-   * @param <T> the type parameter
-   * @param <R> the type parameter
-   * @param result 执行写操作后的结果
-   * @param function 返回结果处理,入参为写操作返回结果
-   * @param errorCode 执行失败时的错误码,可以为null
-   * @return the response entity
-   */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<String>> exec(
-          final R result,
-          final Function<R, ResponseEntity<Rs<String>>> function,
-          final ResultCode errorCode) {
-    try {
-      return function.apply(result);
-    } catch (Exception e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
-      return fail(Objects.nonNull(errorCode) ? errorCode : ResultCode.API_FAIL_EXEC_DELETE);
-    }
   }
 
   /**
@@ -365,11 +293,7 @@ public final class ControllerHelper {
    */
   public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
       ResponseEntity<Rs<String>> deleteByIds(final S invoke, final List<Long> ids) {
-    try {
-      invoke.deleteByIds(ids);
-    } catch (Exception e) {
-      return errorResponse(e);
-    }
+    invoke.deleteByIds(ids);
     return ok(ResultCode.API_SUCCESS_EXEC_DELETE);
   }
 
@@ -474,21 +398,17 @@ public final class ControllerHelper {
     // 额外处理,比如敏感词过滤
     entity.redundantValue(poJo);
     log.debug("createOrUpdate:[{}]", poJo);
-    try {
-      long affectRow = create ? invoke.create(poJo) > 0 ? 1 : 0 : invoke.update(poJo);
-      return affectRow == 1
-          ? ok(
-              json().put("id", poJo.getId()),
-              create
-                  ? ResultCode.API_SUCCESS_EXEC_CREATE.desc()
-                  : ResultCode.API_SUCCESS_EXEC_UPDATE.desc())
-          : fail(
-              create
-                  ? ResultCode.API_FAIL_EXEC_CREATE.desc()
-                  : ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST.desc());
-    } catch (Exception e) {
-      return errorResponse(e);
-    }
+    long affectRow = create ? invoke.create(poJo) > 0 ? 1 : 0 : invoke.update(poJo);
+    return affectRow == 1
+        ? ok(
+            json().put("id", poJo.getId()),
+            create
+                ? ResultCode.API_SUCCESS_EXEC_CREATE.desc()
+                : ResultCode.API_SUCCESS_EXEC_UPDATE.desc())
+        : fail(
+            create
+                ? ResultCode.API_FAIL_EXEC_CREATE.desc()
+                : ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST.desc());
   }
 
   private static <R> ResponseEntity<Rs<R>> errorResponse(Exception e) {
