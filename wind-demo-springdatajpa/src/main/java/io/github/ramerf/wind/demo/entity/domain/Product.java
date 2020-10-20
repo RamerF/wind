@@ -21,6 +21,6 @@ public class Product extends AbstractEntityPoJo {
   private String name;
 
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "product_spu_id")
+  @JoinColumn(name = "product_spu_code_id")
   private ProductSpu productSpu;
 }

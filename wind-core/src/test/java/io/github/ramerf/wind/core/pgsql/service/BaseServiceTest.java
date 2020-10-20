@@ -6,6 +6,7 @@ import io.github.ramerf.wind.core.pgsql.entity.pojo.Foo;
 import io.github.ramerf.wind.core.pgsql.entity.pojo.Foo.Type;
 import io.github.ramerf.wind.core.pgsql.entity.response.IdNameResponse;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.LongStream;
 import javax.annotation.Resource;
@@ -455,6 +456,17 @@ public class BaseServiceTest {
         service
             .updateBatchWithNull(list, Arrays.asList(Foo::getName, Foo::getStringList))
             .isPresent());
+  }
+
+  @Test
+  @DisplayName("更新指定字段:带条件")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateField() {
+    foo.setName(LocalDateTime.now().toString());
+    assertEquals(
+        service.updateField(
+            foo, fields -> fields.include(Foo::getName), condition -> condition.eq(Foo::setId, id)),
+        1);
   }
 
   @Test

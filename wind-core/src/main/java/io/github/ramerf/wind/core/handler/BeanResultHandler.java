@@ -59,7 +59,8 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       if (bindProxy
           && isPoJo
           && AbstractEntityPoJo.class.isAssignableFrom(method.getParameterTypes()[0])) {
-        setMappingObject(map, obj, method, fieldName, field);
+        // TODO-WARN 关联查询
+        // setMappingObject(map, obj, method, fieldName, field);
         continue;
       }
 

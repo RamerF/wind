@@ -4,12 +4,11 @@ import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
-import lombok.Data;
+import lombok.Getter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,7 +97,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果执行失败
    */
   default int update(final T t) throws DataAccessException {
-    return getUpdate().update(t);
+    return update(null, t);
   }
 
   /**
@@ -126,9 +125,8 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @return 实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  default int update(@Nonnull final Consumer<Condition<T>> consumer, final T t)
-      throws DataAccessException {
-    return getUpdate().lambdaWhere(consumer).update(t);
+  default int update(final Consumer<Condition<T>> consumer, final T t) throws DataAccessException {
+    return consumer == null ? getUpdate().update(t) : getUpdate().lambdaWhere(consumer).update(t);
   }
 
   /**
@@ -182,29 +180,49 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
     return getUpdate().updateBatchWithNull(ts, includeNullProps);
   }
 
-  /** 更新指定字段. */
-  default void updateField(final T obj, final Consumer<EntityFields<T>> fields) {
-    final EntityFields<T> entityFields = new EntityFields<>();
-    fields.accept(entityFields);
-    final List<IFunction<T, ?>> iFunctions = entityFields.getMethodFunctions();
-    iFunctions.get(0).apply(obj);
-    final EntityInfo entityInfo = getUpdate().entityInfo;
-    final String sql = "update %s set %s where %s";
-    final StringBuilder columnBuilder = new StringBuilder();
-    final StringBuilder valueBuilder = new StringBuilder();
-    for (final IFunction<T, ?> function : iFunctions) {
-      final String column = function.getColumn();
-    }
-
-    // TODO-WARN 更新指定字段,走普通update一样的流程就行了,可以多个参数指定更新条件,否则根据id更新
+  /**
+   * 更新指定字段.
+   * <li>如果条件为空,根据id更新
+   * <li>如果未指定字段,更新不为null的属性
+   */
+  default int updateField(final T t, final Consumer<Fields<T>> fields) throws DataAccessException {
+    return updateField(t, fields, null);
   }
 
-  @Data
-  class EntityFields<T> {
-    private List<IFunction<T, ?>> methodFunctions;
+  /**
+   * 更新指定字段.
+   * <li>如果条件为空,根据id更新
+   * <li>如果未指定字段,更新不为null的属性
+   */
+  default int updateField(
+      final T t, final Consumer<Fields<T>> fields, final Consumer<Condition<T>> condition)
+      throws DataAccessException {
+    if (fields == null) {
+      return getUpdate().update(t);
+    }
+    return condition == null
+        ? getUpdate().updateField(t, fields)
+        : getUpdate().lambdaWhere(condition).updateField(t, fields);
+  }
 
-    public EntityFields<T> add(final IFunction<T, ?> methodFunction) {
-      methodFunctions.add(methodFunction);
+  /** 函数字段集合.指定一个操作应该包含和不包含的字段. */
+  class Fields<T> {
+    @Getter private final List<IFunction<T, ?>> includeFields = new ArrayList<>();
+    @Getter private final List<IFunction<T, ?>> excludeFields = new ArrayList<>();
+
+    @SafeVarargs
+    public final Fields<T> include(final IFunction<T, ?>... includeFields) {
+      this.includeFields.addAll(Arrays.asList(includeFields));
+      return this;
+    }
+
+    // TODO-WARN 未实现exclude
+    @SafeVarargs
+    public final Fields<T> exclude(@Nonnull final IFunction<T, ?>... excludeFields) {
+      for (final IFunction<T, ?> function : excludeFields) {
+        this.includeFields.remove(function);
+      }
+      this.excludeFields.addAll(Arrays.asList(excludeFields));
       return this;
     }
   }

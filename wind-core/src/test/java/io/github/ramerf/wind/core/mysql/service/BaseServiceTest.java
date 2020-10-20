@@ -6,6 +6,7 @@ import io.github.ramerf.wind.core.mysql.entity.pojo.Foo;
 import io.github.ramerf.wind.core.mysql.entity.pojo.Foo.Type;
 import io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.LongStream;
 import javax.annotation.Resource;
@@ -414,6 +415,20 @@ public class BaseServiceTest {
             .collect(toList());
     assertFalse(
         service.updateBatchWithNull(list, Collections.singletonList(Foo::getName)).isPresent());
+  }
+
+  @Test
+  @DisplayName("更新指定字段:带条件")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateField() {
+    foo.setName(LocalDateTime.now().toString());
+    foo.setColumn(null);
+    assertEquals(
+        service.updateField(
+            foo,
+            fields -> fields.include(Foo::getName, Foo::getColumn),
+            condition -> condition.eq(Foo::setId, id)),
+        1);
   }
 
   @Test

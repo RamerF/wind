@@ -14,6 +14,7 @@ import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -29,6 +30,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * 通用写入操作对象.获取实例:<br>
@@ -477,6 +480,55 @@ public final class Update {
               Arrays.stream(batchUpdate).filter(o -> o >= 0 || o == -2).map(o -> 1).sum());
         });
     return updateRow.get() == ts.size() ? Optional.empty() : Optional.of(updateRow.get());
+  }
+
+  /**
+   * 更新指定字段,如果条件为空,根据id更新,如果未指定字段,更新不为null的属性.
+   *
+   * @param <T> the type parameter
+   * @param t the t
+   * @param fields 更新字段
+   * @return 受影响记录数 int
+   */
+  public <T extends AbstractEntityPoJo> int updateField(
+      final T t, final Consumer<Fields<T>> fields) {
+    setCurrentTime(t, entityInfo.getUpdateTimeField());
+    final Fields<T> entityFields = new Fields<>();
+    fields.accept(entityFields);
+    final List<IFunction<T, ?>> fieldFunctions = entityFields.getIncludeFields();
+    if (fieldFunctions.size() == 0) {
+      // 未指定字段,更新不为null的属性
+      return update(t);
+    }
+    final String setString =
+        fieldFunctions.stream()
+            .map(
+                fieldFunction -> {
+                  final String column = fieldFunction.getColumn();
+                  return column + "=?";
+                })
+            .collect(joining(","));
+    // 没有条件时,默认根据id更新
+    if (condition.isEmpty()) {
+      if (Objects.isNull(t.getId())) {
+        throw new IllegalArgumentException("id could not be null");
+      }
+      lambdaWhere(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+    }
+    final String sql = "UPDATE %s SET %s WHERE %s";
+    final String execSql =
+        String.format(sql, entityInfo.getName(), setString, condition.getString());
+    return executor.update(
+        clazz,
+        execSql,
+        ps -> {
+          for (int i = 0; i < fieldFunctions.size(); i++) {
+            ps.setObject(i + 1, fieldFunctions.get(i).apply(t));
+          }
+          condition
+              .getValues(new AtomicInteger(fieldFunctions.size() + 1))
+              .forEach(val -> val.accept(ps));
+        });
   }
 
   /**
