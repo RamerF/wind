@@ -263,7 +263,6 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> deleteByIds(final Collection<Long> ids) throws DataAccessException {
     if (CollectionUtils.isEmpty(ids)) {
       return Optional.empty();

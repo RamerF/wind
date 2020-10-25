@@ -8,8 +8,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public interface BeanFunction extends Serializable {
   Logger log = LoggerFactory.getLogger(BeanFunction.class);
-
+  Comparator<BeanFunction> COMPARATOR = (o1, o2) -> o1.getField().equals(o2.getField()) ? 0 : 1;
   Map<BeanFunction, WeakReference<Field>> LAMBDA_FIELD_MAP = new ConcurrentHashMap<>();
 
   /**
@@ -62,6 +61,10 @@ public interface BeanFunction extends Serializable {
                 field = BeanUtils.getClazz(classPath).getDeclaredField(property);
                 LAMBDA_FIELD_MAP.put(this, new WeakReference<>(field));
               } catch (Exception ex) {
+                if (log.isDebugEnabled()) {
+                  log.warn(ex.getMessage());
+                  log.error(ex.getMessage(), ex);
+                }
                 try {
                   field =
                       BeanUtils.getClazz(classPath)

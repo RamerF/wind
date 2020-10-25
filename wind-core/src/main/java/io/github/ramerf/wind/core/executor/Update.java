@@ -502,11 +502,7 @@ public final class Update {
     }
     final String setString =
         fieldFunctions.stream()
-            .map(
-                fieldFunction -> {
-                  final String column = fieldFunction.getColumn();
-                  return column + "=?";
-                })
+            .map(fieldFunction -> fieldFunction.getColumn() + "=?")
             .collect(joining(","));
     // 没有条件时,默认根据id更新
     if (condition.isEmpty()) {
@@ -515,7 +511,7 @@ public final class Update {
       }
       lambdaWhere(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     }
-    final String sql = "UPDATE %s SET %s WHERE %s";
+    final String sql = "update %s set %s where %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setString, condition.getString());
     return executor.update(

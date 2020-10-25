@@ -18,10 +18,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.*;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
+ * The type Bean result handler.
+ *
+ * @param <E> the type parameter
+ * @since 2019 /12/27
  * @author Tang Xiaofeng
- * @since 2019/12/27
  */
 @Slf4j
 public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
@@ -31,14 +35,33 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
   private static final Map<Method, WeakReference<Field>> METHODS_FIELD_MAP =
       new ConcurrentHashMap<>();
 
+  /**
+   * Instantiates a new Bean result handler.
+   *
+   * @param clazz the clazz
+   * @param queryColumns the query columns
+   */
   public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
     super(clazz, queryColumns);
   }
 
+  /**
+   * Instantiates a new Bean result handler.
+   *
+   * @param clazz the clazz
+   * @param queryColumns the query columns
+   */
   public BeanResultHandler(@Nonnull final Class<E> clazz, final QueryColumn<?>... queryColumns) {
     super(clazz, queryColumns);
   }
 
+  /**
+   * Instantiates a new Bean result handler.
+   *
+   * @param clazz the clazz
+   * @param bindProxy the bind proxy
+   * @param queryColumns the query columns
+   */
   public BeanResultHandler(
       @Nonnull final Class<E> clazz, boolean bindProxy, final QueryColumn<?>... queryColumns) {
     super(clazz, queryColumns);
@@ -56,12 +79,38 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     for (Method method : super.methods) {
       final String fieldName = BeanUtils.methodToProperty(method.getName());
       final Field field = getField(method, fieldName);
-      if (bindProxy
-          && isPoJo
-          && AbstractEntityPoJo.class.isAssignableFrom(method.getParameterTypes()[0])) {
+      final Class<?> paramType = method.getParameterTypes()[0];
+      if (bindProxy && isPoJo) {
+        if (AbstractEntityPoJo.class.isAssignableFrom(paramType)) {
+          //noinspection unchecked
+          initMappingObj(
+              map,
+              (AbstractEntityPoJo) obj,
+              method,
+              field,
+              (Class<? extends AbstractEntityPoJo>) paramType);
+          continue;
+        } else
+        // TODO-WARN 可能类型是集合
+        if (Iterable.class.isAssignableFrom(paramType)) {
+          Class<?> typeArgument =
+              (Class<?>)
+                  ((ParameterizedTypeImpl) method.getGenericParameterTypes()[0])
+                      .getActualTypeArguments()[0];
+          if (AbstractEntityPoJo.class.isAssignableFrom(typeArgument)) {
+            //noinspection unchecked
+            initMappingObj(
+                map,
+                (AbstractEntityPoJo) obj,
+                method,
+                field,
+                (Class<? extends AbstractEntityPoJo>) typeArgument);
+          }
+          continue;
+        }
         // TODO-WARN 关联查询
+        // TODO-WARN 初始化关联对象
         // setMappingObject(map, obj, method, fieldName, field);
-        continue;
       }
 
       final String columnAlia = fieldAliaMap.get(fieldName);
@@ -82,7 +131,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       }
 
       // 判断数据类型,调用指定的转换器,获取到对应的Java值,如果没有就直接赋值.
-      final Class<?> parameterType = method.getParameterTypes()[0];
+      final Class<?> parameterType = paramType;
 
       final Object finalValue =
           TypeHandlerHelper.toJavaValue(
@@ -117,6 +166,31 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     //                   null));
     // }
     return obj;
+  }
+
+  /**
+   * @param map the map
+   * @param obj the obj
+   * @param method the method
+   * @param field the field
+   * @param paramType 关联对象类型
+   */
+  private <T extends AbstractEntityPoJo> void initMappingObj(
+      final Map<String, Object> map,
+      final T obj,
+      final Method method,
+      final Field field,
+      final Class<? extends AbstractEntityPoJo> paramType) {
+    final MappingInfo mappingInfo = EntityMapping.get(obj.getClass(), field).orElse(null);
+    if (mappingInfo == null) {
+      return;
+    }
+    final AbstractEntityPoJo mappingObj = BeanUtils.initial(paramType);
+    final Field referenceField = mappingInfo.getReferenceField();
+    referenceField.setAccessible(true);
+    BeanUtils.setValue(mappingObj, referenceField, map.get(mappingInfo.getColumn()), null);
+    // TODO-WARN 考虑集合的情况,这里只是单个
+    BeanUtils.setValue(obj, field, mappingObj, null);
   }
 
   @SuppressWarnings("unchecked")
@@ -195,10 +269,24 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
             });
   }
 
+  /**
+   * The type Fetch mapping interceptor.
+   *
+   * @param <E> the type parameter
+   * @since 2020.10.25
+   * @author Tang Xiaofeng
+   */
   public static class FetchMappingInterceptor<E> implements MethodInterceptor {
     private final BeanResultHandler<?> resultHandler;
+    /** The Map. */
     final Map<String, Object> map;
 
+    /**
+     * Instantiates a new Fetch mapping interceptor.
+     *
+     * @param resultHandler the result handler
+     * @param map the map
+     */
     public FetchMappingInterceptor(
         final BeanResultHandler<?> resultHandler, final Map<String, Object> map) {
       this.resultHandler = resultHandler;
@@ -219,10 +307,23 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     }
   }
 
+  /**
+   * The type Fetch mapping filter.
+   *
+   * @since 2020.10.25
+   * @author Tang Xiaofeng
+   */
   public static class FetchMappingFilter implements CallbackFilter {
     private final BeanResultHandler<?> resultHandler;
+    /** The Map. */
     final Map<String, Object> map;
 
+    /**
+     * Instantiates a new Fetch mapping filter.
+     *
+     * @param resultHandler the result handler
+     * @param map the map
+     */
     public FetchMappingFilter(
         final BeanResultHandler<?> resultHandler, final Map<String, Object> map) {
       this.resultHandler = resultHandler;

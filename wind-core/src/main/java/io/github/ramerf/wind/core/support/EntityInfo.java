@@ -6,6 +6,7 @@ import io.github.ramerf.wind.core.config.WindConfiguration.CommonField;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
@@ -54,6 +55,10 @@ public final class EntityInfo {
 
   /** 关联对象. */
   private List<MappingInfo> mappingInfos = new ArrayList<>();
+
+  /** TODO-WARN 保存字段的写入方法，更新时可以避免使用反射. */
+  private Map<Field, IConsumer<?, ?>> writeMethods =
+      Collections.synchronizedSortedMap(new TreeMap<>((o1, o2) -> o1.equals(o2) ? 0 : 1));
 
   private Dialect dialect;
 

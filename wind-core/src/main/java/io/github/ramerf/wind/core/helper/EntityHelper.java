@@ -6,8 +6,7 @@ import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exporter.TableExporter;
-import io.github.ramerf.wind.core.function.BeanFunction;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.*;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
@@ -68,6 +67,13 @@ public class EntityHelper {
    * @return the column
    */
   public static String getColumn(BeanFunction function) {
+    // TODO-WARN 可以在这里保存对象的IConsumer，避免反射调用取值
+    if (function instanceof IConsumer) {
+
+    }
+    // TODO-WARN 可以在这里保存对象的IConsumer，避免反射调用取值
+
+
     if (log.isTraceEnabled()) {
       log.trace("getColumn:[{}]", CLAZZ_ENTITY_MAP);
     }

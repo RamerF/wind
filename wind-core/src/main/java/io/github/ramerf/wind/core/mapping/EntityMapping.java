@@ -58,6 +58,7 @@ public class EntityMapping {
     final Class<AbstractEntityPoJo> clazz = (Class<AbstractEntityPoJo>) entityInfo.getClazz();
     final List<MappingInfo> mappingInfos =
         BeanUtils.retrievePrivateFields(clazz, ArrayList::new).stream()
+            // TODO-WARN 可能类型是集合
             .filter(field -> AbstractEntityPoJo.class.isAssignableFrom(field.getType()))
             .map(MappingInfo::of)
             .collect(Collectors.toList());
@@ -114,14 +115,19 @@ public class EntityMapping {
 
   @Data
   public static class MappingInfo {
+    /** 当前对象的列. */
     private Field field;
 
+    /** 当前对象的列. */
     private String column;
 
+    /** 关联对象的列. */
     private String referenceColumn;
 
+    /** 关联对象的字段. */
     private Field referenceField;
 
+    /** 关联对象. */
     private Class<? extends AbstractEntityPoJo> referenceClazz;
 
     /** 引用定义.预留字段. */
@@ -134,6 +140,7 @@ public class EntityMapping {
     @SuppressWarnings("unchecked")
     private static MappingInfo of(final Field field) {
       final MappingInfo info = new MappingInfo();
+      // TODO-WARN 要根据@OneToOne && @JoinColumn获取
       info.setField(field);
       info.setMappingType(MappingType.of(field));
       info.setColumn(EntityUtils.fieldToColumn(field));

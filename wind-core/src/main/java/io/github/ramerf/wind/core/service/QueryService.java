@@ -3,6 +3,10 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.mapping.EntityMapping;
+import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.*;
 import java.util.function.Consumer;
@@ -124,6 +128,21 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
       @Nonnull final Class<R> clazz) {
     final QueryBound<T> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
+  }
+
+  default <R> R getMapping(T t, IFunction<T, R> field) {
+    final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
+    if (optional.isPresent()) {
+      final MappingInfo mappingInfo = optional.get();
+      // TODO-WARN 查询关联对象
+      final R mappingObj = field.apply(t);
+      final Object relationValue =
+          BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
+      BeanUtils.copyProperties(
+          mappingInfo.getMappingType().fetchMapping(t, mappingInfo, relationValue), mappingObj);
+      return mappingObj;
+    }
+    return null;
   }
 
   /**
