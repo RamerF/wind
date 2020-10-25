@@ -9,8 +9,7 @@ import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.util.*;
@@ -88,7 +87,8 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
               (AbstractEntityPoJo) obj,
               method,
               field,
-              (Class<? extends AbstractEntityPoJo>) paramType);
+              (Class<? extends AbstractEntityPoJo>) paramType,
+              false);
           continue;
         } else
         // TODO-WARN 可能类型是集合
@@ -104,7 +104,8 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
                 (AbstractEntityPoJo) obj,
                 method,
                 field,
-                (Class<? extends AbstractEntityPoJo>) typeArgument);
+                (Class<? extends AbstractEntityPoJo>) typeArgument,
+                true);
           }
           continue;
         }
@@ -180,7 +181,8 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       final T obj,
       final Method method,
       final Field field,
-      final Class<? extends AbstractEntityPoJo> paramType) {
+      final Class<? extends AbstractEntityPoJo> paramType,
+      boolean isCollection) {
     final MappingInfo mappingInfo = EntityMapping.get(obj.getClass(), field).orElse(null);
     if (mappingInfo == null) {
       return;
@@ -189,8 +191,17 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     final Field referenceField = mappingInfo.getReferenceField();
     referenceField.setAccessible(true);
     BeanUtils.setValue(mappingObj, referenceField, map.get(mappingInfo.getColumn()), null);
-    // TODO-WARN 考虑集合的情况,这里只是单个
-    BeanUtils.setValue(obj, field, mappingObj, null);
+    if (isCollection) {
+      final Class<?> type = method.getParameterTypes()[0];
+      if (List.class.isAssignableFrom(type)) {
+        BeanUtils.setValue(obj, field, Collections.singletonList(mappingObj), null);
+      }
+      if (Set.class.isAssignableFrom(type)) {
+        BeanUtils.setValue(obj, field, Collections.singleton(mappingObj), null);
+      }
+    } else {
+      BeanUtils.setValue(obj, field, mappingObj, null);
+    }
   }
 
   @SuppressWarnings("unchecked")

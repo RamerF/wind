@@ -134,7 +134,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
     if (optional.isPresent()) {
       final MappingInfo mappingInfo = optional.get();
-      // TODO-WARN 查询关联对象
+      // TODO-WARN 这里开始查询关联对象,处理集合的情况
       final R mappingObj = field.apply(t);
       final Object relationValue =
           BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
