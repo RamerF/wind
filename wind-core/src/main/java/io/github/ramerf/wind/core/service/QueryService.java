@@ -3,9 +3,11 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
+import io.github.ramerf.wind.core.mapping.MappingType;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.*;
@@ -130,17 +132,34 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
   }
 
+  @SuppressWarnings("unchecked")
   default <R> R getMapping(T t, IFunction<T, R> field) {
     final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
     if (optional.isPresent()) {
       final MappingInfo mappingInfo = optional.get();
       // TODO-WARN 这里开始查询关联对象,处理集合的情况
-      final R mappingObj = field.apply(t);
-      final Object relationValue =
-          BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
-      BeanUtils.copyProperties(
-          mappingInfo.getMappingType().fetchMapping(t, mappingInfo, relationValue), mappingObj);
-      return mappingObj;
+      final MappingType mappingType = mappingInfo.getMappingType();
+      final Object relationValue;
+      // 如果是集合
+      if (mappingType.equals(MappingType.ONE_TO_MANY)) {
+        final Class<? extends AbstractEntityPoJo> manyClazz = mappingInfo.getReferenceClazz();
+        final Optional<MappingInfo> infactOpt = EntityMapping.get(manyClazz, t.getClass());
+        if (!infactOpt.isPresent()) {
+          throw CommonException.of(
+              "No mapping object [" + manyClazz + "] found in " + t.getClass());
+        }
+        final MappingInfo infactMapping = infactOpt.get();
+        relationValue = BeanUtils.getValue(t, infactMapping.getReferenceField(), null);
+        return mappingType.fetchMapping(t, infactMapping, relationValue);
+      } else {
+        final R mappingObj = field.apply(t);
+        if (mappingObj == null) {
+          return null;
+        }
+        relationValue = BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
+        // BeanUtils.copyProperties(mapping, mappingObj);
+        return mappingType.fetchMapping(t, mappingInfo, relationValue);
+      }
     }
     return null;
   }

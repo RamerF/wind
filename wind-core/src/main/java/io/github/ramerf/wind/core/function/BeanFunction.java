@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  * 用于bean方法(set/get) 函数式接口
@@ -90,6 +91,15 @@ public interface BeanFunction extends Serializable {
    */
   default Type getGenericType() {
     return getField().getGenericType();
+  }
+
+  /**
+   * 获取Field的泛型参数泛型类型.
+   *
+   * @return the type [ ]
+   */
+  default Type[] getGenericTypeArgumentTypes() {
+    return ((ParameterizedTypeImpl) getGenericType()).getActualTypeArguments();
   }
 
   /**

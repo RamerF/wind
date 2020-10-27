@@ -3,7 +3,7 @@ package io.github.ramerf.wind.demo.entity.pojo;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.util.List;
-import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
  * @author Tang Xiaofeng
  * @since 2020/07/24
  */
-@TableInfo(name = "t_role", comment = "the role")
+@TableInfo(name = "t_department", comment = "the department")
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -21,5 +21,5 @@ import lombok.experimental.SuperBuilder;
 public class Department extends AbstractEntityPoJo {
   private String name;
 
-  @ManyToMany private List<Account> accounts;
+  @OneToMany private List<Account> accounts;
 }

@@ -9,7 +9,8 @@ import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.util.*;
@@ -17,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.*;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  * The type Bean result handler.
@@ -80,38 +80,18 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       final Field field = getField(method, fieldName);
       final Class<?> paramType = method.getParameterTypes()[0];
       if (bindProxy && isPoJo) {
-        if (AbstractEntityPoJo.class.isAssignableFrom(paramType)) {
+        if (MappingInfo.isOneMapping(method)) {
           //noinspection unchecked
           initMappingObj(
               map,
               (AbstractEntityPoJo) obj,
               method,
               field,
-              (Class<? extends AbstractEntityPoJo>) paramType,
-              false);
+              (Class<? extends AbstractEntityPoJo>) paramType);
           continue;
-        } else
-        // TODO-WARN 可能类型是集合
-        if (Iterable.class.isAssignableFrom(paramType)) {
-          Class<?> typeArgument =
-              (Class<?>)
-                  ((ParameterizedTypeImpl) method.getGenericParameterTypes()[0])
-                      .getActualTypeArguments()[0];
-          if (AbstractEntityPoJo.class.isAssignableFrom(typeArgument)) {
-            //noinspection unchecked
-            initMappingObj(
-                map,
-                (AbstractEntityPoJo) obj,
-                method,
-                field,
-                (Class<? extends AbstractEntityPoJo>) typeArgument,
-                true);
-          }
+        } else if (MappingInfo.isManyMapping(method)) {
           continue;
         }
-        // TODO-WARN 关联查询
-        // TODO-WARN 初始化关联对象
-        // setMappingObject(map, obj, method, fieldName, field);
       }
 
       final String columnAlia = fieldAliaMap.get(fieldName);
@@ -181,8 +161,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       final T obj,
       final Method method,
       final Field field,
-      final Class<? extends AbstractEntityPoJo> paramType,
-      boolean isCollection) {
+      final Class<? extends AbstractEntityPoJo> paramType) {
     final MappingInfo mappingInfo = EntityMapping.get(obj.getClass(), field).orElse(null);
     if (mappingInfo == null) {
       return;
@@ -191,17 +170,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     final Field referenceField = mappingInfo.getReferenceField();
     referenceField.setAccessible(true);
     BeanUtils.setValue(mappingObj, referenceField, map.get(mappingInfo.getColumn()), null);
-    if (isCollection) {
-      final Class<?> type = method.getParameterTypes()[0];
-      if (List.class.isAssignableFrom(type)) {
-        BeanUtils.setValue(obj, field, Collections.singletonList(mappingObj), null);
-      }
-      if (Set.class.isAssignableFrom(type)) {
-        BeanUtils.setValue(obj, field, Collections.singleton(mappingObj), null);
-      }
-    } else {
-      BeanUtils.setValue(obj, field, mappingObj, null);
-    }
+    BeanUtils.setValue(obj, field, mappingObj, null);
   }
 
   @SuppressWarnings("unchecked")

@@ -5,13 +5,15 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.persistence.JoinColumn;
 import lombok.Data;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * 保存实体关联关系.
@@ -33,6 +35,14 @@ public class EntityMapping {
       @Nonnull Class<? extends AbstractEntityPoJo> clazz, final Field field) {
     return ENTITY_MAPPING.get(getCglibProxyTarget(clazz)).stream()
         .filter(o -> o.field.equals(field))
+        .findFirst();
+  }
+
+  public static Optional<MappingInfo> get(
+      @Nonnull Class<? extends AbstractEntityPoJo> clazz,
+      final Class<? extends AbstractEntityPoJo> referenceClazz) {
+    return ENTITY_MAPPING.get(getCglibProxyTarget(clazz)).stream()
+        .filter(o -> o.referenceClazz.equals(referenceClazz))
         .findFirst();
   }
 
@@ -59,9 +69,9 @@ public class EntityMapping {
     final List<MappingInfo> mappingInfos =
         BeanUtils.retrievePrivateFields(clazz, ArrayList::new).stream()
             // TODO-WARN 可能类型是集合
-            .filter(field -> AbstractEntityPoJo.class.isAssignableFrom(field.getType()))
+            .filter(field -> MappingInfo.isOneMapping(field) || MappingInfo.isManyMapping(field))
             .map(MappingInfo::of)
-            .collect(Collectors.toList());
+            .collect(toList());
     put(clazz, mappingInfos);
     entityInfo.setMappingInfos(mappingInfos);
   }
@@ -115,6 +125,7 @@ public class EntityMapping {
 
   @Data
   public static class MappingInfo {
+    private Class<? extends AbstractEntityPoJo> clazz;
     /** 当前对象的列. */
     private Field field;
 
@@ -141,12 +152,48 @@ public class EntityMapping {
     private static MappingInfo of(final Field field) {
       final MappingInfo info = new MappingInfo();
       // TODO-WARN 要根据@OneToOne && @JoinColumn获取
+      info.setClazz((Class<? extends AbstractEntityPoJo>) field.getDeclaringClass());
       info.setField(field);
       info.setMappingType(MappingType.of(field));
       info.setColumn(EntityUtils.fieldToColumn(field));
-      info.setReferenceClazz((Class<? extends AbstractEntityPoJo>) field.getType());
+      if (isManyMapping(field)) {
+        final Type type =
+            ((ParameterizedTypeImpl) field.getGenericType()).getActualTypeArguments()[0];
+        info.setReferenceClazz((Class<? extends AbstractEntityPoJo>) type);
+      } else {
+        info.setReferenceClazz((Class<? extends AbstractEntityPoJo>) field.getType());
+      }
       info.setReferenceColumn(getReferencedColumn(field));
       return info;
+    }
+
+    public static boolean isManyMapping(final Field field) {
+      final Class<?> type = field.getType();
+      if (List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type)) {
+        return AbstractEntityPoJo.class.isAssignableFrom(
+            (Class<?>)
+                ((ParameterizedTypeImpl) field.getGenericType()).getActualTypeArguments()[0]);
+      }
+      return false;
+    }
+
+    public static boolean isManyMapping(final Method method) {
+      final Class<?> type = method.getParameterTypes()[0];
+      if (List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type)) {
+        return AbstractEntityPoJo.class.isAssignableFrom(
+            (Class<?>)
+                ((ParameterizedTypeImpl) method.getGenericParameterTypes()[0])
+                    .getActualTypeArguments()[0]);
+      }
+      return false;
+    }
+
+    public static boolean isOneMapping(final Method method) {
+      return AbstractEntityPoJo.class.isAssignableFrom(method.getParameterTypes()[0]);
+    }
+
+    public static boolean isOneMapping(final Field field) {
+      return AbstractEntityPoJo.class.isAssignableFrom(field.getType());
     }
 
     private static String getReferencedColumn(final Field field) {

@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
@@ -40,8 +41,7 @@ public enum MappingType {
       final Object mapping =
           Query.getInstance()
               .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
-              .stringWhere(
-                  condition -> condition.eq(mappingInfo.getReferenceField(), relationValue))
+              .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
               .fetchOne(type);
       return (T) mapping;
     }
@@ -51,7 +51,14 @@ public enum MappingType {
     @Override
     public <T> T fetchMapping(
         final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
-      return null;
+      final Class<?> type = mappingInfo.getClazz();
+      @SuppressWarnings("unchecked")
+      final Object mapping =
+          Query.getInstance()
+              .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
+              .stringWhere(condition -> condition.eq(mappingInfo.getField(), relationValue))
+              .fetchAll(type);
+      return (T) mapping;
     }
   },
   /** The Many to one. */
@@ -59,17 +66,26 @@ public enum MappingType {
     @Override
     public <T> T fetchMapping(
         final AbstractEntityPoJo obj, final MappingInfo mappingInfo, final Object relationValue) {
-      return null;
+      final Class<?> type = mappingInfo.getReferenceClazz();
+      @SuppressWarnings("unchecked")
+      final Object mapping =
+          Query.getInstance()
+              .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
+              .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
+              .fetchOne(type);
+      return (T) mapping;
     }
   },
-  /** The Many to many. */
-  MANY_TO_MANY {
-    @Override
-    public <T> T fetchMapping(
-        final AbstractEntityPoJo obj, final MappingInfo mappingInfo, final Object relationValue) {
-      return null;
-    }
-  },
+
+  // /** The Many to many. */
+  // MANY_TO_MANY {
+  //   @Override
+  //   public <T> T fetchMapping(
+  //       final AbstractEntityPoJo obj, final MappingInfo mappingInfo, final Object relationValue)
+  // {
+  //     throw CommonException.of("方法不支持");
+  //   }
+  // },
   /** The None. */
   NONE {
     @Override
@@ -109,7 +125,8 @@ public enum MappingType {
       return MANY_TO_ONE;
     }
     if (field.isAnnotationPresent(ManyToMany.class)) {
-      return MANY_TO_MANY;
+      throw CommonException.of("方法不支持");
+      // return MANY_TO_MANY;
     }
     return NONE;
   }

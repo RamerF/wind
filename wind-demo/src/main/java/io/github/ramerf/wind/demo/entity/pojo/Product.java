@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import java.util.List;
 import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -21,4 +22,6 @@ public class Product extends AbstractEntityPoJo {
   private String name;
 
   @OneToOne @JoinColumn private ProductSpu productSpu;
+
+  @OneToMany private List<ProductSku> skuses;
 }
