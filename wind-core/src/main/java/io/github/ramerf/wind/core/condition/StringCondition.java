@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
@@ -22,14 +22,14 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
  */
 @Slf4j
 @ToString
-public class StringCondition<T extends AbstractEntity> extends AbstractCondition<T> {
+public class StringCondition<T extends AbstractEntityPoJo> extends AbstractCondition<T> {
 
   @Override
   public StringCondition<T> of() {
     return new StringCondition<>();
   }
 
-  public static <T extends AbstractEntity> StringCondition<T> of(QueryColumn<T> queryColumn) {
+  public static <T extends AbstractEntityPoJo> StringCondition<T> of(QueryColumn<T> queryColumn) {
     final StringCondition<T> condition = new StringCondition<>();
     condition.setEntityInfo(queryColumn.getEntityInfo());
     condition.setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());

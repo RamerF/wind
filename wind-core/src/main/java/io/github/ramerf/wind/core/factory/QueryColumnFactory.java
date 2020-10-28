@@ -4,7 +4,7 @@ import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.QueryEntityMetaData;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
@@ -17,30 +17,26 @@ import java.util.Objects;
  */
 public class QueryColumnFactory {
 
-  public static <T extends AbstractEntity> QueryColumn<T> fromClass(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo> QueryColumn<T> fromClass(final Class<T> clazz) {
     return getInstance(clazz, null, null);
   }
 
-  public static <T extends AbstractEntity> QueryColumn<T> fromClassAndTableName(
-      final Class<T> clazz, final String tableName) {
-    return getInstance(clazz, tableName, null);
-  }
-
-  public static <T extends AbstractEntity> QueryColumn<T> fromClassAndTableAlia(
+  public static <T extends AbstractEntityPoJo> QueryColumn<T> fromClassAndTableAlia(
       final Class<T> clazz, final String tableAlia) {
     return getInstance(clazz, null, tableAlia);
   }
 
-  public static <T extends AbstractEntity> QueryColumn<T> fromTableName(final String tableName) {
+  public static <T extends AbstractEntityPoJo> QueryColumn<T> fromTableName(
+      final String tableName) {
     return getInstance(null, tableName, null);
   }
 
-  public static <T extends AbstractEntity> QueryColumn<T> fromTableNameAndAlia(
+  public static <T extends AbstractEntityPoJo> QueryColumn<T> fromTableNameAndAlia(
       final String tableName, final String tableAlia) {
     return getInstance(null, tableName, tableAlia);
   }
 
-  private static <T extends AbstractEntity> QueryColumn<T> getInstance(
+  private static <T extends AbstractEntityPoJo> QueryColumn<T> getInstance(
       final Class<T> clazz, String tableName, String tableAlia) {
     final QueryColumn<T> queryColumn =
         QueryColumn.of(AppContextInject.getBean(WindConfiguration.class));

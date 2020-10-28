@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  * @since 2020.01.06
  * @author Tang Xiaofeng
  */
-public interface ICondition<T extends AbstractEntity> extends Predicate<T> {
+public interface ICondition<T extends AbstractEntityPoJo> extends Predicate<T> {
 
   /**
    * 创建一个空的条件,包含表信息.

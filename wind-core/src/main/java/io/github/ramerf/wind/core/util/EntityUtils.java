@@ -9,6 +9,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.InterService;
 import io.github.ramerf.wind.core.support.EntityInfo;
@@ -17,7 +18,6 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.persistence.*;
@@ -27,6 +27,7 @@ import org.springframework.aop.framework.AopProxy;
 import org.springframework.aop.support.AopUtils;
 
 import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.*;
+import static io.github.ramerf.wind.core.util.BeanUtils.isPrimitiveType;
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static java.util.stream.Collectors.toList;
 
@@ -48,9 +49,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象映射到数据库的属性.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
+   * 获取对象映射到数据库的属性,包括关系属性.<br>
    *
    * @param obj the obj
    * @return the non null field
@@ -58,7 +57,7 @@ public final class EntityUtils {
   public static List<Field> getAllColumnFields(@Nonnull final Class<?> obj) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(obj, ArrayList::new).stream()
-            .filter(filterColumnField())
+            .filter(EntityUtils::filterColumnField)
             .collect(toList());
     if (log.isTraceEnabled()) {
       log.trace("getAllColumnFields:[{}]", fields);
@@ -67,20 +66,23 @@ public final class EntityUtils {
   }
 
   /**
-   * <pre>
    * 列必须符合以下条件:
-   *  1. 未禁用
-   *  2. 非static
-   *  3. 非transient
-   *  4. 基本类型(对应的包装类型) 或 AbstractEntityPoJo的子类并且标记有注解({@link OneToOne},{@link OneToMany},{@link ManyToOne},{@link ManyToMany})中的一个
+   * <li>未禁用
+   * <li>非static
+   * <li>非transient
+   * <li>基本类型(对应的包装类型)<br>
+   *
+   *     <p>或 AbstractEntityPoJo的子类并且标记有注解({@link OneToOne},{@link OneToMany},{@link
+   *     ManyToOne},{@link ManyToMany})中的一个<br>
+   *
+   *     <p>或 List{@code <T>}/Set{@code <T>},T满足上一个条件
    */
-  private static Predicate<Field> filterColumnField() {
-    return field ->
-        EntityUtils.isNotDisabled(field)
-            && !Modifier.isStatic(field.getModifiers())
-            && !Modifier.isTransient(field.getModifiers())
-            && (BeanUtils.isPrimitiveType(field.getType())
-                || AbstractEntityPoJo.class.isAssignableFrom(field.getType()));
+  private static boolean filterColumnField(Field field) {
+    final int modifiers = field.getModifiers();
+    return EntityUtils.isNotDisabled(field)
+        && !Modifier.isStatic(modifiers)
+        && !Modifier.isTransient(modifiers)
+        && (isPrimitiveType(field.getType()) || MappingInfo.isValidMapping(field));
   }
 
   /**
@@ -90,10 +92,11 @@ public final class EntityUtils {
    * @param t the t
    * @return the non null Field
    */
-  public static <T extends AbstractEntity> List<Field> getNonNullColumnFields(@Nonnull final T t) {
+  public static <T extends AbstractEntityPoJo> List<Field> getNonNullColumnFields(
+      @Nonnull final T t) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
-            .filter(filterColumnField())
+            .filter(EntityUtils::filterColumnField)
             .filter(field -> Objects.nonNull(BeanUtils.getValue(t, field, null)))
             .collect(toList());
     if (log.isTraceEnabled()) {
@@ -151,7 +154,7 @@ public final class EntityUtils {
   public static <T> List<Field> getNullColumnFields(@Nonnull final T t) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
-            .filter(filterColumnField())
+            .filter(EntityUtils::filterColumnField)
             .filter(field -> Objects.isNull(BeanUtils.getValue(t, field, ex -> -1)))
             .collect(toList());
     log.debug("getNullColumnFields:[{}]", fields);
@@ -188,7 +191,7 @@ public final class EntityUtils {
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
-  public static <T extends AbstractEntity> List<String> getNonNullColumns(@Nonnull final T t) {
+  public static <T extends AbstractEntityPoJo> List<String> getNonNullColumns(@Nonnull final T t) {
     final List<String> columns =
         getNonNullColumnFields(t).stream().map(EntityUtils::fieldToColumn).collect(toList());
     log.debug("getNonNullColumns:[{}]", columns);
@@ -206,9 +209,9 @@ public final class EntityUtils {
    * @see Column#name() Column#name()
    * @see StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
-   * @see #getNonNullColumns(AbstractEntity)
+   * @see #getNonNullColumns(AbstractEntityPoJo)
    */
-  public static <T extends AbstractEntity> String getNonNullColumn(@Nonnull final T t) {
+  public static <T extends AbstractEntityPoJo> String getNonNullColumn(@Nonnull final T t) {
     final String nonNullColumn = String.join(",", getNonNullColumns(t));
     log.debug("getNonNullColumn:[{}]", nonNullColumn);
     return nonNullColumn;
@@ -246,7 +249,7 @@ public final class EntityUtils {
     if (joinColumn != null && StringUtils.nonEmpty(joinColumn.name())) {
       return joinColumn.name();
     }
-    // 关系字段默认是 nameId
+    // 关系属性默认是 name + Id
     if (AbstractEntityPoJo.class.isAssignableFrom(field.getType())) {
       return camelToUnderline(field.getName().concat("Id"));
     }

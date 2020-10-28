@@ -3,10 +3,10 @@ package io.github.ramerf.wind.core.helper;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exporter.TableExporter;
-import io.github.ramerf.wind.core.function.*;
+import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
@@ -15,7 +15,8 @@ import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -28,7 +29,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @Slf4j
 public class EntityHelper {
   /** 实体信息:{类全路径:EntityInfo} */
-  private static final Map<String, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
+  private static final Map<Class<?>, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
 
   private static WindContext windContext;
 
@@ -46,7 +47,7 @@ public class EntityHelper {
     final EntityInfo entityInfo =
         EntityInfo.of(
             clazz, windContext.getWindConfiguration(), windContext.getDbMetaData().getDialect());
-    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), entityInfo);
+    CLAZZ_ENTITY_MAP.put(clazz, entityInfo);
     // 这里进行表定义更新
     ddlAuto(entityInfo);
   }
@@ -67,13 +68,6 @@ public class EntityHelper {
    * @return the column
    */
   public static String getColumn(BeanFunction function) {
-    // TODO-WARN 可以在这里保存对象的IConsumer，避免反射调用取值
-    if (function instanceof IConsumer) {
-
-    }
-    // TODO-WARN 可以在这里保存对象的IConsumer，避免反射调用取值
-
-
     if (log.isTraceEnabled()) {
       log.trace("getColumn:[{}]", CLAZZ_ENTITY_MAP);
     }
@@ -120,17 +114,18 @@ public class EntityHelper {
    * @param clazz the clazz
    * @return the entity info
    */
-  public static <T extends AbstractEntity> EntityInfo getEntityInfo(@Nonnull final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo> EntityInfo getEntityInfo(
+      @Nonnull final Class<T> clazz) {
     return initEntityIfNeeded(clazz);
   }
 
-  private static <T extends AbstractEntity> EntityInfo initEntityIfNeeded(
+  private static <T extends AbstractEntityPoJo> EntityInfo initEntityIfNeeded(
       @Nonnull final Class<T> clazz) {
     final String fullPath = clazz.getTypeName();
     synchronized (EntityHelper.class) {
-      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(fullPath);
+      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(clazz);
       if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {
-        initEntity(BeanUtils.getClazz(fullPath));
+        initEntity(clazz);
       }
     }
     return CLAZZ_ENTITY_MAP.get(fullPath);

@@ -90,13 +90,12 @@ public class FooQueryController {
   @ApiOperation("使用Query,查询任意表)")
   public ResponseEntity<Rs<Object>> query4() {
     // 获取查询列和查询条件对象
-    final QueryColumn<IdNameResponse> queryColumn =
-        QueryColumnFactory.fromClassAndTableName(IdNameResponse.class, "foo");
-    final Condition<IdNameResponse> condition = queryColumn.getCondition();
+    final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
+    final Condition<Foo> condition = queryColumn.getCondition();
     final Query query = prototypeBean.query();
     final List<IdNameResponse> list =
         query
-            .select(queryColumn.col(IdNameResponse::getId).col(IdNameResponse::getName))
+            .select(queryColumn.col(Foo::getId).col(Foo::getName))
             .where(condition)
             .fetchAll(IdNameResponse.class);
     return Rs.ok(list);

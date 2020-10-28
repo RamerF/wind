@@ -132,32 +132,29 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
   }
 
-  @SuppressWarnings("unchecked")
-  default <R> R getMapping(T t, IFunction<T, R> field) {
+  default <R> R fetchMapping(T t, IFunction<T, R> field) {
     final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
     if (optional.isPresent()) {
       final MappingInfo mappingInfo = optional.get();
-      // TODO-WARN 这里开始查询关联对象,处理集合的情况
       final MappingType mappingType = mappingInfo.getMappingType();
-      final Object relationValue;
-      // 如果是集合
       if (mappingType.equals(MappingType.ONE_TO_MANY)) {
         final Class<? extends AbstractEntityPoJo> manyClazz = mappingInfo.getReferenceClazz();
+        // 如果是一对多,查询多的一方的关联关系
         final Optional<MappingInfo> infactOpt = EntityMapping.get(manyClazz, t.getClass());
         if (!infactOpt.isPresent()) {
           throw CommonException.of(
               "No mapping object [" + manyClazz + "] found in " + t.getClass());
         }
         final MappingInfo infactMapping = infactOpt.get();
-        relationValue = BeanUtils.getValue(t, infactMapping.getReferenceField(), null);
+        final Object relationValue = BeanUtils.getValue(t, infactMapping.getReferenceField(), null);
         return mappingType.fetchMapping(t, infactMapping, relationValue);
       } else {
         final R mappingObj = field.apply(t);
         if (mappingObj == null) {
           return null;
         }
-        relationValue = BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
-        // BeanUtils.copyProperties(mapping, mappingObj);
+        final Object relationValue =
+            BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
         return mappingType.fetchMapping(t, mappingInfo, relationValue);
       }
     }

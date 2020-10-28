@@ -13,8 +13,10 @@ import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @author ramer
- * @since 15/08/2020
+ * 自动建表.
+ *
+ * @since 2020.10.28
+ * @author Tang Xiaofeng
  */
 @Slf4j
 public class TableExporter {

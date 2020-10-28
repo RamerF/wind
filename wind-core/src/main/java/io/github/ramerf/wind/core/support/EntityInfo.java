@@ -110,7 +110,7 @@ public final class EntityInfo {
     final Field[] timeField = new Field[2];
 
     List<EntityColumn> primaryKeys = new ArrayList<>();
-    List<EntityColumn> entityColumns = new ArrayList<>();
+    Set<EntityColumn> entityColumns = new HashSet<>();
     for (Field field : columnFields) {
       // 创建/更新时间
       if (field.getAnnotation(CreateTimestamp.class) != null) {
@@ -121,6 +121,9 @@ public final class EntityInfo {
       }
       // 列信息
       final EntityColumn entityColumn = EntityColumn.of(field, dialect);
+      if (entityColumn == null) {
+        continue;
+      }
       fieldColumnMap.put(field.getName(), entityColumn.getName());
       if (entityColumn.isPrimaryKey()) {
         primaryKeys.add(entityColumn);
@@ -128,7 +131,7 @@ public final class EntityInfo {
       entityColumns.add(entityColumn);
     }
     entityInfo.setPrimaryKeys(primaryKeys);
-    entityInfo.setEntityColumns(entityColumns);
+    entityInfo.setEntityColumns(new ArrayList<>(entityColumns));
 
     getCreateUpdateTimeFields(timeField, configuration);
     entityInfo.setCreateTimeField(timeField[0]);

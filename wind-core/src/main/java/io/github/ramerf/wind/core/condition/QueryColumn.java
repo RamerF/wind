@@ -2,14 +2,14 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
+import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.WindConfiguration;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
-import io.github.ramerf.wind.core.util.EntityUtils;
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Objects;
 import lombok.EqualsAndHashCode;
@@ -32,7 +32,7 @@ import static java.util.stream.Collectors.joining;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @SuppressWarnings("UnusedReturnValue")
-public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T> {
+public class QueryColumn<T extends AbstractEntityPoJo> extends AbstractQueryEntity<T> {
   /** 预留嵌套语句. */
   //  private List<QueryColumn<T>> children = new ArrayList<>();
 
@@ -51,7 +51,7 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    * @param configuration the configuration
    * @return the query column
    */
-  public static <T extends AbstractEntity> QueryColumn<T> of(WindConfiguration configuration) {
+  public static <T extends AbstractEntityPoJo> QueryColumn<T> of(WindConfiguration configuration) {
     return new QueryColumn<>(EntityInfo.of(configuration));
   }
 
@@ -185,28 +185,26 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
     return this;
   }
 
-  /** 添加查询对象(列/聚合函数). */
-  public QueryColumn<T> add(final Field field) {
-    getQueryEntityMetaData()
-        .queryAlias
-        .add(
-            QueryAlia.of(
-                field.getName(), // constraint format
-                EntityUtils.fieldToColumn(field),
-                getQueryEntityMetaData().getTableName(),
-                getQueryEntityMetaData().getTableAlia()));
-    return this;
-  }
-
   @Override
   public String getString() {
     final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
     if (CollectionUtils.isEmpty(metaData.queryAlias)) {
-      EntityUtils.getAllColumnFields(metaData.clazz).stream()
-          .filter(EntityUtils::isNotDontFetch)
-          .forEach(this::add);
+      EntityHelper.getEntityInfo(metaData.clazz).getEntityColumns().forEach(this::add);
     }
     return metaData.queryAlias.stream().map(QueryColumn::toColumnWithAlia).collect(joining(","));
+  }
+
+  /** 添加查询对象(列/聚合函数). */
+  public QueryColumn<T> add(final EntityColumn entityColumn) {
+    getQueryEntityMetaData()
+        .queryAlias
+        .add(
+            QueryAlia.of(
+                entityColumn.getField().getName(), // constraint format
+                entityColumn.getName(),
+                getQueryEntityMetaData().getTableName(),
+                getQueryEntityMetaData().getTableAlia()));
+    return this;
   }
 
   /** 增加额外的表别名前缀 */

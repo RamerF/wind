@@ -9,7 +9,7 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  * @author Tang Xiaofeng
  * @since 2020/4/29
  */
-@SuppressWarnings({"RedundantCast", "unused"})
+@SuppressWarnings({"unused"})
 public enum SqlAggregateFunction implements SqlFunction {
   /** COUNT(%s) */
   COUNT(str -> " COUNT(" + String.join("", str) + ") "),

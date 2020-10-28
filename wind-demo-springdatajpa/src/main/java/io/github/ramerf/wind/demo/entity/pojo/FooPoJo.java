@@ -61,7 +61,7 @@ public class FooPoJo extends AbstractEntityPoJo {
   /** Integer[]可对应数据库类型 int[] */
   private Integer[] intArr;
 
-  public enum Type implements InterEnum {
+  public enum Type implements InterEnum<Integer> {
     /** 商品类别 */
     PHONE(0, "手机"),
     SPORT(1, "运动");

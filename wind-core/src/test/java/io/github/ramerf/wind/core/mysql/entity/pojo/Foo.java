@@ -55,7 +55,7 @@ public class Foo extends AbstractEntityPoJo {
   @Column(columnDefinition = "text")
   private String largeText;
 
-  public enum Type implements InterEnum {
+  public enum Type implements InterEnum<Integer> {
     /** 商品类别 */
     PHONE(0, "手机"),
     SPORT(1, "运动");

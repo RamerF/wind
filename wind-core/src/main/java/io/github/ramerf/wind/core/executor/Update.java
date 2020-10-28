@@ -4,7 +4,6 @@ import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
@@ -109,12 +108,13 @@ public final class Update {
     if (Objects.isNull(clazz) && StringUtils.isEmpty(tableName)) {
       throw CommonException.of("[clazz,tableName]不能同时为空");
     }
-    this.condition = QueryColumnFactory.fromClassAndTableName(clazz, tableName).getCondition();
     this.clazz = clazz;
     if (clazz == null) {
+      this.condition = QueryColumnFactory.fromTableName(tableName).getCondition();
       this.entityInfo = EntityInfo.of(configuration);
       this.entityInfo.setName(tableName);
     } else {
+      this.condition = QueryColumnFactory.fromClass(clazz).getCondition();
       this.entityInfo = EntityHelper.getEntityInfo(clazz);
     }
     return this;
@@ -609,7 +609,7 @@ public final class Update {
    * @param <T> the type parameter
    * @return 要保存的属性
    */
-  private <T extends AbstractEntity> Set<Field> getSavingFields(
+  private <T extends AbstractEntityPoJo> Set<Field> getSavingFields(
       final T t, List<IFunction<T, ?>> includeNullProps) {
     final Set<Field> savingFields = new HashSet<>(EntityUtils.getNonNullColumnFields(t));
     if (CollectionUtils.nonEmpty(includeNullProps)) {

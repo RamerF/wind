@@ -9,7 +9,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
-import javax.persistence.JoinColumn;
+import javax.persistence.*;
 import lombok.Data;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
@@ -76,7 +76,7 @@ public class EntityMapping {
     entityInfo.setMappingInfos(mappingInfos);
   }
 
-  public static void valid(@Nonnull final Map<String, EntityInfo> map) {
+  public static void valid(@Nonnull final Map<Class<?>, EntityInfo> map) {
     if (map.size() == 0) {
       return;
     }
@@ -167,9 +167,12 @@ public class EntityMapping {
       return info;
     }
 
+    /** 是否是1对N/N对N映射.true:是 */
     public static boolean isManyMapping(final Field field) {
       final Class<?> type = field.getType();
-      if (List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type)) {
+      if ((List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type))
+          && (field.getAnnotation(OneToMany.class) != null
+              || field.getAnnotation(ManyToMany.class) != null)) {
         return AbstractEntityPoJo.class.isAssignableFrom(
             (Class<?>)
                 ((ParameterizedTypeImpl) field.getGenericType()).getActualTypeArguments()[0]);
@@ -177,23 +180,16 @@ public class EntityMapping {
       return false;
     }
 
-    public static boolean isManyMapping(final Method method) {
-      final Class<?> type = method.getParameterTypes()[0];
-      if (List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type)) {
-        return AbstractEntityPoJo.class.isAssignableFrom(
-            (Class<?>)
-                ((ParameterizedTypeImpl) method.getGenericParameterTypes()[0])
-                    .getActualTypeArguments()[0]);
-      }
-      return false;
-    }
-
-    public static boolean isOneMapping(final Method method) {
-      return AbstractEntityPoJo.class.isAssignableFrom(method.getParameterTypes()[0]);
-    }
-
+    /** 是否是N对1映射.true:是 */
     public static boolean isOneMapping(final Field field) {
-      return AbstractEntityPoJo.class.isAssignableFrom(field.getType());
+      return AbstractEntityPoJo.class.isAssignableFrom(field.getType())
+          && (field.getAnnotation(OneToOne.class) != null
+              || field.getAnnotation(ManyToOne.class) != null);
+    }
+
+    /** 是否是有效关系映射.true:是 */
+    public static boolean isValidMapping(final Field field) {
+      return isOneMapping(field) || isManyMapping(field);
     }
 
     private static String getReferencedColumn(final Field field) {

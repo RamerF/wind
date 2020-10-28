@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public abstract class AbstractQueryEntity<T extends AbstractEntity> implements QueryEntity<T> {
+public abstract class AbstractQueryEntity<T extends AbstractEntityPoJo> implements QueryEntity<T> {
   private QueryEntityMetaData<T> queryEntityMetaData = new QueryEntityMetaData<>();
   private EntityInfo entityInfo;
 }

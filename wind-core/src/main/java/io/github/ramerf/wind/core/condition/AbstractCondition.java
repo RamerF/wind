@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
@@ -34,7 +33,7 @@ import static java.util.stream.Collectors.toCollection;
  */
 @Slf4j
 @ToString
-public abstract class AbstractCondition<T extends AbstractEntity> extends AbstractQueryEntity<T>
+public abstract class AbstractCondition<T extends AbstractEntityPoJo> extends AbstractQueryEntity<T>
     implements ICondition<T> {
   /** where后的字符串,参数占位符为 ?. */
   final List<String> conditionSql = new LinkedList<>();

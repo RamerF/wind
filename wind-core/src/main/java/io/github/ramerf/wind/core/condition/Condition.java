@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
@@ -27,14 +28,14 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 @Slf4j
 @ToString
 @SuppressWarnings("UnusedReturnValue")
-public class Condition<T extends AbstractEntity> extends AbstractCondition<T> {
+public class Condition<T extends AbstractEntityPoJo> extends AbstractCondition<T> {
 
   @Override
   public AbstractCondition<T> of() {
     return new Condition<>();
   }
 
-  public static <T extends AbstractEntity> Condition<T> of(QueryColumn<T> queryColumn) {
+  public static <T extends AbstractEntityPoJo> Condition<T> of(QueryColumn<T> queryColumn) {
     final Condition<T> condition = new Condition<>();
     condition.setEntityInfo(queryColumn.getEntityInfo());
     condition.setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
@@ -327,14 +328,14 @@ public class Condition<T extends AbstractEntity> extends AbstractCondition<T> {
     return this;
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
+  public <R extends AbstractEntity, Q extends AbstractEntityPoJo> Condition<T> eq(
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final AbstractQueryEntity<Q> queryColumn,
       @Nonnull final IFunction<R, ?> field2) {
     return eq(true, field, queryColumn, field2);
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntity> Condition<T> eq(
+  public <R extends AbstractEntity, Q extends AbstractEntityPoJo> Condition<T> eq(
       final boolean condition,
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final AbstractQueryEntity<Q> queryColumn,

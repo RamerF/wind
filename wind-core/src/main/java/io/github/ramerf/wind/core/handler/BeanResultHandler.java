@@ -80,7 +80,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       final Field field = getField(method, fieldName);
       final Class<?> paramType = method.getParameterTypes()[0];
       if (bindProxy && isPoJo) {
-        if (MappingInfo.isOneMapping(method)) {
+        if (MappingInfo.isOneMapping(field)) {
           //noinspection unchecked
           initMappingObj(
               map,
@@ -89,7 +89,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
               field,
               (Class<? extends AbstractEntityPoJo>) paramType);
           continue;
-        } else if (MappingInfo.isManyMapping(method)) {
+        } else if (MappingInfo.isManyMapping(field)) {
           continue;
         }
       }

@@ -239,6 +239,7 @@ public class Query {
 
   /**
    * Group by 语句.<br>
+   * TODO-WARN 这个思路有问题,groupBy的实现应该是{@link ICondition},只是最后取sql做聚合
    *
    * <pre>
    *   初始化:
