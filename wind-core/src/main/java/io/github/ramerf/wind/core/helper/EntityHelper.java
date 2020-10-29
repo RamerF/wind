@@ -128,17 +128,18 @@ public class EntityHelper {
         initEntity(clazz);
       }
     }
-    return CLAZZ_ENTITY_MAP.get(fullPath);
+    return CLAZZ_ENTITY_MAP.get(clazz);
   }
 
   private static EntityInfo initEntityIfNeeded(final String fullPath) {
+    final Class<AbstractEntityPoJo> clazz = BeanUtils.getClazz(fullPath);
     synchronized (EntityHelper.class) {
-      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(fullPath);
+      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(clazz);
       if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {
-        initEntity(BeanUtils.getClazz(fullPath));
+        initEntity(clazz);
       }
     }
-    return CLAZZ_ENTITY_MAP.get(fullPath);
+    return CLAZZ_ENTITY_MAP.get(clazz);
   }
 
   private static void ddlAuto(final EntityInfo entityInfo) {

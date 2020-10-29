@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.annotation.TableColumn;
-import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
@@ -20,7 +19,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
-import javax.persistence.*;
+import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AdvisedSupport;
 import org.springframework.aop.framework.AopProxy;
@@ -231,29 +230,40 @@ public final class EntityUtils {
 
   /**
    * 获取对象属性对应的数据库列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为<br>
+   * 默认值为{@link TableColumn#name()};如果前者为空,值为<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
    * @param field the field
    * @return string string
-   * @see Column#name() Column#name()
+   * @see TableColumn#name() TableColumn#name()
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
   public static String fieldToColumn(@Nonnull final Field field) {
-    final Column column = field.getAnnotation(Column.class);
+    final TableColumn column = field.getAnnotation(TableColumn.class);
     if (column != null && StringUtils.nonEmpty(column.name())) {
       return column.name();
     }
-    final JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
-    if (joinColumn != null && StringUtils.nonEmpty(joinColumn.name())) {
-      return joinColumn.name();
+    final Class<?> fieldType = field.getType();
+    if (!AbstractEntityPoJo.class.isAssignableFrom(fieldType)) {
+      return camelToUnderline(field.getName());
     }
-    // 关系属性默认是 name + Id
-    if (AbstractEntityPoJo.class.isAssignableFrom(field.getType())) {
-      return camelToUnderline(field.getName().concat("Id"));
+    // 关联字段
+    final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+    if (oneToOne != null) {
+      final String joinColumnName = oneToOne.joinColumnName();
+      final String referenceField = oneToOne.referenceField();
+      return "".equals(joinColumnName)
+          ? camelToUnderline(fieldType.getSimpleName().concat("_").concat(referenceField))
+          : joinColumnName;
+    } else {
+      final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+      final String joinColumnName = manyToOne.joinColumnName();
+      final String referenceField = manyToOne.referenceField();
+      return "".equals(joinColumnName)
+          ? camelToUnderline(fieldType.getSimpleName().concat("_").concat(referenceField))
+          : joinColumnName;
     }
-    return camelToUnderline(field.getName());
   }
 
   /**

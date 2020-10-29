@@ -195,7 +195,7 @@ public class QueryColumn<T extends AbstractEntityPoJo> extends AbstractQueryEnti
   }
 
   /** 添加查询对象(列/聚合函数). */
-  public QueryColumn<T> add(final EntityColumn entityColumn) {
+  private QueryColumn<T> add(final EntityColumn entityColumn) {
     getQueryEntityMetaData()
         .queryAlias
         .add(

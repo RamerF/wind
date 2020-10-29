@@ -4,7 +4,7 @@ import java.lang.annotation.*;
 import javax.persistence.Column;
 
 /**
- * 字段信息.
+ * 列信息.
  *
  * @author ramer
  * @since 21/07/2020
@@ -13,6 +13,8 @@ import javax.persistence.Column;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface TableColumn {
+  /** 列名默认为该属性的下划线格式,如果是关联属性,默认为[关联类名_属性名]的下划线格式. */
+  String name() default "";
 
   /**
    * (可选)默认不要拉取该字段. 设置为true时,只有手动指定要查询该字段时才会拉取,如: <br>

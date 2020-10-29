@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.annotation.OneToOne;
 import javax.persistence.Entity;
-import javax.persistence.OneToOne;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -20,10 +20,10 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ProductSpuCode extends AbstractEntityPoJo {
+  private long code;
 
-  private String code;
-
-  @OneToOne private ProductSpu productSpu;
+  @OneToOne(field = "code")
+  private ProductSpu productSpu;
 
   @OneToOne private Product product;
 }

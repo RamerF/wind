@@ -2,8 +2,8 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.annotation.OneToMany;
 import java.util.List;
-import javax.persistence.OneToMany;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

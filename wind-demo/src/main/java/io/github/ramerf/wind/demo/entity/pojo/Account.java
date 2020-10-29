@@ -2,9 +2,9 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.annotation.ManyToOne;
 import java.util.Date;
 import javax.persistence.Column;
-import javax.persistence.ManyToOne;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

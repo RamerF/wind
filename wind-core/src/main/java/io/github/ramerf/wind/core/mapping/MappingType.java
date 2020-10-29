@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.mapping;
 
+import io.github.ramerf.wind.core.annotation.OneToOne;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Query;
@@ -118,10 +119,10 @@ public enum MappingType {
     if (field.isAnnotationPresent(OneToOne.class)) {
       return ONE_TO_ONE;
     }
-    if (field.isAnnotationPresent(OneToMany.class)) {
+    if (field.isAnnotationPresent(io.github.ramerf.wind.core.annotation.OneToMany.class)) {
       return ONE_TO_MANY;
     }
-    if (field.isAnnotationPresent(ManyToOne.class)) {
+    if (field.isAnnotationPresent(io.github.ramerf.wind.core.annotation.ManyToOne.class)) {
       return MANY_TO_ONE;
     }
     if (field.isAnnotationPresent(ManyToMany.class)) {

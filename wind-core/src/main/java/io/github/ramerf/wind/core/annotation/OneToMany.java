@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.mapping;
+package io.github.ramerf.wind.core.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -19,9 +19,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface OneToMany {
-  /** 当前对象属性名. */
-  String field();
+  /** 当前对象属性名.默认id */
+  String field() default "id";
 
-  /** 关联对象属性名. */
-  String referenceField();
+  /** 关联对象属性名.默认[当前类Id],如:fooId */
+  String referenceField() default "";
 }

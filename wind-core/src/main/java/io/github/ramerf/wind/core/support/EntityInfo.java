@@ -141,7 +141,7 @@ public final class EntityInfo {
     entityInfo.setLogicDeleteProp(
         LogicDeleteProp.of(clazz.getAnnotation(TableInfo.class), configuration));
     if (!entityInfo.getLogicDeleteProp().isEnable() && entityInfo.isMapToTable()) {
-      log.warn("表[{}]将使用物理删除!", entityInfo.name);
+      log.info("表[{}]将使用物理删除!", entityInfo.name);
     }
     return entityInfo;
   }

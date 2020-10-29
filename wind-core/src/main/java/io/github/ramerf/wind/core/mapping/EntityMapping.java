@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.mapping;
 
+import io.github.ramerf.wind.core.annotation.OneToOne;
 import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -89,8 +90,7 @@ public class EntityMapping {
                         mappingInfo -> {
                           final Class<? extends AbstractEntityPoJo> referenceClazz =
                               mappingInfo.getReferenceClazz();
-                          final EntityInfo referenceEntityInfo =
-                              map.get(referenceClazz.getTypeName());
+                          final EntityInfo referenceEntityInfo = map.get(referenceClazz);
                           if (referenceEntityInfo == null) {
                             throw CommonException.of(
                                 String.format(
@@ -171,7 +171,7 @@ public class EntityMapping {
     public static boolean isManyMapping(final Field field) {
       final Class<?> type = field.getType();
       if ((List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type))
-          && (field.getAnnotation(OneToMany.class) != null
+          && (field.getAnnotation(io.github.ramerf.wind.core.annotation.OneToMany.class) != null
               || field.getAnnotation(ManyToMany.class) != null)) {
         return AbstractEntityPoJo.class.isAssignableFrom(
             (Class<?>)
@@ -184,7 +184,7 @@ public class EntityMapping {
     public static boolean isOneMapping(final Field field) {
       return AbstractEntityPoJo.class.isAssignableFrom(field.getType())
           && (field.getAnnotation(OneToOne.class) != null
-              || field.getAnnotation(ManyToOne.class) != null);
+              || field.getAnnotation(io.github.ramerf.wind.core.annotation.ManyToOne.class) != null);
     }
 
     /** 是否是有效关系映射.true:是 */

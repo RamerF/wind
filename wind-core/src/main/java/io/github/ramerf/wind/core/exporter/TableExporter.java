@@ -39,7 +39,7 @@ public class TableExporter {
     final String columnDefinition =
         columns.stream()
             .filter(EntityColumn::isSupported)
-            .map(column -> column.getColumnDefinition(dialect))
+            .map(column -> column.getColumnDdl(dialect))
             .collect(Collectors.joining(",\n\t"));
     sql.append(columnDefinition).append(",\n\t");
     final List<EntityColumn> keys = entityInfo.getPrimaryKeys();
@@ -95,7 +95,7 @@ public class TableExporter {
     final String columnDefinition =
         updateColumns.stream()
             .filter(EntityColumn::isSupported)
-            .map(column -> " add column " + column.getColumnDefinition(dialect))
+            .map(column -> " add column " + column.getColumnDdl(dialect))
             .collect(Collectors.joining(",\n\t"));
     sql.append(columnDefinition);
     // 列注释

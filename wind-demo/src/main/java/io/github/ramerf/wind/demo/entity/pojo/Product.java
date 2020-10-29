@@ -1,8 +1,10 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.annotation.OneToMany;
+import io.github.ramerf.wind.core.annotation.OneToOne;
 import java.util.List;
-import javax.persistence.*;
+import javax.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -21,7 +23,7 @@ public class Product extends AbstractEntityPoJo {
 
   private String name;
 
-  @OneToOne @JoinColumn private ProductSpu productSpu;
+  @OneToOne private ProductSpu productSpu;
 
   @OneToMany private List<ProductSku> skuses;
 }
