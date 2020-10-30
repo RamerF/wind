@@ -1,10 +1,8 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.annotation.OneToMany;
-import io.github.ramerf.wind.core.annotation.OneToOne;
 import java.util.List;
-import javax.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -12,7 +10,7 @@ import lombok.experimental.SuperBuilder;
  * @author ramer
  * @since 12/09/2020
  */
-@Entity
+@TableInfo
 @Data
 @SuperBuilder
 @NoArgsConstructor

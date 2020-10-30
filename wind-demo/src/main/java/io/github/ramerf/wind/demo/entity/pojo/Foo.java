@@ -7,7 +7,6 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
-import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -15,7 +14,6 @@ import lombok.experimental.SuperBuilder;
  * @author Tang Xiaofeng
  * @since 2019/12/16
  */
-@Entity(name = "foo")
 @TableInfo(name = "foo", comment = "the foo.")
 @Data
 @SuperBuilder
@@ -26,12 +24,11 @@ import lombok.experimental.SuperBuilder;
 public class Foo extends AbstractEntityPoJo {
   private String name;
 
-  @Column(columnDefinition = "text")
-  @TableColumn(comment = "text string comment")
+  @TableColumn(comment = "text string comment", columnDefinition = "text")
   private String textString;
 
   /** List&lt;Long&gt; 可对应数据库类型 bigint[] */
-  @Column(columnDefinition = "bigint[]")
+  @TableColumn(columnDefinition = "bigint[]")
   private List<Long> longList;
 
   /** Long[]可对应数据库类型 bigint[] */
@@ -44,22 +41,22 @@ public class Foo extends AbstractEntityPoJo {
   private String[] stringArr;
 
   /** Bitset 可对应数据库类型 bytea */
-  @Column(columnDefinition = "bytea")
+  @TableColumn(columnDefinition = "bytea")
   private BitSet bitSet;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 smallint/int */
-  @Column(columnDefinition = "smallint")
+  @TableColumn(columnDefinition = "smallint")
   private Type type;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 varchar */
-  @Column(columnDefinition = "varchar(1)")
+  @TableColumn(columnDefinition = "varchar(1)")
   private Alphabet alphabet;
 
-  @Column(columnDefinition = "numeric(5,2)")
+  @TableColumn(columnDefinition = "numeric(5,2)")
   private BigDecimal bigDecimal;
 
-  /** 字段与数据库列不对应时,使用{@link Column#name()}指定数据库字段名. */
-  @Column(name = "non_match_column")
+  /** 字段与数据库列不对应时,使用{@link TableColumn#name()}指定数据库字段名. */
+  @TableColumn(name = "non_match_column")
   private String column;
 
   /** List&lt;Integer&gt; 可对应数据库类型 int[] */

@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.helper;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
@@ -15,8 +16,6 @@ import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
-import javax.persistence.Column;
-import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -78,7 +77,7 @@ public class EntityHelper {
 
   /**
    * 获取Field对应的jdbcType名称,用于sql设置值.<br>
-   * 默认使用{@link Column#columnDefinition()}内的列定义,如果为空则使用默认值.
+   * 默认使用{@link TableColumn#columnDefinition()}内的列定义,如果为空则使用默认值.
    *
    * @param field the field
    * @param defaultValue 默认值
@@ -87,7 +86,7 @@ public class EntityHelper {
    */
   public static String getJdbcTypeName(final Field field, final String defaultValue) {
     String typeName = defaultValue;
-    final Column column = field.getAnnotation(Column.class);
+    final TableColumn column = field.getAnnotation(TableColumn.class);
     if (Objects.nonNull(column)) {
       final String columnDefinition = column.columnDefinition();
       if (StringUtils.nonEmpty(columnDefinition)) {
@@ -168,12 +167,10 @@ public class EntityHelper {
   /**
    * 判断一个Class是否映射到数据库表.true:是
    *
-   * <p>映射到数据库表需要实体包含注解中的一个: {@link Entity},{@link TableInfo}.
+   * <p>映射到数据库表需要实体包含注解: {@link TableInfo}.
    */
   public static boolean isMapToTable(final Class<?> clazz) {
-    return clazz != null
-        && (clazz.getAnnotation(Entity.class) != null
-            || clazz.getAnnotation(TableInfo.class) != null);
+    return clazz != null && clazz.getAnnotation(TableInfo.class) != null;
   }
 
   /**

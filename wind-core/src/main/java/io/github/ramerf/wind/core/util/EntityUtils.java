@@ -19,7 +19,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
-import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AdvisedSupport;
 import org.springframework.aop.framework.AopProxy;
@@ -71,8 +70,8 @@ public final class EntityUtils {
    * <li>非transient
    * <li>基本类型(对应的包装类型)<br>
    *
-   *     <p>或 AbstractEntityPoJo的子类并且标记有注解({@link OneToOne},{@link OneToMany},{@link
-   *     ManyToOne},{@link ManyToMany})中的一个<br>
+   *     <p>或 AbstractEntityPoJo的子类并且标记有注解({@link OneToOne},{@link OneToMany},{@link ManyToOne})中的一个
+   *     <br>
    *
    *     <p>或 List{@code <T>}/Set{@code <T>},T满足上一个条件
    */
@@ -162,12 +161,12 @@ public final class EntityUtils {
 
   /**
    * 获取对象映射到数据库的列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
+   * 默认值为{@link TableColumn#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
    * @param obj the obj
    * @return string all columns
-   * @see Column#name() Column#name()
+   * @see TableColumn#name() Column#name()
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
@@ -180,13 +179,13 @@ public final class EntityUtils {
 
   /**
    * 获取对象映射到数据库的非空属性的列名.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
+   * 默认值为{@link TableColumn#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
    * @param <T> the type parameter
    * @param t the t
    * @return string non null columns
-   * @see Column#name() Column#name()
+   * @see TableColumn#name() Column#name()
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
@@ -199,13 +198,13 @@ public final class EntityUtils {
 
   /**
    * 获取对象映射到数据库的非空属性的列名,以逗号分割.<br>
-   * 默认值为{@link Column#name()};如果前者为空,值为对象属性名的下划线表示<br>
+   * 默认值为{@link TableColumn#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
    * @param <T> the type parameter
    * @param t the t
    * @return string non null column
-   * @see Column#name() Column#name()
+   * @see TableColumn#name() Column#name()
    * @see StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    * @see #getNonNullColumns(AbstractEntityPoJo)
@@ -267,7 +266,7 @@ public final class EntityUtils {
   }
 
   /**
-   * 表名: {@link TableInfo#name()} &gt; {@link Entity#name()} &gt; 类名(驼封转下划线)
+   * 表名: {@link TableInfo#name()} &gt; 类名(驼封转下划线)
    *
    * @param <T> the type t
    * @param clazz the clazz
@@ -275,15 +274,8 @@ public final class EntityUtils {
    */
   public static <T> String getTableName(final Class<T> clazz) {
     final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
-    if (tableInfo != null) {
-      if (StringUtils.nonEmpty(tableInfo.name())) {
-        return tableInfo.name();
-      }
-    }
-
-    final Entity entity = clazz.getAnnotation(Entity.class);
-    if (entity != null && StringUtils.nonEmpty(entity.name())) {
-      return entity.name();
+    if (tableInfo != null && StringUtils.nonEmpty(tableInfo.name())) {
+      return tableInfo.name();
     }
     return StringUtils.camelToUnderline(clazz.getSimpleName());
   }

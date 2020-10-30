@@ -629,7 +629,7 @@ wind:
 #### 可用注解
 
 - @TableInfo 用于指定表信息,配合@Entity使用
-- @TableColumn 用于指定列信息,配合@Column使用
+- @TableColumn 用于指定列信息
 - @LogicDelete 用于@TableInfo注解指定逻辑删除信息
 - @TypeHandler 当全局类型处理器不满足需求时,用于指定特定字段使用的类型处理器
 - @CreateTimestamp 指定该字段值为创建时间

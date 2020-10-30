@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.QueryEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -18,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
-import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.*;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -434,7 +434,7 @@ public final class BeanUtils {
 
 /** The type Ts. */
 class Ts extends AbstractEntityPoJo {
-  @Column(name = "alia")
+  @TableColumn(name = "alia")
   private String name;
 
   private Integer size;

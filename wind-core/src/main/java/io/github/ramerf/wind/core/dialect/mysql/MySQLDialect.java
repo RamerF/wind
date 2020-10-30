@@ -43,7 +43,9 @@ public class MySQLDialect extends Dialect {
     // varchar type
     registerColumnType(String.class, "varchar");
     registerColumnType(String.class, 255, "varchar($l)");
-    registerColumnType(String.class, 65535, "longtext");
+    registerColumnType(String.class, 65535, "text($l)");
+    registerColumnType(String.class, 16777215, "mediumtext($l)");
+    registerColumnType(String.class, 4294967295L, "longtext($l)");
   }
 
   @Override

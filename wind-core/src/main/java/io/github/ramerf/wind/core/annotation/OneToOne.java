@@ -8,9 +8,11 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 指定一对一映射.可选添加关联列
+ * 指定一对一映射.可选添加关联列{@link #joinColumn()}.
  *
- * <p>多的一方添加列field关联目标对象referenceField并且列定义相同.<br>
+ * <p><b>新增列定义和关联属性保持一致,所以使用{@link TableColumn}指定列定义将不会生效</b>.
+ *
+ * <p>多的一方添加列field关联目标对象referenceField并且列定义一致.<br>
  * 如果没有指定field,默认新增列[下划线分割(类型名)_id],如果没有指定referenceField,默认关联id
  *
  * @since 2020.10.28

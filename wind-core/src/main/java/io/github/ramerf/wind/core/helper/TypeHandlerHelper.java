@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.helper;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.config.AppContextInject;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.factory.TypeHandlerRegistryFactory;
@@ -8,7 +9,6 @@ import java.lang.reflect.*;
 import java.sql.PreparedStatement;
 import java.util.Objects;
 import java.util.Optional;
-import javax.persistence.Column;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,7 +49,7 @@ public class TypeHandlerHelper {
   public static class ValueType {
     /** 原始值,可能是java值或数据库值. */
     @Getter private final Object originVal;
-    /** 对应的字段,用于获取{@link Column#columnDefinition()},也可以获取自定义注解. */
+    /** 对应的字段,用于获取{@link TableColumn#columnDefinition()},也可以获取自定义注解. */
     @Getter private final Field field;
     /** 泛型参数类型,可能是{@link Field#getGenericType()}或者{@link Method#getGenericParameterTypes()}[0]. */
     @Getter private final Type genericParameterType;

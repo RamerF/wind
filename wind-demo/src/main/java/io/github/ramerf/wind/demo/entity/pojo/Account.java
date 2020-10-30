@@ -2,9 +2,7 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.annotation.ManyToOne;
 import java.util.Date;
-import javax.persistence.Column;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -35,7 +33,7 @@ public class Account extends AbstractEntityPoJo {
   private long createDate;
 
   /** 自定义更新时间. */
-  @Column(columnDefinition = "timestamp with time zone")
+  @TableColumn(columnDefinition = "timestamp with time zone")
   @UpdateTimestamp
   private Date updateDate;
 

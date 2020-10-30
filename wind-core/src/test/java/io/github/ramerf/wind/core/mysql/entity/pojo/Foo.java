@@ -7,7 +7,6 @@ import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.BitSetBlobTypeHandler;
 import java.math.BigDecimal;
 import java.util.BitSet;
-import javax.persistence.Column;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -28,18 +27,18 @@ public class Foo extends AbstractEntityPoJo {
   /** 基本类型. */
   private int age;
 
-  @Column(columnDefinition = "text")
+  @TableColumn(columnDefinition = "text")
   private String textString;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 smallint/int */
-  @Column(columnDefinition = "smallint")
+  @TableColumn(columnDefinition = "smallint")
   private Type type;
 
-  @Column(columnDefinition = "numeric(5,2)")
+  @TableColumn(columnDefinition = "numeric(5,2)")
   private BigDecimal bigDecimal;
 
-  /** 字段与数据库列不对应时,使用{@link Column#name()}指定数据库字段名. */
-  @Column(name = "non_match_column")
+  /** 字段与数据库列不对应时,使用{@link TableColumn#name()}指定数据库字段名. */
+  @TableColumn(name = "non_match_column")
   private String column;
 
   /** 自定义逻辑删除字段. */
@@ -47,12 +46,11 @@ public class Foo extends AbstractEntityPoJo {
   private boolean hasDeleted;
 
   @TypeHandler(BitSetBlobTypeHandler.class)
-  @Column(columnDefinition = "blob")
+  @TableColumn(columnDefinition = "blob")
   private BitSet bitSet;
 
   /** 大文本字段,测试默认不拉取该字段. */
-  @TableColumn(dontFetch = true, comment = "大文本字段,测试默认不拉取该字段")
-  @Column(columnDefinition = "text")
+  @TableColumn(dontFetch = true, comment = "大文本字段,测试默认不拉取该字段", columnDefinition = "text")
   private String largeText;
 
   public enum Type implements InterEnum<Integer> {

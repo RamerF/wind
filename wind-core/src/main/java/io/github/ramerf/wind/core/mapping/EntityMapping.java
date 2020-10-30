@@ -1,16 +1,18 @@
 package io.github.ramerf.wind.core.mapping;
 
-import io.github.ramerf.wind.core.annotation.OneToOne;
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
-import javax.persistence.*;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import lombok.Data;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
@@ -151,7 +153,7 @@ public class EntityMapping {
     @SuppressWarnings("unchecked")
     private static MappingInfo of(final Field field) {
       final MappingInfo info = new MappingInfo();
-      // TODO-WARN 要根据@OneToOne && @JoinColumn获取
+      // TODO-WARN 要根据@OneToOne && @TableColumn获取
       info.setClazz((Class<? extends AbstractEntityPoJo>) field.getDeclaringClass());
       info.setField(field);
       info.setMappingType(MappingType.of(field));
@@ -163,7 +165,7 @@ public class EntityMapping {
       } else {
         info.setReferenceClazz((Class<? extends AbstractEntityPoJo>) field.getType());
       }
-      info.setReferenceColumn(getReferencedColumn(field));
+      info.setReferenceColumn(getReferencedColumn(field, info.getReferenceClazz()));
       return info;
     }
 
@@ -184,7 +186,8 @@ public class EntityMapping {
     public static boolean isOneMapping(final Field field) {
       return AbstractEntityPoJo.class.isAssignableFrom(field.getType())
           && (field.getAnnotation(OneToOne.class) != null
-              || field.getAnnotation(io.github.ramerf.wind.core.annotation.ManyToOne.class) != null);
+              || field.getAnnotation(io.github.ramerf.wind.core.annotation.ManyToOne.class)
+                  != null);
     }
 
     /** 是否是有效关系映射.true:是 */
@@ -192,11 +195,16 @@ public class EntityMapping {
       return isOneMapping(field) || isManyMapping(field);
     }
 
-    private static String getReferencedColumn(final Field field) {
-      final JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
-      if (joinColumn != null && StringUtils.nonEmpty(joinColumn.referencedColumnName())) {
-        return joinColumn.referencedColumnName();
+    private static String getReferencedColumn(
+        final Field field, final Class<? extends AbstractEntityPoJo> referenceClazz) {
+      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+      final String reference = oneToOne.referenceField();
+      if (oneToOne != null) {
+        EntityUtils.fieldToColumn();
+      } else {
+        field.getAnnotation(ManyToOne.class);
       }
+      BeanUtils.getDeclaredField(referenceClazz, reference);
       // 默认关联id
       return "id";
     }

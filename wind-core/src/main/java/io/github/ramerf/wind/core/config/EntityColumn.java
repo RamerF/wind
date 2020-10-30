@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Objects;
 import javax.annotation.Nonnull;
-import javax.persistence.Column;
 import javax.persistence.Id;
 import lombok.*;
 
@@ -65,7 +64,7 @@ public class EntityColumn {
   /** 是否是主键. */
   private boolean primaryKey = false;
 
-  /** {@link Column#columnDefinition()}. */
+  /** {@link TableColumn#columnDefinition()}. */
   @Getter(AccessLevel.NONE)
   private String columnDefinition;
 
@@ -85,6 +84,9 @@ public class EntityColumn {
     return unique ? String.format("create unique index %s_index on table(%s)", name, name) : null;
   }
 
+  private static final String defaultRegex = "default[ ]+[']?[\\w\\u4e00-\\u9fa5]+[']?[ ]?";
+  private static final String commentRegex = "comment.*";
+
   public static EntityColumn of(@Nonnull Field field, Dialect dialect) {
     // 如果是一对多关联的情况,不记录列信息
     if (MappingInfo.isManyMapping(field)) {
@@ -95,7 +97,7 @@ public class EntityColumn {
     entityColumn.name = EntityUtils.fieldToColumn(field);
 
     final boolean oneMapping = MappingInfo.isOneMapping(field);
-    final Field referenceField = oneMapping ? getReferenceField(field) : field;
+    final Field parseField = oneMapping ? getReferenceField(field) : field;
     // OneToOne时,可能不会添加列
     if (oneMapping) {
       final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
@@ -103,7 +105,7 @@ public class EntityColumn {
         entityColumn.supported = false;
       }
     }
-    entityColumn.type = referenceField.getGenericType();
+    entityColumn.type = parseField.getGenericType();
     if (dialect.isSupportJavaType(entityColumn.type)
         || (entityColumn.type instanceof Class
             && InterEnum.class.isAssignableFrom((Class<?>) entityColumn.type))) {
@@ -112,24 +114,13 @@ public class EntityColumn {
     if (field.isAnnotationPresent(Id.class)) {
       entityColumn.primaryKey = true;
     }
-
-    final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
-    if (tableColumn != null) {
-      entityColumn.comment = tableColumn.comment();
-      if (StringUtils.nonEmpty(tableColumn.defaultValue())) {
-        entityColumn.defaultValue = tableColumn.defaultValue();
-      } else if (tableColumn.defaultBlankValue()) {
-        entityColumn.defaultValue = "''";
-      }
-    }
-
     // 如果是基本类型,列定义不能为空
     if (entityColumn.getType() instanceof Class
         && ((Class<?>) entityColumn.getType()).isPrimitive()) {
       entityColumn.nullable = false;
     }
-    // TODO-WARN 如果是关联对象,需要判断JoinColumn
-    final Column column = referenceField.getAnnotation(Column.class);
+
+    final TableColumn column = parseField.getAnnotation(TableColumn.class);
     if (column == null) {
       entityColumn.typeName =
           entityColumn.supported
@@ -145,21 +136,21 @@ public class EntityColumn {
         entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn);
       }
     } else {
-      StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
+      entityColumn.comment = column.comment();
+      if (!column.defaultValue().isEmpty()) {
+        entityColumn.defaultValue = column.defaultValue();
+      } else if (column.defaultBlankValue()) {
+        entityColumn.defaultValue = "''";
+      }
+      // StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
       StringUtils.doIfNonEmpty(
           column.columnDefinition(),
           columnDefinition -> {
-            final String defaultRegex = "default[ ]+\\w+[ ]?";
-            final String commentRegex = "comment.*";
-            final String lowerCaseDefinition = columnDefinition.toLowerCase();
-            if (tableColumn == null) {
-              entityColumn.columnDefinition = columnDefinition;
-              return;
-            }
-            // TableColumn#defaultValue优先级高于Column#columnDefinition中的default值
+            columnDefinition = columnDefinition.toLowerCase();
             String defaultValue = entityColumn.defaultValue;
             if (StringUtils.nonEmpty(defaultValue)) {
-              String replacement = " default '" + defaultValue + "'";
+              String replacement =
+                  " default '" + (defaultValue.equals("''") ? "" : defaultValue) + "'";
               entityColumn.columnDefinition =
                   columnDefinition.replaceAll(defaultRegex, replacement);
               if (!entityColumn.columnDefinition.contains("default")) {

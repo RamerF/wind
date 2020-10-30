@@ -58,7 +58,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
     StringBuilder var1 = new StringBuilder();
     if (this.ownerType != null) {
       if (this.ownerType instanceof Class) {
-        var1.append(((Class) this.ownerType).getName());
+        var1.append(((Class<?>) this.ownerType).getName());
       } else {
         var1.append(this.ownerType.toString());
       }
@@ -82,8 +82,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
       Type[] var3 = this.actualTypeArguments;
       int var4 = var3.length;
 
-      for (int var5 = 0; var5 < var4; ++var5) {
-        Type var6 = var3[var5];
+      for (Type var6 : var3) {
         if (!var2) {
           var1.append(", ");
         }

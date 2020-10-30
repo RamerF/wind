@@ -1,7 +1,8 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
+import io.github.ramerf.wind.core.annotation.ManyToOne;
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -9,7 +10,7 @@ import lombok.experimental.SuperBuilder;
  * @author ramer
  * @since 12/09/2020
  */
-@Entity
+@TableInfo
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -18,5 +19,5 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class ProductSku extends AbstractEntityPoJo {
   private String name;
-  @ManyToOne @JoinColumn private Product product;
+  @ManyToOne private Product product;
 }

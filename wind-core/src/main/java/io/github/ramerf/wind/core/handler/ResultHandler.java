@@ -6,7 +6,6 @@ import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.*;
-import javax.persistence.Entity;
 import lombok.Data;
 
 /**
@@ -98,7 +97,7 @@ public interface ResultHandler<T, E> {
       /*
        别名逻辑:
        1. 别名
-       2. 别名为空时,如果用户定义的列名(@Column.name)和下划线格式的字段名不相等,使用字段对应的下划线表示(解决字段名和列名不对应时,查询字段为空)
+       2. 别名为空时,如果用户定义的列名(@TableColumn.name)和下划线格式的字段名不相等,使用字段对应的下划线表示(解决字段名和列名不对应时,查询字段为空)
       */
       final String underlineField = StringUtils.camelToUnderline(fieldName);
       queryAlia.setColumnAlia(
@@ -114,14 +113,8 @@ public interface ResultHandler<T, E> {
                 .map(Reference::get)
                 .orElseGet(
                     () -> {
-                      final Class<Object> clazz =
-                          BeanUtils.getClazz(function.getImplClassFullPath());
-                      final Entity entity = clazz.getAnnotation(Entity.class);
-                      // 表名: @Entity#name > 类名(驼封转下划线)
                       final String name =
-                          Objects.nonNull(entity) && StringUtils.nonEmpty(entity.name())
-                              ? entity.name()
-                              : StringUtils.camelToUnderline(className);
+                          EntityUtils.getTableName(BeanUtils.getClazz(classFullPath));
                       TABLE_NAME_MAP.put(classFullPath, new WeakReference<>(name));
                       return name;
                     });
