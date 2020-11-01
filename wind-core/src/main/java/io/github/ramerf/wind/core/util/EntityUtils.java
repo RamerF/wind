@@ -229,8 +229,9 @@ public final class EntityUtils {
 
   /**
    * 获取对象属性对应的数据库列名.<br>
-   * 默认值为{@link TableColumn#name()};如果前者为空,值为<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
+   * <li>普通字段:默认值为{@link TableColumn#name()};如果前者为空,值为<br>
+   *     {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
+   * <li>N对1关联字段:
    *
    * @param field the field
    * @return string string
@@ -239,30 +240,41 @@ public final class EntityUtils {
    * @see Field#getName() Field#getName()
    */
   public static String fieldToColumn(@Nonnull final Field field) {
-    final TableColumn column = field.getAnnotation(TableColumn.class);
-    if (column != null && StringUtils.nonEmpty(column.name())) {
-      return column.name();
-    }
     final Class<?> fieldType = field.getType();
+    // 普通字段
     if (!AbstractEntityPoJo.class.isAssignableFrom(fieldType)) {
-      return camelToUnderline(field.getName());
+      final TableColumn column = field.getAnnotation(TableColumn.class);
+      return column != null && StringUtils.nonEmpty(column.name())
+          ? column.name()
+          : camelToUnderline(field.getName());
     }
     // 关联字段
     final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+    final String joinColumnName;
+    final String reference;
     if (oneToOne != null) {
-      final String joinColumnName = oneToOne.joinColumnName();
-      final String referenceField = oneToOne.referenceField();
-      return "".equals(joinColumnName)
-          ? camelToUnderline(fieldType.getSimpleName().concat("_").concat(referenceField))
-          : joinColumnName;
+      joinColumnName = oneToOne.joinColumnName();
+      reference = oneToOne.referenceField();
     } else {
       final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-      final String joinColumnName = manyToOne.joinColumnName();
-      final String referenceField = manyToOne.referenceField();
-      return "".equals(joinColumnName)
-          ? camelToUnderline(fieldType.getSimpleName().concat("_").concat(referenceField))
-          : joinColumnName;
+      joinColumnName = manyToOne.joinColumnName();
+      reference = manyToOne.referenceField();
     }
+    // 手动指定关联列名
+    if (!"".equals(joinColumnName)) {
+      return joinColumnName;
+    } else
+    // 关联id
+    if ("id".equals(reference)) {
+      return camelToUnderline(fieldType.getSimpleName().concat("_").concat(reference));
+    }
+    final Field referenceField = BeanUtils.getDeclaredField(fieldType, reference);
+    if (referenceField == null
+        || AbstractEntityPoJo.class.isAssignableFrom(referenceField.getType())) {
+      throw CommonException.of("Invalid mapping field " + reference);
+    }
+    return camelToUnderline(
+        fieldType.getSimpleName().concat("_").concat(fieldToColumn(referenceField)));
   }
 
   /**

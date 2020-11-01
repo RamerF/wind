@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
-import io.github.ramerf.wind.core.annotation.OneToOne;
-import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -20,9 +19,10 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ProductSpuCode extends AbstractEntityPoJo {
+  @TableColumn(defaultValue = "0")
   private long code;
 
-  @OneToOne(field = "code")
+  @OneToOne(field = "code", joinColumn = false)
   private ProductSpu productSpu;
 
   @OneToOne private Product product;

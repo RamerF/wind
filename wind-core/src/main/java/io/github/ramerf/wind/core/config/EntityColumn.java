@@ -13,6 +13,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.persistence.Id;
 import lombok.*;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  * 实体列信息(字段,sqlType).
@@ -125,16 +126,12 @@ public class EntityColumn {
       entityColumn.typeName =
           entityColumn.supported
               ? dialect.getTypeName(
-                  entityColumn.type,
+                  entityColumn.getType(field, entityColumn.type),
                   entityColumn.length,
                   entityColumn.precision,
                   entityColumn.scale)
               : null;
 
-      // 默认主键定义
-      if (entityColumn.isPrimaryKey()) {
-        entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn);
-      }
     } else {
       entityColumn.comment = column.comment();
       if (!column.defaultValue().isEmpty()) {
@@ -181,7 +178,7 @@ public class EntityColumn {
         entityColumn.typeName =
             entityColumn.supported
                 ? dialect.getTypeName(
-                    entityColumn.type,
+                    entityColumn.getType(field, entityColumn.type),
                     entityColumn.length,
                     entityColumn.precision,
                     entityColumn.scale)
@@ -189,7 +186,19 @@ public class EntityColumn {
       }
     }
     entityColumn.columnDefinition = entityColumn.getColumnDefinition(dialect);
+    // 默认主键定义
+    if (entityColumn.isPrimaryKey()) {
+      entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn);
+    }
     return entityColumn;
+  }
+
+  private Type getType(Field field, Type type) {
+    if (this.type instanceof Class && InterEnum.class.isAssignableFrom((Class<?>) this.type)) {
+      return ((ParameterizedTypeImpl) field.getType().getGenericInterfaces()[0])
+          .getActualTypeArguments()[0];
+    }
+    return this.type;
   }
 
   private String getColumnDefinition(final Dialect dialect) {

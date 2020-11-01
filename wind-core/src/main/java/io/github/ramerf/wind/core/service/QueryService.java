@@ -132,7 +132,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
   }
 
-  default <R> R fetchMapping(T t, IFunction<T, R> field) {
+  default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> field) {
     final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
     if (optional.isPresent()) {
       final MappingInfo mappingInfo = optional.get();
@@ -149,6 +149,7 @@ public interface QueryService<T extends AbstractEntityPoJo> extends InterService
         final Object relationValue = BeanUtils.getValue(t, infactMapping.getReferenceField(), null);
         return mappingType.fetchMapping(t, infactMapping, relationValue);
       } else {
+        // TODO-WARN 这里有问题，可能没有保存对面的字段
         final R mappingObj = field.apply(t);
         if (mappingObj == null) {
           return null;
