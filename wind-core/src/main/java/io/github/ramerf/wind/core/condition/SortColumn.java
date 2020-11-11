@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.LinkedList;
@@ -19,7 +20,7 @@ public class SortColumn {
   /** The Orders. */
   List<Sort.Order> orders = new LinkedList<>();
 
-  public static <T extends AbstractEntity> SortColumn by(
+  public static <T extends AbstractEntityPoJo<?>> SortColumn by(
       @Nonnull final IFunction<T, ?> function, Order order) {
     SortColumn sortColumn = new SortColumn();
     if (order.equals(Order.ASC)) {

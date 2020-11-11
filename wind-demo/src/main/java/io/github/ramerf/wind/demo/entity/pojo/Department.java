@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Department extends AbstractEntityPoJo {
+public class Department extends AbstractEntityPoJo<Department> {
   private String name;
 
   @OneToMany private List<Account> accounts;

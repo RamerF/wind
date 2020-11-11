@@ -12,7 +12,7 @@ import lombok.ToString;
 @SuppressWarnings("all")
 public class ResultCode {
   // 凭证
-  public static final ResultCode API_WRONG_PARAM = of("E0100", "参数错误不能为空");
+  public static final ResultCode API_WRONG_PARAM = of("E0100", "参数错误");
   public static final ResultCode API_CERT_NOT_EXIST = of("E0101", "未知凭证");
   public static final ResultCode API_CERT_WRONG_FORMAT = of("E0102", "参数签名有误");
   public static final ResultCode API_CERT_SECRET_EXPIRE = of("E0103", "凭证已过期");

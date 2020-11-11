@@ -19,6 +19,8 @@ import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.proxy.*;
 
+import static io.github.ramerf.wind.core.util.StringUtils.firstUppercase;
+
 /**
  * The type Bean result handler.
  *
@@ -243,7 +245,10 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
         .map(Reference::get)
         .orElseGet(
             () -> {
-              final Field field = BeanUtils.getDeclaredField(clazz, fieldName);
+              Field field = BeanUtils.getDeclaredField(clazz, fieldName);
+              if (field == null) {
+                field = BeanUtils.getDeclaredField(clazz, "is" + firstUppercase(fieldName));
+              }
               METHODS_FIELD_MAP.put(method, new WeakReference<>(field));
               return field;
             });
