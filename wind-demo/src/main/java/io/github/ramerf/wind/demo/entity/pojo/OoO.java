@@ -21,7 +21,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class OoO extends AbstractEntityPoJo {
+public class OoO extends AbstractEntityPoJo<OoO> {
   private String name;
 
   @TableColumn(columnDefinition = "text")

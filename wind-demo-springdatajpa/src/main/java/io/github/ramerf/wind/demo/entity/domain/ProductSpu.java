@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, exclude = "product")
-public class ProductSpu extends AbstractEntityPoJo {
+public class ProductSpu extends AbstractEntityPoJo<Product> {
 
   private String address;
 
