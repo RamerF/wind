@@ -16,6 +16,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ProductCategory extends AbstractEntityPoJo<ProductCategory> {
+public class ProductCategory extends AbstractEntityPoJo {
   private String name;
 }

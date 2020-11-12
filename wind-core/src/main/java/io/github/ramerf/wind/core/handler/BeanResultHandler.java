@@ -75,7 +75,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     if (CollectionUtils.isEmpty(map)) {
       return null;
     }
-    final E obj = initClazz(map);
+    final E obj = BeanUtils.initial(clazz);
     final boolean isPoJo = AbstractEntityPoJo.class.isAssignableFrom(clazz);
     for (Method method : super.methods) {
       final String fieldName = BeanUtils.methodToProperty(method.getName());
@@ -114,18 +114,16 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
       }
 
       // 判断数据类型,调用指定的转换器,获取到对应的Java值,如果没有就直接赋值.
-      final Class<?> parameterType = paramType;
-
       final Object finalValue =
           TypeHandlerHelper.toJavaValue(
-              ValueType.of(value, method.getGenericParameterTypes()[0], field), parameterType);
+              ValueType.of(value, method.getGenericParameterTypes()[0], field), paramType);
       BeanUtils.invoke(obj, method, finalValue)
           .ifPresent(
               exception ->
                   log.warn(
                       "handle:跳过类型不匹配的字段[fieldName:{},paramType:{},valueType:{}]",
                       fieldName,
-                      parameterType.getSimpleName(),
+                      paramType.getSimpleName(),
                       Optional.ofNullable(finalValue)
                           .map(Object::getClass)
                           .map(Class::getSimpleName)
@@ -175,68 +173,8 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
     BeanUtils.setValue(obj, field, mappingObj, null);
   }
 
-  @SuppressWarnings("unchecked")
-  private void setMappingObject(
-      final Map<String, Object> map,
-      final E obj,
-      final Method method,
-      final String fieldName,
-      final Field field) {
-    final Class<? extends AbstractEntityPoJo> mappingClass =
-        (Class<? extends AbstractEntityPoJo>) method.getParameterTypes()[0];
-    final Optional<MappingInfo> optional =
-        EntityMapping.get((Class<? extends AbstractEntityPoJo>) clazz, getField(method, fieldName));
-    if (!optional.isPresent()) {
-      return;
-    }
-    final MappingInfo mappingInfo = optional.get();
-    if (mappingInfo.getMappingType() == null) {
-      return;
-    }
-    AbstractEntityPoJo mappingObject;
-    final Object relationValue = map.get(mappingInfo.getColumn());
-    if (ThreadLocalMappingFetch.isCached(mappingClass, relationValue)) {
-      mappingObject = ThreadLocalMappingFetch.getObject(mappingClass, relationValue);
-    } else {
-      // 未缓存时,返回代理,并缓存代理的目标实例
-      final AbstractEntityPoJo proxy =
-          new OneToOneFetch((AbstractEntityPoJo) obj, mappingInfo, relationValue).getFetchProxy();
-      // 如果id为null,说明未查询到数据
-      if (proxy.getId() == null) {
-        mappingObject = null;
-      } else {
-        OneToOneFetch.OneToOneLazyLoader.getEmptyPoJo(proxy.getClass());
-        final AbstractEntityPoJo initial = BeanUtils.initial(mappingClass);
-        BeanUtils.copyProperties(proxy, initial);
-        mappingObject = initial;
-      }
-      ThreadLocalMappingFetch.putObject(mappingObject, relationValue);
-    }
-    BeanUtils.setValue(
-        obj,
-        field,
-        mappingObject,
-        e -> {
-          log.warn(e.getMessage());
-          log.error(e.getMessage(), e);
-        });
-  }
-
   /** 如果是AbstractEntityPoJo子类,返回代理,查询关联对象. */
   private E initClazz(final Map<String, Object> map) {
-    final E obj;
-    // if (AbstractEntityPoJo.class.isAssignableFrom(clazz) && fieldAliaMap.size() > 0) {
-    //   Enhancer enhancer = new Enhancer();
-    //   enhancer.setSuperclass(clazz);
-    //   enhancer.setCallbacks(
-    //       new Callback[] {new FetchMappingInterceptor<>(this, map), NoOp.INSTANCE});
-    //   enhancer.setCallbackFilter(new FetchMappingFilter(this, map));
-    //   @SuppressWarnings("unchecked")
-    //   final E e = obj = (E) enhancer.create();
-    // } else {
-    //   obj = BeanUtils.initial(clazz);
-    // }
-    // return obj;
     return BeanUtils.initial(clazz);
   }
 

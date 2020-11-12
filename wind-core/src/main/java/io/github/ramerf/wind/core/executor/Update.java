@@ -1,8 +1,7 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;

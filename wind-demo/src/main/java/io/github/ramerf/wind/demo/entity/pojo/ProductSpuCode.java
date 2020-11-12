@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ProductSpuCode extends AbstractEntityPoJo<Product> {
+public class ProductSpuCode extends AbstractEntityPoJo {
   @TableColumn(defaultValue = "0")
   private long code;
 

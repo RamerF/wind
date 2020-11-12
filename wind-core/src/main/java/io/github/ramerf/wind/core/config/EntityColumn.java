@@ -144,6 +144,7 @@ public class EntityColumn {
           column.columnDefinition(),
           columnDefinition -> {
             columnDefinition = columnDefinition.toLowerCase();
+            entityColumn.columnDefinition = columnDefinition;
             String defaultValue = entityColumn.defaultValue;
             if (StringUtils.nonEmpty(defaultValue)) {
               String replacement =

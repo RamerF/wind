@@ -152,7 +152,7 @@ public class EntityHelper {
     // 先删除,再创建
     if (DdlAuto.CREATE.equals(ddlAuto)) {
       // Phase 1. delete
-      final JdbcTemplate jdbcTemplate = windContext.getJdbcTemplateExecutor().getJdbcTemplate();
+      final JdbcTemplate jdbcTemplate = windContext.getExecutor().getJdbcTemplate();
       final String dropSql = "drop table if exists " + entityInfo.getName();
       log.info("ddlAuto:drop table[{}]", dropSql);
       jdbcTemplate.execute(dropSql);

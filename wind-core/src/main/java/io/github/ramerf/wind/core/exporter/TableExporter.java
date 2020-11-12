@@ -75,7 +75,7 @@ public class TableExporter {
       }
     }
     log.info("createTable:[\n{}\n]", sql.toString());
-    windContext.getJdbcTemplateExecutor().getJdbcTemplate().execute(sql.toString());
+    windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
   public void updateTable(@Nonnull final EntityInfo entityInfo) {
@@ -109,7 +109,7 @@ public class TableExporter {
       sql.append(";\n\t").append(columnComment);
     }
     log.info("updateTable:[\n{}\n]", sql.toString());
-    windContext.getJdbcTemplateExecutor().getJdbcTemplate().execute(sql.toString());
+    windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
   /** 获取需要更新的列. */

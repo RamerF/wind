@@ -20,7 +20,7 @@ public class SortColumn {
   /** The Orders. */
   List<Sort.Order> orders = new LinkedList<>();
 
-  public static <T extends AbstractEntityPoJo<?>> SortColumn by(
+  public static <T extends AbstractEntityPoJo> SortColumn by(
       @Nonnull final IFunction<T, ?> function, Order order) {
     SortColumn sortColumn = new SortColumn();
     if (order.equals(Order.ASC)) {

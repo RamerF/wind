@@ -210,6 +210,10 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
     @Getter private final List<IFunction<T, ?>> includeFields = new ArrayList<>();
     @Getter private final List<IFunction<T, ?>> excludeFields = new ArrayList<>();
 
+    public static <T extends AbstractEntityPoJo> Fields<T> with(Class<T> clazz) {
+      return new Fields<>();
+    }
+
     @SafeVarargs
     public final Fields<T> include(final IFunction<T, ?>... includeFields) {
       this.includeFields.addAll(Arrays.asList(includeFields));

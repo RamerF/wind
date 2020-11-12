@@ -1,13 +1,12 @@
 package io.github.ramerf.wind.core.entity.pojo;
 
-import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.service.GenericService;
+import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
@@ -32,7 +31,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @AllArgsConstructor
 @EqualsAndHashCode
 @MappedSuperclass
-public class AbstractEntityPoJo<T extends AbstractEntityPoJo<?>> implements AbstractEntity {
+public class AbstractEntityPoJo implements AbstractEntity {
   public static final String LOGIC_DELETE_FIELD_NAME = "deleted";
   public static final String LOGIC_DELETE_COLUMN_NAME = "deleted";
 
@@ -75,6 +74,7 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<?>> implements Abst
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
+  @SuppressWarnings("unchecked")
   public final long create() throws DataAccessException {
     genericService().create(instance());
     return getId();
@@ -89,8 +89,9 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<?>> implements Abst
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  public final long createWithNull(List<IFunction<T, ?>> includeNullProps)
-      throws DataAccessException {
+  @SuppressWarnings("unchecked")
+  public final <T extends AbstractEntityPoJo> long createWithNull(
+      List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
     genericService().createWithNull(instance(), includeNullProps);
     return getId();
   }
@@ -103,8 +104,22 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<?>> implements Abst
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
+  @SuppressWarnings("unchecked")
   public final int update() throws DataAccessException {
     return genericService().update(instance());
+  }
+
+  /**
+   * 更新.
+   *
+   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
+   *
+   * @return 实际受影响的行数 int
+   * @throws DataAccessException 如果执行失败
+   */
+  @SuppressWarnings("unchecked")
+  public final <T extends AbstractEntityPoJo> int update(final Fields<T> fields) throws DataAccessException {
+    return genericService().updateField(instance(),fields1 -> );
   }
 
   /**
@@ -116,8 +131,9 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<?>> implements Abst
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  public final int updateWithNull(List<IFunction<T, ?>> includeNullProps)
-      throws DataAccessException {
+  @SuppressWarnings("unchecked")
+  public final <T extends AbstractEntityPoJo> int updateWithNull(
+      List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
     return genericService().updateWithNull(instance(), includeNullProps);
   }
 
@@ -130,7 +146,9 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<?>> implements Abst
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  public final int update(final Consumer<Condition<T>> consumer) throws DataAccessException {
+  @SuppressWarnings("unchecked")
+  public final <T extends AbstractEntityPoJo> int update(final Consumer<Condition<T>> consumer)
+      throws DataAccessException {
     return consumer == null
         ? genericService().update(instance())
         : genericService().getUpdate().lambdaWhere(consumer).update(instance());
@@ -146,7 +164,7 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<?>> implements Abst
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  public final int updateWithNull(
+  public final <T extends AbstractEntityPoJo> int updateWithNull(
       @Nonnull final Consumer<Condition<T>> consumer, List<IFunction<T, ?>> includeNullProps)
       throws DataAccessException {
     return genericService()
@@ -161,14 +179,12 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<?>> implements Abst
    * @return the update
    */
   @SuppressWarnings("unchecked")
-  @JsonIgnore
-  @JSONField(serialize = false, deserialize = false)
-  private T instance() {
+  private <T extends AbstractEntityPoJo> T instance() {
     return (T) this;
   }
 
-  @SuppressWarnings("unchecked")
-  private GenericService<T> genericService() {
-    return GenericService.with((Class<T>) instance().getClass());
+  @SuppressWarnings({"rawtypes"})
+  private GenericService genericService() {
+    return GenericService.with(instance().getClass());
   }
 }

@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.annotation.*;
-import io.github.ramerf.wind.core.config.LogicDeleteProp;
-import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
@@ -38,12 +38,14 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 public final class EntityUtils {
   private static WindConfiguration configuration;
+  private static Dialect dialect;
   /** {@link BaseService} 泛型{@link AbstractEntityPoJo} */
   private static final Map<Class<?>, WeakReference<Class<?>>> SERVICE_POJO_MAP =
       new ConcurrentHashMap<>();
 
-  public static void initial(final WindConfiguration configuration) {
-    EntityUtils.configuration = configuration;
+  public static void initial(final WindContext context) {
+    EntityUtils.configuration = context.getWindConfiguration();
+    EntityUtils.dialect = context.getDbMetaData().getDialect();
   }
 
   /**
@@ -80,7 +82,9 @@ public final class EntityUtils {
     return EntityUtils.isNotDisabled(field)
         && !Modifier.isStatic(modifiers)
         && !Modifier.isTransient(modifiers)
-        && (isPrimitiveType(field.getType()) || MappingInfo.isValidMapping(field));
+        && (isPrimitiveType(field.getType())
+            || MappingInfo.isValidMapping(field)
+            || dialect.isSupportJavaType(field.getGenericType()));
   }
 
   /**
@@ -93,8 +97,10 @@ public final class EntityUtils {
   public static <T extends AbstractEntityPoJo> List<Field> getNonNullColumnFields(
       @Nonnull final T t) {
     final List<Field> fields =
-        BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
-            .filter(EntityUtils::filterColumnField)
+        // BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
+        //     .filter(EntityUtils::filterColumnField)
+        EntityHelper.getEntityInfo(t.getClass()).getEntityColumns().stream()
+            .map(EntityColumn::getField)
             .filter(field -> Objects.nonNull(BeanUtils.getValue(t, field, null)))
             .collect(toList());
     if (log.isTraceEnabled()) {

@@ -77,7 +77,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   public void afterPropertiesSet() throws Exception {
     // 打印banner
     printBanner();
-    windContext.setJdbcTemplateExecutor(executor);
+    windContext.setExecutor(executor);
     AppContextInject.initital(applicationContext);
     // 初始化分布式主键
     SnowflakeIdWorker.initial(configuration.getSnowflakeProp());
@@ -85,7 +85,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     Update.initial(executor, configuration, idGenerator, windContext.getDbMetaData().getDialect());
     Query.initial(executor, configuration);
     // 初始化EntityUtils
-    EntityUtils.initial(configuration);
+    EntityUtils.initial(windContext);
     // 初始化实体类
     final Class<?> bootClass =
         applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
