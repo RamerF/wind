@@ -17,7 +17,6 @@
     <version>4.0.1-RELEASE</version>
     <modules>
         <module>wind-core</module>
-        <module>wind-annotation</module>
     </modules>
     <url>http://maven.apache.org</url>
     <description>springboot web at once.</description>

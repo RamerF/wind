@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.annotation;
+package io.github.ramerf.wind.core.annotation;
 
 import java.lang.annotation.*;
 import org.springframework.beans.factory.annotation.Qualifier;
