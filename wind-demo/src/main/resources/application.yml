@@ -104,3 +104,4 @@ wind:
   snowflake-prop:
     worker-id: 3
     data-center-id: 2
+  write-null-prop: true

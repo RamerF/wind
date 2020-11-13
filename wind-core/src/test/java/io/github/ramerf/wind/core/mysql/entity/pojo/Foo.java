@@ -50,7 +50,7 @@ public class Foo extends AbstractEntityPoJo {
   private BitSet bitSet;
 
   /** 大文本字段,测试默认不拉取该字段. */
-  @TableColumn(dontFetch = true, comment = "大文本字段,测试默认不拉取该字段", columnDefinition = "text")
+  @TableColumn(comment = "大文本字段,测试默认不拉取该字段", columnDefinition = "text")
   private String largeText;
 
   public enum Type implements InterEnum<Integer> {

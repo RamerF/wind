@@ -1,19 +1,22 @@
 package io.github.ramerf.wind.core.pgsql.service;
 
 import io.github.ramerf.wind.core.condition.SortColumn;
+import io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse;
 import io.github.ramerf.wind.core.pgsql.PgsqlApplication;
 import io.github.ramerf.wind.core.pgsql.entity.pojo.Foo;
 import io.github.ramerf.wind.core.pgsql.entity.pojo.Foo.Type;
-import io.github.ramerf.wind.core.pgsql.entity.response.IdNameResponse;
+import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.LongStream;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.annotation.Order;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -64,36 +67,6 @@ public class BaseServiceTest {
   @BeforeEach
   public void before() {
     foo.setId(id);
-  }
-
-  @Test
-  @Order(1)
-  @DisplayName("单个创建:创建并返回对象")
-  @Transactional(rollbackFor = Exception.class)
-  public void testCreateAndGet() {
-    assertNotNull(service.createAndGet(foo));
-  }
-
-  @Test
-  @Order(1)
-  @DisplayName("单个创建:创建并返回对象,指定保存可能为null的列")
-  @Transactional(rollbackFor = Exception.class)
-  public void testCreateAndGetWithNull() {
-    assertNotNull(service.createAndGetWithNull(foo, Collections.singletonList(Foo::getStringList)));
-  }
-
-  @Test
-  @DisplayName("单个更新:更新并返回对象")
-  @Transactional(rollbackFor = Exception.class)
-  public void testUpdateAndGet() {
-    assertNotNull(service.updateAndGet(foo));
-  }
-
-  @Test
-  @DisplayName("单个更新:更新并返回对象,指定保存可能为null的列")
-  @Transactional(rollbackFor = Exception.class)
-  public void testUpdateAndGetWithNull() {
-    assertNotNull(service.updateAndGetWithNull(foo, Collections.singletonList(Foo::getStringList)));
   }
 
   @Test
@@ -151,7 +124,7 @@ public class BaseServiceTest {
         service.getOne(
             query -> query.col(Foo::getId).col(Foo::getName),
             condition -> condition.eq(Foo::setId, id),
-            IdNameResponse.class));
+            io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse.class));
   }
 
   @Test
@@ -173,7 +146,9 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testList2() {
     assertNotNull(
-        service.list(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
+        service.list(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse.class));
   }
 
   @Test
@@ -206,7 +181,7 @@ public class BaseServiceTest {
         service.list(
             query -> query.col(Foo::getId).col(Foo::getName),
             condition -> condition.gt(Foo::setId, 0L),
-            IdNameResponse.class));
+            io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse.class));
   }
 
   @Test
@@ -220,7 +195,7 @@ public class BaseServiceTest {
             1,
             10,
             SortColumn.by(Foo::getName, SortColumn.Order.DESC),
-            IdNameResponse.class));
+            io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse.class));
   }
 
   @Test
@@ -235,7 +210,9 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testListAll2() {
     assertNotNull(
-        service.listAll(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
+        service.listAll(
+            query -> query.col(Foo::getId).col(Foo::getName),
+            io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse.class));
   }
 
   @Test
@@ -260,11 +237,11 @@ public class BaseServiceTest {
             1,
             10,
             SortColumn.by(Foo::getName, SortColumn.Order.DESC),
-            IdNameResponse.class));
+            io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse.class));
   }
 
   @Test
-  @DisplayName("查询分页:带条件指定列")
+  @DisplayName("查询分页:带条件指定列,返回任意对象")
   @Transactional(rollbackFor = Exception.class)
   public void testPage3() {
     assertNotNull(
@@ -294,22 +271,49 @@ public class BaseServiceTest {
   @Order(2)
   @DisplayName("单个创建")
   @Transactional(rollbackFor = Exception.class)
-  public void testCreate() {
+  public void testCreate1() {
     assertTrue(service.create(foo) > 0);
   }
 
   @Test
   @Order(2)
-  @DisplayName("单个创建:指定保存可能为null的列")
+  @DisplayName("单个创建: 指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testCreateWithNull() {
-    assertTrue(service.createWithNull(foo, Collections.singletonList(Foo::getStringList)) > 0);
+  public void testCreate2() {
+    // assertTrue(service.create(foo, fields -> fields.exclude(Foo::getAge)) > 0);
+    assertTrue(service.create(foo, fields -> fields.include(Foo::getAge, Foo::getName)) > 0);
+  }
+
+  @Test
+  @Order(1)
+  @DisplayName("单个创建:域对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreate3() {
+    final Consumer<Fields<Foo>> consumer =
+        fields -> fields.include(Foo::getName, Foo::getAge).exclude(Foo::getLargeText);
+    assertTrue(foo.create(consumer) > 0);
+  }
+
+  @Test
+  @Order(1)
+  @DisplayName("单个创建:返回对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateAndGet1() {
+    assertNotNull(service.createAndGet(foo));
+  }
+
+  @Test
+  @Order(1)
+  @DisplayName("单个创建:返回对象,指定属性")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateAndGet2() {
+    assertNotNull(service.createAndGet(foo, fields -> fields.exclude(Foo::getLargeText)));
   }
 
   @Test
   @DisplayName("批量创建")
   @Transactional(rollbackFor = Exception.class)
-  public void testCreateBatch() {
+  public void testCreateBatch1() {
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -319,28 +323,18 @@ public class BaseServiceTest {
                         .name("test" + i)
                         .textString("text" + i)
                         .bigDecimal(BigDecimal.valueOf(100 + i))
-                        .type(Type.SPORT)
-                        .intList(Arrays.asList(1, 3, 5))
-                        .intArr(new Integer[] {1, 4, 7})
-                        .longList(Arrays.asList(2L, 4L, 6L))
-                        .longArr(new Long[] {1L, 3L, 5L})
-                        .stringList(Arrays.asList("3", "a", "6", "b"))
-                        .stringArr(new String[] {"2", "a", "b"})
+                        .type(Foo.Type.SPORT)
                         .column("non_match_column")
-                        .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
                         .build())
             .collect(toList());
     long start = System.currentTimeMillis();
-    assertFalse(
-        service
-            .createBatchWithNull(list, Arrays.asList(Foo::getName, Foo::getStringList))
-            .isPresent());
+    assertFalse(service.createBatch(list).isPresent());
   }
 
   @Test
-  @DisplayName("批量创建:指定保存可能为null的列")
+  @DisplayName("批量创建:指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testCreateBatchWithNull() {
+  public void testCreateBatch2() {
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -350,61 +344,68 @@ public class BaseServiceTest {
                         .name("test" + i)
                         .textString("text" + i)
                         .bigDecimal(BigDecimal.valueOf(100 + i))
-                        .type(Type.SPORT)
-                        .intList(Arrays.asList(1, 3, 5))
-                        .intArr(new Integer[] {1, 4, 7})
-                        .longList(Arrays.asList(2L, 4L, 6L))
-                        .longArr(new Long[] {1L, 3L, 5L})
-                        .stringList(Arrays.asList("3", "a", "6", "b"))
-                        .stringArr(new String[] {"2", "a", "b"})
+                        .type(Foo.Type.SPORT)
                         .column("non_match_column")
-                        .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
                         .build())
             .collect(toList());
     long start = System.currentTimeMillis();
     assertFalse(
-        service
-            .createBatchWithNull(list, Arrays.asList(Foo::getName, Foo::getStringList))
-            .isPresent());
+        service.createBatch(list, fields -> fields.include(Foo::getName, Foo::getAge)).isPresent());
   }
 
   @Test
   @DisplayName("单个更新")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdate() {
+  public void testUpdate1() {
     assertEquals(service.update(foo), 1);
   }
 
   @Test
-  @DisplayName("单个更新:指定保存可能为null的列")
+  @DisplayName("单个更新:指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateWithNull() {
-    assertEquals(service.updateWithNull(foo, Collections.singletonList(Foo::getStringList)), 1);
+  public void testUpdate2() {
+    foo.setName("<" + LocalDateTime.now() + ">");
+    assertEquals(service.update(foo, fields -> fields.include(Foo::getName)), 1);
   }
 
   @Test
   @DisplayName("单个更新:条件更新")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateCondition() {
-    assertEquals(service.update(condition -> condition.eq(Foo::setId, id), foo), 1);
+  public void testUpdate3() {
+    assertEquals(service.updateByCondition(foo, condition -> condition.eq(Foo::setId, id)), 1);
   }
 
   @Test
-  @DisplayName("单个更新:条件更新,指定保存可能为null的列")
+  @DisplayName("单个更新:条件更新,指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateConditionWithNull() {
+  public void testUpdate4() {
+    foo.setName("<" + LocalDateTime.now() + ">");
     assertEquals(
-        service.updateWithNull(
-            condition -> condition.eq(Foo::setId, id),
-            foo,
-            Arrays.asList(Foo::getName, Foo::getStringList)),
+        service.update(
+            foo, //
+            fields -> fields.include(Foo::getName),
+            condition -> condition.eq(Foo::setId, id)),
         1);
+  }
+
+  @Test
+  @DisplayName("单个更新:返回对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateAndGet1() {
+    assertNotNull(service.updateAndGet(foo));
+  }
+
+  @Test
+  @DisplayName("单个更新:返回对象,指定属性")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateAndGet2() {
+    assertNotNull(service.updateAndGet(foo, fields -> fields.include(Foo::getLargeText)));
   }
 
   @Test
   @DisplayName("批量更新")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateBatch() {
+  public void testUpdateBatch1() {
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -414,24 +415,17 @@ public class BaseServiceTest {
                         .name("test" + i * i)
                         .textString("text" + i)
                         .bigDecimal(BigDecimal.valueOf(100 + i))
-                        .type(Type.SPORT)
-                        .intList(Arrays.asList(1, 3, 5))
-                        .intArr(new Integer[] {1, 4, 7})
-                        .longList(Arrays.asList(2L, 4L, 6L))
-                        .longArr(new Long[] {1L, 3L, 5L})
-                        .stringList(Arrays.asList("3", "a", "6", "b"))
-                        .stringArr(new String[] {"2", "a", "b"})
+                        .type(Foo.Type.SPORT)
                         .column("non_match_column")
-                        .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
                         .build())
             .collect(toList());
     assertFalse(service.updateBatch(list).isPresent());
   }
 
   @Test
-  @DisplayName("批量更新:指定保存可能为null的列")
+  @DisplayName("批量更新:指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateBatchWithNull() {
+  public void testUpdateBatch2() {
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -441,32 +435,11 @@ public class BaseServiceTest {
                         .name("test" + i * i)
                         .textString("text" + i)
                         .bigDecimal(BigDecimal.valueOf(100 + i))
-                        .type(Type.SPORT)
-                        .intList(Arrays.asList(1, 3, 5))
-                        .intArr(new Integer[] {1, 4, 7})
-                        .longList(Arrays.asList(2L, 4L, 6L))
-                        .longArr(new Long[] {1L, 3L, 5L})
-                        .stringList(Arrays.asList("3", "a", "6", "b"))
-                        .stringArr(new String[] {"2", "a", "b"})
+                        .type(Foo.Type.SPORT)
                         .column("non_match_column")
-                        .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
                         .build())
             .collect(toList());
-    assertFalse(
-        service
-            .updateBatchWithNull(list, Arrays.asList(Foo::getName, Foo::getStringList))
-            .isPresent());
-  }
-
-  @Test
-  @DisplayName("更新指定字段:带条件")
-  @Transactional(rollbackFor = Exception.class)
-  public void testUpdateField() {
-    foo.setName(LocalDateTime.now().toString());
-    assertEquals(
-        service.updateField(
-            foo, fields -> fields.include(Foo::getName), condition -> condition.eq(Foo::setId, id)),
-        1);
+    assertFalse(service.updateBatch(list, fields -> fields.include(Foo::getName)).isPresent());
   }
 
   @Test
@@ -491,19 +464,5 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testDeleteByIds() {
     assertTrue(service.deleteByIds(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
-  }
-
-  @Test
-  @DisplayName("单个查询:默认不查询指定字段(大字段)")
-  @Transactional(rollbackFor = Exception.class)
-  public void testDontFetch() {
-    // 默认不查询
-    assertNull(service.getOne(condition -> condition.eq(Foo::setId, id)).getLargeText());
-    // 指定查询该字段
-    assertNotNull(
-        service
-            .getOne(
-                query -> query.col(Foo::getLargeText), condition -> condition.eq(Foo::setId, id))
-            .getLargeText());
   }
 }

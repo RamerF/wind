@@ -1,16 +1,16 @@
 package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
-import io.github.ramerf.wind.core.config.AppContextInject;
-import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.factory.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * The type Type handler helper.
@@ -20,10 +20,17 @@ import lombok.extern.slf4j.Slf4j;
  */
 @SuppressWarnings("unchecked")
 @Slf4j
+@Component
 public class TypeHandlerHelper {
+  private static TypeHandlerRegistryFactory typeHandlerRegistryFactory;
+
+  public TypeHandlerHelper(final TypeHandlerRegistryFactory typeHandlerRegistryFactory) {
+    TypeHandlerHelper.typeHandlerRegistryFactory = typeHandlerRegistryFactory;
+  }
+
   @SuppressWarnings("rawtypes")
   public static Object toJavaValue(final ValueType valueType, final Class<?> parameterType) {
-    return Optional.of(AppContextInject.getBean(TypeHandlerRegistryFactory.class))
+    return Optional.of(typeHandlerRegistryFactory)
         .map(
             o -> {
               final ITypeHandler typeHandler = o.getToJavaTypeHandler(valueType);
@@ -40,7 +47,7 @@ public class TypeHandlerHelper {
   }
 
   public static Object toJdbcValue(final ValueType valueType, final PreparedStatement ps) {
-    return Optional.of(AppContextInject.getBean(TypeHandlerRegistryFactory.class))
+    return Optional.of(typeHandlerRegistryFactory)
         .map(o -> o.getToJdbcTypeHandler(valueType))
         .map(typeHandler -> typeHandler.convertToJdbc(valueType.originVal, valueType.field, ps))
         .orElse(valueType.originVal);

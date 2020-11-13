@@ -1,14 +1,13 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.config.PrototypeBean;
+import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
-import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
@@ -29,7 +28,7 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
-import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 /**
  * 通用写入操作对象.获取实例:<br>
@@ -50,10 +49,11 @@ import static java.util.stream.Collectors.joining;
  */
 @Slf4j
 @SuppressWarnings("unused")
-public final class Update {
+public final class Update<T extends AbstractEntityPoJo> {
 
-  private Class<?> clazz;
-  private ICondition<?> condition;
+  private final Class<T> clazz;
+  private ICondition<T> condition;
+  private Fields<T> fields;
 
   private EntityInfo entityInfo;
 
@@ -61,74 +61,76 @@ public final class Update {
   private static WindConfiguration configuration;
   private static IdGenerator idGenerator;
   private static Dialect dialect;
+  private static PrototypeBean prototypeBean;
 
+  /**
+   * Instantiates a new Update.
+   *
+   * @param clazz the clazz
+   * @since 2020.11.13
+   * @author Tang Xiaofeng
+   */
+  public Update(Class<T> clazz) {
+    this.clazz = clazz;
+    this.condition = QueryColumnFactory.fromClass(clazz).getCondition();
+    this.entityInfo = EntityHelper.getEntityInfo(clazz);
+  }
+
+  /**
+   * Initial.
+   *
+   * @param executor the executor
+   * @param configuration the configuration
+   * @param idGenerator the id generator
+   * @param dialect the dialect
+   */
   public static void initial(
       final Executor executor,
       final WindConfiguration configuration,
       final IdGenerator idGenerator,
-      final Dialect dialect) {
+      final Dialect dialect,
+      final PrototypeBean prototypeBean) {
     Update.executor = executor;
     Update.configuration = configuration;
     Update.idGenerator = idGenerator;
     Update.dialect = dialect;
+    Update.prototypeBean = prototypeBean;
   }
 
   /**
    * Gets instance.
    *
-   * @return the instance
-   */
-  public static Update getInstance() {
-    return AppContextInject.getBean(Update.class);
-  }
-
-  /**
-   * From update.
-   *
    * @param <T> the type parameter
    * @param clazz the clazz
-   * @return the update
+   * @return the instance
    */
-  public <T extends AbstractEntityPoJo> Update from(final Class<T> clazz) {
-    return from(clazz, null);
+  public static <T extends AbstractEntityPoJo> Update<T> getInstance(final Class<T> clazz) {
+    return prototypeBean.update(clazz);
+  }
+
+  public Update<T> from(final String tableName) {
+    this.entityInfo.setName(tableName);
+    return this;
   }
 
   /**
-   * From update.
+   * Fields update.
    *
-   * @param tableName the table name
+   * @param fields the fields
    * @return the update
    */
-  public Update from(final String tableName) {
-    return from(null, tableName);
-  }
-
-  private <T extends AbstractEntityPoJo> Update from(final Class<T> clazz, final String tableName) {
-    if (Objects.isNull(clazz) && StringUtils.isEmpty(tableName)) {
-      throw CommonException.of("[clazz,tableName]不能同时为空");
-    }
-    this.clazz = clazz;
-    if (clazz == null) {
-      this.condition = QueryColumnFactory.fromTableName(tableName).getCondition();
-      this.entityInfo = EntityInfo.of(configuration);
-      this.entityInfo.setName(tableName);
-    } else {
-      this.condition = QueryColumnFactory.fromClass(clazz).getCondition();
-      this.entityInfo = EntityHelper.getEntityInfo(clazz);
-    }
+  public Update<T> fields(Consumer<Fields<T>> fields) {
+    // TODO-WARN 实现
     return this;
   }
 
   /**
    * Where update.
    *
-   * @param <T> the type parameter
    * @param consumer the consumer
    * @return the update
    */
-  @SuppressWarnings("unchecked")
-  public <T extends AbstractEntityPoJo> Update lambdaWhere(
-      @Nonnull final Consumer<Condition<T>> consumer) {
+  public Update<T> where(@Nonnull final Consumer<Condition<T>> consumer) {
     consumer.accept((Condition<T>) this.condition);
     return this;
   }
@@ -136,13 +138,10 @@ public final class Update {
   /**
    * Where update.
    *
-   * @param <T> the type parameter
    * @param consumer the consumer
    * @return the update
    */
-  @SuppressWarnings("unchecked")
-  public <T extends AbstractEntityPoJo> Update strWhere(
-      @Nonnull final Consumer<StringCondition<T>> consumer) {
+  public Update<T> strWhere(@Nonnull final Consumer<StringCondition<T>> consumer) {
     consumer.accept((StringCondition<T>) this.condition);
     return this;
   }
@@ -150,37 +149,34 @@ public final class Update {
   /**
    * 创建,默认不保存值为null的列.
    *
-   * @param <T> the type parameter
    * @param t the t
    * @throws DataAccessException 如果执行失败
-   * @throws CommonException 创建记录条数不等于1
    */
-  public <T extends AbstractEntityPoJo> void create(@Nonnull final T t) throws DataAccessException {
-    createWithNull(t, null);
+  public void create(@Nonnull final T t) throws DataAccessException {
+    create(t, null);
   }
 
   /**
-   * 创建,默认不保存值为null的列.
+   * 创建.
    *
-   * @param <T> the type parameter
    * @param t the t
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param fields the fields
    * @throws DataAccessException 如果执行失败
-   * @throws CommonException 创建记录条数不等于1
    */
-  public <T extends AbstractEntityPoJo> void createWithNull(
-      @Nonnull final T t, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
+  public void create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
     t.setId(idGenerator.nextId(t));
+    // TODO-POST 如果sql ddl 包含default这里就不需要设置
     setCurrentTime(t, entityInfo.getCreateTimeField(), false);
-    setCurrentTime(t, entityInfo.getUpdateTimeField());
+    setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
     final StringBuilder valueMarks = new StringBuilder();
     List<Object> values = new LinkedList<>();
     final AtomicInteger index = new AtomicInteger(1);
+
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
-    getSavingFields(t, includeNullProps)
+    getSavingFields(t, fields)
         .forEach(
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
@@ -210,62 +206,36 @@ public final class Update {
     }
   }
 
-  private <T extends AbstractEntityPoJo> void setCurrentTime(
-      @Nonnull final T t, final Field field) {
-    setCurrentTime(t, field, true);
-  }
-
-  private <T extends AbstractEntityPoJo> void setCurrentTime(
-      @Nonnull final T t, final Field field, final boolean isUpdateTime) {
-    if (field == null) {
-      return;
-    }
-    final Object val = BeanUtils.getValue(t, field, null);
-    // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
-    if (val == null || (val instanceof Long && (Long) val < 1)) {
-      final Object value;
-      if (Date.class.isAssignableFrom(field.getType())) {
-        value = new Timestamp(System.currentTimeMillis());
-      } else {
-        value = System.currentTimeMillis();
-      }
-      BeanUtils.setValue(t, field, value, null);
-    }
+  /**
+   * 批量创建,默认不保存null值.
+   *
+   * @param ts the ts
+   * @return 保存成功数 optional
+   */
+  public Optional<Integer> createBatch(final List<T> ts) {
+    return createBatch(ts, null);
   }
 
   /**
    * 批量创建,默认不保存null值.
    *
-   * @param <T> the type parameter
    * @param ts the ts
-   * @return 保存成功数
+   * @param fields the fields
+   * @return 保存成功数 optional
    */
-  public <T extends AbstractEntityPoJo> Optional<Integer> createBatch(final List<T> ts) {
-    return createBatchWithNull(ts, null);
-  }
-
-  /**
-   * 批量创建,默认不保存null值.
-   *
-   * @param <T> the type parameter
-   * @param ts the ts
-   * @param includeNullProps 即使值为null也保存的属性
-   * @return 保存成功数
-   */
-  public <T extends AbstractEntityPoJo> Optional<Integer> createBatchWithNull(
-      final List<T> ts, List<IFunction<T, ?>> includeNullProps) {
+  public Optional<Integer> createBatch(final List<T> ts, final Fields<T> fields) {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
     }
     // 取第一条记录获取批量保存sql
-    final T t = ts.get(0);
     ts.forEach(
-        o -> {
-          setCurrentTime(o, entityInfo.getCreateTimeField(), false);
-          setCurrentTime(o, entityInfo.getUpdateTimeField());
-          o.setId(idGenerator.nextId(o));
+        t -> {
+          setCurrentTime(t, entityInfo.getCreateTimeField(), false);
+          setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
+          t.setId(idGenerator.nextId(t));
         });
-    final Set<Field> savingFields = getSavingFields(t, includeNullProps);
+    final T t = ts.get(0);
+    final List<Field> savingFields = getSavingFields(t, fields);
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -282,6 +252,7 @@ public final class Update {
 
     AtomicInteger createRow = new AtomicInteger();
     BatchExecUtil.batchExec(
+        "create batch",
         ts,
         configuration.getBatchSize(),
         execList -> {
@@ -347,30 +318,27 @@ public final class Update {
   /**
    * 更新,默认根据id更新且不更新值为null的列.
    *
-   * @param <T> the type parameter
    * @param t the t
-   * @return 受影响记录数
+   * @return 受影响记录数 int
    */
-  public <T extends AbstractEntityPoJo> int update(@Nonnull final T t) {
-    return updateWithNull(t, null);
+  public int update(@Nonnull final T t) {
+    return update(t, null);
   }
 
   /**
-   * 更新,默认根据id更新且不更新值为null的列.
+   * 更新,默认根据id更新.
    *
-   * @param <T> the type parameter
    * @param t the t
-   * @param includeNullProps 即使值为null也保存的属性
-   * @return 受影响记录数
+   * @param fields the fields
+   * @return 受影响记录数 int
    */
   @SuppressWarnings("DuplicatedCode")
-  public <T extends AbstractEntityPoJo> int updateWithNull(
-      @Nonnull final T t, List<IFunction<T, ?>> includeNullProps) {
-    setCurrentTime(t, entityInfo.getUpdateTimeField());
+  public int update(@Nonnull final T t, final Fields<T> fields) {
+    setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
-    getSavingFields(t, includeNullProps)
+    getSavingFields(t, fields)
         .forEach(
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
@@ -382,7 +350,7 @@ public final class Update {
       if (Objects.isNull(t.getId())) {
         throw new IllegalArgumentException("id could not be null");
       }
-      lambdaWhere(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+      where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     }
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
@@ -399,35 +367,32 @@ public final class Update {
   /**
    * 批量更新,根据id更新.
    *
-   * @param <T> the type parameter
    * @param ts the ts
    * @return the int
    */
   @SuppressWarnings("DuplicatedCode")
-  public <T extends AbstractEntityPoJo> Optional<Integer> updateBatch(@Nonnull final List<T> ts) {
-    return updateBatchWithNull(ts, null);
+  public Optional<Integer> updateBatch(@Nonnull final List<T> ts) {
+    return updateBatch(ts, null);
   }
 
   /**
    * 批量更新,根据id更新.
    *
-   * @param <T> the type parameter
    * @param ts the ts
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param fields the fields
    * @return the int
    */
   @SuppressWarnings("DuplicatedCode")
-  public <T extends AbstractEntityPoJo> Optional<Integer> updateBatchWithNull(
-      @Nonnull final List<T> ts, List<IFunction<T, ?>> includeNullProps) {
+  public Optional<Integer> updateBatch(@Nonnull final List<T> ts, final Fields<T> fields) {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
     }
     // 保存更新时间
-    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeField()));
+    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeField(), true));
 
     // 取第一条记录获取批量更新sql
     final T t = ts.get(0);
-    final Set<Field> savingFields = getSavingFields(t, includeNullProps);
+    final List<Field> savingFields = getSavingFields(t, fields);
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger();
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
@@ -440,13 +405,14 @@ public final class Update {
       throw new IllegalArgumentException("id could not be null");
     }
     // 保证占位符对应
-    lambdaWhere(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+    where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
 
     AtomicInteger updateRow = new AtomicInteger();
     BatchExecUtil.batchExec(
+        "update batch",
         ts,
         configuration.getBatchSize(),
         execList -> {
@@ -456,15 +422,14 @@ public final class Update {
                   execSql,
                   new BatchPreparedStatementSetter() {
                     @Override
-                    @SuppressWarnings("unchecked")
                     public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                       final AtomicInteger index = new AtomicInteger(1);
                       final T obj = execList.get(i);
-                      setCurrentTime(obj, entityInfo.getUpdateTimeField());
+                      setCurrentTime(obj, entityInfo.getUpdateTimeField(), true);
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
-                      Condition.of(QueryColumnFactory.fromClass((Class<T>) clazz))
+                      Condition.of(QueryColumnFactory.fromClass(clazz))
                           .eq(T::setId, obj.getId())
                           .getValues(index)
                           .forEach(val -> val.accept(ps));
@@ -479,67 +444,6 @@ public final class Update {
               Arrays.stream(batchUpdate).filter(o -> o >= 0 || o == -2).map(o -> 1).sum());
         });
     return updateRow.get() == ts.size() ? Optional.empty() : Optional.of(updateRow.get());
-  }
-
-  /**
-   * 更新指定字段,如果条件为空,根据id更新,如果未指定字段,更新不为null的属性.
-   *
-   * @param <T> the type parameter
-   * @param t the t
-   * @param fields 更新字段
-   * @return 受影响记录数 int
-   */
-  public <T extends AbstractEntityPoJo> int updateField(
-      final T t, final Consumer<Fields<T>> fields) {
-    setCurrentTime(t, entityInfo.getUpdateTimeField());
-    final Fields<T> entityFields = new Fields<>();
-    fields.accept(entityFields);
-    final List<IFunction<T, ?>> fieldFunctions = entityFields.getIncludeFields();
-    if (fieldFunctions.size() == 0) {
-      // 未指定字段,更新不为null的属性
-      return update(t);
-    }
-    final String setString =
-        fieldFunctions.stream()
-            .map(fieldFunction -> fieldFunction.getColumn() + "=?")
-            .collect(joining(","));
-    // 没有条件时,默认根据id更新
-    if (condition.isEmpty()) {
-      if (Objects.isNull(t.getId())) {
-        throw new IllegalArgumentException("id could not be null");
-      }
-      lambdaWhere(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
-    }
-    final String sql = "update %s set %s where %s";
-    final String execSql =
-        String.format(sql, entityInfo.getName(), setString, condition.getString());
-    return executor.update(
-        clazz,
-        execSql,
-        ps -> {
-          for (int i = 0; i < fieldFunctions.size(); i++) {
-            ps.setObject(i + 1, fieldFunctions.get(i).apply(t));
-          }
-          condition
-              .getValues(new AtomicInteger(fieldFunctions.size() + 1))
-              .forEach(val -> val.accept(ps));
-        });
-  }
-
-  /**
-   * Update batch request int.
-   *
-   * @param <R> the type parameter
-   * @param ts the ts
-   * @param includeNull the include null
-   * @return the int
-   */
-  public <R extends AbstractEntityRequest<?>> int updateBatchRequest(
-      @Nonnull final List<R> ts, final boolean includeNull) {
-    if (CollectionUtils.isEmpty(ts)) {
-      return 0;
-    }
-    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
   }
 
   /**
@@ -600,21 +504,47 @@ public final class Update {
     }
   }
 
-  /**
-   * 获取要保存的属性.
-   *
-   * @param t 需要保存的对象
-   * @param includeNullProps 即使值为null也需要保存的属性
-   * @param <T> the type parameter
-   * @return 要保存的属性
-   */
-  private <T extends AbstractEntityPoJo> Set<Field> getSavingFields(
-      final T t, List<IFunction<T, ?>> includeNullProps) {
-    final Set<Field> savingFields = new HashSet<>(EntityUtils.getNonNullColumnFields(t));
-    if (CollectionUtils.nonEmpty(includeNullProps)) {
-      includeNullProps.forEach(prop -> savingFields.add(prop.getField()));
+  private List<Field> getSavingFields(final @Nonnull T t, final Fields<T> fields) {
+    final List<Field> savingFields;
+    if (fields == null) {
+      savingFields =
+          configuration.isWriteNullProp()
+              ? EntityUtils.getAllColumnFields(t.getClass())
+              : EntityUtils.getNonNullColumnFields(t);
+    } else {
+      final List<Field> includeFields = fields.getIncludeFields();
+      final List<Field> excludeFields = fields.getExcludeFields();
+      if (includeFields.isEmpty()) {
+        savingFields =
+            (configuration.isWriteNullProp()
+                    ? EntityUtils.getAllColumnFields(t.getClass())
+                    : EntityUtils.getNonNullColumnFields(t))
+                .stream().filter(field -> !excludeFields.contains(field)).collect(toList());
+      } else {
+        savingFields =
+            includeFields.stream()
+                .filter(field -> !excludeFields.contains(field))
+                .collect(toList());
+      }
     }
     return savingFields;
+  }
+
+  private void setCurrentTime(@Nonnull final T t, final Field field, final boolean isUpdateTime) {
+    if (field == null) {
+      return;
+    }
+    final Object val = BeanUtils.getValue(t, field, null);
+    // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
+    if (val == null || (val instanceof Long && (Long) val < 1)) {
+      final Object value;
+      if (Date.class.isAssignableFrom(field.getType())) {
+        value = new Timestamp(System.currentTimeMillis());
+      } else {
+        value = System.currentTimeMillis();
+      }
+      BeanUtils.setValue(t, field, value, null);
+    }
   }
 
   /**

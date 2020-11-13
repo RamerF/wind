@@ -47,8 +47,8 @@ public final class ControllerHelper {
    * @param invoke the invoke
    * @param entity the entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<Object>> create(final S invoke, final T entity) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo> Rs<Object> create(
+      final S invoke, final T entity) {
     return Rs.ok(json().put("id", invoke.create(entity)));
   }
 
@@ -62,9 +62,8 @@ public final class ControllerHelper {
    * @param bindingResult the binding result
    * @return the response entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<Object>> create(
-          final S invoke, final T entity, final BindingResult bindingResult) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo> Rs<Object> create(
+      final S invoke, final T entity, final BindingResult bindingResult) {
     log.info("create:[{}]", entity);
     if (bindingResult.hasErrors()) {
       return fail(collect(bindingResult));
@@ -90,7 +89,7 @@ public final class ControllerHelper {
           T extends AbstractEntityPoJo,
           R extends AbstractEntityRequest,
           P>
-      ResponseEntity<Rs<P>> create(
+      Rs<P> create(
           final S invoke,
           final R entity,
           final BindingResult bindingResult,
@@ -108,8 +107,8 @@ public final class ControllerHelper {
    * @return the entity
    * @see #detail(BaseService, long, Function) #detail(BaseService, long, Function)
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<Object>> detail(final S invoke, final long id) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo> Rs<Object> detail(
+      final S invoke, final long id) {
     return detail(invoke, id, null);
   }
 
@@ -125,8 +124,8 @@ public final class ControllerHelper {
    *     <code>      poJo -&gt; {        poJo.setPassword(null);      }     </code>
    * @return the entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<R>> detail(final S invoke, final long id, Function<T, R> function) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R> Rs<R> detail(
+      final S invoke, final long id, Function<T, R> function) {
     if (id < 1) {
       return wrongFormat("id");
     }
@@ -143,7 +142,7 @@ public final class ControllerHelper {
    * @param function 转换函数表达式
    * @return {@link ResponseEntity}
    */
-  public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(
+  public static <T extends AbstractEntity, R> Rs<Page<R>> page(
       final Page<T> page, final Function<T, R> function) {
     return ok(PageUtils.toPage(page, function, null));
   }
@@ -160,9 +159,8 @@ public final class ControllerHelper {
    * @param bindingResult the binding result
    * @return the response entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<R>> update(
-          final S invoke, final T entity, final long id, final BindingResult bindingResult) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R> Rs<R> update(
+      final S invoke, final T entity, final long id, final BindingResult bindingResult) {
     if (id < 1) {
       return wrongFormat("id");
     }
@@ -188,8 +186,8 @@ public final class ControllerHelper {
    * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode) #update(BaseService,
    *     AbstractEntityPoJo, ResultCode, ResultCode)
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<String>> update(final S invoke, final T entity) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R> Rs<String> update(
+      final S invoke, final T entity) {
     return update(invoke, entity, null, null);
   }
 
@@ -204,9 +202,8 @@ public final class ControllerHelper {
    * @return the response entity
    * @see #update(BaseService, AbstractEntityPoJo, ResultCode, ResultCode)
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<String>> update(
-          final S invoke, final T entity, final ResultCode errorCode) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo> Rs<String> update(
+      final S invoke, final T entity, final ResultCode errorCode) {
     return update(invoke, entity, null, errorCode);
   }
 
@@ -221,12 +218,8 @@ public final class ControllerHelper {
    * @param errorCode 执行失败时的错误码,可以为null
    * @return the response entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<String>> update(
-          final S invoke,
-          final T entity,
-          final ResultCode successCode,
-          final ResultCode errorCode) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo> Rs<String> update(
+      final S invoke, final T entity, final ResultCode successCode, final ResultCode errorCode) {
     final int update = invoke.update(entity);
     return update == 1
         ? fail(ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST)
@@ -250,7 +243,7 @@ public final class ControllerHelper {
    */
   public static <
           S extends BaseService<T>, T extends AbstractEntityPoJo, R extends AbstractEntityRequest>
-      ResponseEntity<Rs<Object>> update(
+      Rs<Object> update(
           final S invoke,
           final R entity,
           final long id,
@@ -273,8 +266,8 @@ public final class ControllerHelper {
    * @param id the id
    * @return the response entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R>
-      ResponseEntity<Rs<R>> delete(final S invoke, final long id) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo, R> Rs<R> delete(
+      final S invoke, final long id) {
     if (id < 1) {
       return wrongFormat("id");
     }
@@ -291,8 +284,8 @@ public final class ControllerHelper {
    * @param ids the ids
    * @return the response entity
    */
-  public static <S extends BaseService<T>, T extends AbstractEntityPoJo>
-      ResponseEntity<Rs<String>> deleteByIds(final S invoke, final List<Long> ids) {
+  public static <S extends BaseService<T>, T extends AbstractEntityPoJo> Rs<String> deleteByIds(
+      final S invoke, final List<Long> ids) {
     invoke.deleteByIds(ids);
     return ok(ResultCode.API_SUCCESS_EXEC_DELETE);
   }
@@ -307,7 +300,7 @@ public final class ControllerHelper {
    * @param filterFunction 过滤函数表达式
    * @return {@link ResponseEntity}
    */
-  public static <T extends AbstractEntity, E> ResponseEntity<Rs<List<E>>> list(
+  public static <T extends AbstractEntity, E> Rs<List<E>> list(
       final List<T> list, final Function<T, E> function, final Predicate<E> filterFunction) {
     return ok(CollectionUtils.toList(list, function, filterFunction));
   }
@@ -320,7 +313,7 @@ public final class ControllerHelper {
    * @param list the list
    * @return the response entity
    */
-  public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(final List<T> list) {
+  public static <T extends AbstractEntity, R> Rs<Page<R>> page(final List<T> list) {
     return ok(PageUtils.toPage(list));
   }
 
@@ -334,7 +327,7 @@ public final class ControllerHelper {
    * @param filterFunction the filter function
    * @return the response entity
    */
-  public static <T extends AbstractEntity, R> ResponseEntity<Rs<Page<R>>> page(
+  public static <T extends AbstractEntity, R> Rs<Page<R>> page(
       final List<T> page, final Function<T, R> function, final Predicate<R> filterFunction) {
     return ok(PageUtils.toPage(page, function, filterFunction));
   }
@@ -355,7 +348,7 @@ public final class ControllerHelper {
           T extends AbstractEntityPoJo,
           R extends AbstractEntityRequest,
           P>
-      ResponseEntity<Rs<P>> createOrUpdate(
+      Rs<P> createOrUpdate(
           final S invoke,
           final R entity,
           final BindingResult bindingResult,
@@ -411,7 +404,7 @@ public final class ControllerHelper {
                 : ResultCode.API_FAIL_EXEC_UPDATE_NOT_EXIST.desc());
   }
 
-  private static <R> ResponseEntity<Rs<R>> errorResponse(Exception e) {
+  private static <R> Rs<R> errorResponse(Exception e) {
     log.warn(
         "errorResponse:{}[{}]",
         Thread.currentThread().getStackTrace()[2].getMethodName(),

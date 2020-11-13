@@ -43,7 +43,7 @@ public class WindConfiguration {
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 150;
 
-  /** 是否启用通用mvc配置. */
+  /** 是否启用默认mvc配置. */
   private boolean enableWebMvcConfigurer = true;
 
   /** 禁用{@link AbstractEntityPoJo}中的公共字段. */
@@ -54,6 +54,9 @@ public class WindConfiguration {
 
   /** 数据库方言全路径. */
   private String dialect;
+
+  /** 新增/更新时写入值为null的属性,默认不写入. */
+  private boolean writeNullProp = false;
 
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();

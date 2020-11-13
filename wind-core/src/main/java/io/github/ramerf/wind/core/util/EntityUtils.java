@@ -227,12 +227,6 @@ public final class EntityUtils {
         .noneMatch(disableField -> disableField.getField().equals(field));
   }
 
-  /** 给定的字段未被标记默认不抓取.false:不抓取 */
-  public static boolean isNotDontFetch(final Field field) {
-    final TableColumn annotation = field.getAnnotation(TableColumn.class);
-    return annotation == null || !annotation.dontFetch();
-  }
-
   /**
    * 获取对象属性对应的数据库列名.<br>
    * <li>普通字段:默认值为{@link TableColumn#name()};如果前者为空,值为<br>

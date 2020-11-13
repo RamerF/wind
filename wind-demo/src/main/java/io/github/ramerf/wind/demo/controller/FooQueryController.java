@@ -15,7 +15,6 @@ import java.util.List;
 import javax.annotation.Resource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -30,11 +29,10 @@ import org.springframework.web.bind.annotation.*;
 @Api(tags = "Query使用示例")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class FooQueryController {
-  @Resource private PrototypeBean prototypeBean;
 
   @GetMapping
   @ApiOperation("使用Query")
-  public ResponseEntity<Rs<Object>> query() {
+  public Rs<List<Foo>> query() {
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
     final Condition<Foo> condition = queryColumn.getCondition();
@@ -44,19 +42,19 @@ public class FooQueryController {
     condition.eq(Foo::setId, 1L);
     // 动态条件,第一个参数为false时,不会包含该条件
     condition.eq(false, Foo::setId, 2L);
-    return Rs.ok(prototypeBean.query().select(queryColumn).where(condition).fetchAll(Long.class));
+    return Rs.ok(
+        Query.getInstance(Foo.class).select(queryColumn).where(condition).fetchAll(Long.class));
   }
 
   @GetMapping(params = "type=2")
   @ApiOperation("使用Query,groupBy,sum")
-  public ResponseEntity<Rs<Object>> query2() {
+  public Rs<List<GroupBySum>> query2() {
     QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
     Condition<Foo> condition = queryColumn.getCondition().gt(Foo::setId, 0L);
     final QueryEntityMetaData<Foo> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
     final GroupByClause<Foo> clause = queryEntityMetaData.getGroupByClause();
     final List<GroupBySum> list =
-        prototypeBean
-            .query()
+        Query.getInstance(Foo.class)
             .select(queryColumn.sum(Foo::getId, "big_decimal").col(Foo::getName, "name"))
             .where(condition)
             .groupBy(clause.col(Foo::getName))
@@ -66,7 +64,7 @@ public class FooQueryController {
 
   @GetMapping("/diy")
   @ApiOperation("使用Query,DIY)")
-  public ResponseEntity<Rs<Object>> query3() {
+  public Rs<List<Foo>> query3() {
     /* 说明:只支持inner join方式连表 */
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
@@ -79,8 +77,7 @@ public class FooQueryController {
     // 执行连表: foo.id=o_o.id
     condition.eq(Foo::getId, queryColumn2, OoO::getId);
     return Rs.ok(
-        prototypeBean
-            .query()
+        Query.getInstance(Foo.class)
             .select(queryColumn)
             .where(condition, queryColumn2.getCondition())
             .fetchAll(Foo.class));
@@ -88,7 +85,7 @@ public class FooQueryController {
 
   @GetMapping(value = "/diy", params = "type=2")
   @ApiOperation("使用Query,查询任意表)")
-  public ResponseEntity<Rs<Object>> query4() {
+  public Rs<List<IdNameResponse>> query4() {
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
     final Condition<Foo> condition = queryColumn.getCondition();

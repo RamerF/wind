@@ -622,8 +622,10 @@ wind:
   snowflake-prop:
     worker-id: 3
     data-center-id: 2
-  # 默认true,当默认mvc配置与当前项目不兼容时设置为false可禁用
+  # 启用默认mvc配置,默认true启用,如果默认配置与项目需求不兼容时可设置为false禁用
   enable-web-mvc-configurer: false
+  # 新增/更新时写入值为null的属性,默认不写入
+  write-null-prop: true
 ```
 
 #### 可用注解

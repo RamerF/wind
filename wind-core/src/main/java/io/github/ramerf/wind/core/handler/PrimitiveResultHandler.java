@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.Map;
@@ -16,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2019 /12/27
  */
 @Slf4j
-public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
+public class PrimitiveResultHandler<E>
+    extends AbstractResultHandler<AbstractEntityPoJo, Map<String, Object>, E> {
 
   /**
    * Instantiates a new Primitive result handler.

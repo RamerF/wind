@@ -53,8 +53,7 @@ public class GlobalExceptionHandler {
   @ResponseBody
   @ResponseStatus
   @ExceptionHandler(value = CommonException.class)
-  public ResponseEntity<Rs<Object>> handleCommonException(
-      HttpServletRequest request, Exception exception) {
+  public Rs<Object> handleCommonException(HttpServletRequest request, Exception exception) {
     log.error(request.getRequestURL().toString());
     handleError(request, exception);
     final ResultCode resultCode = ((CommonException) exception).getResultCode();
@@ -71,7 +70,7 @@ public class GlobalExceptionHandler {
   @ResponseBody
   @ResponseStatus
   @ExceptionHandler(value = HttpMessageNotReadableException.class)
-  public ResponseEntity<Rs<Object>> handleHttpMessageNotReadableException(
+  public Rs<Object> handleHttpMessageNotReadableException(
       HttpServletRequest request, Exception exception) {
     log.error(request.getRequestURL().toString());
     final Throwable cause = exception.getCause();
@@ -99,7 +98,7 @@ public class GlobalExceptionHandler {
   @ResponseBody
   @ResponseStatus
   @ExceptionHandler(value = MethodArgumentTypeMismatchException.class)
-  public ResponseEntity<Rs<Object>> handleMethodArgumentTypeMismatchException(
+  public Rs<Object> handleMethodArgumentTypeMismatchException(
       HttpServletRequest request, Exception exception) {
     if (exception.getCause() instanceof ConversionFailedException
         && exception.getCause().getCause() instanceof CommonException) {
@@ -127,7 +126,7 @@ public class GlobalExceptionHandler {
   @ResponseBody
   @ResponseStatus
   @ExceptionHandler(value = MissingServletRequestParameterException.class)
-  public ResponseEntity<Rs<Object>> handleMissingServletRequestParameterException(
+  public Rs<Object> handleMissingServletRequestParameterException(
       HttpServletRequest request, Exception exception) {
     handleError(request, exception);
     return Rs.notPresent(((MissingServletRequestParameterException) exception).getParameterName());
@@ -146,7 +145,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Rs<Object>> handleHttpMediaTypeNotSupportedException(
       HttpServletRequest request, Exception exception) {
     handleError(request, exception);
-    return Rs.notSupportContentType(request.getContentType());
+    return Rs.notSupportMediaType(request.getContentType());
   }
 
   /**
@@ -162,7 +161,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Rs<Object>> handleHttpRequestMethodNotSupportedException(
       HttpServletRequest request, Exception exception) {
     handleError(request, exception);
-    return Rs.notSupportMethod(request.getMethod());
+    return Rs.notSupportRequestMethod(request.getMethod());
   }
 
   /**
@@ -175,7 +174,7 @@ public class GlobalExceptionHandler {
   @ResponseBody
   @ResponseStatus
   @ExceptionHandler(value = ConstraintViolationException.class)
-  public ResponseEntity<Rs<Object>> handleConstraintViolationException(
+  public Rs<Object> handleConstraintViolationException(
       HttpServletRequest request, Exception exception) {
     return Rs.fail(
         ((ConstraintViolationException) exception)
@@ -194,8 +193,7 @@ public class GlobalExceptionHandler {
   @ResponseBody
   @ResponseStatus
   @ExceptionHandler(value = DataAccessException.class)
-  public ResponseEntity<Rs<Object>> handleDataAccessException(
-      HttpServletRequest request, Exception exception) {
+  public Rs<Object> handleDataAccessException(HttpServletRequest request, Exception exception) {
     final Throwable cause = exception.getCause();
     if (cause instanceof SQLException) {
       handleError(request, (SQLException) cause);
@@ -217,8 +215,7 @@ public class GlobalExceptionHandler {
   @ResponseBody
   @ResponseStatus
   @ExceptionHandler(value = Exception.class)
-  public ResponseEntity<Rs<Object>> handleException(
-      HttpServletRequest request, Exception exception) {
+  public Rs<Object> handleException(HttpServletRequest request, Exception exception) {
     log.error(request.getRequestURL().toString());
     handleError(request, exception);
     return Rs.fail();

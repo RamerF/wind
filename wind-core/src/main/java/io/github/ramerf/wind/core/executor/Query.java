@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
-import io.github.ramerf.wind.core.config.AppContextInject;
+import io.github.ramerf.wind.core.config.PrototypeBean;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -56,7 +56,7 @@ import static java.util.stream.Collectors.toCollection;
  * @since 2019 /12/28
  */
 @Slf4j
-public class Query {
+public class Query<T extends AbstractEntityPoJo> {
   /**
    *
    *
@@ -68,9 +68,9 @@ public class Query {
    * 3. orderBy case when id=? then min_number else max_number end
    * </pre>
    */
-  private List<QueryColumn<?>> queryColumns;
+  private List<QueryColumn<T>> queryColumns;
 
-  private List<ICondition<?>> conditions;
+  private List<ICondition<T>> conditions;
   private String queryString;
   private String conditionString;
   private String countString;
@@ -80,10 +80,20 @@ public class Query {
 
   private static Executor executor;
   private static WindConfiguration configuration;
+  private static PrototypeBean prototypeBean;
+  private final Class<T> clazz;
 
-  public static void initial(final Executor executor, final WindConfiguration configuration) {
+  public static void initial(
+      final Executor executor,
+      final WindConfiguration configuration,
+      final PrototypeBean prototypeBean) {
     Query.executor = executor;
     Query.configuration = configuration;
+    Query.prototypeBean = prototypeBean;
+  }
+
+  public Query(final Class<T> clazz) {
+    this.clazz = clazz;
   }
 
   /**
@@ -91,8 +101,8 @@ public class Query {
    *
    * @return the instance
    */
-  public static Query getInstance() {
-    return AppContextInject.getBean(Query.class);
+  public static <T extends AbstractEntityPoJo> Query<T> getInstance(final Class<T> clazz) {
+    return prototypeBean.query(clazz);
   }
 
   /**
@@ -101,7 +111,8 @@ public class Query {
    * @param queryColumns the query columns
    * @return the query
    */
-  public Query select(@Nonnull final QueryColumn<?>... queryColumns) {
+  @SafeVarargs
+  public final Query<T> select(@Nonnull final QueryColumn<T>... queryColumns) {
     this.queryColumns = new LinkedList<>(Arrays.asList(queryColumns));
     this.queryString =
         this.queryColumns.stream().map(QueryColumn::getString).collect(Collectors.joining(","));
@@ -122,7 +133,7 @@ public class Query {
    * @param conditions the conditions
    * @return the query
    */
-  public Query from(final ICondition<?>... conditions) {
+  public Query<T> from(final ICondition<?>... conditions) {
     // TODO-WARN: from方法
     throw CommonException.of("方法未实现");
   }
@@ -133,8 +144,9 @@ public class Query {
    * @param conditions the conditions
    * @return the query
    */
+  @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
-  public Query where(final ICondition<?>... conditions) {
+  public final Query<T> where(final ICondition<T>... conditions) {
     this.conditions = new LinkedList<>(Arrays.asList(conditions));
     String conditionString =
         this.conditions.stream()
@@ -173,7 +185,7 @@ public class Query {
    */
   @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
-  public final Query where(final Consumer<Condition<?>>... consumers) {
+  public final Query<T> where(final Consumer<Condition<?>>... consumers) {
     this.conditions =
         consumers.length > 0
             ? IntStream.range(0, consumers.length)
@@ -205,7 +217,8 @@ public class Query {
     return this;
   }
 
-  public final Query stringWhere(final Consumer<StringCondition<?>>... consumers) {
+  @SafeVarargs
+  public final Query<T> stringWhere(final Consumer<StringCondition<?>>... consumers) {
     this.conditions =
         consumers.length > 0
             ? IntStream.range(0, consumers.length)
@@ -253,7 +266,7 @@ public class Query {
    * @param groupByClauses the group by clauses
    * @return the query
    */
-  public Query groupBy(@Nonnull final GroupByClause<?>... groupByClauses) {
+  public Query<T> groupBy(@Nonnull final GroupByClause<?>... groupByClauses) {
     afterWhereString
         .append(GROUP_BY)
         .append(
@@ -288,13 +301,12 @@ public class Query {
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
     return executor.fetchOne(
-        SqlParam.builder()
-            .sql(queryString)
-            .clazz(clazz)
-            .conditions(conditions)
-            .queryColumns(queryColumns)
-            .startIndex(new AtomicInteger(1))
-            .build(),
+        new SqlParam<T>()
+            .setSql(queryString)
+            .setClazz(clazz)
+            .setConditions(conditions)
+            .setQueryColumns(queryColumns)
+            .setStartIndex(new AtomicInteger(1)),
         resultHandler);
   }
 
@@ -314,13 +326,12 @@ public class Query {
       log.trace("fetch:[{}]", queryString);
     }
     return executor.fetchAll(
-        SqlParam.builder()
-            .sql(queryString)
-            .clazz(clazz)
-            .conditions(conditions)
-            .queryColumns(queryColumns)
-            .startIndex(new AtomicInteger(1))
-            .build(),
+        new SqlParam<T>()
+            .setSql(queryString)
+            .setClazz(clazz)
+            .setConditions(conditions)
+            .setQueryColumns(queryColumns)
+            .setStartIndex(new AtomicInteger(1)),
         clazz);
   }
 
@@ -356,13 +367,12 @@ public class Query {
             pageable.getPageSize(),
             pageable.getOffset());
     return executor.fetchAll(
-        SqlParam.builder()
-            .sql(queryString)
-            .clazz(clazz)
-            .conditions(conditions)
-            .queryColumns(queryColumns)
-            .startIndex(new AtomicInteger(1))
-            .build());
+        new SqlParam<T>()
+            .setSql(queryString)
+            .setClazz(clazz)
+            .setConditions(conditions)
+            .setQueryColumns(queryColumns)
+            .setStartIndex(new AtomicInteger(1)));
   }
 
   /**
@@ -403,14 +413,13 @@ public class Query {
       log.trace("fetch:[{}]", queryString);
     }
     return executor.fetchPage(
-        SqlParam.builder()
-            .sql(queryString)
-            .clazz(clazz)
-            .conditions(conditions)
-            .queryColumns(queryColumns)
-            .startIndex(new AtomicInteger(1))
-            .build(),
-        fetchCount(clazz),
+        new SqlParam<T>()
+            .setSql(queryString)
+            .setClazz(clazz)
+            .setConditions(conditions)
+            .setQueryColumns(queryColumns)
+            .setStartIndex(new AtomicInteger(1)),
+        fetchCount(this.clazz),
         pageable);
   }
 
@@ -419,7 +428,7 @@ public class Query {
    *
    * @return long long
    */
-  public long fetchCount(final Class<?> clazz) {
+  public long fetchCount(final Class<T> clazz) {
     doIfNonEmpty(afterWhereString.toString(), str -> countString = countString.concat(str));
     final boolean nonEmpty = StringUtils.nonEmpty(countString);
     final String sql =
@@ -427,31 +436,28 @@ public class Query {
             ? "SELECT SUM(b.a) FROM (SELECT 1 a FROM %s) b"
             : "SELECT COUNT(1) FROM %s";
     return executor.fetchCount(
-        SqlParam.builder()
-            .sql(String.format(sql, countString))
-            .clazz(Long.class)
-            .entityClazz(clazz)
-            .aggregateFunction(SqlAggregateFunction.COUNT)
-            .conditions(conditions)
-            .startIndex(new AtomicInteger(1))
-            .build());
+        new SqlParam<T>()
+            .setSql(String.format(sql, countString))
+            .setClazz(Long.class)
+            .setEntityClazz(clazz)
+            .setAggregateFunction(SqlAggregateFunction.COUNT)
+            .setConditions(conditions)
+            .setStartIndex(new AtomicInteger(1)));
   }
 
   /**
    * 自定义sql查询列表.
    *
-   * @param <T> the type parameter
    * @param <R> the type parameter
    * @param sql the sql
    * @param respClazz the clazz
    * @param args the args
    * @return the list
    */
-  public <T extends AbstractEntityPoJo, R> List<R> fetchBySql(
-      final String sql, final Class<R> respClazz, final Object... args) {
+  public <R> List<R> fetchBySql(final String sql, final Class<R> respClazz, final Object... args) {
     final List<Map<String, Object>> list =
         executor.queryForList(
-            SqlParam.builder().sql(sql).clazz(respClazz).conditions(conditions).build(), args);
+            new SqlParam<T>().setSql(sql).setClazz(respClazz).setConditions(conditions), args);
     if (CollectionUtils.isEmpty(list)) {
       return Collections.emptyList();
     }
@@ -472,11 +478,10 @@ public class Query {
    */
   public long countBySql(final String sql, final Object... args) {
     return executor.queryForObject(
-        SqlParam.builder()
-            .sql(sql)
-            .aggregateFunction(SqlAggregateFunction.COUNT)
-            .conditions(conditions)
-            .build(),
+        new SqlParam<T>()
+            .setSql(sql)
+            .setAggregateFunction(SqlAggregateFunction.COUNT)
+            .setConditions(conditions),
         args,
         Long.class);
   }

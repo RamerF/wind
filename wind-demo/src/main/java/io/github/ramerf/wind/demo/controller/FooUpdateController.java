@@ -9,7 +9,6 @@ import io.swagger.annotations.ApiOperation;
 import java.util.function.Consumer;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,13 +27,12 @@ public class FooUpdateController {
 
   @GetMapping
   @ApiOperation("使用Update")
-  public ResponseEntity<Rs<Object>> update() {
+  public Rs<Integer> update() {
     final Foo foo = Foo.builder().name("name").build();
     final int affectRow =
         prototypeBean
-            .update()
-            .from(Foo.class)
-            .lambdaWhere((Consumer<Condition<Foo>>) condition -> condition.eq(Foo::setId, 1L))
+            .update(Foo.class)
+            .where((Consumer<Condition<Foo>>) condition -> condition.eq(Foo::setId, 1L))
             .update(foo);
     return Rs.ok(affectRow);
   }

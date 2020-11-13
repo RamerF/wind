@@ -5,9 +5,11 @@ import io.github.ramerf.wind.core.mysql.MysqlApplication;
 import io.github.ramerf.wind.core.mysql.entity.pojo.Foo;
 import io.github.ramerf.wind.core.mysql.entity.pojo.Foo.Type;
 import io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse;
+import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.LongStream;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -58,36 +60,6 @@ public class BaseServiceTest {
   @BeforeEach
   public void before() {
     foo.setId(id);
-  }
-
-  @Test
-  @Order(1)
-  @DisplayName("单个创建:创建并返回对象")
-  @Transactional(rollbackFor = Exception.class)
-  public void testCreateAndGet() {
-    assertNotNull(service.createAndGet(foo));
-  }
-
-  @Test
-  @Order(1)
-  @DisplayName("单个创建:创建并返回对象,指定保存可能为null的列")
-  @Transactional(rollbackFor = Exception.class)
-  public void testCreateAndGetWithNull() {
-    assertNotNull(service.createAndGetWithNull(foo, Collections.singletonList(Foo::getLargeText)));
-  }
-
-  @Test
-  @DisplayName("单个更新:更新并返回对象")
-  @Transactional(rollbackFor = Exception.class)
-  public void testUpdateAndGet() {
-    assertNotNull(service.updateAndGet(foo));
-  }
-
-  @Test
-  @DisplayName("单个更新:更新并返回对象,指定保存可能为null的列")
-  @Transactional(rollbackFor = Exception.class)
-  public void testUpdateAndGetWithNull() {
-    assertNotNull(service.updateAndGetWithNull(foo, Collections.singletonList(Foo::getLargeText)));
   }
 
   @Test
@@ -288,22 +260,49 @@ public class BaseServiceTest {
   @Order(2)
   @DisplayName("单个创建")
   @Transactional(rollbackFor = Exception.class)
-  public void testCreate() {
+  public void testCreate1() {
     assertTrue(service.create(foo) > 0);
   }
 
   @Test
   @Order(2)
-  @DisplayName("单个创建: 指定保存可能为null的列")
+  @DisplayName("单个创建: 指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testCreateWithNull() {
-    assertTrue(service.createWithNull(foo, Collections.singletonList(Foo::getLargeText)) > 0);
+  public void testCreate2() {
+    // assertTrue(service.create(foo, fields -> fields.exclude(Foo::getAge)) > 0);
+    assertTrue(service.create(foo, fields -> fields.include(Foo::getAge)) > 0);
+  }
+
+  @Test
+  @Order(1)
+  @DisplayName("单个创建:域对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreate3() {
+    final Consumer<Fields<Foo>> consumer =
+        fields -> fields.include(Foo::getName, Foo::getAge).exclude(Foo::getLargeText);
+    assertTrue(foo.create(consumer) > 0);
+  }
+
+  @Test
+  @Order(1)
+  @DisplayName("单个创建:返回对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateAndGet1() {
+    assertNotNull(service.createAndGet(foo));
+  }
+
+  @Test
+  @Order(1)
+  @DisplayName("单个创建:返回对象,指定属性")
+  @Transactional(rollbackFor = Exception.class)
+  public void testCreateAndGet2() {
+    assertNotNull(service.createAndGet(foo, fields -> fields.exclude(Foo::getLargeText)));
   }
 
   @Test
   @DisplayName("批量创建")
   @Transactional(rollbackFor = Exception.class)
-  public void testCreateBatch() {
+  public void testCreateBatch1() {
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -322,9 +321,9 @@ public class BaseServiceTest {
   }
 
   @Test
-  @DisplayName("批量创建:指定保存可能为null的列")
+  @DisplayName("批量创建:指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testCreateBatchWithNull() {
+  public void testCreateBatch2() {
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -340,46 +339,63 @@ public class BaseServiceTest {
             .collect(toList());
     long start = System.currentTimeMillis();
     assertFalse(
-        service.createBatchWithNull(list, Collections.singletonList(Foo::getName)).isPresent());
+        service.createBatch(list, fields -> fields.include(Foo::getName, Foo::getAge)).isPresent());
   }
 
   @Test
   @DisplayName("单个更新")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdate() {
+  public void testUpdate1() {
     assertEquals(service.update(foo), 1);
   }
 
   @Test
-  @DisplayName("单个更新:指定保存可能为null的列")
+  @DisplayName("单个更新:指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateWithNull() {
-    assertEquals(service.updateWithNull(foo, Collections.singletonList(Foo::getLargeText)), 1);
+  public void testUpdate2() {
+    foo.setName("<" + LocalDateTime.now() + ">");
+    assertEquals(service.update(foo, fields -> fields.include(Foo::getName)), 1);
   }
 
   @Test
   @DisplayName("单个更新:条件更新")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateCondition() {
-    assertEquals(service.update(condition -> condition.eq(Foo::setId, id), foo), 1);
+  public void testUpdate3() {
+    assertEquals(service.updateByCondition(foo, condition -> condition.eq(Foo::setId, id)), 1);
   }
 
   @Test
-  @DisplayName("单个更新:条件更新,指定保存可能为null的列")
+  @DisplayName("单个更新:条件更新,指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateConditionWithNull() {
+  public void testUpdate4() {
+    foo.setName("<" + LocalDateTime.now() + ">");
     assertEquals(
-        service.updateWithNull(
-            condition -> condition.eq(Foo::setId, id),
-            foo,
-            Collections.singletonList(Foo::getName)),
+        service.update(
+            foo, //
+            fields -> fields.include(Foo::getName),
+            condition -> condition.eq(Foo::setId, id)),
         1);
+  }
+
+  @Test
+  @DisplayName("单个更新:返回对象")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateAndGet1() {
+    assertNotNull(service.updateAndGet(foo));
+  }
+
+  @Test
+  @DisplayName("单个更新:返回对象,指定属性")
+  @Transactional(rollbackFor = Exception.class)
+  public void testUpdateAndGet2() {
+    foo.setName("<" + LocalDateTime.now() + ">");
+    assertNotNull(service.updateAndGet(foo, fields -> fields.include(Foo::getName)));
   }
 
   @Test
   @DisplayName("批量更新")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateBatch() {
+  public void testUpdateBatch1() {
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -397,9 +413,9 @@ public class BaseServiceTest {
   }
 
   @Test
-  @DisplayName("批量更新:指定保存可能为null的列")
+  @DisplayName("批量更新:指定属性")
   @Transactional(rollbackFor = Exception.class)
-  public void testUpdateBatchWithNull() {
+  public void testUpdateBatch2() {
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -413,22 +429,7 @@ public class BaseServiceTest {
                         .column("non_match_column")
                         .build())
             .collect(toList());
-    assertFalse(
-        service.updateBatchWithNull(list, Collections.singletonList(Foo::getName)).isPresent());
-  }
-
-  @Test
-  @DisplayName("更新指定字段:带条件")
-  @Transactional(rollbackFor = Exception.class)
-  public void testUpdateField() {
-    foo.setName(LocalDateTime.now().toString());
-    foo.setColumn(null);
-    assertEquals(
-        service.updateField(
-            foo,
-            fields -> fields.include(Foo::getName, Foo::getColumn),
-            condition -> condition.eq(Foo::setId, id)),
-        1);
+    assertFalse(service.updateBatch(list, fields -> fields.include(Foo::getName)).isPresent());
   }
 
   @Test
@@ -453,19 +454,5 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testDeleteByIds() {
     assertTrue(service.deleteByIds(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
-  }
-
-  @Test
-  @DisplayName("单个查询:默认不查询指定字段(大字段)")
-  @Transactional(rollbackFor = Exception.class)
-  public void testDontFetch() {
-    // 默认不查询
-    assertNull(service.getOne(condition -> condition.eq(Foo::setId, id)).getLargeText());
-    // 指定查询该字段
-    assertNotNull(
-        service
-            .getOne(
-                query -> query.col(Foo::getLargeText), condition -> condition.eq(Foo::setId, id))
-            .getLargeText());
   }
 }

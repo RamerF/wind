@@ -21,7 +21,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
   /**
    * 过滤某些属性可能包含的特殊字符.
    *
-   * @param trans 页面传递过来的对象
+   * @param trans 原始对象
    * @param filtered 过滤后的对象
    */
   default void textFilter(T trans, T filtered) {}
@@ -40,8 +40,8 @@ public interface InterService<T extends AbstractEntityPoJo> {
    *
    * @return the query
    */
-  default Query getQuery() {
-    return Query.getInstance();
+  default Query<T> getQuery() {
+    return Query.getInstance(getPoJoClass());
   }
 
   /**
@@ -49,19 +49,18 @@ public interface InterService<T extends AbstractEntityPoJo> {
    *
    * @return the update
    */
-  default Update getUpdate() {
-    return getUpdate(true);
+  default Update<T> getUpdate() {
+    return Update.getInstance(getPoJoClass());
   }
 
   /**
-   * Gets update for current.
+   * Gets update for clazz.
    *
-   * @param current 是否当前类的更新组件
+   * @param clazz 是否当前类的更新组件
    * @return the update
    */
-  default Update getUpdate(final boolean current) {
-    final Update instance = Update.getInstance();
-    return current ? instance.from(getPoJoClass()) : instance;
+  default <R extends AbstractEntityPoJo> Update<R> getUpdate(final Class<R> clazz) {
+    return Update.getInstance(clazz);
   }
 
   /**

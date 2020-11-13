@@ -4,7 +4,7 @@ import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.mapping.*;
+import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
@@ -17,19 +17,20 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.proxy.*;
 
 import static io.github.ramerf.wind.core.util.StringUtils.firstUppercase;
 
 /**
  * The type Bean result handler.
  *
- * @param <E> the type parameter
  * @since 2019 /12/27
  * @author Tang Xiaofeng
+ * @param <P> PoJo
+ * @param <E> the type parameter
  */
 @Slf4j
-public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
+public class BeanResultHandler<P extends AbstractEntityPoJo, E>
+    extends AbstractResultHandler<P, Map<String, Object>, E> {
   private boolean bindProxy = true;
 
   /** 方法对应的字段. */
@@ -42,7 +43,7 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
    * @param clazz the clazz
    * @param queryColumns the query columns
    */
-  public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
+  public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<P>> queryColumns) {
     super(clazz, queryColumns);
   }
 
@@ -52,7 +53,8 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
    * @param clazz the clazz
    * @param queryColumns the query columns
    */
-  public BeanResultHandler(@Nonnull final Class<E> clazz, final QueryColumn<?>... queryColumns) {
+  @SafeVarargs
+  public BeanResultHandler(@Nonnull final Class<E> clazz, final QueryColumn<P>... queryColumns) {
     super(clazz, queryColumns);
   }
 
@@ -63,8 +65,9 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
    * @param bindProxy the bind proxy
    * @param queryColumns the query columns
    */
+  @SafeVarargs
   public BeanResultHandler(
-      @Nonnull final Class<E> clazz, boolean bindProxy, final QueryColumn<?>... queryColumns) {
+      @Nonnull final Class<E> clazz, boolean bindProxy, final QueryColumn<P>... queryColumns) {
     super(clazz, queryColumns);
     this.bindProxy = bindProxy;
   }
@@ -190,88 +193,5 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
               METHODS_FIELD_MAP.put(method, new WeakReference<>(field));
               return field;
             });
-  }
-
-  /**
-   * The type Fetch mapping interceptor.
-   *
-   * @param <E> the type parameter
-   * @since 2020.10.25
-   * @author Tang Xiaofeng
-   */
-  public static class FetchMappingInterceptor<E> implements MethodInterceptor {
-    private final BeanResultHandler<?> resultHandler;
-    /** The Map. */
-    final Map<String, Object> map;
-
-    /**
-     * Instantiates a new Fetch mapping interceptor.
-     *
-     * @param resultHandler the result handler
-     * @param map the map
-     */
-    public FetchMappingInterceptor(
-        final BeanResultHandler<?> resultHandler, final Map<String, Object> map) {
-      this.resultHandler = resultHandler;
-      this.map = map;
-    }
-
-    @Override
-    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) {
-      AbstractEntityPoJo poJo = (AbstractEntityPoJo) obj;
-      final Field field =
-          resultHandler.getField(method, BeanUtils.methodToProperty(method.getName()));
-      final Object relationValue = map.get(resultHandler.fieldAliaMap.get(field.getName()));
-      // 查询关联字段
-      log.debug("get relation:[{}]", method.getName());
-      return EntityMapping.get(poJo.getClass(), field)
-          .map(mappingInfo -> MappingType.of(field).fetchMapping(poJo, mappingInfo, relationValue))
-          .orElse(null);
-    }
-  }
-
-  /**
-   * The type Fetch mapping filter.
-   *
-   * @since 2020.10.25
-   * @author Tang Xiaofeng
-   */
-  public static class FetchMappingFilter implements CallbackFilter {
-    private final BeanResultHandler<?> resultHandler;
-    /** The Map. */
-    final Map<String, Object> map;
-
-    /**
-     * Instantiates a new Fetch mapping filter.
-     *
-     * @param resultHandler the result handler
-     * @param map the map
-     */
-    public FetchMappingFilter(
-        final BeanResultHandler<?> resultHandler, final Map<String, Object> map) {
-      this.resultHandler = resultHandler;
-      this.map = map;
-    }
-
-    @Override
-    public int accept(final Method method) {
-      final boolean isGetter = method.getName().startsWith("get");
-      final boolean noArgs = method.getParameterTypes().length == 0;
-      final boolean isPoJo = AbstractEntityPoJo.class.isAssignableFrom(method.getReturnType());
-      if (!isGetter || !noArgs || !isPoJo) {
-        return 1;
-      }
-      final Field field =
-          resultHandler.getField(method, BeanUtils.methodToProperty(method.getName()));
-      // 未标记为不抓取的字段
-      if (!EntityUtils.isNotDontFetch(field)) {
-        return 1;
-      }
-      final Object relationValue = map.get(resultHandler.fieldAliaMap.get(field.getName()));
-      if (relationValue == null) {
-        return 1;
-      }
-      return 0;
-    }
   }
 }

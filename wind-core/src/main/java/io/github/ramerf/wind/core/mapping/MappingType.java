@@ -38,7 +38,7 @@ public enum MappingType {
       final Class<?> type = mappingInfo.getReferenceClazz();
       @SuppressWarnings("unchecked")
       final Object mapping =
-          Query.getInstance()
+          Query.getInstance((Class<AbstractEntityPoJo>) poJo.getClass())
               .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
               .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
               .fetchOne(type);
@@ -53,7 +53,7 @@ public enum MappingType {
       final Class<?> type = mappingInfo.getClazz();
       @SuppressWarnings("unchecked")
       final Object mapping =
-          Query.getInstance()
+          Query.getInstance((Class<AbstractEntityPoJo>) poJo.getClass())
               .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
               .stringWhere(condition -> condition.eq(mappingInfo.getField(), relationValue))
               .fetchAll(type);
@@ -64,11 +64,11 @@ public enum MappingType {
   MANY_TO_ONE {
     @Override
     public <T> T fetchMapping(
-        final AbstractEntityPoJo obj, final MappingInfo mappingInfo, final Object relationValue) {
+        final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getReferenceClazz();
       @SuppressWarnings("unchecked")
       final Object mapping =
-          Query.getInstance()
+          Query.getInstance((Class<AbstractEntityPoJo>) poJo.getClass())
               .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
               .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
               .fetchOne(type);

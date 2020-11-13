@@ -4,13 +4,11 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.util.Date;
-import java.util.List;
 import java.util.function.Consumer;
-import javax.annotation.Nonnull;
 import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -21,8 +19,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 /**
  * PoJo实体.
  *
+ * @since 2019 /12/6
  * @author Tang Xiaofeng
- * @since 2019/12/6
  */
 @Slf4j
 @Data
@@ -69,8 +67,6 @@ public class AbstractEntityPoJo implements AbstractEntity {
   /**
    * 创建记录.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
@@ -83,23 +79,19 @@ public class AbstractEntityPoJo implements AbstractEntity {
   /**
    * 创建记录.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param <T> the type parameter
+   * @param fieldsConsumer the fields consumer
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
   @SuppressWarnings("unchecked")
-  public final <T extends AbstractEntityPoJo> long createWithNull(
-      List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
-    genericService().createWithNull(instance(), includeNullProps);
-    return getId();
+  public final <T extends AbstractEntityPoJo> long create(final Consumer<Fields<T>> fieldsConsumer)
+      throws DataAccessException {
+    return genericService().create(instance(), fieldsConsumer);
   }
 
   /**
    * 更新.
-   *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
    *
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
@@ -112,65 +104,56 @@ public class AbstractEntityPoJo implements AbstractEntity {
   /**
    * 更新.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
+   * @param <T> the type parameter
+   * @param fieldsConsumer the fields consumer
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
   @SuppressWarnings("unchecked")
-  public final <T extends AbstractEntityPoJo> int update(final Fields<T> fields) throws DataAccessException {
-    return genericService().updateField(instance(),fields1 -> );
+  public final <T extends AbstractEntityPoJo> int update(final Consumer<Fields<T>> fieldsConsumer)
+      throws DataAccessException {
+    return genericService().update(instance(), fieldsConsumer, null);
   }
 
   /**
    * 更新.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param <T> the type parameter
+   * @param conditionConsumer the fields consumer
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
   @SuppressWarnings("unchecked")
-  public final <T extends AbstractEntityPoJo> int updateWithNull(
-      List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
-    return genericService().updateWithNull(instance(), includeNullProps);
+  public final <T extends AbstractEntityPoJo> int updateByCondition(
+      final Consumer<Condition<T>> conditionConsumer) throws DataAccessException {
+    return genericService().update(instance(), null, conditionConsumer);
   }
 
   /**
-   * 条件更新.
+   * 删除记录.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
-   * @param consumer 更新条件
-   * @return 实际受影响的行数 int
+   * @return 实际受影响的行数
    * @throws DataAccessException 如果执行失败
+   * @see DataAccessException
+   * @see CommonException
+   */
+  public int delete() throws DataAccessException {
+    return genericService().delete(id);
+  }
+
+  /**
+   * 条件删除.
+   *
+   * @param consumer the consumer.示例:<br>
+   *     {@code condition -> condition.eq(AbstractEntityPoJo::setId, 1L)}
+   * @return 删除记录数 long
+   * @throws DataAccessException 如果执行失败
+   * @see DataAccessException
    */
   @SuppressWarnings("unchecked")
-  public final <T extends AbstractEntityPoJo> int update(final Consumer<Condition<T>> consumer)
+  public <T extends AbstractEntityPoJo> int delete(Consumer<Condition<T>> consumer)
       throws DataAccessException {
-    return consumer == null
-        ? genericService().update(instance())
-        : genericService().getUpdate().lambdaWhere(consumer).update(instance());
-  }
-
-  /**
-   * 条件更新.
-   *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
-   * @param consumer 更新条件
-   * @param includeNullProps 即使值为null也保存的属性
-   * @return 实际受影响的行数 int
-   * @throws DataAccessException 如果执行失败
-   */
-  public final <T extends AbstractEntityPoJo> int updateWithNull(
-      @Nonnull final Consumer<Condition<T>> consumer, List<IFunction<T, ?>> includeNullProps)
-      throws DataAccessException {
-    return genericService()
-        .getUpdate()
-        .lambdaWhere(consumer)
-        .updateWithNull(instance(), includeNullProps);
+    return genericService().delete(consumer);
   }
 
   /**

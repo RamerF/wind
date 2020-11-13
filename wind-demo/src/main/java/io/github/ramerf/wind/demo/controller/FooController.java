@@ -19,7 +19,6 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,7 +41,7 @@ public class FooController {
 
   @PostMapping("/create")
   @ApiOperation("创建,创建poJo,自定义错误信息")
-  public ResponseEntity<Rs<Object>> create(
+  public Rs<Object> create(
       @Valid @RequestBody final FooRequest fooRequest, final BindingResult bindingResult) {
     if (bindingResult.hasErrors()) {
       return Rs.fail(collect(bindingResult));
@@ -52,14 +51,14 @@ public class FooController {
 
   @PostMapping(value = "/create", params = "type=2")
   @ApiOperation("创建,创建poJo")
-  public ResponseEntity<Rs<Object>> create2(
+  public Rs<Object> create2(
       @Valid @RequestBody final FooRequest fooRequest, final BindingResult bindingResult) {
     return ControllerHelper.create(service, fooRequest.poJo(), bindingResult);
   }
 
   @PostMapping(value = "/create", params = "type=3")
   @ApiOperation("创建,指定保存null属性")
-  public ResponseEntity<Rs<Object>> create3(
+  public Rs<Object> create3(
       @Valid @RequestBody final FooRequest fooRequest, final BindingResult bindingResult) {
     return ControllerHelper.create(
         service, fooRequest, bindingResult, Foo::getTextString, Foo::getName);
@@ -67,13 +66,13 @@ public class FooController {
 
   @GetMapping(value = "/detail/{id}")
   @ApiOperation("查询,根据id获取详情")
-  public ResponseEntity<Rs<Object>> detail(@PathVariable("id") final long id) {
+  public Rs<Object> detail(@PathVariable("id") final long id) {
     return ControllerHelper.detail(service, id);
   }
 
   @GetMapping(value = "/detail/{id}", params = "type=2")
   @ApiOperation("查询,根据id获取详情,并转换为response")
-  public ResponseEntity<Rs<FooResponse>> detail2(@PathVariable("id") final long id) {
+  public Rs<FooResponse> detail2(@PathVariable("id") final long id) {
     /* /
     ControllerHelper.detail(
          service,
@@ -89,7 +88,7 @@ public class FooController {
 
   @GetMapping(value = "/list")
   @ApiOperation("查询,列表查询,支持转换和过滤")
-  public ResponseEntity<Rs<List<FooResponse>>> list() {
+  public Rs<List<FooResponse>> list() {
     // page需要自己调用分页查询,仅提供相关的对象转换方法
     final List<Foo> list = service.list(condition -> condition.like(Foo::setName, "foo"));
     return ControllerHelper.list(list, FooResponse::of, foo -> StringUtils.nonEmpty(foo.getName()));
@@ -97,7 +96,7 @@ public class FooController {
 
   @GetMapping(value = "/page")
   @ApiOperation("查询,分页")
-  public ResponseEntity<Rs<Page<FooResponse>>> page() {
+  public Rs<Page<FooResponse>> page() {
     // page需要自己调用分页查询,仅提供相关的对象转换方法
     final Page<Foo> page =
         service.page(
@@ -110,7 +109,7 @@ public class FooController {
 
   @GetMapping(value = "/page", params = "type=2")
   @ApiOperation("查询,列表查询,转换为分页对象")
-  public ResponseEntity<Rs<Page<FooResponse>>> page2() {
+  public Rs<Page<FooResponse>> page2() {
     // page需要自己调用分页查询,仅提供相关的对象转换方法
     final List<Foo> list = service.list(condition -> condition.eq(Foo::setName, "foo"));
     return ControllerHelper.page(list, FooResponse::of, foo -> StringUtils.nonEmpty(foo.getName()));
@@ -118,7 +117,7 @@ public class FooController {
 
   @PostMapping(value = "/update/{id}")
   @ApiOperation("更新,更新request")
-  public ResponseEntity<Rs<String>> update(
+  public Rs<String> update(
       @PathVariable("id") final long id,
       @RequestBody FooRequest fooRequest,
       final BindingResult bindingResult) {
@@ -133,7 +132,7 @@ public class FooController {
 
   @PostMapping(value = "/update/{id}", params = "type=2")
   @ApiOperation("更新,直接更新PoJo")
-  public ResponseEntity<Rs<String>> update2(
+  public Rs<String> update2(
       @PathVariable("id") final long id,
       @RequestBody FooRequest fooRequest,
       final BindingResult bindingResult) {
@@ -148,7 +147,7 @@ public class FooController {
 
   @PostMapping(value = "/update/{id}", params = "type=3")
   @ApiOperation("更新,直接更新PoJo,自定义执行失败时的返回信息")
-  public ResponseEntity<Rs<String>> update3(
+  public Rs<String> update3(
       @PathVariable("id") final long id,
       @RequestBody FooRequest fooRequest,
       final BindingResult bindingResult) {
@@ -163,7 +162,7 @@ public class FooController {
 
   @PostMapping(value = "/update/{id}", params = "type=4")
   @ApiOperation("更新,直接更新PoJo,自定义执行成功和失败时的返回信息")
-  public ResponseEntity<Rs<String>> update4(
+  public Rs<String> update4(
       @PathVariable("id") final long id,
       @RequestBody FooRequest fooRequest,
       final BindingResult bindingResult) {
@@ -179,7 +178,7 @@ public class FooController {
 
   @PostMapping(value = "/update/{id}", params = "type=5")
   @ApiOperation("更新,指定保存列")
-  public ResponseEntity<Rs<Object>> update5(
+  public Rs<Object> update5(
       @PathVariable("id") final long id,
       @RequestBody FooRequest fooRequest,
       final BindingResult bindingResult) {
@@ -188,19 +187,19 @@ public class FooController {
 
   @PostMapping(value = "/delete/{id}")
   @ApiOperation("删除,根据id删除")
-  public ResponseEntity<Rs<Object>> delete(@PathVariable("id") final long id) {
+  public Rs<Object> delete(@PathVariable("id") final long id) {
     return ControllerHelper.delete(service, id);
   }
 
   @PostMapping(value = "/deleteByIds")
   @ApiOperation("删除,根据id批量删除")
-  public ResponseEntity<Rs<String>> deleteByIds(@RequestParam("ids") final List<Long> ids) {
+  public Rs<String> deleteByIds(@RequestParam("ids") final List<Long> ids) {
     return ControllerHelper.deleteByIds(service, ids);
   }
 
   @PostMapping("/paramValid")
   @ApiOperation("接收枚举,手动校验")
-  public ResponseEntity<Rs<List<FooRequest>>> paramValid(@RequestBody List<FooRequest> foos) {
+  public Rs<List<FooRequest>> paramValid(@RequestBody List<FooRequest> foos) {
     ViolationResult violationResult = ValidateUtil.validate(foos);
     if (violationResult.hasErrors()) {
       return Rs.fail(collect(violationResult));

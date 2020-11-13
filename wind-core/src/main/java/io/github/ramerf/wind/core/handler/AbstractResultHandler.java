@@ -18,12 +18,14 @@ import static java.util.stream.Collectors.toMap;
 /**
  * The type Abstract result handler.
  *
- * @param <T> the type parameter
- * @param <E> the type parameter
- * @author Tang Xiaofeng
  * @since 2020 /4/6
+ * @author Tang Xiaofeng
+ * @param <P> 数据库对应 poJo
+ * @param <T> 数据库返回对象
+ * @param <E> 实际返回对象
  */
-abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
+abstract class AbstractResultHandler<P extends AbstractEntityPoJo, T, E>
+    implements ResultHandler<T, E> {
   /** The Methods. */
   List<Method> methods;
 
@@ -41,7 +43,7 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
    * @param clazz the clazz
    */
   public AbstractResultHandler(
-      @Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
+      @Nonnull final Class<E> clazz, final List<QueryColumn<P>> queryColumns) {
     this(clazz, queryColumns, true);
   }
 
@@ -50,8 +52,9 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
    *
    * @param clazz the clazz
    */
+  @SafeVarargs
   public AbstractResultHandler(
-      @Nonnull final Class<E> clazz, @Nonnull final QueryColumn<?>... queryColumns) {
+      @Nonnull final Class<E> clazz, @Nonnull final QueryColumn<P>... queryColumns) {
     this(clazz, Arrays.asList(queryColumns), true);
   }
 
@@ -63,7 +66,7 @@ abstract class AbstractResultHandler<T, E> implements ResultHandler<T, E> {
    */
   public AbstractResultHandler(
       @Nonnull final Class<E> clazz,
-      final List<QueryColumn<?>> queryColumns,
+      final List<QueryColumn<P>> queryColumns,
       final boolean initMethods) {
     this.clazz = clazz;
     if (initMethods) {

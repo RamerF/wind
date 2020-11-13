@@ -48,6 +48,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   private final ObjectMapper objectMapper;
   private final Executor executor;
   private final IdGenerator idGenerator;
+  private final PrototypeBean prototypeBean;
 
   public WindAutoConfiguration(
       final WindConfiguration windConfiguration,
@@ -55,7 +56,8 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       final ApplicationEventPublisher publisher,
       final ObjectMapper objectMapper,
       final Executor jdbcTemplateExecutor,
-      final ObjectProvider<IdGenerator> idGenerator) {
+      final ObjectProvider<IdGenerator> idGenerator,
+      final PrototypeBean prototypeBean) {
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
     windContext.setWindConfiguration(windConfiguration);
 
@@ -64,6 +66,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     this.objectMapper = objectMapper;
     this.executor = jdbcTemplateExecutor;
     this.idGenerator = idGenerator.getIfAvailable();
+    this.prototypeBean = prototypeBean;
   }
 
   @Override
@@ -82,8 +85,13 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     // 初始化分布式主键
     SnowflakeIdWorker.initial(configuration.getSnowflakeProp());
     // 初始化Query/Update
-    Update.initial(executor, configuration, idGenerator, windContext.getDbMetaData().getDialect());
-    Query.initial(executor, configuration);
+    Update.initial(
+        executor,
+        configuration,
+        idGenerator,
+        windContext.getDbMetaData().getDialect(),
+        prototypeBean);
+    Query.initial(executor, configuration, prototypeBean);
     // 初始化EntityUtils
     EntityUtils.initial(windContext);
     // 初始化实体类

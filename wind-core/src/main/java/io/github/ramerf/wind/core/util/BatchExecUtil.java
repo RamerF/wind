@@ -20,22 +20,26 @@ public class BatchExecUtil {
    *
    * @param list the list
    * @param consumer the consumer
-   * @see #batchExec(List, int, Consumer)
+   * @see #batchExec(String, List, int, Consumer)
    */
-  public static <T> void batchExec(final List<T> list, Consumer<List<T>> consumer) {
-    batchExec(list, 150, consumer);
+  public static <T> void batchExec(
+      final String taskName, final List<T> list, Consumer<List<T>> consumer) {
+    batchExec(taskName, list, 150, consumer);
   }
 
   /**
    * 批量执行,每次操作<code>batchSize</code>条.
    *
+   * @param <T> the type parameter
+   * @param taskName 任务名称,用于打印信息
    * @param list the list
    * @param batchSize 每次执行的大小
    * @param consumer the consumer
    */
-  public static <T> void batchExec(final List<T> list, int batchSize, Consumer<List<T>> consumer) {
+  public static <T> void batchExec(
+      final String taskName, final List<T> list, int batchSize, Consumer<List<T>> consumer) {
     if (CollectionUtils.isEmpty(list)) {
-      log.info("batchExec:[empty!]");
+      log.info("batchExec:{}[empty!]", taskName);
       return;
     }
     List<T> subList = new ArrayList<>(batchSize);
@@ -44,10 +48,10 @@ public class BatchExecUtil {
     for (int i = 0; i < count; i++) {
       final boolean lastTrunk = i + 1 == count;
       final int start = i * batchSize;
-      final int end = Math.min((i + 1) * batchSize, total);
+      final int end = lastTrunk ? total : (i + 1) * batchSize;
       subList.addAll(list.subList(start, end));
-      if (i + 1 == count || subList.size() == batchSize) {
-        log.info("batchExec:[start:{},end:{}]", start, end);
+      if (lastTrunk || subList.size() == batchSize) {
+        log.debug("batchExec:{}[start:{},end:{}]", taskName, start, end);
         consumer.accept(subList);
         subList.clear();
       }
