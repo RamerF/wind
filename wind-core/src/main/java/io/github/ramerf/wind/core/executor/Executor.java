@@ -101,7 +101,7 @@ public interface Executor {
    * @return the t
    * @throws DataAccessException the data access exception
    */
-  <T> T queryForObject(@Nonnull final SqlParam sqlParam, Object[] args, Class<T> requiredType)
+  <T> T queryForObject(@Nonnull final SqlParam<?> sqlParam, Object[] args, Class<T> requiredType)
       throws DataAccessException;
 
   /**
@@ -112,8 +112,8 @@ public interface Executor {
    * @return the list
    * @throws DataAccessException the data access exception
    */
-  List<Map<String, Object>> queryForList(@Nonnull final SqlParam sqlParam, @Nullable Object... args)
-      throws DataAccessException;
+  List<Map<String, Object>> queryForList(
+      @Nonnull final SqlParam<?> sqlParam, @Nullable Object... args) throws DataAccessException;
 
   /**
    * Query t.
@@ -126,7 +126,7 @@ public interface Executor {
    * @throws DataAccessException the data access exception
    */
   <T> T query(
-      @Nonnull final SqlParam sqlParam,
+      @Nonnull final SqlParam<?> sqlParam,
       @Nullable PreparedStatementSetter pss,
       ResultSetExtractor<T> rse)
       throws DataAccessException;
@@ -142,7 +142,7 @@ public interface Executor {
    * @throws DataAccessException the data access exception
    */
   <T> List<T> query(
-      @Nonnull final SqlParam sqlParam,
+      @Nonnull final SqlParam<?> sqlParam,
       @Nullable PreparedStatementSetter pss,
       RowMapper<T> rowMapper)
       throws DataAccessException;
@@ -206,7 +206,7 @@ public interface Executor {
     /** 参数填充起始位置. */
     protected AtomicInteger startIndex;
     /** sql条件,可获取占位符对应的值,用于redis缓存唯一key生成.{@link ICondition#getValues(AtomicInteger)} */
-    protected List<ICondition<T>> conditions;
+    protected List<ICondition<? extends AbstractEntityPoJo>> conditions;
     /** 执行聚合函数,可为空. */
     protected SqlAggregateFunction aggregateFunction;
 

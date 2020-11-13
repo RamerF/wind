@@ -31,7 +31,6 @@ import static io.github.ramerf.wind.core.util.StringUtils.firstUppercase;
 @Slf4j
 public class BeanResultHandler<P extends AbstractEntityPoJo, E>
     extends AbstractResultHandler<P, Map<String, Object>, E> {
-  private boolean bindProxy = true;
 
   /** 方法对应的字段. */
   private static final Map<Method, WeakReference<Field>> METHODS_FIELD_MAP =
@@ -58,20 +57,6 @@ public class BeanResultHandler<P extends AbstractEntityPoJo, E>
     super(clazz, queryColumns);
   }
 
-  /**
-   * Instantiates a new Bean result handler.
-   *
-   * @param clazz the clazz
-   * @param bindProxy the bind proxy
-   * @param queryColumns the query columns
-   */
-  @SafeVarargs
-  public BeanResultHandler(
-      @Nonnull final Class<E> clazz, boolean bindProxy, final QueryColumn<P>... queryColumns) {
-    super(clazz, queryColumns);
-    this.bindProxy = bindProxy;
-  }
-
   @Override
   public E handle(Map<String, Object> map) {
     // map = {alia:value}
@@ -84,7 +69,7 @@ public class BeanResultHandler<P extends AbstractEntityPoJo, E>
       final String fieldName = BeanUtils.methodToProperty(method.getName());
       final Field field = getField(method, fieldName);
       final Class<?> paramType = method.getParameterTypes()[0];
-      if (bindProxy && isPoJo) {
+      if (isPoJo) {
         if (MappingInfo.isOneMapping(field)) {
           //noinspection unchecked
           initMappingObj(

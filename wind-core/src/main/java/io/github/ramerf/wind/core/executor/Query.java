@@ -70,7 +70,7 @@ public class Query<T extends AbstractEntityPoJo> {
    */
   private List<QueryColumn<T>> queryColumns;
 
-  private List<ICondition<T>> conditions;
+  private List<ICondition<? extends AbstractEntityPoJo>> conditions;
   private String queryString;
   private String conditionString;
   private String countString;
@@ -144,9 +144,8 @@ public class Query<T extends AbstractEntityPoJo> {
    * @param conditions the conditions
    * @return the query
    */
-  @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
-  public final Query<T> where(final ICondition<T>... conditions) {
+  public Query<T> where(final ICondition<?>... conditions) {
     this.conditions = new LinkedList<>(Arrays.asList(conditions));
     String conditionString =
         this.conditions.stream()
@@ -217,6 +216,7 @@ public class Query<T extends AbstractEntityPoJo> {
     return this;
   }
 
+  @SuppressWarnings("DuplicatedCode")
   @SafeVarargs
   public final Query<T> stringWhere(final Consumer<StringCondition<?>>... consumers) {
     this.conditions =

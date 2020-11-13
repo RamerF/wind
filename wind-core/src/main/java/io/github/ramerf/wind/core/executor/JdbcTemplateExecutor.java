@@ -194,7 +194,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   public <T> T queryForObject(
-      @Nonnull final SqlParam sqlParam, final Object[] args, final Class<T> requiredType)
+      @Nonnull final SqlParam<?> sqlParam, final Object[] args, final Class<T> requiredType)
       throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
@@ -204,7 +204,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   public List<Map<String, Object>> queryForList(
-      @Nonnull final SqlParam sqlParam, final Object... args) throws DataAccessException {
+      @Nonnull final SqlParam<?> sqlParam, final Object... args) throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
         () -> jdbcTemplate.queryForList(sqlParam.sql, args),
@@ -213,7 +213,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   public <T> T query(
-      @Nonnull final SqlParam sqlParam,
+      @Nonnull final SqlParam<?> sqlParam,
       final PreparedStatementSetter pss,
       final ResultSetExtractor<T> rse)
       throws DataAccessException {
@@ -222,7 +222,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   public <T> List<T> query(
-      @Nonnull final SqlParam sqlParam,
+      @Nonnull final SqlParam<?> sqlParam,
       final PreparedStatementSetter pss,
       final RowMapper<T> rowMapper)
       throws DataAccessException {
@@ -254,16 +254,14 @@ public class JdbcTemplateExecutor implements Executor {
 
   @SuppressWarnings("unchecked")
   private <T> T cacheIfAbsent(
-      @Nonnull final SqlParam sqlParam, Supplier<T> supplier, final String methodName) {
+      @Nonnull final SqlParam<?> sqlParam, Supplier<T> supplier, final String methodName) {
     // 未开启缓存
     if (Objects.isNull(cache)) {
       return supplier.get();
     }
     final String key = cache.generateKey(sqlParam, methodName);
     // 命中缓存
-    // TODO-WARN 测试
-    // if (cache.isKeyExist(key)) {
-    if (false) {
+    if (cache.isKeyExist(key)) {
       if (log.isDebugEnabled()) {
         log.debug("cacheIfAbsent:Hit cache[{}]", key);
       }

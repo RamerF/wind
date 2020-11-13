@@ -1,18 +1,16 @@
 package io.github.ramerf.wind.demo.controller;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.PrototypeBean;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
+import io.github.ramerf.wind.demo.entity.pojo.Account;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
-import io.github.ramerf.wind.demo.entity.pojo.OoO;
 import io.github.ramerf.wind.demo.entity.response.IdNameResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.math.BigDecimal;
 import java.util.List;
-import javax.annotation.Resource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -67,19 +65,21 @@ public class FooQueryController {
   public Rs<List<Foo>> query3() {
     /* 说明:只支持inner join方式连表 */
     // 获取查询列和查询条件对象
-    final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
-    final QueryColumn<OoO> queryColumn2 = QueryColumnFactory.fromClass(OoO.class);
-    final Condition<Foo> condition = queryColumn.getCondition();
+    final QueryColumn<Foo> fooQueryColumn = QueryColumnFactory.fromClass(Foo.class);
+    final QueryColumn<Account> accountQueryColumn = QueryColumnFactory.fromClass(Account.class);
+    final Condition<Foo> fooCondition = fooQueryColumn.getCondition();
     // 指定查询列
-    queryColumn.col(Foo::getId);
+    fooQueryColumn.col(Foo::getId);
     // 指定查询条件
-    condition.eq(Foo::setId, 1L);
-    // 执行连表: foo.id=o_o.id
-    condition.eq(Foo::getId, queryColumn2, OoO::getId);
+    fooCondition.eq(Foo::setId, 1L);
+    // 执行连表: foo.id=account.id
+    fooCondition.eq(Foo::getId, accountQueryColumn, Account::getId);
+    final Condition<Account> accountCondition = accountQueryColumn.getCondition();
+    accountCondition.eq(Account::setId, 1L);
     return Rs.ok(
         Query.getInstance(Foo.class)
-            .select(queryColumn)
-            .where(condition, queryColumn2.getCondition())
+            .select(fooQueryColumn)
+            .where(fooCondition, accountCondition)
             .fetchAll(Foo.class));
   }
 
@@ -89,9 +89,8 @@ public class FooQueryController {
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
     final Condition<Foo> condition = queryColumn.getCondition();
-    final Query query = prototypeBean.query();
     final List<IdNameResponse> list =
-        query
+        Query.getInstance(Foo.class)
             .select(queryColumn.col(Foo::getId).col(Foo::getName))
             .where(condition)
             .fetchAll(IdNameResponse.class);

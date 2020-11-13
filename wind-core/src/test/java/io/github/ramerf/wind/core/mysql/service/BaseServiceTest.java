@@ -5,13 +5,13 @@ import io.github.ramerf.wind.core.mysql.MysqlApplication;
 import io.github.ramerf.wind.core.mysql.entity.pojo.Foo;
 import io.github.ramerf.wind.core.mysql.entity.pojo.Foo.Type;
 import io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse;
+import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.LongStream;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Mysql 测试")
 public class BaseServiceTest {
-  @Resource private FooService service;
+  private GenericService<Foo> service;
   private static final Foo foo;
   private static final Long id = 10000L;
 
@@ -60,6 +60,7 @@ public class BaseServiceTest {
   @BeforeEach
   public void before() {
     foo.setId(id);
+    service = GenericService.with(Foo.class);
   }
 
   @Test

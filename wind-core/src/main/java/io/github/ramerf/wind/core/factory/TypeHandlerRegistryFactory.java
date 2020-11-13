@@ -91,7 +91,7 @@ public class TypeHandlerRegistryFactory {
    * @return the type handler
    * @see ITypeHandler
    */
-  @SuppressWarnings("DuplicatedCode")
+  @SuppressWarnings({"DuplicatedCode", "unchecked"})
   public ITypeHandler getToJavaTypeHandler(final ValueType valueType) {
     final Object value = valueType.getOriginVal();
     if (Objects.isNull(value)) {
@@ -107,16 +107,34 @@ public class TypeHandlerRegistryFactory {
             handler -> {
               final Type javaClass = handler.getJavaClass();
               final Type jdbcClass = handler.getJdbcClass();
-              try {
-                return (Objects.equals(javaClass, genericParameterType)
-                        || Class.forName(javaClass.getTypeName())
-                            .isAssignableFrom(
-                                Class.forName(
-                                    Objects.requireNonNull(genericParameterType).getTypeName())))
-                    && Objects.equals(value.getClass(), jdbcClass);
-              } catch (ClassNotFoundException ignored) {
+              boolean eqJavaClass = false;
+              if (Objects.equals(javaClass, genericParameterType)) {
+                eqJavaClass = true;
+              } else {
+                if (javaClass instanceof Class && genericParameterType instanceof Class) {
+                  Class javaClazz = (Class) javaClass;
+                  Class paramClazz = (Class) genericParameterType;
+                  eqJavaClass = javaClazz.isAssignableFrom(paramClazz);
+                } else {
+                  try {
+                    eqJavaClass =
+                        Class.forName(javaClass.getTypeName())
+                            .isAssignableFrom(Class.forName(genericParameterType.getTypeName()));
+                  } catch (ClassNotFoundException ignored) {
+                  }
+                }
               }
-              return false;
+              boolean eqJdbcClass = false;
+              if (Objects.equals(value.getClass(), jdbcClass)) {
+                eqJdbcClass = true;
+              } else {
+                try {
+                  eqJdbcClass =
+                      Class.forName(jdbcClass.getTypeName()).isAssignableFrom(value.getClass());
+                } catch (ClassNotFoundException ignored) {
+                }
+              }
+              return eqJavaClass && eqJdbcClass;
             })
         .findFirst()
         .orElse(null);
