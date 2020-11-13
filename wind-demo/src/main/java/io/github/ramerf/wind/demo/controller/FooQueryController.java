@@ -4,8 +4,8 @@ import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
-import io.github.ramerf.wind.demo.entity.pojo.Account;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
+import io.github.ramerf.wind.demo.entity.pojo.Product;
 import io.github.ramerf.wind.demo.entity.response.IdNameResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -66,16 +66,16 @@ public class FooQueryController {
     /* 说明:只支持inner join方式连表 */
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> fooQueryColumn = QueryColumnFactory.fromClass(Foo.class);
-    final QueryColumn<Account> accountQueryColumn = QueryColumnFactory.fromClass(Account.class);
+    final QueryColumn<Product> accountQueryColumn = QueryColumnFactory.fromClass(Product.class);
     final Condition<Foo> fooCondition = fooQueryColumn.getCondition();
     // 指定查询列
     fooQueryColumn.col(Foo::getId);
     // 指定查询条件
     fooCondition.eq(Foo::setId, 1L);
     // 执行连表: foo.id=account.id
-    fooCondition.eq(Foo::getId, accountQueryColumn, Account::getId);
-    final Condition<Account> accountCondition = accountQueryColumn.getCondition();
-    accountCondition.eq(Account::setId, 1L);
+    fooCondition.eq(Foo::getId, accountQueryColumn, Product::getId);
+    final Condition<Product> accountCondition = accountQueryColumn.getCondition();
+    accountCondition.eq(Product::setId, 1L);
     return Rs.ok(
         Query.getInstance(Foo.class)
             .select(fooQueryColumn)
