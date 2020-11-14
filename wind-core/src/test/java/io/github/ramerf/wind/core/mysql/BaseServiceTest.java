@@ -1,10 +1,8 @@
-package io.github.ramerf.wind.core.mysql.service;
+package io.github.ramerf.wind.core.mysql;
 
 import io.github.ramerf.wind.core.condition.SortColumn;
-import io.github.ramerf.wind.core.mysql.MysqlApplication;
-import io.github.ramerf.wind.core.mysql.entity.pojo.Foo;
-import io.github.ramerf.wind.core.mysql.entity.pojo.Foo.Type;
-import io.github.ramerf.wind.core.mysql.entity.response.IdNameResponse;
+import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.math.BigDecimal;
@@ -12,6 +10,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.LongStream;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -456,4 +456,17 @@ public class BaseServiceTest {
   public void testDeleteByIds() {
     assertTrue(service.deleteByIds(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
   }
+
+  /**
+   * @author Tang Xiaofeng
+   * @since 2020/8/5
+   */
+  @Getter
+  @Setter
+  public static class IdNameResponse implements AbstractEntity {
+    private Long id;
+    private String name;
+  }
+
+
 }

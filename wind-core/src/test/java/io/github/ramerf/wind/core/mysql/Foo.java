@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.mysql.entity.pojo;
+package io.github.ramerf.wind.core.mysql;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
@@ -54,7 +54,7 @@ public class Foo extends AbstractEntityPoJo {
   private String largeText;
 
   public enum Type implements InterEnum<Integer> {
-    /** 商品类别 */
+    /** 类别 */
     PHONE(0, "手机"),
     SPORT(1, "运动");
 

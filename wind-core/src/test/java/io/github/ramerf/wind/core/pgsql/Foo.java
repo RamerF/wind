@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.pgsql.entity.pojo;
+package io.github.ramerf.wind.core.pgsql;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
