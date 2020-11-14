@@ -61,7 +61,10 @@ public class FooController {
   public Rs<Object> create3(
       @Valid @RequestBody final FooRequest fooRequest, final BindingResult bindingResult) {
     return ControllerHelper.create(
-        service, fooRequest, bindingResult, Foo::getTextString, Foo::getName);
+        service,
+        fooRequest,
+        bindingResult,
+        fields -> fields.include(Foo::getTextString, Foo::getName));
   }
 
   @GetMapping(value = "/detail/{id}")
@@ -182,7 +185,8 @@ public class FooController {
       @PathVariable("id") final long id,
       @RequestBody FooRequest fooRequest,
       final BindingResult bindingResult) {
-    return ControllerHelper.update(service, fooRequest, id, bindingResult, Foo::getName);
+    return ControllerHelper.update(
+        service, fooRequest, id, bindingResult, fields -> fields.include(Foo::getName));
   }
 
   @PostMapping(value = "/delete/{id}")

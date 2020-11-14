@@ -6,15 +6,13 @@ import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.BeanFunction;
-import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.service.BaseService;
+import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import io.github.ramerf.wind.core.util.PageUtils;
-import java.lang.reflect.Field;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +20,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-import org.springframework.validation.*;
+import org.springframework.validation.BindingResult;
 
 import static io.github.ramerf.wind.core.entity.response.Rs.*;
-import static io.github.ramerf.wind.core.util.BeanUtils.getNullProp;
 import static io.github.ramerf.wind.core.util.BeanUtils.initial;
 import static io.github.ramerf.wind.core.util.EntityUtils.getPoJoClass;
 import static io.github.ramerf.wind.core.validation.ValidateUtil.collect;
@@ -37,7 +34,6 @@ import static io.github.ramerf.wind.core.validation.ValidateUtil.collect;
  * @since 2019 /12/26
  */
 @Slf4j
-@SuppressWarnings({"rawtypes", "unchecked"})
 public final class ControllerHelper {
   /**
    * 执行创建.
@@ -81,20 +77,20 @@ public final class ControllerHelper {
    * @param invoke the invoke
    * @param entity the entity
    * @param bindingResult the binding result
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param fieldsConsumer 指定或排除保存/更新的字段
    * @return the response entity
    */
   public static <
           S extends BaseService<T>,
           T extends AbstractEntityPoJo,
-          R extends AbstractEntityRequest,
+          R extends AbstractEntityRequest<T>,
           P>
       Rs<P> create(
           final S invoke,
           final R entity,
           final BindingResult bindingResult,
-          final IFunction<T, ?>... includeNullProps) {
-    return createOrUpdate(invoke, entity, bindingResult, true, includeNullProps);
+          final Consumer<Fields<T>> fieldsConsumer) {
+    return createOrUpdate(invoke, entity, bindingResult, true, fieldsConsumer);
   }
 
   /**
@@ -238,22 +234,24 @@ public final class ControllerHelper {
    * @param entity the entity
    * @param id the id
    * @param bindingResult the binding result
-   * @param includeNullProps 即使值为null也更新的属性
+   * @param fieldsConsumer 指定或排除保存/更新的字段
    * @return the response entity
    */
   public static <
-          S extends BaseService<T>, T extends AbstractEntityPoJo, R extends AbstractEntityRequest>
+          S extends BaseService<T>,
+          T extends AbstractEntityPoJo,
+          R extends AbstractEntityRequest<T>>
       Rs<Object> update(
           final S invoke,
           final R entity,
           final long id,
           final BindingResult bindingResult,
-          final IFunction<T, ?>... includeNullProps) {
+          final Consumer<Fields<T>> fieldsConsumer) {
     if (id < 1) {
       return wrongFormat("id");
     }
     entity.setId(id);
-    return createOrUpdate(invoke, entity, bindingResult, false, includeNullProps);
+    return createOrUpdate(invoke, entity, bindingResult, false, fieldsConsumer);
   }
 
   /**
@@ -339,33 +337,27 @@ public final class ControllerHelper {
    * @param entity 要更新的request {@link AbstractEntityRequest} 对象.
    * @param bindingResult 校验器校验结果.
    * @param create 是否是创建.
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param fieldsConsumer 指定或排除保存/更新的字段
    * @param <T> 服务层实现类.
    * @return {@link ResponseEntity}
    */
   private static <
           S extends BaseService<T>,
           T extends AbstractEntityPoJo,
-          R extends AbstractEntityRequest,
+          R extends AbstractEntityRequest<T>,
           P>
       Rs<P> createOrUpdate(
           final S invoke,
           final R entity,
           final BindingResult bindingResult,
           final boolean create,
-          @Nonnull final IFunction<T, ?>... includeNullProps) {
-    final List<String> includeNulls =
-        Arrays.stream(includeNullProps)
-            .map(BeanFunction::getField)
-            .map(Field::getName)
-            .collect(Collectors.toList());
+          @Nonnull final Consumer<Fields<T>> fieldsConsumer) {
     if (log.isDebugEnabled()) {
       // 打印参数,处理不同层级调用的情况
       Stream.of(Thread.currentThread().getStackTrace())
           .filter(o -> o.getClassName().contains("controller."))
           .findFirst()
-          .ifPresent(
-              stack -> log.info("\n\t{}:[entity:{},includeNulls:{}]", stack, entity, includeNulls));
+          .ifPresent(stack -> log.info("\n\t{}:[entity:{}]", stack, entity));
     }
     if (Objects.nonNull(bindingResult) && bindingResult.hasErrors()) {
       return fail(collect(bindingResult));
@@ -376,22 +368,16 @@ public final class ControllerHelper {
       entity.setId(null);
     } else if (Objects.isNull(id) || id < 1) {
       return wrongFormat("id");
-    } else {
-      // 更新时id对应的数据不存在
-      final T exist = invoke.getById(id);
-      CommonException.requireNonNull(exist, ResultCode.API_DATA_NOT_EXIST.desc(String.valueOf(id)));
     }
     T poJo = initial(getPoJoClass(invoke));
-    BeanUtils.copyProperties(
-        entity,
-        poJo,
-        getNullProp(entity).stream()
-            .filter(prop -> !includeNulls.contains(prop))
-            .toArray(String[]::new));
+    BeanUtils.copyProperties(entity, poJo);
     // 额外处理,比如敏感词过滤
     entity.redundantValue(poJo);
     log.debug("createOrUpdate:[{}]", poJo);
-    long affectRow = create ? invoke.create(poJo) > 0 ? 1 : 0 : invoke.update(poJo);
+    long affectRow =
+        create
+            ? invoke.create(poJo, fieldsConsumer) > 0 ? 1 : 0
+            : invoke.update(poJo, fieldsConsumer);
     return affectRow == 1
         ? ok(
             json().put("id", poJo.getId()),

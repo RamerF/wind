@@ -38,7 +38,6 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    *
    * @param domain Domain实体 {@link AbstractEntityPoJo}.
    */
-  @SuppressWarnings({"unused"})
   public void redundantValue(T domain) {}
 
   /**

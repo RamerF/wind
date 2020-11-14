@@ -13,7 +13,7 @@ import io.github.ramerf.wind.demo.entity.pojo.Foo;
 public interface FooService extends BaseService<Foo> {
 
   /**
-   * Enable cache demo product po jo.
+   * Enable cache foo.
    *
    * @param id the id
    * @return the demo product po jo
@@ -21,7 +21,7 @@ public interface FooService extends BaseService<Foo> {
   Foo enableCache(final long id);
 
   /**
-   * Redis cache demo product po jo.
+   * Redis cache foo.
    *
    * @param id the id
    * @return the demo product po jo
@@ -29,7 +29,7 @@ public interface FooService extends BaseService<Foo> {
   Foo redisCache(final long id);
 
   /**
-   * Redis cache clear demo product po jo.
+   * Redis cache clear.
    *
    * @param poJo the po jo
    */
