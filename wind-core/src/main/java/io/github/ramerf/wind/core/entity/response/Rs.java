@@ -64,10 +64,10 @@ public class Rs<T> implements Serializable {
    * @return the rs
    */
   public static <R> Rs<R> of(final boolean result) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setData(null);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setData(null);
+    return rs;
   }
 
   /**
@@ -80,9 +80,9 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final T data) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setData((R) data);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setData((R) data);
+    return rs;
   }
 
   /**
@@ -92,27 +92,11 @@ public class Rs<T> implements Serializable {
    * @param resultCode the result code
    * @return the rs
    */
-  // @SuppressWarnings("unchecked")
-  @SuppressWarnings("StatementWithEmptyBody")
-  public static <T> Rs<T> of(final ResultCode resultCode) {
-    Rs<T> commonResponse = new Rs<>();
-    // 如果数据为null,处理为空json.暂时不启用
-    if (Objects.isNull(resultCode)) {
-      // ServletRequestAttributes attributes =
-      //     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-      // if (Objects.nonNull(attributes)) {
-      //   final HttpServletRequest request = attributes.getRequest();
-      //   final String uri = request.getRequestURI();
-      //   // 仅前端请求转换null为空json
-      //   if (excludeUrl.stream().noneMatch(url -> url.contains(uri))) {
-      //     commonResponse.setData((T) json());
-      //   }
-      // }
-    } else {
-      commonResponse.setCode(resultCode.code());
-      commonResponse.setMsg(resultCode.desc());
-    }
-    return commonResponse;
+  public static <T> Rs<T> of(@Nonnull final ResultCode resultCode) {
+    Rs<T> rs = new Rs<>();
+    rs.setCode(resultCode.code());
+    rs.setMsg(resultCode.desc());
+    return rs;
   }
 
   /**
@@ -126,10 +110,10 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final boolean result, final T data) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setData((R) data);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setData((R) data);
+    return rs;
   }
 
   /**
@@ -143,10 +127,10 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final T data, final String msg) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setData((R) data);
-    commonResponse.setMsg(msg);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setData((R) data);
+    rs.setMsg(msg);
+    return rs;
   }
 
   /**
@@ -158,10 +142,10 @@ public class Rs<T> implements Serializable {
    * @return the rs
    */
   public static <R> Rs<R> of(final boolean result, final String msg) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setMsg(msg);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setMsg(msg);
+    return rs;
   }
 
   /**
@@ -176,11 +160,11 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final boolean result, final T data, final String msg) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setData((R) data);
-    commonResponse.setMsg(msg);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setData((R) data);
+    rs.setMsg(msg);
+    return rs;
   }
 
   /**
@@ -195,12 +179,12 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final boolean result, final T data, final ResultCode resultCode) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setData((R) data);
-    commonResponse.setMsg(resultCode.desc());
-    commonResponse.setCode(resultCode.code());
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setData((R) data);
+    rs.setMsg(resultCode.desc());
+    rs.setCode(resultCode.code());
+    return rs;
   }
 
   /**
@@ -212,11 +196,11 @@ public class Rs<T> implements Serializable {
    * @return the rs
    */
   public static <R> Rs<R> of(final boolean result, final ResultCode resultCode) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setMsg(resultCode.desc());
-    commonResponse.setCode(resultCode.code());
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setMsg(resultCode.desc());
+    rs.setCode(resultCode.code());
+    return rs;
   }
 
   /**
