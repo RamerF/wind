@@ -5,13 +5,13 @@
     <parent>
         <artifactId>wind</artifactId>
         <groupId>io.github.ramerf</groupId>
-        <version>4.0.1-RELEASE</version>
+        <version>4.0.2-RELEASE</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>wind-core</artifactId>
     <name>wind-core</name>
-    <version>4.0.1-RELEASE</version>
+    <version>4.0.2-RELEASE</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <postgresql.version>42.2.18</postgresql.version>

@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
-import io.github.ramerf.wind.core.annotation.*;
+import io.github.ramerf.wind.core.annotation.ManyToOne;
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import java.util.List;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -16,8 +16,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Product extends AbstractEntityPoJo {
+public class ProductSkuSupplier extends AbstractEntityPoJo {
   private String name;
-  /** 双向. */
-  @OneToMany private List<ProductSku> skuses;
+
+  /** 单向{@link ManyToOne}. */
+  @ManyToOne private ProductSku productSku;
 }

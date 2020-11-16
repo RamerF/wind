@@ -21,10 +21,12 @@ public class ProductSpu extends AbstractEntityPoJo {
 
   private String address;
 
+  /** 单向{@link OneToOne}关联. */
   @OneToOne private Product product;
 
   private Long productId;
 
+  /** 双向{@link OneToOne}关联,自定义关联字段. */
   @OneToOne(referenceField = "code")
   private ProductSpuCode productSpuCode;
 }

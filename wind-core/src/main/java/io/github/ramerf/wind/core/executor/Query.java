@@ -26,20 +26,25 @@ import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
 import static java.util.stream.Collectors.toCollection;
 
 /**
- * 通用查询操作对象.获取实例:<br>
+ * 通用查询操作对象.
  *
- * <pre>
- *     // 方式1
- *     <code>@Resource private Provider&lt;Query&gt; queryProvider;</code>
- *     // 方式2
- *     <code>@Resource private ObjectProvider&lt;Query&gt; queryProvider;</code>
- *     final Query query = queryProvider.get();
- *     // 方式3
- *     <code>@Resource private PrototypeBean prototypeBean;</code>
- *     final Query query = prototypeBean.query();
- *   </pre>
+ * <p>获取PoJo的查询实例<br>
  *
- * 构建 SQL.所有的条件字符串构造,需要改为对象<br>
+ * <p>方式1<br>
+ * {@code Query.getInstance(PoJo.class)}
+ *
+ * <p>方式2<br>
+ * {@code @Resource private Provider<Query<PoJo>> queryProvider;}
+ *
+ * <p>方式3<br>
+ * {@code @Resource private ObjectProvider<Query<PoJo>> queryProvider;}<br>
+ * final Query<PoJo> query = queryProvider.get();
+ *
+ * <p>方式4<br>
+ * {@code @Resource private PrototypeBean prototypeBean;}<br>
+ * final Query<PoJo> query = prototypeBean.query(PoJo.class);
+ *
+ * <p>构建 SQL.所有的条件字符串构造,需要改为对象<br>
  * 如: OrderByClause... <br>
  *
  * <p>下面是新的实现思路 <br>
@@ -53,7 +58,7 @@ import static java.util.stream.Collectors.toCollection;
  * <p>TODO: [延后] 完整的连表查询需要{@link ICondition}支持
  *
  * @author Tang Xiaofeng
- * @since 2019 /12/28
+ * @since 2019/12/28
  */
 @Slf4j
 public class Query<T extends AbstractEntityPoJo> {

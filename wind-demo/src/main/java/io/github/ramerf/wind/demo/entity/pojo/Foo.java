@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.math.BigDecimal;
 import java.util.BitSet;
 import java.util.List;
@@ -23,6 +24,9 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class Foo extends AbstractEntityPoJo {
   private String name;
+
+  /** 基本类型. */
+  private int age;
 
   @TableColumn(comment = "text string comment", columnDefinition = "text")
   private String textString;
@@ -65,6 +69,11 @@ public class Foo extends AbstractEntityPoJo {
   /** Integer[]可对应数据库类型 int[] */
   private Integer[] intArr;
 
+  /** 大文本字段,测试{@link Fields} include/exclude. */
+  @TableColumn(comment = "大文本字段,测试Fields include/exclude", columnDefinition = "text")
+  private String largeText;
+
+  /* boolean类型. */
   private boolean isNumber;
   private boolean string;
   private Boolean isNull;

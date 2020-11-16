@@ -31,21 +31,26 @@ import org.springframework.jdbc.support.KeyHolder;
 import static java.util.stream.Collectors.toList;
 
 /**
- * 通用写入操作对象.获取实例:<br>
+ * 通用写入操作对象.
  *
- * <pre>
- *     // 方式1:
- *     <code>@Resource private Provider&lt;Update&gt; updateProvider;</code>
- *     // 方式2:
- *     <code>@Resource private ObjectProvider&lt;Query&gt; updateProvider;</code>
- *     final Update update = updateProvider.get();
- *     // 方式3:
- *     <code>@Resource private PrototypeBean prototypeBean;</code>
- *     final Update update = prototypeBean.update();
- *   </pre>
+ * <p>获取PoJo的写入实例<br>
+ *
+ * <p>方式1<br>
+ * {@code Update.getInstance(PoJo.class)}
+ *
+ * <p>方式2<br>
+ * {@code @Resource private Provider<Update<PoJo>> updateProvider;}
+ *
+ * <p>方式3<br>
+ * {@code @Resource private ObjectProvider<Update<PoJo>> updateProvider;}<br>
+ * final Update<PoJo> update = updateProvider.get();
+ *
+ * <p>方式4<br>
+ * {@code @Resource private PrototypeBean prototypeBean;}<br>
+ * final Update<PoJo> update = prototypeBean.update(PoJo.class);
  *
  * @author Tang Xiaofeng
- * @since 2020 /1/13
+ * @since 2020/1/13
  */
 @Slf4j
 @SuppressWarnings("unused")

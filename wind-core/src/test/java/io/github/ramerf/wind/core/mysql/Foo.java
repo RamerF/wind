@@ -5,6 +5,7 @@ import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.BitSetBlobTypeHandler;
+import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.math.BigDecimal;
 import java.util.BitSet;
 import lombok.*;
@@ -30,9 +31,17 @@ public class Foo extends AbstractEntityPoJo {
   @TableColumn(columnDefinition = "text")
   private String textString;
 
+  @TypeHandler(BitSetBlobTypeHandler.class)
+  @TableColumn(columnDefinition = "blob")
+  private BitSet bitSet;
+
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 smallint/int */
   @TableColumn(columnDefinition = "smallint")
   private Type type;
+
+  /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 varchar */
+  @TableColumn(columnDefinition = "varchar(1)")
+  private Alphabet alphabet;
 
   @TableColumn(columnDefinition = "numeric(5,2)")
   private BigDecimal bigDecimal;
@@ -45,13 +54,15 @@ public class Foo extends AbstractEntityPoJo {
   @TableColumn(defaultValue = "false")
   private boolean hasDeleted;
 
-  @TypeHandler(BitSetBlobTypeHandler.class)
-  @TableColumn(columnDefinition = "blob")
-  private BitSet bitSet;
-
-  /** 大文本字段,测试默认不拉取该字段. */
-  @TableColumn(comment = "大文本字段,测试默认不拉取该字段", columnDefinition = "text")
+  /** 大文本字段,测试{@link Fields} include/exclude. */
+  @TableColumn(comment = "大文本字段,测试Fields include/exclude", columnDefinition = "text")
   private String largeText;
+
+  /* boolean类型. */
+  private boolean isNumber;
+  private boolean string;
+  private Boolean isNull;
+  private Boolean nonNull;
 
   public enum Type implements InterEnum<Integer> {
     /** 类别 */
@@ -68,6 +79,30 @@ public class Foo extends AbstractEntityPoJo {
 
     @Override
     public Integer value() {
+      return this.value;
+    }
+
+    @Override
+    public String desc() {
+      return this.desc;
+    }
+  }
+
+  public enum Alphabet implements InterEnum<String> {
+    /** Alphabet. */
+    _A("A", "A"),
+    _B("B", "B");
+
+    private final String value;
+    private final String desc;
+
+    Alphabet(String value, String desc) {
+      this.value = value;
+      this.desc = desc;
+    }
+
+    @Override
+    public String value() {
       return this.value;
     }
 
