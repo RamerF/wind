@@ -144,7 +144,12 @@ public final class BeanUtils {
   private static List<Field> getPrivateFields(
       @Nonnull Class<?> clazz, @Nonnull final List<Field> fields) {
     do {
-      fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+      for (final Field superField : clazz.getDeclaredFields()) {
+        // 同名覆盖只保留子类字段
+        if (fields.stream().noneMatch(o -> o.getName().equals(superField.getName()))) {
+          fields.add(superField);
+        }
+      }
     } while (Objects.nonNull(clazz = clazz.getSuperclass()));
     return fields;
   }
