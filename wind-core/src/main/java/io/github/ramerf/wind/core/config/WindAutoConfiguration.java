@@ -145,8 +145,8 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     try {
       entities = BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);
       if (entities.size() < 1) {
-        log.error(
-            "no entity with @Entity annotation found in path: [{}], correct your configuration:wind.entity-package",
+        log.info(
+            "no entity with @TableInfo annotation found in path: [{}], correct your configuration:wind.entity-package",
             entityPackage);
       }
     } catch (IOException e) {

@@ -45,7 +45,7 @@
     ```
  2. 新建 pojo 实体`Foo`继承于`AbstractEntityPoJo`
     ```java
-    @Entity
+    @TableInfo
     public class Foo extends AbstractEntityPoJo {}
     ```
  3. 新建 service `FooService`继承于`BaseService`
