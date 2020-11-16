@@ -624,8 +624,8 @@ wind:
     data-center-id: 2
   # 启用默认mvc配置,默认true启用,如果默认配置与项目需求不兼容时可设置为false禁用
   enable-web-mvc-configurer: false
-  # 新增/更新时写入值为null的属性,默认不写入
-  write-null-prop: true
+  # 新增/更新时写入值为null的属性,默认写入
+  write-null-prop: false
 ```
 
 #### 可用注解

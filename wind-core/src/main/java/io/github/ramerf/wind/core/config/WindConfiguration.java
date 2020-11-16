@@ -56,7 +56,7 @@ public class WindConfiguration {
   private String dialect;
 
   /** 新增/更新时写入值为null的属性,默认不写入. */
-  private boolean writeNullProp = false;
+  private boolean writeNullProp = true;
 
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
