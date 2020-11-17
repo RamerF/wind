@@ -1,7 +1,5 @@
 package io.github.ramerf.wind.core.helper;
 
-import io.github.ramerf.wind.core.entity.constant.Constant;
-import java.time.LocalDateTime;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,8 +43,9 @@ public class SqlHelper {
       return QUOTE_FORMAT.format(val);
     }
     if (value instanceof Date) {
-      return QUOTE_FORMAT.format(
-          LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
+      // return QUOTE_FORMAT.format(
+      //     LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
+      return QUOTE_FORMAT.format(((Date) value).toInstant().toString());
     }
     if (List.class.isAssignableFrom(value.getClass())) {
       // 数组拼接为: '{name1,name2}' 或使用函数 string_to_array('name1,name2', ',')
