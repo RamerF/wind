@@ -48,7 +48,8 @@ public final class DbResolver {
     } catch (SQLException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
-      throw new IllegalStateException(e);
+      // throw new IllegalStateException(e);
+      return null;
     }
   }
 

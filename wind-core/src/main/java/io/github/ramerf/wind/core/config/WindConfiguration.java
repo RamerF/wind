@@ -72,7 +72,6 @@ public class WindConfiguration {
         && logicDeleteColumn.equals(AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME)
         && getDisableFields().stream()
             .anyMatch(field -> field.getColumn().equals(logicDeleteColumn))) {
-      log.info("逻辑删除字段[{}]已被禁用,将启用全局物理删除!", logicDeleteColumn);
       logicDeleteProp.setEnable(false);
     }
   }
@@ -83,7 +82,6 @@ public class WindConfiguration {
     final String logicDeleteColumn = logicDeleteProp.getColumn();
     if (logicDeleteColumn.equals(AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME)
         && disableFields.stream().anyMatch(field -> field.getColumn().equals(logicDeleteColumn))) {
-      log.info("逻辑删除字段[{}]已被禁用,将启用全局物理删除!", logicDeleteColumn);
       logicDeleteProp.setEnable(false);
     }
   }
