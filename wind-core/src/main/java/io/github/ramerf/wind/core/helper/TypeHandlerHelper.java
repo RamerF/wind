@@ -7,7 +7,6 @@ import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
 import java.util.Objects;
-import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,29 +27,26 @@ public class TypeHandlerHelper {
     TypeHandlerHelper.typeHandlerRegistryFactory = typeHandlerRegistryFactory;
   }
 
-  @SuppressWarnings("rawtypes")
   public static Object toJavaValue(final ValueType valueType, final Class<?> parameterType) {
-    return Optional.of(typeHandlerRegistryFactory)
-        .map(
-            o -> {
-              final ITypeHandler typeHandler = o.getToJavaTypeHandler(valueType);
-              if (log.isTraceEnabled()) {
-                log.trace(
-                    "toJavaValue:match typeHandler[typeHandler:{},field:{}]",
-                    Objects.isNull(typeHandler) ? null : typeHandler.getClass().getSimpleName(),
-                    valueType.originVal);
-              }
-              return typeHandler;
-            })
-        .map(typeHandler -> typeHandler.covertFromJdbc(valueType.originVal, parameterType))
-        .orElse(valueType.originVal);
+    @SuppressWarnings("rawtypes")
+    final ITypeHandler typeHandler = typeHandlerRegistryFactory.getToJavaTypeHandler(valueType);
+    if (log.isTraceEnabled()) {
+      log.trace(
+          "toJavaValue:match typeHandler[typeHandler:{},field:{}]",
+          Objects.isNull(typeHandler) ? null : typeHandler.getClass().getSimpleName(),
+          valueType.originVal);
+    }
+    return typeHandler == null
+        ? valueType.originVal
+        : typeHandler.covertFromJdbc(valueType.originVal, parameterType);
   }
 
   public static Object toJdbcValue(final ValueType valueType, final PreparedStatement ps) {
-    return Optional.of(typeHandlerRegistryFactory)
-        .map(o -> o.getToJdbcTypeHandler(valueType))
-        .map(typeHandler -> typeHandler.convertToJdbc(valueType.originVal, valueType.field, ps))
-        .orElse(valueType.originVal);
+    @SuppressWarnings("rawtypes")
+    final ITypeHandler typeHandler = typeHandlerRegistryFactory.getToJdbcTypeHandler(valueType);
+    return typeHandler == null
+        ? valueType.originVal
+        : typeHandler.convertToJdbc(valueType.originVal, valueType.field, ps);
   }
 
   public static class ValueType {

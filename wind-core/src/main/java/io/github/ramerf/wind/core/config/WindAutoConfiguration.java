@@ -14,18 +14,18 @@ import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.*;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +38,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Slf4j
 @Configuration
+@ConditionalOnBean(DataSource.class)
 @EnableConfigurationProperties(WindConfiguration.class)
 @AutoConfigureAfter({CommonBean.class, PrototypeBean.class})
 public class WindAutoConfiguration implements ApplicationContextAware, InitializingBean {
@@ -52,13 +53,15 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
 
   public WindAutoConfiguration(
       final WindConfiguration windConfiguration,
-      @Qualifier("dataSource") final DataSource dataSource,
+      @Autowired final List<DataSource> dataSources,
       final ApplicationEventPublisher publisher,
       final ObjectMapper objectMapper,
       final Executor jdbcTemplateExecutor,
       final ObjectProvider<IdGenerator> idGenerator,
       final PrototypeBean prototypeBean) {
-    windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
+    windContext.setDbMetaData(
+        DbMetaData.getInstance(
+            dataSources.get(0), windConfiguration.getDialect(), windConfiguration.getDdlAuto()));
     windContext.setWindConfiguration(windConfiguration);
 
     this.configuration = windConfiguration;

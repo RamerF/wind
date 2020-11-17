@@ -83,12 +83,13 @@ public class BeanResultHandler<P extends AbstractEntityPoJo, E>
           continue;
         }
       }
-
       final String columnAlia = fieldAliaMap.get(fieldName);
-      Object value =
-          Optional.ofNullable(map.get(columnAlia))
-              .orElseGet(() -> map.get(StringUtils.camelToUnderline(fieldName)));
-      if (Objects.isNull(value)) {
+
+      Object value = map.get(columnAlia);
+      if (value == null) {
+        value = map.get(StringUtils.camelToUnderline(fieldName));
+      }
+      if (value == null) {
         continue;
       }
       // 如果是数据库数组类型,获取对应的java数组
@@ -117,23 +118,6 @@ public class BeanResultHandler<P extends AbstractEntityPoJo, E>
                           .map(Class::getSimpleName)
                           .orElse(null)));
     }
-    // if (obj instanceof AbstractEntityPoJo) {
-    //   // 关联对象设置代理
-    //   EntityHelper.getEntityInfo(((AbstractEntityPoJo) obj).getClass())
-    //       .getMappingInfos()
-    //       .forEach(
-    //           mappingInfo ->
-    //               BeanUtils.setValue(
-    //                   obj,
-    //                   mappingInfo.getField(),
-    //                   mappingInfo
-    //                       .getMappingType()
-    //                       .fetchMapping(
-    //                           (AbstractEntityPoJo) obj,
-    //                           mappingInfo,
-    //                           map.get(mappingInfo.getColumn())),
-    //                   null));
-    // }
     return obj;
   }
 

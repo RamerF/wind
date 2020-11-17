@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.metadata;
 
+import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -8,7 +9,8 @@ import javax.sql.DataSource;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.metadata.DbResolver.*;
+import static io.github.ramerf.wind.core.metadata.DbResolver.getConnection;
+import static io.github.ramerf.wind.core.metadata.DbResolver.getMetaData;
 
 /**
  * 数据库元数据.
@@ -20,25 +22,28 @@ import static io.github.ramerf.wind.core.metadata.DbResolver.*;
 public class DbMetaData {
   private static volatile DbMetaData INSTANCE;
   @Getter private final Dialect dialect;
-  @Getter private final String catelog;
-  @Getter private final String schema;
+  @Getter private String catelog;
+  @Getter private String schema;
 
-  private final NameTableInformation tableInformations;
+  private NameTableInformation tableInformations;
 
-  private DbMetaData(DataSource dataSource, final String dialectName) {
-    Connection connection = getConnection(dataSource);
-    final DatabaseMetaData databaseMetaData = getMetaData(connection);
-    final String catalog = getCatalog(connection);
-    final String schema = DbResolver.getSchema(connection);
-    this.catelog = catalog;
-    this.schema = schema;
-    this.tableInformations = DbResolver.getTables(databaseMetaData, catalog, schema);
+  private DbMetaData(DataSource dataSource, final String dialectName, final DdlAuto ddlAuto) {
+    if (!ddlAuto.equals(DdlAuto.NONE)) {
+      Connection connection = getConnection(dataSource);
+      final DatabaseMetaData databaseMetaData = getMetaData(connection);
+      final String catalog = DbResolver.getCatalog(connection);
+      final String schema = DbResolver.getSchema(connection);
+      this.catelog = catalog;
+      this.schema = schema;
+      this.tableInformations = DbResolver.getTables(databaseMetaData, catalog, schema);
+    }
     this.dialect =
         dialectName != null ? Dialect.getInstance(dialectName) : Dialect.getInstance(dataSource);
   }
 
   /** 该方法返回一个单例. */
-  public static DbMetaData getInstance(DataSource dataSource, final String dialect) {
+  public static DbMetaData getInstance(
+      DataSource dataSource, final String dialect, final DdlAuto ddlAuto) {
     if (INSTANCE != null) {
       return INSTANCE;
     }
@@ -46,7 +51,7 @@ public class DbMetaData {
       if (INSTANCE != null) {
         return INSTANCE;
       }
-      return INSTANCE = new DbMetaData(dataSource, dialect);
+      return INSTANCE = new DbMetaData(dataSource, dialect, ddlAuto);
     }
   }
 

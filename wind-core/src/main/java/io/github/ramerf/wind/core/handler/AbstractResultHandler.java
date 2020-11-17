@@ -10,8 +10,8 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -24,7 +24,8 @@ import static java.util.stream.Collectors.toMap;
  * @param <T> 数据库返回对象
  * @param <E> 实际返回对象
  */
-abstract class AbstractResultHandler<P extends AbstractEntityPoJo, T, E>
+@Slf4j
+public abstract class AbstractResultHandler<P extends AbstractEntityPoJo, T, E>
     implements ResultHandler<T, E> {
   /** The Methods. */
   List<Method> methods;
@@ -118,6 +119,10 @@ abstract class AbstractResultHandler<P extends AbstractEntityPoJo, T, E>
     if (CollectionUtils.isEmpty(ts)) {
       return Collections.emptyList();
     }
-    return ts.stream().map(this::handle).collect(Collectors.toList());
+    List<E> es = new ArrayList<>();
+    for (T t : ts) {
+      es.add(handle(t));
+    }
+    return es;
   }
 }

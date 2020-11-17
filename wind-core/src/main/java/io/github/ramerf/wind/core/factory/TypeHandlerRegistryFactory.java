@@ -1,7 +1,8 @@
 package io.github.ramerf.wind.core.factory;
 
-import io.github.ramerf.wind.core.handler.*;
-import io.github.ramerf.wind.core.handler.typehandler.*;
+import io.github.ramerf.wind.core.handler.TypeHandler;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
+import io.github.ramerf.wind.core.handler.typehandler.LongTimestampTypeHandler;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -23,6 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 public class TypeHandlerRegistryFactory {
   private Set<ITypeHandler> typeHandlers =
       new TreeSet<>(((o1, o2) -> Objects.equals(o1.getClass(), o2.getClass()) ? 0 : 1));
+  /** 缓存字段类型处理器. */
+  private static final Map<Field, ITypeHandler> toJavaTypeHandlers =
+      Collections.synchronizedMap(new WeakHashMap<>());
 
   /** Instantiates a new Type handler registry factory. */
   public TypeHandlerRegistryFactory() {}
@@ -93,51 +97,60 @@ public class TypeHandlerRegistryFactory {
    */
   @SuppressWarnings({"DuplicatedCode", "unchecked"})
   public ITypeHandler getToJavaTypeHandler(final ValueType valueType) {
-    final Object value = valueType.getOriginVal();
-    if (Objects.isNull(value)) {
-      return null;
+    if (toJavaTypeHandlers.containsKey(valueType.getField())) {
+      return toJavaTypeHandlers.get(valueType.getField());
     }
-    final ITypeHandler typeHandler = getHandlerFromAnnotation(valueType);
+    ITypeHandler typeHandler = getHandlerFromAnnotation(valueType);
     if (typeHandler != null) {
+      toJavaTypeHandlers.put(valueType.getField(), typeHandler);
       return typeHandler;
     }
+    // 默认构造器不处理null值
+    final Object value = valueType.getOriginVal();
+    if (value == null) {
+      return null;
+    }
     final Type genericParameterType = valueType.getGenericParameterType();
-    return getTypeHandlers().stream()
-        .filter(
-            handler -> {
-              final Type javaClass = handler.getJavaClass();
-              final Type jdbcClass = handler.getJdbcClass();
-              boolean eqJavaClass = false;
-              if (Objects.equals(javaClass, genericParameterType)) {
-                eqJavaClass = true;
-              } else {
-                if (javaClass instanceof Class && genericParameterType instanceof Class) {
-                  Class javaClazz = (Class) javaClass;
-                  Class paramClazz = (Class) genericParameterType;
-                  eqJavaClass = javaClazz.isAssignableFrom(paramClazz);
-                } else {
-                  try {
-                    eqJavaClass =
-                        Class.forName(javaClass.getTypeName())
-                            .isAssignableFrom(Class.forName(genericParameterType.getTypeName()));
-                  } catch (ClassNotFoundException ignored) {
+    typeHandler =
+        getTypeHandlers().stream()
+            .filter(
+                handler -> {
+                  final Type javaClass = handler.getJavaClass();
+                  final Type jdbcClass = handler.getJdbcClass();
+                  boolean eqJavaClass = false;
+                  if (Objects.equals(javaClass, genericParameterType)) {
+                    eqJavaClass = true;
+                  } else {
+                    if (javaClass instanceof Class && genericParameterType instanceof Class) {
+                      Class javaClazz = (Class) javaClass;
+                      Class paramClazz = (Class) genericParameterType;
+                      eqJavaClass = javaClazz.isAssignableFrom(paramClazz);
+                    } else {
+                      try {
+                        eqJavaClass =
+                            Class.forName(javaClass.getTypeName())
+                                .isAssignableFrom(
+                                    Class.forName(genericParameterType.getTypeName()));
+                      } catch (ClassNotFoundException ignored) {
+                      }
+                    }
                   }
-                }
-              }
-              boolean eqJdbcClass = false;
-              if (Objects.equals(value.getClass(), jdbcClass)) {
-                eqJdbcClass = true;
-              } else {
-                try {
-                  eqJdbcClass =
-                      Class.forName(jdbcClass.getTypeName()).isAssignableFrom(value.getClass());
-                } catch (ClassNotFoundException ignored) {
-                }
-              }
-              return eqJavaClass && eqJdbcClass;
-            })
-        .findFirst()
-        .orElse(null);
+                  boolean eqJdbcClass = false;
+                  if (Objects.equals(value.getClass(), jdbcClass)) {
+                    eqJdbcClass = true;
+                  } else {
+                    try {
+                      eqJdbcClass =
+                          Class.forName(jdbcClass.getTypeName()).isAssignableFrom(value.getClass());
+                    } catch (ClassNotFoundException ignored) {
+                    }
+                  }
+                  return eqJavaClass && eqJdbcClass;
+                })
+            .findFirst()
+            .orElse(null);
+    toJavaTypeHandlers.put(valueType.getField(), typeHandler);
+    return typeHandler;
   }
 
   /**
@@ -178,7 +191,7 @@ public class TypeHandlerRegistryFactory {
   private ITypeHandler getHandlerFromAnnotation(final ValueType valueType) {
     final Field field = valueType.getField();
     final TypeHandler typeHandler = field.getAnnotation(TypeHandler.class);
-    if (Objects.nonNull(typeHandler)) {
+    if (typeHandler != null) {
       try {
         return typeHandler.value().newInstance();
       } catch (InstantiationException | IllegalAccessException e) {
