@@ -9,13 +9,13 @@ import lombok.extern.slf4j.Slf4j;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * 枚举工具类.
+ * InterEnum 枚举工具类.
  *
  * @author Tang Xiaofeng
  * @since 2019 /12/11
  */
 @Slf4j
-public class EnumUtils {
+public class InterEnumUtils {
   @SuppressWarnings("rawtypes")
   private static final Map<Class<? extends InterEnum<?>>, WeakReference<Map>> MAP = new HashMap<>();
 
@@ -53,7 +53,7 @@ public class EnumUtils {
    * @param args the input arguments
    */
   public static void main(String[] args) {
-    log.info("main:valid[{}]", EnumUtils.of(2, Type.class));
+    log.info("main:valid[{}]", InterEnumUtils.of(2, Type.class));
   }
 
   /** The enum Type. */

@@ -14,10 +14,15 @@ import lombok.Data;
 @Data
 public class TableColumnInformation {
   private String name;
+  private int dataType;
+  private String typeName;
 
-  public static TableColumnInformation of(final String name) {
+  public static TableColumnInformation of(
+      final String name, final int dataType, final String typeName) {
     TableColumnInformation columnInformation = new TableColumnInformation();
     columnInformation.setName(name);
+    columnInformation.setDataType(dataType);
+    columnInformation.setTypeName(typeName);
     return columnInformation;
   }
 

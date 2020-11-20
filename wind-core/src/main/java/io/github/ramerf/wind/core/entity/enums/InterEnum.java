@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.entity.enums;
 
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.util.EnumUtils;
+import io.github.ramerf.wind.core.util.InterEnumUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.Serializable;
 import java.util.function.Supplier;
@@ -44,7 +44,7 @@ public interface InterEnum<V> extends Serializable {
    * @return 枚举实例 e
    */
   static <V, E extends InterEnum<V>> E ofNullable(final V value, Class<E> clazz) {
-    return EnumUtils.of(value, clazz);
+    return InterEnumUtils.of(value, clazz);
   }
 
   /**
@@ -59,7 +59,7 @@ public interface InterEnum<V> extends Serializable {
    */
   static <V, E extends InterEnum<V>> E of(final V value, Class<E> clazz, Supplier<String> message)
       throws CommonException {
-    E e = EnumUtils.of(value, clazz);
+    E e = InterEnumUtils.of(value, clazz);
     if (e == null) {
       throw CommonException.of(
           ResultCode.API_PARAM_INVALID.desc(

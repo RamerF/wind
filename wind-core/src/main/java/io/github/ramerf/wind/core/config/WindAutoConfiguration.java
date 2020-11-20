@@ -14,14 +14,14 @@ import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
-import java.util.*;
+import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -53,15 +53,13 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
 
   public WindAutoConfiguration(
       final WindConfiguration windConfiguration,
-      @Autowired final List<DataSource> dataSources,
+      final DataSource dataSource,
       final ApplicationEventPublisher publisher,
       final ObjectMapper objectMapper,
       final Executor jdbcTemplateExecutor,
       final ObjectProvider<IdGenerator> idGenerator,
       final PrototypeBean prototypeBean) {
-    windContext.setDbMetaData(
-        DbMetaData.getInstance(
-            dataSources.get(0), windConfiguration.getDialect(), windConfiguration.getDdlAuto()));
+    windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
     windContext.setWindConfiguration(windConfiguration);
 
     this.configuration = windConfiguration;

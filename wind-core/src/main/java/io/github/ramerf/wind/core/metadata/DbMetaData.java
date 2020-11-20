@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.metadata;
 
-import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -27,23 +26,20 @@ public class DbMetaData {
 
   private NameTableInformation tableInformations;
 
-  private DbMetaData(DataSource dataSource, final String dialectName, final DdlAuto ddlAuto) {
-    if (!ddlAuto.equals(DdlAuto.NONE)) {
-      Connection connection = getConnection(dataSource);
-      final DatabaseMetaData databaseMetaData = getMetaData(connection);
-      final String catalog = DbResolver.getCatalog(connection);
-      final String schema = DbResolver.getSchema(connection);
-      this.catelog = catalog;
-      this.schema = schema;
-      this.tableInformations = DbResolver.getTables(databaseMetaData, catalog, schema);
-    }
+  private DbMetaData(DataSource dataSource, final String dialectName) {
+    Connection connection = getConnection(dataSource);
+    final DatabaseMetaData databaseMetaData = getMetaData(connection);
+    final String catalog = DbResolver.getCatalog(connection);
+    final String schema = DbResolver.getSchema(connection);
+    this.catelog = catalog;
+    this.schema = schema;
+    this.tableInformations = DbResolver.getTables(databaseMetaData, catalog, schema);
     this.dialect =
         dialectName != null ? Dialect.getInstance(dialectName) : Dialect.getInstance(dataSource);
   }
 
   /** 该方法返回一个单例. */
-  public static DbMetaData getInstance(
-      DataSource dataSource, final String dialect, final DdlAuto ddlAuto) {
+  public static DbMetaData getInstance(DataSource dataSource, final String dialect) {
     if (INSTANCE != null) {
       return INSTANCE;
     }
@@ -51,7 +47,7 @@ public class DbMetaData {
       if (INSTANCE != null) {
         return INSTANCE;
       }
-      return INSTANCE = new DbMetaData(dataSource, dialect, ddlAuto);
+      return INSTANCE = new DbMetaData(dataSource, dialect);
     }
   }
 
