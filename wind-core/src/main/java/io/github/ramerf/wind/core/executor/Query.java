@@ -11,6 +11,7 @@ import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.*;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -61,7 +62,7 @@ import static java.util.stream.Collectors.toCollection;
  * @since 2019/12/28
  */
 @Slf4j
-public class Query<T extends AbstractEntityPoJo> {
+public class Query<T extends AbstractEntityPoJo<T, ? extends Serializable>> {
   /**
    *
    *
@@ -75,7 +76,7 @@ public class Query<T extends AbstractEntityPoJo> {
    */
   private List<QueryColumn<T>> queryColumns;
 
-  private List<ICondition<? extends AbstractEntityPoJo>> conditions;
+  private List<ICondition<?>> conditions;
   private String queryString;
   private String conditionString;
   private String countString;
@@ -106,7 +107,7 @@ public class Query<T extends AbstractEntityPoJo> {
    *
    * @return the instance
    */
-  public static <T extends AbstractEntityPoJo> Query<T> getInstance(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo<T, ?>> Query<T> getInstance(final Class<T> clazz) {
     return prototypeBean.query(clazz);
   }
 

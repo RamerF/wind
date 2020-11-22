@@ -5,11 +5,13 @@ import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.handler.ResultHandler;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
@@ -33,8 +35,8 @@ public interface Executor {
    * @return the r
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo, R> R fetchOne(@Nonnull SqlParam<T> sqlParam)
-      throws DataAccessException;
+  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> R fetchOne(
+      @Nonnull SqlParam<T> sqlParam) throws DataAccessException;
   /**
    * Fetch one r.
    *
@@ -43,7 +45,7 @@ public interface Executor {
    * @return the r
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo, R> R fetchOne(
+  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> R fetchOne(
       @Nonnull SqlParam<T> sqlParam, ResultHandler<Map<String, Object>, R> resultHandler)
       throws DataAccessException;
 
@@ -56,8 +58,8 @@ public interface Executor {
    * @return the list
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo, R> List<R> fetchAll(@Nonnull SqlParam<T> sqlParam, Class<R> clazz)
-      throws DataAccessException;
+  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> List<R> fetchAll(
+      @Nonnull SqlParam<T> sqlParam, Class<R> clazz) throws DataAccessException;
 
   /**
    * Fetch all list.
@@ -67,8 +69,8 @@ public interface Executor {
    * @return the list
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo, R> List<R> fetchAll(@Nonnull SqlParam<T> sqlParam)
-      throws DataAccessException;
+  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> List<R> fetchAll(
+      @Nonnull SqlParam<T> sqlParam) throws DataAccessException;
 
   /**
    * Fetch page page.
@@ -80,7 +82,7 @@ public interface Executor {
    * @return the page
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo, R> Page<R> fetchPage(
+  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> Page<R> fetchPage(
       @Nonnull SqlParam<T> sqlParam, long total, PageRequest pageable) throws DataAccessException;
 
   /**
@@ -89,7 +91,8 @@ public interface Executor {
    * @param sqlParam the sql param
    * @return the long
    */
-  <T extends AbstractEntityPoJo> long fetchCount(@Nonnull SqlParam<T> sqlParam);
+  <T extends AbstractEntityPoJo<T, ? extends Serializable>> long fetchCount(
+      @Nonnull SqlParam<T> sqlParam);
 
   /**
    * Query for object t.
@@ -194,7 +197,7 @@ public interface Executor {
   // @Builder
   @Setter
   @Accessors(chain = true)
-  class SqlParam<T extends AbstractEntityPoJo> {
+  class SqlParam<T extends AbstractEntityPoJo<T, ?>> {
     /** 执行sql. */
     protected String sql;
     /** 返回对象. */
@@ -206,7 +209,7 @@ public interface Executor {
     /** 参数填充起始位置. */
     protected AtomicInteger startIndex;
     /** sql条件,可获取占位符对应的值,用于redis缓存唯一key生成.{@link ICondition#getValues(AtomicInteger)} */
-    protected List<ICondition<? extends AbstractEntityPoJo>> conditions;
+    protected List<ICondition<?>> conditions;
     /** 执行聚合函数,可为空. */
     protected SqlAggregateFunction aggregateFunction;
 

@@ -7,6 +7,7 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.util.*;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -41,13 +42,13 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @Override
-  public <T extends AbstractEntityPoJo, R> R fetchOne(@Nonnull final SqlParam<T> sqlParam)
-      throws DataAccessException {
+  public <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> R fetchOne(
+      @Nonnull final SqlParam<T> sqlParam) throws DataAccessException {
     return fetchOne(sqlParam, null);
   }
 
   @Override
-  public <T extends AbstractEntityPoJo, R> R fetchOne(
+  public <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> R fetchOne(
       @Nonnull final SqlParam<T> sqlParam, ResultHandler<Map<String, Object>, R> resultHandler)
       throws DataAccessException {
     return cacheIfAbsent(
@@ -80,7 +81,7 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @Override
-  public <T extends AbstractEntityPoJo, R> List<R> fetchAll(
+  public <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> List<R> fetchAll(
       @Nonnull final SqlParam<T> sqlParam, final Class<R> clazz) throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
@@ -107,8 +108,8 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T extends AbstractEntityPoJo, R> List<R> fetchAll(@Nonnull final SqlParam<T> sqlParam)
-      throws DataAccessException {
+  public <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> List<R> fetchAll(
+      @Nonnull final SqlParam<T> sqlParam) throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
         () -> {
@@ -135,7 +136,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T extends AbstractEntityPoJo, R> Page<R> fetchPage(
+  public <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> Page<R> fetchPage(
       @Nonnull final SqlParam<T> sqlParam, final long total, final PageRequest pageable)
       throws DataAccessException {
     return cacheIfAbsent(
@@ -173,7 +174,8 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   @SuppressWarnings("ConstantConditions")
-  public <T extends AbstractEntityPoJo> long fetchCount(@Nonnull final SqlParam<T> sqlParam) {
+  public <T extends AbstractEntityPoJo<T, ? extends Serializable>> long fetchCount(
+      @Nonnull final SqlParam<T> sqlParam) {
     return cacheIfAbsent(
         sqlParam,
         () ->

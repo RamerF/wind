@@ -32,7 +32,7 @@ import static java.util.stream.Collectors.joining;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @SuppressWarnings("UnusedReturnValue")
-public class QueryColumn<T extends AbstractEntityPoJo> extends AbstractQueryEntity<T> {
+public class QueryColumn<T extends AbstractEntityPoJo<T, ?>> extends AbstractQueryEntity<T> {
   /** 预留嵌套语句. */
   //  private List<QueryColumn<T>> children = new ArrayList<>();
 
@@ -51,7 +51,8 @@ public class QueryColumn<T extends AbstractEntityPoJo> extends AbstractQueryEnti
    * @param configuration the configuration
    * @return the query column
    */
-  public static <T extends AbstractEntityPoJo> QueryColumn<T> of(WindConfiguration configuration) {
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> of(
+      WindConfiguration configuration) {
     return new QueryColumn<>(EntityInfo.of(configuration));
   }
 

@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
+import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.BeanFunction;
@@ -13,7 +14,8 @@ import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.sql.Types;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +44,7 @@ public class EntityHelper {
    * @param <T> the type parameter
    * @param clazz the clazz
    */
-  public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo<T, ?>> void initEntity(final Class<T> clazz) {
     final EntityInfo entityInfo =
         EntityInfo.of(
             clazz, windContext.getWindConfiguration(), windContext.getDbMetaData().getDialect());
@@ -113,12 +115,24 @@ public class EntityHelper {
    * @param clazz the clazz
    * @return the entity info
    */
-  public static <T extends AbstractEntityPoJo> EntityInfo getEntityInfo(
+  public static <T extends AbstractEntityPoJo<T, ?>> EntityInfo getEntityInfo(
       @Nonnull final Class<T> clazz) {
     return initEntityIfNeeded(clazz);
   }
 
-  private static <T extends AbstractEntityPoJo> EntityInfo initEntityIfNeeded(
+  /**
+   * 获取实体的主键字段.
+   *
+   * @param <T> the type parameter
+   * @param clazz the clazz
+   * @return the entity id field
+   */
+  public static <T extends AbstractEntityPoJo<T, ?>> Field getEntityIdField(
+      @Nonnull final Class<T> clazz) {
+    return getEntityInfo(clazz).getIdColumn().getField();
+  }
+
+  private static <T extends AbstractEntityPoJo<T, ?>> EntityInfo initEntityIfNeeded(
       @Nonnull final Class<T> clazz) {
     final String fullPath = clazz.getTypeName();
     synchronized (EntityHelper.class) {
@@ -179,7 +193,7 @@ public class EntityHelper {
    * @param args the input arguments
    */
   public static void main(String[] args) {
-    IFunction<AbstractEntityPoJo, Date> function = AbstractEntityPoJo::getCreateTime;
+    IFunction<TestLambda, String> function = TestLambda::getName;
     log.info("main:[{}]", getColumn(function));
   }
 }

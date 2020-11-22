@@ -3,14 +3,15 @@ package io.github.ramerf.wind.core.entity.request;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import io.swagger.annotations.ApiModelProperty;
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Optional;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 
 import static io.github.ramerf.wind.core.util.BeanUtils.initial;
 
@@ -27,11 +28,12 @@ import static io.github.ramerf.wind.core.util.BeanUtils.initial;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
+public abstract class AbstractEntityRequest<
+        T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
     implements AbstractEntity {
 
   @ApiModelProperty(value = "主键ID", example = "235455")
-  private Long id;
+  private ID id;
 
   /**
    * Request实体转换为Domain实体的额外处理,比如敏感词过滤.
@@ -58,7 +60,7 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    *
    * @return the t
    */
-  public final T poJo(final Long id) {
+  public final T poJo(final ID id) {
     final Type genericSuperclass = this.getClass().getGenericSuperclass();
     if (!(genericSuperclass instanceof ParameterizedType)) {
       throw CommonException.of("无法获取pojo对象,请修改request类,添加pojo泛型");
@@ -66,7 +68,11 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
     final T poJo =
         initial(((ParameterizedType) genericSuperclass).getActualTypeArguments()[0].getTypeName());
     BeanUtils.copyProperties(this, poJo);
-    Optional.ofNullable(id).ifPresent(o -> poJo.setId(id));
+    if (id != null) {
+      @SuppressWarnings("unchecked")
+      final Class<T> clazz = (Class<T>) poJo.getClass();
+      BeanUtils.setValue(poJo, EntityHelper.getEntityIdField(clazz), id, null);
+    }
     return poJo;
   }
 
@@ -74,12 +80,12 @@ public abstract class AbstractEntityRequest<T extends AbstractEntityPoJo>
    * 获取PoJo的class对象.<br>
    * 注意: 使用该方法,需要<code>request</code>对象指定<code>pojo</code>泛型.<br>
    */
-  public final Class<? extends AbstractEntityPoJo> poJoClass() {
+  public final Class<T> poJoClass() {
     final Type genericSuperclass = this.getClass().getGenericSuperclass();
     if (!(genericSuperclass instanceof ParameterizedType)) {
       throw CommonException.of("无法获取pojo对象,请修改request类,添加pojo泛型");
     }
-    return io.github.ramerf.wind.core.util.BeanUtils.getClazz(
+    return BeanUtils.getClazz(
         ((ParameterizedType) genericSuperclass).getActualTypeArguments()[0].getTypeName());
   }
 }

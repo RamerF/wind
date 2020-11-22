@@ -89,8 +89,8 @@ public final class BeanUtils {
   public static List<String> getNullProp(@Nonnull final Object obj) {
     final BeanWrapperImpl wrapper = new BeanWrapperImpl(obj);
     return Stream.of(wrapper.getPropertyDescriptors())
-        .filter(o -> Objects.isNull(wrapper.getPropertyValue(o.getName())))
         .map(FeatureDescriptor::getName)
+        .filter(propertyName -> Objects.isNull(wrapper.getPropertyValue(propertyName)))
         .collect(toList());
   }
 
@@ -362,7 +362,13 @@ public final class BeanUtils {
       }
       return field.get(obj);
     } catch (Exception e) {
-      return Optional.ofNullable(consumer).map(ex -> ex.apply(e)).orElse(null);
+      return Optional.ofNullable(consumer)
+          .map(ex -> ex.apply(e))
+          .orElseGet(
+              () -> {
+                log.info(e.getMessage(), e);
+                return null;
+              });
     }
   }
 

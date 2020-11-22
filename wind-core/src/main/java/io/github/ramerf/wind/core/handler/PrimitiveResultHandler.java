@@ -2,8 +2,10 @@ package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.handler.PrimitiveResultHandler.EmptyPoJo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nonnull;
@@ -18,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class PrimitiveResultHandler<E>
-    extends AbstractResultHandler<AbstractEntityPoJo, Map<String, Object>, E> {
+    extends AbstractResultHandler<EmptyPoJo, Map<String, Object>, E> {
 
   /**
    * Instantiates a new Primitive result handler.
@@ -80,6 +82,9 @@ public class PrimitiveResultHandler<E>
     if (Integer.class.isAssignableFrom(clazz)) {
       return (E) Integer.valueOf(0);
     }
+    if (BigInteger.class.isAssignableFrom(clazz)) {
+      return (E) BigInteger.valueOf(0);
+    }
     if (BigDecimal.class.isAssignableFrom(clazz)) {
       return (E) BigDecimal.valueOf(0);
     }
@@ -88,4 +93,6 @@ public class PrimitiveResultHandler<E>
     }
     return null;
   }
+
+  public static class EmptyPoJo extends AbstractEntityPoJo<EmptyPoJo, Long> {}
 }

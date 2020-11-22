@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  * @since 2020.01.06
  * @author Tang Xiaofeng
  */
-public interface ICondition<T extends AbstractEntityPoJo> extends Predicate<T> {
+public interface ICondition<T extends AbstractEntityPoJo<T, ?>> extends Predicate<T> {
 
   /**
    * 创建一个空的条件,包含表信息.

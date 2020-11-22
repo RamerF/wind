@@ -1,8 +1,7 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.PrototypeBean;
-import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
@@ -54,19 +53,21 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 @SuppressWarnings("unused")
-public final class Update<T extends AbstractEntityPoJo> {
+public final class Update<T extends AbstractEntityPoJo<T, ?>> {
 
   private final Class<T> clazz;
-  private ICondition<T> condition;
+  private final ICondition<T> condition;
   private Fields<T> fields;
 
-  private EntityInfo entityInfo;
+  private final EntityInfo entityInfo;
 
   private static Executor executor;
   private static WindConfiguration configuration;
   private static IdGenerator idGenerator;
   private static Dialect dialect;
   private static PrototypeBean prototypeBean;
+  private final Field idField;
+  private Field logicDeleteField;
 
   /**
    * Instantiates a new Update.
@@ -79,6 +80,11 @@ public final class Update<T extends AbstractEntityPoJo> {
     this.clazz = clazz;
     this.condition = QueryColumnFactory.fromClass(clazz).getCondition();
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
+    idField = EntityHelper.getEntityIdField(clazz);
+    final EntityColumn logicDeletePropColumn = this.entityInfo.getLogicDeletePropColumn();
+    if (logicDeletePropColumn != null) {
+      logicDeleteField = logicDeletePropColumn.getField();
+    }
   }
 
   /**
@@ -109,7 +115,7 @@ public final class Update<T extends AbstractEntityPoJo> {
    * @param clazz the clazz
    * @return the instance
    */
-  public static <T extends AbstractEntityPoJo> Update<T> getInstance(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo<T, ?>> Update<T> getInstance(final Class<T> clazz) {
     return prototypeBean.update(clazz);
   }
 
@@ -168,8 +174,9 @@ public final class Update<T extends AbstractEntityPoJo> {
    * @param fields the fields
    * @throws DataAccessException 如果执行失败
    */
-  public void create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
-    t.setId(idGenerator.nextId(t));
+  public T create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
+    // TODO-WARN 如果非主键自增,设置主键值
+    // t.setId(idGenerator.nextId(t));
     // TODO-POST 如果sql ddl 包含default这里就不需要设置
     setCurrentTime(t, entityInfo.getCreateTimeField(), false);
     setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
@@ -203,12 +210,16 @@ public final class Update<T extends AbstractEntityPoJo> {
               return ps;
             },
             keyHolder);
-    if (Objects.isNull(t.getId())) {
-      t.setId((Long) Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey()));
-    }
-    if (update != 1 || Objects.isNull(t.getId())) {
+
+    BeanUtils.setValue(
+        t,
+        idField,
+        Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey()),
+        null);
+    if (update != 1 || BeanUtils.getValue(t, idField, null) == null) {
       throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);
     }
+    return t;
   }
 
   /**
@@ -237,7 +248,7 @@ public final class Update<T extends AbstractEntityPoJo> {
         t -> {
           setCurrentTime(t, entityInfo.getCreateTimeField(), false);
           setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
-          t.setId(idGenerator.nextId(t));
+          BeanUtils.setValue(t, idField, idGenerator.nextId(t), null);
         });
     final T t = ts.get(0);
     final List<Field> savingFields = getSavingFields(t, fields);
@@ -270,7 +281,8 @@ public final class Update<T extends AbstractEntityPoJo> {
                     public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                       final AtomicInteger index = new AtomicInteger(1);
                       final T obj = execList.get(i);
-                      obj.setCreateTime(new Date());
+                      // TODO-WARN 创建时间戳
+                      // obj.setCreateTime(new Date());
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
@@ -352,10 +364,7 @@ public final class Update<T extends AbstractEntityPoJo> {
             });
     // 没有条件时,默认根据id更新
     if (condition.isEmpty()) {
-      if (Objects.isNull(t.getId())) {
-        throw new IllegalArgumentException("id could not be null");
-      }
-      where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+      where(cond -> cond.eq(idField, BeanUtils.getValue(t, idField, null)));
     }
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
@@ -406,11 +415,13 @@ public final class Update<T extends AbstractEntityPoJo> {
             setBuilder.append(
                 String.format(
                     setBuilder.length() > 0 ? ",%s=?" : "%s=?", EntityUtils.fieldToColumn(field))));
-    if (Objects.isNull(t.getId())) {
-      throw new IllegalArgumentException("id could not be null");
-    }
+    // TODO-WARN 根据主键更新
+    // if (Objects.isNull(t.getId())) {
+    //   throw new IllegalArgumentException("id could not be null");
+    // }
     // 保证占位符对应
-    where(cond -> cond.eq(AbstractEntityPoJo::setId, t.getId()));
+    where(cond -> cond.eq(idField, null));
+    // TODO-WARN 根据主键更新
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
@@ -435,7 +446,7 @@ public final class Update<T extends AbstractEntityPoJo> {
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
                       Condition.of(QueryColumnFactory.fromClass(clazz))
-                          .eq(T::setId, obj.getId())
+                          .eq(idField, BeanUtils.getValue(obj, idField, null))
                           .getValues(index)
                           .forEach(val -> val.accept(ps));
                     }
@@ -479,7 +490,7 @@ public final class Update<T extends AbstractEntityPoJo> {
           String.format(
               "update %s set %s=%s,%s=? where %s",
               entityInfo.getName(),
-              entityInfo.getLogicDeleteProp().getColumn(),
+              entityInfo.getLogicDeletePropColumn().getName(),
               entityInfo.getLogicDeleteProp().isDeleted(),
               entityInfo.getFieldColumnMap().get(updateTimeField.getName()),
               condition.getString());
@@ -499,7 +510,7 @@ public final class Update<T extends AbstractEntityPoJo> {
           String.format(
               "update %s set %s=%s where %s",
               entityInfo.getName(),
-              entityInfo.getLogicDeleteProp().getColumn(),
+              entityInfo.getLogicDeletePropColumn().getName(),
               entityInfo.getLogicDeleteProp().isDeleted(),
               condition.getString());
       return executor.update(

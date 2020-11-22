@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.toMap;
  * @param <E> 实际返回对象
  */
 @Slf4j
-public abstract class AbstractResultHandler<P extends AbstractEntityPoJo, T, E>
+public abstract class AbstractResultHandler<P extends AbstractEntityPoJo<P, ?>, T, E>
     implements ResultHandler<T, E> {
   /** The Methods. */
   List<Method> methods;
@@ -65,6 +65,7 @@ public abstract class AbstractResultHandler<P extends AbstractEntityPoJo, T, E>
    * @param clazz 支持转换的对象
    * @param initMethods 是否调用初始化methods
    */
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public AbstractResultHandler(
       @Nonnull final Class<E> clazz,
       final List<QueryColumn<P>> queryColumns,
@@ -87,13 +88,12 @@ public abstract class AbstractResultHandler<P extends AbstractEntityPoJo, T, E>
                 .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
                 .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
       } else if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {
-        @SuppressWarnings("unchecked")
         final Class<AbstractEntityPoJo> entityClass = (Class<AbstractEntityPoJo>) clazz;
+        @SuppressWarnings("unchecked")
+        final QueryColumn<? extends AbstractEntityPoJo> queryColumn =
+            QueryColumnFactory.fromClass(entityClass);
         this.fieldAliaMap =
-            QueryColumnFactory.fromClass(entityClass)
-                .getQueryEntityMetaData()
-                .getQueryAlias()
-                .stream()
+            queryColumn.getQueryEntityMetaData().getQueryAlias().stream()
                 .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
       }
     }

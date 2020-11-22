@@ -17,26 +17,27 @@ import java.util.Objects;
  */
 public class QueryColumnFactory {
 
-  public static <T extends AbstractEntityPoJo> QueryColumn<T> fromClass(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromClass(
+      final Class<T> clazz) {
     return getInstance(clazz, null, null);
   }
 
-  public static <T extends AbstractEntityPoJo> QueryColumn<T> fromClassAndTableAlia(
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromClassAndTableAlia(
       final Class<T> clazz, final String tableAlia) {
     return getInstance(clazz, null, tableAlia);
   }
 
-  public static <T extends AbstractEntityPoJo> QueryColumn<T> fromTableName(
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromTableName(
       final String tableName) {
     return getInstance(null, tableName, null);
   }
 
-  public static <T extends AbstractEntityPoJo> QueryColumn<T> fromTableNameAndAlia(
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromTableNameAndAlia(
       final String tableName, final String tableAlia) {
     return getInstance(null, tableName, tableAlia);
   }
 
-  private static <T extends AbstractEntityPoJo> QueryColumn<T> getInstance(
+  private static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> getInstance(
       final Class<T> clazz, String tableName, String tableAlia) {
     final QueryColumn<T> queryColumn =
         QueryColumn.of(AppContextInject.getBean(WindConfiguration.class));

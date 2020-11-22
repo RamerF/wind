@@ -3,6 +3,9 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.util.BeanUtils;
+import java.io.Serializable;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import org.springframework.dao.DataAccessException;
@@ -14,8 +17,8 @@ import org.springframework.dao.DataAccessException;
  * @author Tang Xiaofeng
  * @since 2019/11/13
  */
-public interface BaseService<T extends AbstractEntityPoJo>
-    extends QueryService<T>, UpdateService<T> {
+public interface BaseService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
+    extends QueryService<T, ID>, UpdateService<T, ID> {
   /**
    * 创建记录,返回创建成功的对象.
    *
@@ -27,7 +30,9 @@ public interface BaseService<T extends AbstractEntityPoJo>
    */
   default T createAndGet(@Nonnull final T t) throws RuntimeException {
     create(t, null);
-    return getById(t.getId());
+    @SuppressWarnings("unchecked")
+    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
+    return getById(id);
   }
 
   /**
@@ -41,7 +46,9 @@ public interface BaseService<T extends AbstractEntityPoJo>
   default T createAndGet(@Nonnull final T t, final Consumer<Fields<T>> fieldsConsumer)
       throws RuntimeException {
     create(t, fieldsConsumer);
-    return getById(t.getId());
+    @SuppressWarnings("unchecked")
+    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
+    return getById(id);
   }
 
   /**
@@ -53,7 +60,9 @@ public interface BaseService<T extends AbstractEntityPoJo>
    */
   default T updateAndGet(final T t) throws RuntimeException {
     update(t, null);
-    return getById(t.getId());
+    @SuppressWarnings("unchecked")
+    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
+    return getById(id);
   }
 
   /**
@@ -67,7 +76,9 @@ public interface BaseService<T extends AbstractEntityPoJo>
   default T updateAndGet(final T t, final Consumer<Fields<T>> fieldsConsumer)
       throws RuntimeException {
     update(t, fieldsConsumer);
-    return getById(t.getId());
+    @SuppressWarnings("unchecked")
+    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
+    return getById(id);
   }
 
   /**
@@ -81,7 +92,9 @@ public interface BaseService<T extends AbstractEntityPoJo>
   default T updateByConditionAndGet(final T t, final Consumer<Condition<T>> conditionConsumer)
       throws RuntimeException {
     updateByCondition(t, conditionConsumer);
-    return getById(t.getId());
+    @SuppressWarnings("unchecked")
+    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
+    return getById(id);
   }
 
   /**
@@ -98,6 +111,8 @@ public interface BaseService<T extends AbstractEntityPoJo>
       final Consumer<Condition<T>> conditionConsumer)
       throws RuntimeException {
     update(t, fieldsConsumer, conditionConsumer);
-    return getById(t.getId());
+    @SuppressWarnings("unchecked")
+    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
+    return getById(id);
   }
 }

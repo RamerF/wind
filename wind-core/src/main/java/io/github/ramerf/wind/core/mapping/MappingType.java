@@ -33,13 +33,13 @@ public enum MappingType {
   /** The One to one. */
   ONE_TO_ONE {
     @Override
-    public <T> T fetchMapping(
-        final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
+    public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+        final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getReferenceClazz();
       @SuppressWarnings("unchecked")
       final Object mapping =
-          Query.getInstance((Class<AbstractEntityPoJo>) poJo.getClass())
-              .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
+          Query.getInstance((Class<E>) poJo.getClass())
+              .select(QueryColumnFactory.fromClass((Class<E>) type))
               .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
               .fetchOne(type);
       return (T) mapping;
@@ -48,13 +48,13 @@ public enum MappingType {
   /** The One to many. */
   ONE_TO_MANY {
     @Override
-    public <T> T fetchMapping(
-        final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
+    public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+        final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getClazz();
       @SuppressWarnings("unchecked")
       final Object mapping =
-          Query.getInstance((Class<AbstractEntityPoJo>) poJo.getClass())
-              .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
+          Query.getInstance((Class<E>) poJo.getClass())
+              .select(QueryColumnFactory.fromClass((Class<E>) type))
               .stringWhere(condition -> condition.eq(mappingInfo.getField(), relationValue))
               .fetchAll(type);
       return (T) mapping;
@@ -63,13 +63,13 @@ public enum MappingType {
   /** The Many to one. */
   MANY_TO_ONE {
     @Override
-    public <T> T fetchMapping(
-        final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
+    public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+        final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getReferenceClazz();
       @SuppressWarnings("unchecked")
       final Object mapping =
-          Query.getInstance((Class<AbstractEntityPoJo>) poJo.getClass())
-              .select(QueryColumnFactory.fromClass((Class<AbstractEntityPoJo>) type))
+          Query.getInstance((Class<E>) poJo.getClass())
+              .select(QueryColumnFactory.fromClass((Class<E>) type))
               .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
               .fetchOne(type);
       return (T) mapping;
@@ -88,8 +88,8 @@ public enum MappingType {
   /** The None. */
   NONE {
     @Override
-    public <T> T fetchMapping(
-        final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue) {
+    public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+        final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       return null;
     }
   },
@@ -104,8 +104,8 @@ public enum MappingType {
    * @param relationValue the relation value
    * @return the t
    */
-  public abstract <T> T fetchMapping(
-      final AbstractEntityPoJo poJo, final MappingInfo mappingInfo, final Object relationValue);
+  public abstract <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+      final E poJo, final MappingInfo mappingInfo, final Object relationValue);
 
   /**
    * Of mapping type.

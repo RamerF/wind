@@ -15,7 +15,7 @@ import lombok.Setter;
  * @author Tang Xiaofeng
  * @since 2019 /12/28
  */
-public class QueryEntityMetaData<T extends AbstractEntityPoJo> extends EntityMetaData<T> {
+public class QueryEntityMetaData<T extends AbstractEntityPoJo<T, ?>> extends EntityMetaData<T> {
   /** 查询字段. */
   @Getter protected List<QueryAlia> queryAlias = new ArrayList<>();
 

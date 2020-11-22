@@ -6,7 +6,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
  * @author Tang Xiaofeng
  * @since 2020/1/5
  */
-public interface Predicate<T extends AbstractEntityPoJo> extends QueryEntity<T> {
+public interface Predicate<T extends AbstractEntityPoJo<T, ?>> extends QueryEntity<T> {
   /**
    * 获取条件sql.
    *

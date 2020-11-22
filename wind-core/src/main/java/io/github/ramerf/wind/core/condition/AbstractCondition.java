@@ -3,10 +3,12 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.IConsumer;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.EntityInfo;
+import io.github.ramerf.wind.core.util.EntityUtils;
+import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -33,8 +35,8 @@ import static java.util.stream.Collectors.toCollection;
  */
 @Slf4j
 @ToString
-public abstract class AbstractCondition<T extends AbstractEntityPoJo> extends AbstractQueryEntity<T>
-    implements ICondition<T> {
+public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
+    extends AbstractQueryEntity<T> implements ICondition<T> {
   /** where后的字符串,参数占位符为 ?. */
   final List<String> conditionSql = new LinkedList<>();
   /** 占位符对应的值. */
@@ -76,15 +78,18 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo> extends Ab
   private synchronized void appendLogicNotDelete() {
     final LogicDeleteProp logicDeleteProp = getEntityInfo().getLogicDeleteProp();
     if (logicDeleteProp.isEnable()) {
+      final Field logicDeleteField =
+          EntityHelper.getEntityInfo(getQueryEntityMetaData().getClazz())
+              .getLogicDeletePropColumn()
+              .getField();
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
-              .concat(logicDeleteProp.getColumn())
+              .concat(EntityUtils.fieldToColumn(logicDeleteField))
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
-      final IConsumer<AbstractEntityPoJo, Boolean> beanFunction = AbstractEntityPoJo::setDeleted;
-      valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), beanFunction));
+      valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), logicDeleteField));
     }
   }
 

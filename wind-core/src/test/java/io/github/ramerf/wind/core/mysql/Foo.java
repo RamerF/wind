@@ -8,21 +8,22 @@ import io.github.ramerf.wind.core.handler.typehandler.BitSetBlobTypeHandler;
 import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.math.BigDecimal;
 import java.util.BitSet;
+import javax.persistence.Id;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 /**
  * @author Tang Xiaofeng
  * @since 2019/12/16
  */
-@TableInfo(name = "foo", comment = "测试表", logicDelete = @LogicDelete(column = "has_deleted"))
+@TableInfo(name = "foo", comment = "测试表", logicDelete = @LogicDelete(fieldName = "hasDeleted"))
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Foo extends AbstractEntityPoJo {
+public class Foo extends AbstractEntityPoJo<Foo, Long> {
+  @Id private Long id;
   private String name;
 
   /** 基本类型. */

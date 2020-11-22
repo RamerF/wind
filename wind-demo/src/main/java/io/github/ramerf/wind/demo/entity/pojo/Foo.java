@@ -1,15 +1,17 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.service.UpdateService.Fields;
 import java.math.BigDecimal;
-import java.util.BitSet;
-import java.util.List;
+import java.util.*;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * @author Tang Xiaofeng
@@ -22,7 +24,28 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Foo extends AbstractEntityPoJo {
+public class Foo extends AbstractEntityPoJo<Long> {
+
+  // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  /** 是否逻辑删除,false:未删除,所有的查询默认只会查询未删除的数据. */
+  @Builder.Default
+  @TableColumn(defaultValue = "false")
+  private boolean deleted = false;
+
+  /** 创建时间 */
+  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+  private Date createTime;
+
+  /** 修改时间 */
+  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+  private Date updateTime;
+
   private String name;
 
   /** 基本类型. */
@@ -49,7 +72,7 @@ public class Foo extends AbstractEntityPoJo {
   private BitSet bitSet;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 smallint/int */
-  @TableColumn(columnDefinition = "smallint")
+  // @TableColumn(columnDefinition = "smallint")
   private Type type;
 
   /** 继承{@link InterEnum}的枚举类型 可对应数据库类型 varchar */
@@ -79,21 +102,21 @@ public class Foo extends AbstractEntityPoJo {
   private Boolean isNull;
   private Boolean nonNull;
 
-  public enum Type implements InterEnum<Integer> {
+  public enum Type implements InterEnum<String> {
     /** Type. */
-    PHONE(0, "手机"),
-    SPORT(1, "运动");
+    PHONE("0", "手机"),
+    SPORT("1", "运动");
 
-    private final int value;
+    private final String value;
     private final String desc;
 
-    Type(int value, String desc) {
+    Type(String value, String desc) {
       this.value = value;
       this.desc = desc;
     }
 
     @Override
-    public Integer value() {
+    public String value() {
       return this.value;
     }
 

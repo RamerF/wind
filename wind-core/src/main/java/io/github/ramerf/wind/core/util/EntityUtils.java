@@ -3,28 +3,24 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.entity.request.AbstractEntityRequest;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.InterService;
-import io.github.ramerf.wind.core.support.EntityInfo;
+import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AdvisedSupport;
 import org.springframework.aop.framework.AopProxy;
 import org.springframework.aop.support.AopUtils;
 
-import static io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo.*;
 import static io.github.ramerf.wind.core.util.BeanUtils.isPrimitiveType;
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static java.util.stream.Collectors.toList;
@@ -67,7 +63,6 @@ public final class EntityUtils {
 
   /**
    * 列必须符合以下条件:
-   * <li>未禁用
    * <li>非static
    * <li>非transient
    * <li>基本类型(对应的包装类型)<br>
@@ -79,8 +74,7 @@ public final class EntityUtils {
    */
   private static boolean filterColumnField(Field field) {
     final int modifiers = field.getModifiers();
-    return EntityUtils.isNotDisabled(field)
-        && !Modifier.isStatic(modifiers)
+    return !Modifier.isStatic(modifiers)
         && !Modifier.isTransient(modifiers)
         && (isPrimitiveType(field.getType())
             || MappingInfo.isValidMapping(field)
@@ -94,8 +88,9 @@ public final class EntityUtils {
    * @param t the t
    * @return the non null Field
    */
-  public static <T extends AbstractEntityPoJo> List<Field> getNonNullColumnFields(
+  public static <T extends AbstractEntityPoJo<T, ?>> List<Field> getNonNullColumnFields(
       @Nonnull final T t) {
+    @SuppressWarnings("unchecked")
     final List<Field> fields =
         // BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
         //     .filter(EntityUtils::filterColumnField)
@@ -106,47 +101,47 @@ public final class EntityUtils {
     if (log.isTraceEnabled()) {
       log.debug("getNonNullColumnFields:[{}]", fields);
     }
-    return filterCustomField(t, fields);
+    // return filterCustomField(t, fields);
+    return fields;
   }
 
-  @SuppressWarnings("unchecked")
-  private static <T extends AbstractEntity> List<Field> filterCustomField(
-      @Nonnull final T t, final List<Field> fields) {
-    final Class<? extends AbstractEntityPoJo> clazz;
-    if (t instanceof AbstractEntityRequest) {
-      clazz = ((AbstractEntityRequest<? extends AbstractEntityPoJo>) t).poJoClass();
-    } else {
-      clazz = (Class<? extends AbstractEntityPoJo>) t.getClass();
-    }
-    final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
-    // 剔除掉自定义字段
-    Stream<Field> stream = fields.stream();
-    // 创建时间
-    final Field createTimeField = entityInfo.getCreateTimeField();
-    if (createTimeField != null) {
-      // 可能覆盖父类的字段
-      stream =
-          stream.filter(
-              field ->
-                  !CREATE_TIME_FIELD_NAME.equals(field.getName()) || field.equals(createTimeField));
-    }
-    // 更新时间
-    final Field updateTimeField = entityInfo.getUpdateTimeField();
-    if (updateTimeField != null) {
-      stream =
-          stream.filter(
-              field ->
-                  !UPDATE_TIME_FIELD_NAME.equals(field.getName()) || field.equals(updateTimeField));
-    }
-    // 逻辑删除
-    final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
-    // 未启用 或者 自定义字段
-    if (!logicDeleteProp.isEnable()
-        || !LOGIC_DELETE_COLUMN_NAME.equals(logicDeleteProp.getColumn())) {
-      stream = stream.filter(field -> !LOGIC_DELETE_FIELD_NAME.equals(field.getName()));
-    }
-    return stream.collect(toList());
-  }
+  /*
+  // private static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
+  //     List<Field> filterCustomField(@Nonnull final T t, final List<Field> fields) {
+  //   @SuppressWarnings("unchecked")
+  //   final Class<T> clazz = (Class<T>) t.getClass();
+  //   final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
+  //   // 剔除掉自定义字段
+  //   Stream<Field> stream = fields.stream();
+  //   // 创建时间
+  //   final Field createTimeField = entityInfo.getCreateTimeField();
+  //   if (createTimeField != null) {
+  //     // 可能覆盖父类的字段
+  //     stream =
+  //         stream.filter(
+  //             field ->
+  //                 !CREATE_TIME_FIELD_NAME.equals(field.getName()) ||
+  // field.equals(createTimeField));
+  //   }
+  //   // 更新时间
+  //   final Field updateTimeField = entityInfo.getUpdateTimeField();
+  //   if (updateTimeField != null) {
+  //     stream =
+  //         stream.filter(
+  //             field ->
+  //                 !UPDATE_TIME_FIELD_NAME.equals(field.getName()) ||
+  // field.equals(updateTimeField));
+  //   }
+  //   // 逻辑删除
+  //   final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
+  //   // 未启用 或者 自定义字段
+  //   if (!logicDeleteProp.isEnable()
+  //       || !LOGIC_DELETE_COLUMN_NAME.equals(logicDeleteProp.getColumn())) {
+  //     stream = stream.filter(field -> !LOGIC_DELETE_FIELD_NAME.equals(field.getName()));
+  //   }
+  //   return stream.collect(toList());
+  // }
+  */
 
   /**
    * 获取对象映射到数据库且值为null的属性.
@@ -195,7 +190,8 @@ public final class EntityUtils {
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
-  public static <T extends AbstractEntityPoJo> List<String> getNonNullColumns(@Nonnull final T t) {
+  public static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
+      List<String> getNonNullColumns(@Nonnull final T t) {
     final List<String> columns =
         getNonNullColumnFields(t).stream().map(EntityUtils::fieldToColumn).collect(toList());
     log.debug("getNonNullColumns:[{}]", columns);
@@ -215,16 +211,11 @@ public final class EntityUtils {
    * @see Field#getName() Field#getName()
    * @see #getNonNullColumns(AbstractEntityPoJo)
    */
-  public static <T extends AbstractEntityPoJo> String getNonNullColumn(@Nonnull final T t) {
+  public static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
+      String getNonNullColumn(@Nonnull final T t) {
     final String nonNullColumn = String.join(",", getNonNullColumns(t));
     log.debug("getNonNullColumn:[{}]", nonNullColumn);
     return nonNullColumn;
-  }
-
-  /** 给定的字段未被禁用.false:已被禁用 */
-  public static boolean isNotDisabled(final Field field) {
-    return configuration.getDisableFields().stream()
-        .noneMatch(disableField -> disableField.getField().equals(field));
   }
 
   /**
@@ -301,8 +292,11 @@ public final class EntityUtils {
    * @return the poJo class
    */
   @SuppressWarnings("unchecked")
-  public static <T extends AbstractEntityPoJo, S extends InterService<T>> Class<T> getPoJoClass(
-      S service) {
+  public static <
+          T extends AbstractEntityPoJo<T, ID>,
+          S extends InterService<T, ID>,
+          ID extends Serializable>
+      Class<T> getPoJoClass(S service) {
     Class<S> serviceClazz = (Class<S>) getProxyTarget(service).getClass();
     Class<T> classes =
         (Class<T>)
@@ -313,6 +307,7 @@ public final class EntityUtils {
       return classes;
     }
 
+    // TODO-WARN 这里应该通过循环，获取pojo，如果arguments包含AbstraentityPojo的之类，就停止
     final Type baseServiceType = serviceClazz.getInterfaces()[0].getGenericInterfaces()[0];
     ParameterizedType parameterizedType = (ParameterizedType) baseServiceType;
     final Type[] arguments = parameterizedType.getActualTypeArguments();

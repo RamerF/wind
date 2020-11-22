@@ -11,7 +11,7 @@ import lombok.Data;
  * @since 2020 /4/11
  */
 @Data
-public class EntityMetaData<T extends AbstractEntityPoJo> {
+public class EntityMetaData<T extends AbstractEntityPoJo<T, ?>> {
   /** 表名. */
   protected String tableName;
 

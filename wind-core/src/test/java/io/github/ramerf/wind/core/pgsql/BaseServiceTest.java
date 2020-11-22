@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Pgsql 测试")
 public class BaseServiceTest {
-  private GenericService<Foo> service;
+  private GenericService<Foo, Long> service;
   private static final Foo foo;
   private static final Long id = 10000L;
 
@@ -67,7 +67,7 @@ public class BaseServiceTest {
   @BeforeEach
   public void before() {
     foo.setId(id);
-    service = GenericService.with(Foo.class);
+    service = GenericService.with(Foo.class, Long.class);
   }
 
   @Test
@@ -147,9 +147,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testList2() {
     assertNotNull(
-        service.list(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            IdNameResponse.class));
+        service.list(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
   }
 
   @Test
@@ -211,9 +209,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testListAll2() {
     assertNotNull(
-        service.listAll(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            IdNameResponse.class));
+        service.listAll(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
   }
 
   @Test
@@ -273,7 +269,7 @@ public class BaseServiceTest {
   @DisplayName("单个创建")
   @Transactional(rollbackFor = Exception.class)
   public void testCreate1() {
-    assertTrue(service.create(foo) > 0);
+    assertNotNull(service.create(foo));
   }
 
   @Test
@@ -282,7 +278,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testCreate2() {
     // assertTrue(service.create(foo, fields -> fields.exclude(Foo::getAge)) > 0);
-    assertTrue(service.create(foo, fields -> fields.include(Foo::getAge, Foo::getName)) > 0);
+    assertNotNull(service.create(foo, fields -> fields.include(Foo::getAge, Foo::getName)));
   }
 
   @Test
@@ -292,7 +288,7 @@ public class BaseServiceTest {
   public void testCreate3() {
     final Consumer<Fields<Foo>> consumer =
         fields -> fields.include(Foo::getName, Foo::getAge).exclude(Foo::getLargeText);
-    assertTrue(foo.create(consumer) > 0);
+    assertNotNull(foo.create(consumer));
   }
 
   @Test

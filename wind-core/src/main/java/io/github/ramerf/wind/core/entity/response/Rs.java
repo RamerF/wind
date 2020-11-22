@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import javax.annotation.Nonnull;
-import lombok.*;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -24,8 +24,6 @@ import org.springframework.http.ResponseEntity;
  * @param <T> the type parameter
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ApiModel("通用响应")
 @SuppressWarnings("unused")
 public class Rs<T> implements Serializable {

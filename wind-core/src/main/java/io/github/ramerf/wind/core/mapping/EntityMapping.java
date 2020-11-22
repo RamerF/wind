@@ -25,32 +25,31 @@ import static java.util.stream.Collectors.toList;
  * @since 19/09/2020
  */
 @Data
-public class EntityMapping {
+public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
   /** {@link Collections#singletonList(Object)}. */
-  private static Map<Class<? extends AbstractEntityPoJo>, List<MappingInfo>> ENTITY_MAPPING =
-      new ConcurrentHashMap<>();
+  private static Map<Class<?>, List<MappingInfo>> ENTITY_MAPPING = new ConcurrentHashMap<>();
 
-  public static List<MappingInfo> get(@Nonnull Class<? extends AbstractEntityPoJo> clazz) {
+  public static <T extends AbstractEntityPoJo<T, ?>> List<MappingInfo> get(
+      @Nonnull Class<T> clazz) {
     return ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public static Optional<MappingInfo> get(
       @Nonnull Class<? extends AbstractEntityPoJo> clazz, final Field field) {
-    return ENTITY_MAPPING.get(getCglibProxyTarget(clazz)).stream()
-        .filter(o -> o.field.equals(field))
-        .findFirst();
+    final List<MappingInfo> infos = ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
+    return infos.stream().filter(o -> o.field.equals(field)).findFirst();
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public static Optional<MappingInfo> get(
       @Nonnull Class<? extends AbstractEntityPoJo> clazz,
       final Class<? extends AbstractEntityPoJo> referenceClazz) {
-    return ENTITY_MAPPING.get(getCglibProxyTarget(clazz)).stream()
-        .filter(o -> o.referenceClazz.equals(referenceClazz))
-        .findFirst();
+    final List<MappingInfo> infos = ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
+    return infos.stream().filter(o -> o.referenceClazz.equals(referenceClazz)).findFirst();
   }
 
-  public static void put(
-      @Nonnull Class<? extends AbstractEntityPoJo> clazz, @Nonnull final MappingInfo mappingInfo) {
+  public static void put(@Nonnull Class<?> clazz, @Nonnull final MappingInfo mappingInfo) {
     ENTITY_MAPPING.merge(
         clazz,
         Collections.singletonList(mappingInfo),
@@ -60,15 +59,13 @@ public class EntityMapping {
         });
   }
 
-  public static void put(
-      @Nonnull Class<? extends AbstractEntityPoJo> clazz,
-      @Nonnull final List<MappingInfo> mappingInfos) {
+  public static void put(@Nonnull Class<?> clazz, @Nonnull final List<MappingInfo> mappingInfos) {
     ENTITY_MAPPING.put(clazz, mappingInfos);
   }
 
-  public static void initial(final EntityInfo entityInfo) {
+  public static <T extends AbstractEntityPoJo<T, ?>> void initial(final EntityInfo entityInfo) {
     @SuppressWarnings("unchecked")
-    final Class<AbstractEntityPoJo> clazz = (Class<AbstractEntityPoJo>) entityInfo.getClazz();
+    final Class<T> clazz = (Class<T>) entityInfo.getClazz();
     final List<MappingInfo> mappingInfos =
         BeanUtils.retrievePrivateFields(clazz, ArrayList::new).stream()
             .filter(field -> MappingInfo.isOneMapping(field) || MappingInfo.isManyMapping(field))
@@ -78,7 +75,8 @@ public class EntityMapping {
     entityInfo.setMappingInfos(mappingInfos);
   }
 
-  public static void valid(@Nonnull final Map<Class<?>, EntityInfo> map) {
+  public static <T extends AbstractEntityPoJo<T, ?>, E extends AbstractEntityPoJo<E, ?>> void valid(
+      @Nonnull final Map<Class<?>, EntityInfo> map) {
     if (map.size() == 0) {
       return;
     }
@@ -92,8 +90,9 @@ public class EntityMapping {
                           if (mappingInfo.referenceColumn == null) {
                             return;
                           }
-                          final Class<? extends AbstractEntityPoJo> referenceClazz =
-                              mappingInfo.getReferenceClazz();
+                          @SuppressWarnings("unchecked")
+                          final Class<E> referenceClazz =
+                              (Class<E>) mappingInfo.getReferenceClazz();
                           final EntityInfo referenceEntityInfo = map.get(referenceClazz);
                           if (referenceEntityInfo == null) {
                             throw CommonException.of(
@@ -129,6 +128,7 @@ public class EntityMapping {
 
   @Data
   public static class MappingInfo {
+    @SuppressWarnings("rawtypes")
     private Class<? extends AbstractEntityPoJo> clazz;
     /** 当前对象的列. */
     private Field field;
@@ -143,6 +143,7 @@ public class EntityMapping {
     private Field referenceField;
 
     /** 关联对象. */
+    @SuppressWarnings("rawtypes")
     private Class<? extends AbstractEntityPoJo> referenceClazz;
 
     /** 引用定义.预留字段. */
@@ -153,20 +154,21 @@ public class EntityMapping {
     private MappingInfo() {}
 
     @SuppressWarnings("unchecked")
-    private static MappingInfo of(final Field field) {
+    private static <T extends AbstractEntityPoJo<T, ?>, E extends AbstractEntityPoJo<E, ?>>
+        MappingInfo of(final Field field) {
       final MappingInfo mappingInfo = new MappingInfo();
-      mappingInfo.setClazz((Class<? extends AbstractEntityPoJo>) field.getDeclaringClass());
+      mappingInfo.setClazz((Class<T>) field.getDeclaringClass());
       mappingInfo.setField(field);
       mappingInfo.setMappingType(MappingType.of(field));
       mappingInfo.setColumn(EntityUtils.fieldToColumn(field));
       if (isManyMapping(field)) {
         final Type type =
             ((ParameterizedTypeImpl) field.getGenericType()).getActualTypeArguments()[0];
-        mappingInfo.setReferenceClazz((Class<? extends AbstractEntityPoJo>) type);
+        mappingInfo.setReferenceClazz((Class<E>) type);
         return mappingInfo;
       }
 
-      mappingInfo.setReferenceClazz((Class<? extends AbstractEntityPoJo>) field.getType());
+      mappingInfo.setReferenceClazz((Class<E>) field.getType());
       final String joinColumnName;
       final String reference;
       final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
@@ -211,7 +213,8 @@ public class EntityMapping {
   }
 
   /** 获取CGLIB代理目标对象,截取(0,$$)之间的字符. */
-  public static <T extends AbstractEntityPoJo> Class<T> getCglibProxyTarget(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo<T, ?>> Class<T> getCglibProxyTarget(
+      final Class<T> clazz) {
     String name = clazz.getName();
     final int index = name.indexOf("$$");
     return BeanUtils.getClazz(index != -1 ? name.substring(0, index) : name);

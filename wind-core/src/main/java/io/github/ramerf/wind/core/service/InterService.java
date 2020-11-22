@@ -8,6 +8,7 @@ import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.util.EntityUtils;
+import java.io.Serializable;
 
 /**
  * The interface Inter service.
@@ -16,7 +17,7 @@ import io.github.ramerf.wind.core.util.EntityUtils;
  * @author Tang Xiaofeng
  * @since 2020 /1/5
  */
-public interface InterService<T extends AbstractEntityPoJo> {
+public interface InterService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable> {
 
   /**
    * 过滤某些属性可能包含的特殊字符.
@@ -59,7 +60,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * @param clazz 是否当前类的更新组件
    * @return the update
    */
-  default <R extends AbstractEntityPoJo> Update<R> getUpdate(final Class<R> clazz) {
+  default <R extends AbstractEntityPoJo<R, ?>> Update<R> getUpdate(final Class<R> clazz) {
     return Update.getInstance(clazz);
   }
 

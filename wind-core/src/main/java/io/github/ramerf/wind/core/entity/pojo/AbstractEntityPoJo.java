@@ -1,20 +1,17 @@
 package io.github.ramerf.wind.core.entity.pojo;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.service.UpdateService.Fields;
-import java.util.Date;
+import io.github.ramerf.wind.core.util.BeanUtils;
+import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.function.Consumer;
-import javax.persistence.*;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * PoJo实体.
@@ -23,69 +20,26 @@ import org.springframework.format.annotation.DateTimeFormat;
  * @author Tang Xiaofeng
  */
 @Slf4j
-@Data
-@SuperBuilder
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-@MappedSuperclass
-public class AbstractEntityPoJo implements AbstractEntity {
-  public static final String LOGIC_DELETE_FIELD_NAME = "deleted";
-  public static final String LOGIC_DELETE_COLUMN_NAME = "deleted";
-
-  public static final String CREATE_TIME_FIELD_NAME = "createTime";
-  public static final String CREATE_TIME_COLUMN_NAME = "create_time";
-
-  public static final String UPDATE_TIME_FIELD_NAME = "updateTime";
-  public static final String UPDATE_TIME_COLUMN_NAME = "update_time";
-
-  // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
-  /** 是否逻辑删除,false:未删除,所有的查询默认只会查询未删除的数据. */
-  @Builder.Default
-  @TableColumn(defaultValue = "false")
-  private boolean deleted = false;
-
-  /** 创建时间 */
-  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date createTime;
-
-  /** 修改时间 */
-  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date updateTime;
-
-  /** 所在数据库名称,不能赋值,因为该值始终为数据库默认值:DATABASE(),暂时没用该字段. */
-  @Setter(AccessLevel.NONE)
-  private static transient String databaseName;
-
+public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
+    implements AbstractEntity {
   /**
    * 创建记录.
    *
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  @SuppressWarnings("unchecked")
-  public final long create() throws DataAccessException {
-    genericService().create(instance());
-    return getId();
+  public final AbstractEntityPoJo<T, ID> create() throws DataAccessException {
+    return genericService().create(instance());
   }
 
   /**
    * 创建记录.
    *
-   * @param <T> the type parameter
    * @param fieldsConsumer the fields consumer
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  @SuppressWarnings("unchecked")
-  public final <T extends AbstractEntityPoJo> long create(final Consumer<Fields<T>> fieldsConsumer)
+  public final AbstractEntityPoJo<T, ID> create(final Consumer<Fields<T>> fieldsConsumer)
       throws DataAccessException {
     return genericService().create(instance(), fieldsConsumer);
   }
@@ -96,7 +50,6 @@ public class AbstractEntityPoJo implements AbstractEntity {
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  @SuppressWarnings("unchecked")
   public final int update() throws DataAccessException {
     return genericService().update(instance());
   }
@@ -104,28 +57,23 @@ public class AbstractEntityPoJo implements AbstractEntity {
   /**
    * 更新.
    *
-   * @param <T> the type parameter
    * @param fieldsConsumer the fields consumer
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  @SuppressWarnings("unchecked")
-  public final <T extends AbstractEntityPoJo> int update(final Consumer<Fields<T>> fieldsConsumer)
-      throws DataAccessException {
+  public final int update(final Consumer<Fields<T>> fieldsConsumer) throws DataAccessException {
     return genericService().update(instance(), fieldsConsumer, null);
   }
 
   /**
    * 更新.
    *
-   * @param <T> the type parameter
    * @param conditionConsumer the fields consumer
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  @SuppressWarnings("unchecked")
-  public final <T extends AbstractEntityPoJo> int updateByCondition(
-      final Consumer<Condition<T>> conditionConsumer) throws DataAccessException {
+  public final int updateByCondition(final Consumer<Condition<T>> conditionConsumer)
+      throws DataAccessException {
     return genericService().update(instance(), null, conditionConsumer);
   }
 
@@ -137,8 +85,10 @@ public class AbstractEntityPoJo implements AbstractEntity {
    * @see DataAccessException
    * @see CommonException
    */
+  @SuppressWarnings("unchecked")
   public int delete() throws DataAccessException {
-    return genericService().delete(id);
+    final Field idField = EntityHelper.getEntityIdField(this.getClass());
+    return genericService().delete((ID) BeanUtils.getValue(this, idField, null));
   }
 
   /**
@@ -150,9 +100,7 @@ public class AbstractEntityPoJo implements AbstractEntity {
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
-  @SuppressWarnings("unchecked")
-  public <T extends AbstractEntityPoJo> int delete(Consumer<Condition<T>> consumer)
-      throws DataAccessException {
+  public int delete(Consumer<Condition<T>> consumer) throws DataAccessException {
     return genericService().delete(consumer);
   }
 
@@ -162,12 +110,14 @@ public class AbstractEntityPoJo implements AbstractEntity {
    * @return the update
    */
   @SuppressWarnings("unchecked")
-  private <T extends AbstractEntityPoJo> T instance() {
+  private T instance() {
     return (T) this;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private GenericService genericService() {
-    return GenericService.with(instance().getClass());
+  @SuppressWarnings("unchecked")
+  private GenericService<T, ID> genericService() {
+    return GenericService.with(
+        (Class<T>) instance().getClass(),
+        (Class<ID>) EntityHelper.getEntityIdField(instance().getClass()).getType());
   }
 }

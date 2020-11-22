@@ -39,6 +39,7 @@ public class EntityColumn {
   /** 对应java类型. */
   private Type type;
 
+  /** sql类型名. */
   private String typeName;
 
   /** 长度. */
@@ -240,7 +241,7 @@ public class EntityColumn {
   private static String getPrimaryKeyDefinition(
       final Dialect dialect, final EntityColumn entityColumn) {
     final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
-    Long id = 1L;
+    Object id = 1L;
     try {
       id = idGenerator.nextId(null);
     } catch (Exception ignore) {

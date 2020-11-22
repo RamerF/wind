@@ -22,14 +22,15 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
  */
 @Slf4j
 @ToString
-public class StringCondition<T extends AbstractEntityPoJo> extends AbstractCondition<T> {
+public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
 
   @Override
   public StringCondition<T> of() {
     return new StringCondition<>();
   }
 
-  public static <T extends AbstractEntityPoJo> StringCondition<T> of(QueryColumn<T> queryColumn) {
+  public static <T extends AbstractEntityPoJo<T, ?>> StringCondition<T> of(
+      QueryColumn<T> queryColumn) {
     final StringCondition<T> condition = new StringCondition<>();
     condition.setEntityInfo(queryColumn.getEntityInfo());
     condition.setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());

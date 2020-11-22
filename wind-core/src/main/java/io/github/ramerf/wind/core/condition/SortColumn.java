@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.util.LinkedList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -37,7 +36,7 @@ public class SortColumn {
    * @return the sort
    */
   public Sort getSort() {
-    return CollectionUtils.isEmpty(orders) ? sort : Sort.by(orders);
+    return orders.isEmpty() ? sort : Sort.by(orders);
   }
 
   /**

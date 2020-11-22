@@ -1,10 +1,5 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.support.EntityInfo;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -46,9 +41,6 @@ public class WindConfiguration {
   /** 是否启用默认mvc配置. */
   private boolean enableWebMvcConfigurer = true;
 
-  /** 禁用{@link AbstractEntityPoJo}中的公共字段. */
-  private List<CommonField> disableFields = new ArrayList<>();
-
   /** 自动更新表模式. */
   private DdlAuto ddlAuto;
 
@@ -63,28 +55,6 @@ public class WindConfiguration {
 
   /** 缓存配置. */
   @NestedConfigurationProperty private CacheConfig cache = new CacheConfig();
-
-  public void setLogicDeleteProp(final LogicDeleteProp logicDeleteProp) {
-    this.logicDeleteProp = logicDeleteProp;
-    // 如果逻辑删除字段已被禁用,给个提示
-    final String logicDeleteColumn = logicDeleteProp.getColumn();
-    if (disableFields.size() > 0
-        && logicDeleteColumn.equals(AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME)
-        && getDisableFields().stream()
-            .anyMatch(field -> field.getColumn().equals(logicDeleteColumn))) {
-      logicDeleteProp.setEnable(false);
-    }
-  }
-
-  public void setDisableFields(final List<CommonField> disableFields) {
-    this.disableFields = disableFields;
-    // 如果逻辑删除字段已被禁用,给个提示
-    final String logicDeleteColumn = logicDeleteProp.getColumn();
-    if (logicDeleteColumn.equals(AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME)
-        && disableFields.stream().anyMatch(field -> field.getColumn().equals(logicDeleteColumn))) {
-      logicDeleteProp.setEnable(false);
-    }
-  }
 
   /**
    * Redis 缓存配置.
@@ -121,55 +91,5 @@ public class WindConfiguration {
     UPDATE,
     /** None ddl auto. */
     NONE
-  }
-
-  /**
-   * PoJo公共字段.
-   *
-   * @author Tang Xiaofeng
-   */
-  @Slf4j
-  @SuppressWarnings("JavadocReference")
-  public enum CommonField {
-    /** {@link AbstractEntityPoJo#deleted}. */
-    DELETED {
-      @Override
-      public Field getField() {
-        return EntityInfo.DEFAULT_LOGIC_DELETE_FIELD;
-      }
-
-      @Override
-      public String getColumn() {
-        return AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME;
-      }
-    },
-    /** {@link AbstractEntityPoJo#createTime}. */
-    CREATE_TIME {
-      @Override
-      public Field getField() {
-        return EntityInfo.DEFAULT_CREATE_TIME_FIELD;
-      }
-
-      @Override
-      public String getColumn() {
-        return AbstractEntityPoJo.CREATE_TIME_COLUMN_NAME;
-      }
-    },
-    /** {@link AbstractEntityPoJo#updateTime}. */
-    UPDATE_TIME {
-      @Override
-      public Field getField() {
-        return EntityInfo.DEFAULT_UPDATE_TIME_FIELD;
-      }
-
-      @Override
-      public String getColumn() {
-        return AbstractEntityPoJo.UPDATE_TIME_COLUMN_NAME;
-      }
-    };
-
-    public abstract Field getField();
-
-    public abstract String getColumn();
   }
 }

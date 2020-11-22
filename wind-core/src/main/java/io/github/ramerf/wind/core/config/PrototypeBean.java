@@ -31,12 +31,12 @@ import org.springframework.core.type.AnnotationMetadata;
 @ConditionalOnMissingBean({Query.class, Update.class})
 public class PrototypeBean {
   @Lookup
-  public <T extends AbstractEntityPoJo> Query<T> query(Class<T> clazz) {
+  public <T extends AbstractEntityPoJo<T, ?>> Query<T> query(Class<T> clazz) {
     return null;
   }
 
   @Lookup
-  public <T extends AbstractEntityPoJo> Update<T> update(Class<T> clazz) {
+  public <T extends AbstractEntityPoJo<T, ?>> Update<T> update(Class<T> clazz) {
     return null;
   }
 

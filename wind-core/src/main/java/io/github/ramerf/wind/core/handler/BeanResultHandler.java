@@ -29,7 +29,7 @@ import static io.github.ramerf.wind.core.util.StringUtils.firstUppercase;
  * @param <E> the type parameter
  */
 @Slf4j
-public class BeanResultHandler<P extends AbstractEntityPoJo, E>
+public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
     extends AbstractResultHandler<P, Map<String, Object>, E> {
 
   /** 方法对应的字段. */

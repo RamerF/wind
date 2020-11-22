@@ -46,7 +46,7 @@ public abstract class AbstractCache implements RedisCache {
   }
 
   @Override
-  public <T extends AbstractEntityPoJo> String generateKey(
+  public <T extends AbstractEntityPoJo<T, ?>> String generateKey(
       @Nonnull final SqlParam<T> sqlParam, @Nonnull final String methodName) {
     return getFixedKeyPrefix(sqlParam.getEntityClazz())
         + ":"

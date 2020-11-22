@@ -9,7 +9,7 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
  * @author Tang Xiaofeng
  * @since 2019 /12/28
  */
-public interface QueryEntity<T extends AbstractEntityPoJo> {
+public interface QueryEntity<T extends AbstractEntityPoJo<T, ?>> {
   /**
    * Gets string.
    *

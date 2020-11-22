@@ -6,7 +6,9 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
@@ -27,7 +29,8 @@ import static java.util.stream.Collectors.toList;
  * @since 2020/1/5
  * @see WindConfiguration#isWriteNullProp()
  */
-public interface UpdateService<T extends AbstractEntityPoJo> extends InterService<T> {
+public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
+    extends InterService<T, ID> {
 
   /**
    * 创建记录.
@@ -36,7 +39,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  default long create(@Nonnull final T t) throws DataAccessException {
+  default T create(@Nonnull final T t) throws DataAccessException {
     return create(t, null);
   }
 
@@ -49,7 +52,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果执行失败
    */
   @SuppressWarnings("unchecked")
-  default long create(@Nonnull final T t, final Consumer<Fields<T>> fieldsConsumer)
+  default T create(@Nonnull final T t, final Consumer<Fields<T>> fieldsConsumer)
       throws DataAccessException {
     textFilter(t, t);
     Fields<T> fields = null;
@@ -57,8 +60,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
       fields = Fields.with((Class<T>) t.getClass());
       fieldsConsumer.accept(fields);
     }
-    getUpdate().create(t, fields);
-    return t.getId();
+    return getUpdate().create(t, fields);
   }
 
   /**
@@ -84,7 +86,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果执行失败
    */
   @Transactional(rollbackFor = Exception.class)
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   default Optional<Integer> createBatch(
       @Nonnull final List<T> ts, final Consumer<Fields<T>> fieldsConsumer)
       throws DataAccessException {
@@ -176,12 +178,12 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * 批量更新.<br>
    *
    * @param ts 要更新的数据集
-   * @param fields 即使值为null也保存的属性
+   * @param fieldsConsumer the fields consumer
    * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> updateBatch(final List<T> ts, final Consumer<Fields<T>> fieldsConsumer)
       throws DataAccessException {
@@ -205,8 +207,10 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @see DataAccessException
    * @see CommonException
    */
-  default int delete(final long id) throws DataAccessException {
-    return getUpdate().where(condition -> condition.eq(AbstractEntityPoJo::setId, id)).delete();
+  default int delete(final ID id) throws DataAccessException {
+    return getUpdate()
+        .where(condition -> condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id))
+        .delete();
   }
 
   /**
@@ -230,12 +234,14 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  default Optional<Integer> deleteByIds(final Collection<Long> ids) throws DataAccessException {
+  default Optional<Integer> deleteByIds(final Collection<ID> ids) throws DataAccessException {
     if (CollectionUtils.isEmpty(ids)) {
       return Optional.empty();
     }
     final int affectRow =
-        getUpdate().where(condition -> condition.in(AbstractEntityPoJo::setId, ids)).delete();
+        getUpdate()
+            .where(condition -> condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids))
+            .delete();
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);
   }
 
@@ -244,7 +250,7 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
     @Getter private final List<IFunction<T, ?>> includes = new ArrayList<>();
     @Getter private final List<IFunction<T, ?>> excludes = new ArrayList<>();
 
-    public static <T extends AbstractEntityPoJo> Fields<T> with(Class<T> clazz) {
+    public static <T extends AbstractEntityPoJo<T, ?>> Fields<T> with(Class<T> clazz) {
       return new Fields<>();
     }
 
