@@ -5,7 +5,6 @@ import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.handler.ResultHandler;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,8 +34,8 @@ public interface Executor {
    * @return the r
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> R fetchOne(
-      @Nonnull SqlParam<T> sqlParam) throws DataAccessException;
+  <T extends AbstractEntityPoJo<T, ?>, R> R fetchOne(@Nonnull SqlParam<T> sqlParam)
+      throws DataAccessException;
   /**
    * Fetch one r.
    *
@@ -45,7 +44,7 @@ public interface Executor {
    * @return the r
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> R fetchOne(
+  <T extends AbstractEntityPoJo<T, ?>, R> R fetchOne(
       @Nonnull SqlParam<T> sqlParam, ResultHandler<Map<String, Object>, R> resultHandler)
       throws DataAccessException;
 
@@ -58,7 +57,7 @@ public interface Executor {
    * @return the list
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> List<R> fetchAll(
+  <T extends AbstractEntityPoJo<T, ?>, R> List<R> fetchAll(
       @Nonnull SqlParam<T> sqlParam, Class<R> clazz) throws DataAccessException;
 
   /**
@@ -69,8 +68,8 @@ public interface Executor {
    * @return the list
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> List<R> fetchAll(
-      @Nonnull SqlParam<T> sqlParam) throws DataAccessException;
+  <T extends AbstractEntityPoJo<T, ?>, R> List<R> fetchAll(@Nonnull SqlParam<T> sqlParam)
+      throws DataAccessException;
 
   /**
    * Fetch page page.
@@ -82,7 +81,7 @@ public interface Executor {
    * @return the page
    * @throws DataAccessException the data access exception
    */
-  <T extends AbstractEntityPoJo<T, ? extends Serializable>, R> Page<R> fetchPage(
+  <T extends AbstractEntityPoJo<T, ?>, R> Page<R> fetchPage(
       @Nonnull SqlParam<T> sqlParam, long total, PageRequest pageable) throws DataAccessException;
 
   /**
@@ -91,8 +90,7 @@ public interface Executor {
    * @param sqlParam the sql param
    * @return the long
    */
-  <T extends AbstractEntityPoJo<T, ? extends Serializable>> long fetchCount(
-      @Nonnull SqlParam<T> sqlParam);
+  <T extends AbstractEntityPoJo<T, ?>> long fetchCount(@Nonnull SqlParam<T> sqlParam);
 
   /**
    * Query for object t.

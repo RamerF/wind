@@ -3,7 +3,6 @@ package io.github.ramerf.wind.demo.controller;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.executor.Query;
-import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.pojo.Product;
 import io.github.ramerf.wind.demo.entity.response.IdNameResponse;
@@ -32,8 +31,8 @@ public class FooQueryController {
   @ApiOperation("使用Query")
   public Rs<List<Foo>> query() {
     // 获取查询列和查询条件对象
-    final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
-    final Condition<Foo> condition = queryColumn.getCondition();
+    final QueryColumn<Foo> queryColumn = QueryColumn.fromClass(Foo.class);
+    final Condition<Foo> condition = Condition.getInstance(queryColumn);
     // 指定查询列
     queryColumn.col(Foo::getId);
     // 指定查询条件
@@ -47,8 +46,8 @@ public class FooQueryController {
   @GetMapping(params = "type=2")
   @ApiOperation("使用Query,groupBy,sum")
   public Rs<List<GroupBySum>> query2() {
-    QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
-    Condition<Foo> condition = queryColumn.getCondition().gt(Foo::setId, 0L);
+    QueryColumn<Foo> queryColumn = QueryColumn.fromClass(Foo.class);
+    Condition<Foo> condition = Condition.getInstance(queryColumn);
     final QueryEntityMetaData<Foo> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
     final GroupByClause<Foo> clause = queryEntityMetaData.getGroupByClause();
     final List<GroupBySum> list =
@@ -65,17 +64,17 @@ public class FooQueryController {
   public Rs<List<Foo>> query3() {
     /* 说明:只支持inner join方式连表 */
     // 获取查询列和查询条件对象
-    final QueryColumn<Foo> fooQueryColumn = QueryColumnFactory.fromClass(Foo.class);
-    final QueryColumn<Product> accountQueryColumn = QueryColumnFactory.fromClass(Product.class);
-    final Condition<Foo> fooCondition = fooQueryColumn.getCondition();
+    final QueryColumn<Foo> fooQueryColumn = QueryColumn.fromClass(Foo.class);
+    final QueryColumn<Product> accountQueryColumn = QueryColumn.fromClass(Product.class);
+    final Condition<Foo> fooCondition = Condition.getInstance(fooQueryColumn);
     // 指定查询列
     fooQueryColumn.col(Foo::getId);
     // 指定查询条件
     fooCondition.eq(Foo::setId, 1L);
     // 执行连表: foo.id=account.id
     fooCondition.eq(Foo::getId, accountQueryColumn, Product::getId);
-    final Condition<Product> accountCondition = accountQueryColumn.getCondition();
-    accountCondition.eq(Product::setId, 1L);
+    final Condition<Product> accountCondition = Condition.getInstance(accountQueryColumn);
+    accountCondition.eq(Product::setId, "1");
     return Rs.ok(
         Query.getInstance(Foo.class)
             .select(fooQueryColumn)
@@ -87,8 +86,8 @@ public class FooQueryController {
   @ApiOperation("使用Query,查询任意表)")
   public Rs<List<IdNameResponse>> query4() {
     // 获取查询列和查询条件对象
-    final QueryColumn<Foo> queryColumn = QueryColumnFactory.fromClass(Foo.class);
-    final Condition<Foo> condition = queryColumn.getCondition();
+    final QueryColumn<Foo> queryColumn = QueryColumn.fromClass(Foo.class);
+    final Condition<Foo> condition = Condition.getInstance(queryColumn);
     final List<IdNameResponse> list =
         Query.getInstance(Foo.class)
             .select(queryColumn.col(Foo::getId).col(Foo::getName))

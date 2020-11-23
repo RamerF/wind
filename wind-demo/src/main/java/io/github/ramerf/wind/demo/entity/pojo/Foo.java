@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.util.*;
 import javax.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 /**
@@ -19,12 +18,12 @@ import org.springframework.format.annotation.DateTimeFormat;
  */
 @TableInfo(name = "foo", comment = "the foo.")
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Foo extends AbstractEntityPoJo<Long> {
+public class Foo extends AbstractEntityPoJo<Foo, Long> {
 
   // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
   @Id

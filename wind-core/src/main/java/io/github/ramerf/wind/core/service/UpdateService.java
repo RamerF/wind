@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
@@ -156,9 +157,12 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
       fields = Fields.with((Class<T>) t.getClass());
       fieldsConsumer.accept(fields);
     }
-    return conditionConsumer == null
-        ? getUpdate().update(t, fields)
-        : getUpdate().where(conditionConsumer).update(t, fields);
+    if (conditionConsumer == null) {
+      return getUpdate().update(t, fields);
+    }
+    final Condition<T> condition = Condition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    conditionConsumer.accept(condition);
+    return getUpdate().where(condition).update(t, fields);
   }
 
   /**
@@ -208,8 +212,9 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * @see CommonException
    */
   default int delete(final ID id) throws DataAccessException {
+    final Condition<T> condition = Condition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     return getUpdate()
-        .where(condition -> condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id))
+        .where(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id))
         .delete();
   }
 
@@ -222,8 +227,10 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
-  default int delete(Consumer<Condition<T>> consumer) throws DataAccessException {
-    return getUpdate().where(consumer).delete();
+  default int delete(@Nonnull Consumer<Condition<T>> consumer) throws DataAccessException {
+    final Condition<T> condition = Condition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    consumer.accept(condition);
+    return getUpdate().where(condition).delete();
   }
 
   /**
@@ -238,14 +245,13 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
     if (CollectionUtils.isEmpty(ids)) {
       return Optional.empty();
     }
-    final int affectRow =
-        getUpdate()
-            .where(condition -> condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids))
-            .delete();
+    final Condition<T> condition = Condition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids);
+    final int affectRow = getUpdate().where(condition).delete();
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);
   }
 
-  /** 函数字段集合.指定一个操作应该包含和不包含的字段. */
+  /** 可用于指定一个操作包含/不包含的字段. */
   class Fields<T> {
     @Getter private final List<IFunction<T, ?>> includes = new ArrayList<>();
     @Getter private final List<IFunction<T, ?>> excludes = new ArrayList<>();
@@ -260,7 +266,6 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
       return this;
     }
 
-    // TODO-WARN 未实现exclude
     @SafeVarargs
     public final Fields<T> exclude(@Nonnull final IFunction<T, ?>... excludeFields) {
       for (final IFunction<T, ?> function : excludeFields) {

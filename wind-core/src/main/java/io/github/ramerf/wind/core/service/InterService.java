@@ -6,7 +6,6 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
-import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.io.Serializable;
 
@@ -33,7 +32,7 @@ public interface InterService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @return the query column
    */
   default QueryColumn<T> getQueryColumn() {
-    return QueryColumnFactory.fromClass(getPoJoClass());
+    return QueryColumn.fromClass(getPoJoClass());
   }
 
   /**

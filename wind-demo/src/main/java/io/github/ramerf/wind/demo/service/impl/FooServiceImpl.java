@@ -26,7 +26,7 @@ public class FooServiceImpl implements FooService {
   @Resource private FooRepository repository;
 
   @Resource(name = "fooBs")
-  private BaseService<Foo> baseService;
+  private BaseService<Foo, Long> baseService;
   //
   //  @Override
   //  public long create(@Nonnull Foo foo, IFunction<Foo, ?>... includeNullProps)
@@ -69,7 +69,7 @@ public class FooServiceImpl implements FooService {
   }
 
   @Bean("fooBs")
-  public BaseService<Foo> setBaseService(@Autowired FooRepository repository) {
+  public BaseService<Foo, Long> setBaseService(@Autowired FooRepository repository) {
     return new BaseServiceImpl<>(repository, this);
   }
 

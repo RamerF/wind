@@ -128,6 +128,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
             AnsiStyle.FAINT));
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private void initEntityInfo(final Class<?> bootClass, final WindConfiguration configuration) {
     final SpringBootApplication application = bootClass.getAnnotation(SpringBootApplication.class);
     String scanBasePackages;
@@ -155,8 +156,6 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       log.warn("initEntityInfo:fail to init entity info[{}]", e.getMessage());
     }
     if (entities != null) {
-      // 下面这行确保查询指定公共列时lambda可以使用AbstractEntityPoJo指定.如: AbstractEntityPoJo::getId
-      entities.add(AbstractEntityPoJo.class);
       entities.forEach(EntityHelper::initEntity);
       EntityHelper.initEntityMapping();
     }

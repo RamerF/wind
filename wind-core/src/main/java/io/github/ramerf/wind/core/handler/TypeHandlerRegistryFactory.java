@@ -1,8 +1,7 @@
-package io.github.ramerf.wind.core.factory;
+package io.github.ramerf.wind.core.handler;
 
-import io.github.ramerf.wind.core.handler.TypeHandler;
-import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
-import io.github.ramerf.wind.core.handler.typehandler.LongTimestampTypeHandler;
+import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.handler.typehandler.*;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -22,8 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressWarnings({"rawtypes"})
 public class TypeHandlerRegistryFactory {
-  private Set<ITypeHandler> typeHandlers =
-      new TreeSet<>(((o1, o2) -> Objects.equals(o1.getClass(), o2.getClass()) ? 0 : 1));
+  private Set<ITypeHandler> typeHandlers = new HashSet<>();
   /** 缓存字段类型处理器. */
   private static final Map<Field, ITypeHandler> toJavaTypeHandlers =
       Collections.synchronizedMap(new WeakHashMap<>());
@@ -87,7 +85,6 @@ public class TypeHandlerRegistryFactory {
 
   /**
    * 获取Jdbc值转换为Java值类型转换器,用于将数据库值转换为Java类型.<br>
-   * 后面可能会再添加一个Class/Field参数(用于获取字段上的转换器注解)
    *
    * <p>valueType {@link ValueType}
    *
@@ -154,14 +151,14 @@ public class TypeHandlerRegistryFactory {
   }
 
   /**
-   * 获取Java值转换为Jdbc值类型转换器,用于将数据库值转换为Java类型.<br>
-   * 后面可能会再添加一个Class/Field参数(用于获取字段上的转换器注解)
+   * 获取Java值转换为Jdbc值类型转换器,用于将Java值转换为数据库值.<br>
+   *
+   * <p>转换为jdbc值时,只有字段注解了类型转换器或者{@link InterEnum}的子类会用到,其余返回原值
    *
    * @param valueType {@link ValueType}
    * @return the type handler
    * @see ITypeHandler
    */
-  @SuppressWarnings("DuplicatedCode")
   public ITypeHandler getToJdbcTypeHandler(final ValueType valueType) {
     final Object value = valueType.getOriginVal();
     if (Objects.isNull(value)) {
@@ -171,21 +168,10 @@ public class TypeHandlerRegistryFactory {
     if (typeHandler != null) {
       return typeHandler;
     }
-    final Type genericParameterType = valueType.getGenericParameterType();
-    return getTypeHandlers().stream()
-        .filter(
-            handler -> {
-              final Type javaClass = handler.getJavaClass();
-              try {
-                return Objects.equals(javaClass, genericParameterType)
-                    || Class.forName(javaClass.getTypeName())
-                        .isAssignableFrom(Class.forName(genericParameterType.getTypeName()));
-              } catch (ClassNotFoundException ignored) {
-              }
-              return false;
-            })
-        .findFirst()
-        .orElse(null);
+    if (InterEnum.class.isAssignableFrom(valueType.getField().getType())) {
+      return new EnumTypeHandler();
+    }
+    return null;
   }
 
   private ITypeHandler getHandlerFromAnnotation(final ValueType valueType) {

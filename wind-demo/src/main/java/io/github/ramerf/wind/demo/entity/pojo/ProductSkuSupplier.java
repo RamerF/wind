@@ -3,8 +3,8 @@ package io.github.ramerf.wind.demo.entity.pojo;
 import io.github.ramerf.wind.core.annotation.ManyToOne;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import javax.persistence.Id;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 /**
  * @author ramer
@@ -12,11 +12,12 @@ import lombok.experimental.SuperBuilder;
  */
 @TableInfo
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ProductSkuSupplier extends AbstractEntityPoJo {
+public class ProductSkuSupplier extends AbstractEntityPoJo<ProductSkuSupplier, String> {
+  @Id private String id;
   private String name;
 
   /** 单向{@link ManyToOne}. */

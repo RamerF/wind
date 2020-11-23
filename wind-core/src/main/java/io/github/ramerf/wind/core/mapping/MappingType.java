@@ -1,9 +1,9 @@
 package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.annotation.OneToOne;
+import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Query;
-import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import java.lang.reflect.Field;
 import javax.annotation.Nonnull;
@@ -39,7 +39,7 @@ public enum MappingType {
       @SuppressWarnings("unchecked")
       final Object mapping =
           Query.getInstance((Class<E>) poJo.getClass())
-              .select(QueryColumnFactory.fromClass((Class<E>) type))
+              .select(QueryColumn.fromClass((Class<E>) type))
               .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
               .fetchOne(type);
       return (T) mapping;
@@ -54,7 +54,7 @@ public enum MappingType {
       @SuppressWarnings("unchecked")
       final Object mapping =
           Query.getInstance((Class<E>) poJo.getClass())
-              .select(QueryColumnFactory.fromClass((Class<E>) type))
+              .select(QueryColumn.fromClass((Class<E>) type))
               .stringWhere(condition -> condition.eq(mappingInfo.getField(), relationValue))
               .fetchAll(type);
       return (T) mapping;
@@ -69,7 +69,7 @@ public enum MappingType {
       @SuppressWarnings("unchecked")
       final Object mapping =
           Query.getInstance((Class<E>) poJo.getClass())
-              .select(QueryColumnFactory.fromClass((Class<E>) type))
+              .select(QueryColumn.fromClass((Class<E>) type))
               .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
               .fetchOne(type);
       return (T) mapping;

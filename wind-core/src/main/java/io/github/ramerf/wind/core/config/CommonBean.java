@@ -1,11 +1,12 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.cache.*;
-import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.executor.JdbcTemplateExecutor;
-import io.github.ramerf.wind.core.factory.TypeHandlerRegistryFactory;
+import io.github.ramerf.wind.core.handler.TypeHandlerRegistryFactory;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
+import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.*;
 import io.github.ramerf.wind.core.util.EnvironmentUtil;
@@ -93,9 +94,11 @@ public class CommonBean {
    * @return the jackson 2 object mapper builder customizer
    */
   @Bean
-  public Jackson2ObjectMapperBuilderCustomizer jacksonObjectMapperCustomizer() {
+  public Jackson2ObjectMapperBuilderCustomizer jacksonObjectMapperCustomizer(
+      InterEnumSerializer interEnumSerializer) {
     return objectMapperBuilder ->
-        objectMapperBuilder.serializerByType(InterEnum.class, new JacksonEnumSerializer());
+        objectMapperBuilder.serializerByType(
+            InterEnum.class, new JacksonEnumSerializer(interEnumSerializer));
   }
 
   /**

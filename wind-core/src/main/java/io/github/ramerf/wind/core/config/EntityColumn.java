@@ -240,6 +240,11 @@ public class EntityColumn {
 
   private static String getPrimaryKeyDefinition(
       final Dialect dialect, final EntityColumn entityColumn) {
+    final Type type = entityColumn.type;
+    // 只有主键类型是整型时,才可能自增
+    if (type instanceof Class && !Number.class.isAssignableFrom((Class<?>) type)) {
+      return entityColumn.columnDefinition;
+    }
     final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
     Object id = 1L;
     try {
@@ -251,11 +256,11 @@ public class EntityColumn {
     final IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
     return id == null
         ? identityColumnSupport.containDataTypeInIdentityColumn()
-            ? identityColumnSupport.getIdentityColumnString(entityColumn.type)
+            ? identityColumnSupport.getIdentityColumnString(type)
             : dialect
-                .getTypeName(entityColumn.type)
+                .getTypeName(type)
                 .concat(" ")
-                .concat(identityColumnSupport.getIdentityColumnString(entityColumn.type))
+                .concat(identityColumnSupport.getIdentityColumnString(type))
         : entityColumn.columnDefinition;
   }
 

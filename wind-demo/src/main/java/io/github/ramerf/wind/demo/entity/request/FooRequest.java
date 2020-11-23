@@ -17,7 +17,7 @@ import lombok.*;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @ApiModel("Foo")
-public class FooRequest extends AbstractEntityRequest<Foo> {
+public class FooRequest extends AbstractEntityRequest<Foo, Long> {
   @NotNull(message = "类型值无效")
   private Foo.Type type;
 

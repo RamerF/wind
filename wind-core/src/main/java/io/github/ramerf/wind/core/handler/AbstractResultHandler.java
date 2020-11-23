@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.lang.ref.Reference;
@@ -91,7 +90,7 @@ public abstract class AbstractResultHandler<P extends AbstractEntityPoJo<P, ?>, 
         final Class<AbstractEntityPoJo> entityClass = (Class<AbstractEntityPoJo>) clazz;
         @SuppressWarnings("unchecked")
         final QueryColumn<? extends AbstractEntityPoJo> queryColumn =
-            QueryColumnFactory.fromClass(entityClass);
+            QueryColumn.fromClass(entityClass);
         this.fieldAliaMap =
             queryColumn.getQueryEntityMetaData().getQueryAlias().stream()
                 .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));

@@ -473,9 +473,13 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
       queryBound.conditionConsumer = conditionConsumer;
       queryBound.service = service;
       final QueryColumn<T> queryColumn = service.getQueryColumn();
-      Optional.ofNullable(queryConsumer).ifPresent(o -> o.accept(queryColumn));
-      final Condition<T> condition = queryColumn.getCondition();
-      Optional.ofNullable(conditionConsumer).ifPresent(o -> o.accept(condition));
+      if (queryConsumer != null) {
+        queryConsumer.accept(queryColumn);
+      }
+      final Condition<T> condition = Condition.getInstance(queryColumn);
+      if (conditionConsumer != null) {
+        conditionConsumer.accept(condition);
+      }
       queryBound.queryColumn = queryColumn;
       queryBound.condition = condition;
       return queryBound;

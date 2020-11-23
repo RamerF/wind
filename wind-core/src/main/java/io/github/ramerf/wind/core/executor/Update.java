@@ -1,12 +1,12 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.config.PrototypeBean;
+import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.factory.QueryColumnFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
@@ -16,6 +16,7 @@ import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.sql.*;
+import java.time.*;
 import java.util.Date;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,18 +57,15 @@ import static java.util.stream.Collectors.toList;
 public final class Update<T extends AbstractEntityPoJo<T, ?>> {
 
   private final Class<T> clazz;
-  private final ICondition<T> condition;
+  private ICondition<T> condition;
   private Fields<T> fields;
-
   private final EntityInfo entityInfo;
-
   private static Executor executor;
   private static WindConfiguration configuration;
   private static IdGenerator idGenerator;
   private static Dialect dialect;
   private static PrototypeBean prototypeBean;
   private final Field idField;
-  private Field logicDeleteField;
 
   /**
    * Instantiates a new Update.
@@ -76,15 +74,11 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    * @since 2020.11.13
    * @author Tang Xiaofeng
    */
-  public Update(Class<T> clazz) {
+  public Update(final Class<T> clazz) {
     this.clazz = clazz;
-    this.condition = QueryColumnFactory.fromClass(clazz).getCondition();
+    // this.condition = QueryColumn.fromClass(clazz).getCondition();
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
-    idField = EntityHelper.getEntityIdField(clazz);
-    final EntityColumn logicDeletePropColumn = this.entityInfo.getLogicDeletePropColumn();
-    if (logicDeletePropColumn != null) {
-      logicDeleteField = logicDeletePropColumn.getField();
-    }
+    this.idField = EntityHelper.getEntityIdField(clazz);
   }
 
   /**
@@ -119,41 +113,14 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     return prototypeBean.update(clazz);
   }
 
-  public Update<T> from(final String tableName) {
-    this.entityInfo.setName(tableName);
-    return this;
-  }
-
-  /**
-   * Fields update.
-   *
-   * @param fields the fields
-   * @return the update
-   */
-  public Update<T> fields(Consumer<Fields<T>> fields) {
-    // TODO-WARN 实现
-    return this;
-  }
-
   /**
    * Where update.
    *
-   * @param consumer the consumer
+   * @param condition the condition
    * @return the update
    */
-  public Update<T> where(@Nonnull final Consumer<Condition<T>> consumer) {
-    consumer.accept((Condition<T>) this.condition);
-    return this;
-  }
-
-  /**
-   * Where update.
-   *
-   * @param consumer the consumer
-   * @return the update
-   */
-  public Update<T> strWhere(@Nonnull final Consumer<StringCondition<T>> consumer) {
-    consumer.accept((StringCondition<T>) this.condition);
+  public Update<T> where(@Nonnull final ICondition<T> condition) {
+    this.condition = condition;
     return this;
   }
 
@@ -161,10 +128,11 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    * 创建,默认不保存值为null的列.
    *
    * @param t the t
+   * @return the t
    * @throws DataAccessException 如果执行失败
    */
-  public void create(@Nonnull final T t) throws DataAccessException {
-    create(t, null);
+  public T create(@Nonnull final T t) throws DataAccessException {
+    return create(t, null);
   }
 
   /**
@@ -175,8 +143,10 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    * @throws DataAccessException 如果执行失败
    */
   public T create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
-    // TODO-WARN 如果非主键自增,设置主键值
-    // t.setId(idGenerator.nextId(t));
+    final Object id = idGenerator.nextId(t);
+    if (id != null) {
+      BeanUtils.setValue(t, idField, id, null);
+    }
     // TODO-POST 如果sql ddl 包含default这里就不需要设置
     setCurrentTime(t, entityInfo.getCreateTimeField(), false);
     setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
@@ -364,7 +334,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
             });
     // 没有条件时,默认根据id更新
     if (condition.isEmpty()) {
-      where(cond -> cond.eq(idField, BeanUtils.getValue(t, idField, null)));
+      this.condition.eq(idField, BeanUtils.getValue(t, idField, null));
     }
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
@@ -415,13 +385,8 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
             setBuilder.append(
                 String.format(
                     setBuilder.length() > 0 ? ",%s=?" : "%s=?", EntityUtils.fieldToColumn(field))));
-    // TODO-WARN 根据主键更新
-    // if (Objects.isNull(t.getId())) {
-    //   throw new IllegalArgumentException("id could not be null");
-    // }
     // 保证占位符对应
-    where(cond -> cond.eq(idField, null));
-    // TODO-WARN 根据主键更新
+    this.condition.eq(idField, null);
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
@@ -445,7 +410,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
-                      Condition.of(QueryColumnFactory.fromClass(clazz))
+                      Condition.getInstance(QueryColumn.fromClass(clazz))
                           .eq(idField, BeanUtils.getValue(obj, idField, null))
                           .getValues(index)
                           .forEach(val -> val.accept(ps));
@@ -498,11 +463,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
           clazz,
           updateString,
           ps -> {
-            if (Date.class.isAssignableFrom(updateTimeField.getType())) {
-              ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-            } else {
-              ps.setLong(1, System.currentTimeMillis());
-            }
+            ps.setObject(1, getUpdateTimeValue(updateTimeField));
             condition.getValues(new AtomicInteger(2)).forEach(val -> val.accept(ps));
           });
     } else {
@@ -552,15 +513,32 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     }
     final Object val = BeanUtils.getValue(t, field, null);
     // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
-    if (val == null || (val instanceof Long && (Long) val < 1)) {
-      final Object value;
-      if (Date.class.isAssignableFrom(field.getType())) {
-        value = new Timestamp(System.currentTimeMillis());
-      } else {
-        value = System.currentTimeMillis();
-      }
-      BeanUtils.setValue(t, field, value, null);
+    if (val == null
+        || (val instanceof Long && (Long) val == 0)
+        || (val instanceof Integer && (Integer) val == 0)) {
+      BeanUtils.setValue(t, field, getUpdateTimeValue(field), null);
     }
+  }
+
+  private Object getUpdateTimeValue(final Field updateTimeField) {
+    final Class<?> fieldType = updateTimeField.getType();
+    final Object value;
+    if (LocalDate.class.isAssignableFrom(fieldType)) {
+      return LocalDate.now();
+    }
+    if (LocalTime.class.isAssignableFrom(fieldType)) {
+      return LocalTime.now();
+    }
+    if (LocalDateTime.class.isAssignableFrom(fieldType)) {
+      return LocalDateTime.now();
+    }
+    if (Date.class.isAssignableFrom(fieldType)) {
+      return new Timestamp(System.currentTimeMillis());
+    }
+    if (Integer.class.isAssignableFrom(fieldType)) {
+      return System.currentTimeMillis() / 1000;
+    }
+    return System.currentTimeMillis();
   }
 
   /**

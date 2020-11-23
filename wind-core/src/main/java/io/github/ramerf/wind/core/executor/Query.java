@@ -11,7 +11,6 @@ import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.*;
-import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -62,7 +61,7 @@ import static java.util.stream.Collectors.toCollection;
  * @since 2019/12/28
  */
 @Slf4j
-public class Query<T extends AbstractEntityPoJo<T, ? extends Serializable>> {
+public class Query<T extends AbstractEntityPoJo<T, ?>> {
   /**
    *
    *
@@ -196,10 +195,14 @@ public class Query<T extends AbstractEntityPoJo<T, ? extends Serializable>> {
             ? IntStream.range(0, consumers.length)
                 .mapToObj(
                     i -> {
-                      Optional.ofNullable(consumers[i])
-                          .ifPresent(
-                              consumer -> consumer.accept(queryColumns.get(i).getCondition()));
-                      return queryColumns.get(i).getCondition();
+                      final Consumer<Condition<?>> consumer = consumers[i];
+                      if (consumer == null) {
+                        return null;
+                      }
+                      final QueryColumn<T> queryColumn = queryColumns.get(i);
+                      final Condition<T> condition = Condition.getInstance(queryColumn);
+                      consumer.accept(condition);
+                      return condition;
                     })
                 .collect(toCollection(LinkedList::new))
             : new LinkedList<>();
@@ -230,10 +233,14 @@ public class Query<T extends AbstractEntityPoJo<T, ? extends Serializable>> {
             ? IntStream.range(0, consumers.length)
                 .mapToObj(
                     i -> {
-                      Optional.ofNullable(consumers[i])
-                          .ifPresent(
-                              consumer -> consumer.accept(queryColumns.get(i).getStrCondition()));
-                      return queryColumns.get(i).getStrCondition();
+                      final Consumer<StringCondition<?>> consumer = consumers[i];
+                      if (consumer == null) {
+                        return null;
+                      }
+                      final QueryColumn<T> queryColumn = queryColumns.get(i);
+                      final StringCondition<T> condition = StringCondition.getInstance(queryColumn);
+                      consumer.accept(condition);
+                      return condition;
                     })
                 .collect(toCollection(LinkedList::new))
             : new LinkedList<>();

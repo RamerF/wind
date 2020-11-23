@@ -10,7 +10,7 @@ import io.github.ramerf.wind.demo.entity.pojo.Foo;
  * @since 2019 /12/17
  */
 @SuppressWarnings("unused")
-public interface FooService extends BaseService<Foo> {
+public interface FooService extends BaseService<Foo, Long> {
 
   /**
    * Enable cache foo.

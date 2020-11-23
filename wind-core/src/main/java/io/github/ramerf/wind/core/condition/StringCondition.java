@@ -3,13 +3,11 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
-import io.github.ramerf.wind.core.util.EntityUtils;
-import java.lang.reflect.Field;
 import javax.annotation.Nonnull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.condition.AbstractCondition.MatchPattern.EQUAL;
+import static io.github.ramerf.wind.core.condition.ICondition.MatchPattern.EQUAL;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.AND;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.DOT;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
@@ -24,17 +22,24 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 @ToString
 public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
 
-  @Override
-  public StringCondition<T> of() {
-    return new StringCondition<>();
+  public StringCondition() {}
+
+  public StringCondition(final QueryColumn<T> queryColumn) {
+    super(queryColumn);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> StringCondition<T> of(
-      QueryColumn<T> queryColumn) {
-    final StringCondition<T> condition = new StringCondition<>();
-    condition.setEntityInfo(queryColumn.getEntityInfo());
-    condition.setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
-    return condition;
+  public StringCondition(final Class<T> clazz, final String tableName, final String tableAlia) {
+    super(clazz, tableName, tableAlia);
+  }
+
+  public static <T extends AbstractEntityPoJo<T, ?>> StringCondition<T> getInstance(
+      final QueryColumn<T> queryColumn) {
+    return new StringCondition<>(queryColumn);
+  }
+
+  @Override
+  public StringCondition<T> defaultConstructor() {
+    return new StringCondition<>();
   }
 
   public <V> StringCondition<T> eq(@Nonnull final MappingInfo mappingInfo, final V value) {
@@ -52,25 +57,6 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
               .concat(EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
       valueTypes.add(ValueType.of(value, mappingInfo.getReferenceField()));
-    }
-    return this;
-  }
-
-  public <V> StringCondition<T> eq(@Nonnull final Field field, final V value) {
-    return eq(true, field, value);
-  }
-
-  public <V> StringCondition<T> eq(
-      final boolean condition, @Nonnull final Field field, final V value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(EntityUtils.fieldToColumn(field))
-              .concat(EQUAL.operator)
-              .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, field));
     }
     return this;
   }

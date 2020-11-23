@@ -23,6 +23,8 @@ public @interface LogicDelete {
   /**
    * 逻辑删除java字段名,最终以下划线形式对应数据库列,糟了😥,这里有问题,如果数据库列名不是下划线形式就洗白了,哈哈.
    *
+   * <p>在一个风雨交加的白天,我悄悄修复了这个bug
+   *
    * @return the string
    */
   String fieldName();

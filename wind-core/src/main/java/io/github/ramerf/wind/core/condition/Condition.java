@@ -7,9 +7,7 @@ import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.util.EntityUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -17,7 +15,7 @@ import javax.annotation.Nonnull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.condition.AbstractCondition.MatchPattern.*;
+import static io.github.ramerf.wind.core.condition.ICondition.MatchPattern.*;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 
@@ -31,17 +29,26 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 @ToString
 @SuppressWarnings("UnusedReturnValue")
 public class Condition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
-
-  @Override
-  public AbstractCondition<T> of() {
-    return new Condition<>();
+  public Condition() {
+    super();
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> Condition<T> of(QueryColumn<T> queryColumn) {
-    final Condition<T> condition = new Condition<>();
-    condition.setEntityInfo(queryColumn.getEntityInfo());
-    condition.setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
-    return condition;
+  public Condition(final QueryColumn<T> queryColumn) {
+    super(queryColumn);
+  }
+
+  protected Condition(final Class<T> clazz, final String tableName, final String tableAlia) {
+    super(clazz, tableName, tableAlia);
+  }
+
+  public static <T extends AbstractEntityPoJo<T, ?>> Condition<T> getInstance(
+      final QueryColumn<T> queryColumn) {
+    return new Condition<>(queryColumn);
+  }
+
+  @Override
+  public Condition<T> defaultConstructor() {
+    return new Condition<>();
   }
 
   public <V> Condition<T> eq(@Nonnull final IConsumer<T, V> field, final V value) {
@@ -56,24 +63,6 @@ public class Condition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondi
               .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
               .concat(field.getColumn())
-              .concat(MatchPattern.EQUAL.operator)
-              .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, field));
-    }
-    return this;
-  }
-
-  public <V> Condition<T> eq(@Nonnull final Field field, final V value) {
-    return eq(true, field, value);
-  }
-
-  public <V> Condition<T> eq(final boolean condition, @Nonnull final Field field, final V value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(EntityUtils.fieldToColumn(field))
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
       valueTypes.add(ValueType.of(value, field));
@@ -322,29 +311,6 @@ public class Condition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondi
     return this;
   }
 
-  public <V> Condition<T> in(@Nonnull final Field field, @Nonnull final Collection<V> values) {
-    return in(true, field, values);
-  }
-
-  public <V> Condition<T> in(
-      final boolean condition, @Nonnull final Field field, @Nonnull final Collection<V> values) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(EntityUtils.fieldToColumn(field))
-              .concat(
-                  String.format(
-                      MatchPattern.IN.operator,
-                      values.stream()
-                          .map(SqlHelper::toPreFormatSqlVal)
-                          .collect(Collectors.joining(SEMICOLON.operator)))));
-      values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
-    }
-    return this;
-  }
-
   public <V> Condition<T> notIn(
       @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
     return notIn(true, field, values);
@@ -373,7 +339,7 @@ public class Condition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondi
 
   public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>> Condition<T> eq(
       @Nonnull final IFunction<T, ?> field,
-      @Nonnull final AbstractQueryEntity<Q> queryColumn,
+      @Nonnull final QueryColumn<Q> queryColumn,
       @Nonnull final IFunction<R, ?> field2) {
     return eq(true, field, queryColumn, field2);
   }

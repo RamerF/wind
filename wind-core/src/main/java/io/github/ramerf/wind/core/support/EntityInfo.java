@@ -82,6 +82,9 @@ public final class EntityInfo {
   public static EntityInfo of(
       @Nonnull final Class<?> clazz, final WindConfiguration configuration, Dialect dialect) {
     EntityInfo entityInfo = new EntityInfo();
+    entityInfo.setLogicDeleteProp(
+        LogicDeleteProp.of(clazz.getAnnotation(TableInfo.class), configuration));
+
     entityInfo.mapToTable = EntityHelper.isMapToTable(clazz);
     entityInfo.dialect = dialect;
     entityInfo.setClazz(clazz);
@@ -98,6 +101,7 @@ public final class EntityInfo {
 
     List<EntityColumn> primaryKeys = new ArrayList<>();
     Set<EntityColumn> entityColumns = new HashSet<>();
+    final String logicDeletePropName = entityInfo.getLogicDeleteProp().getFieldName();
     for (Field field : columnFields) {
       // 创建/更新时间
       if (field.getAnnotation(CreateTimestamp.class) != null) {
@@ -118,6 +122,10 @@ public final class EntityInfo {
       if (field.getAnnotation(Id.class) != null) {
         entityInfo.setIdColumn(entityColumn);
       }
+      // 逻辑删除字段
+      if (field.getName().equals(logicDeletePropName)) {
+        entityInfo.setLogicDeletePropColumn(entityColumn);
+      }
       entityColumns.add(entityColumn);
     }
     if (entityInfo.getIdColumn() == null
@@ -131,9 +139,6 @@ public final class EntityInfo {
     entityInfo.setCreateTimeField(timeField[0]);
     entityInfo.setUpdateTimeField(timeField[1]);
     entityInfo.setFieldColumnMap(fieldColumnMap);
-
-    entityInfo.setLogicDeleteProp(
-        LogicDeleteProp.of(clazz.getAnnotation(TableInfo.class), configuration));
     return entityInfo;
   }
 }

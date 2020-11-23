@@ -1,29 +1,27 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.config.LogicDeleteProp;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.helper.EntityHelper;
-import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
+import io.github.ramerf.wind.core.helper.*;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.BeanUtils;
 
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.AND;
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.DOT;
+import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 import static java.util.stream.Collectors.toCollection;
 
@@ -38,19 +36,54 @@ import static java.util.stream.Collectors.toCollection;
 public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
     extends AbstractQueryEntity<T> implements ICondition<T> {
   /** where后的字符串,参数占位符为 ?. */
-  final List<String> conditionSql = new LinkedList<>();
+  protected final List<String> conditionSql = new LinkedList<>();
   /** 占位符对应的值. */
-  final List<ValueType> valueTypes = new LinkedList<>();
+  protected final List<ValueType> valueTypes = new LinkedList<>();
 
   private boolean containLogicNotDelete = false;
 
-  /** 获取实例.通常是默认构造器. */
-  abstract AbstractCondition<T> of();
+  public AbstractCondition() {}
+
+  public AbstractCondition(final QueryColumn<T> queryColumn) {
+    setEntityInfo(queryColumn.getEntityInfo());
+    setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
+  }
+
+  public AbstractCondition(final Class<T> clazz, String tableName, String tableAlia) {
+    if (clazz == null && tableName == null && tableAlia == null) {
+      throw CommonException.of("[clazz,tableName,tableAlia]不能同时为空");
+    }
+    final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
+    if (clazz != null) {
+      final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
+      // 如果tableName不为空,需要覆盖entityInfo的值.传入的tableName优先级最高,因为支持使用不相关的类查询表
+      if (tableName != null) {
+        entityInfo.setName(tableName);
+      } else {
+        tableName = entityInfo.getName();
+      }
+      setEntityInfo(entityInfo);
+    }
+    final QueryEntityMetaData<T> queryEntityMetaData = new QueryEntityMetaData<>();
+    queryEntityMetaData.setClazz(clazz);
+    queryEntityMetaData.setTableName(tableName);
+    tableAlia = tableAlia == null ? tableName : tableAlia;
+    queryEntityMetaData.setTableAlia(tableAlia);
+    String fromTable = tableName;
+    if (tableAlia != null && !tableAlia.equals(tableName)) {
+      fromTable = tableName.concat(" ").concat(tableAlia);
+    }
+    queryEntityMetaData.setFromTable(fromTable);
+    setQueryEntityMetaData(queryEntityMetaData);
+  }
+
+  /** 默认构造器. */
+  protected abstract AbstractCondition<T> defaultConstructor();
 
   public AbstractCondition<T> condition(final boolean genAlia) {
     this.getQueryEntityMetaData().setContainTableAlia(true);
 
-    final AbstractCondition<T> condition = of();
+    final AbstractCondition<T> condition = defaultConstructor();
     final EntityInfo entityInfo = new EntityInfo();
     BeanUtils.copyProperties(getEntityInfo(), entityInfo);
     condition.setEntityInfo(entityInfo);
@@ -126,63 +159,49 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
     return valueTypes.size() <= 0;
   }
 
-  /** 属性匹配模式 */
-  public enum MatchPattern {
-    /** = */
-    EQUAL("="),
-    /** != */
-    NOT_EQUAL("!="),
-    /** &gt; */
-    GREATER(">"),
-    /** &gt;= */
-    GE(">="),
-    /** &lt; */
-    LESS("<"),
-    /** &lt;= */
-    LE("<="),
-    LIKE_PLAIN(" LIKE %s "),
-    /** LIKE %criteria% */
-    LIKE(" LIKE '%%%s%%'"),
-    /** LIKE %criteria */
-    LIKE_LEFT(" LIKE '%%%s'"),
-    /** LIKE criteria% */
-    LIKE_RIGHT(" LIKE '%s%%'"),
-    /** NOT LIKE %criteria% */
-    NOT_LIKE_PLAIN(" NOT LIKE %s "),
-    NOT_LIKE(" NOT LIKE '%%%s%%'"),
-    /** BETWEEN start AND end */
-    BETWEEN(" BETWEEN %s and %s"),
-    /** NOT BETWEEN start AND end */
-    NOT_BETWEEN(" NOT BETWEEN %s and %s"),
-    /** IS NULL */
-    IS_NULL(" IS NULL"),
-    /** IS NOT NULL */
-    IS_NOT_NULL(" IS NOT NULL"),
-    /** EXISTS */
-    EXISTS(" EXISTS(%s)"),
-    /** NOT EXISTS */
-    NOT_EXISTS(" NOT EXISTS(%s)"),
-    /** IN () */
-    IN(" IN (%s)"),
-    /** NOT IN () */
-    NOT_IN(" NOT IN (%s)"),
-    /** &gt;ANY() */
-    GREATER_ANY(" >ANY(%s)"),
-    /** &gt;=ANY() */
-    GE_ANY(" >=ANY(%s)"),
-    /** &lt;ANY() */
-    LESS_ANY(" <ANY(%s)"),
-    /** &lt;=ANY() */
-    LE_ANY(" <=ANY(%s)");
+  @Override
+  public final ICondition<T> eq(@Nonnull final Field field, final Object value) {
+    return eq(true, field, value);
+  }
 
-    final String operator;
-
-    public String operator() {
-      return operator;
+  @Override
+  public final ICondition<T> eq(
+      final boolean condition, @Nonnull final Field field, final Object value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(EntityUtils.fieldToColumn(field))
+              .concat(MatchPattern.EQUAL.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, field));
     }
+    return this;
+  }
 
-    MatchPattern(final String operator) {
-      this.operator = operator;
+  @Override
+  public final ICondition<T> in(@Nonnull final Field field, @Nonnull final Collection<?> values) {
+    return in(true, field, values);
+  }
+
+  @Override
+  public final ICondition<T> in(
+      final boolean condition, @Nonnull final Field field, @Nonnull final Collection<?> values) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(EntityUtils.fieldToColumn(field))
+              .concat(
+                  String.format(
+                      MatchPattern.IN.operator,
+                      values.stream()
+                          .map(SqlHelper::toPreFormatSqlVal)
+                          .collect(Collectors.joining(SEMICOLON.operator)))));
+      values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
     }
+    return this;
   }
 }

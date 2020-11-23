@@ -2,8 +2,8 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import javax.persistence.Id;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 /**
  * .
@@ -13,12 +13,14 @@ import lombok.experimental.SuperBuilder;
  */
 @TableInfo
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ProductSpuCode extends AbstractEntityPoJo {
+public class ProductSpuCode extends AbstractEntityPoJo<ProductSpuCode, Long> {
+  @Id private String id;
+
   @TableColumn(defaultValue = "0")
   private long code;
 

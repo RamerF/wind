@@ -2,7 +2,6 @@ package io.github.ramerf.wind.demo.controller;
 
 import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.condition.SortColumn.Order;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.pojo.Foo.Type;
@@ -68,8 +67,7 @@ public class FooServiceController {
   public Rs<Long> count3() {
     return Rs.ok(
         service.count(
-            query -> query.col(AbstractEntityPoJo::getId),
-            condition -> condition.like(Foo::setName, "foo")));
+            query -> query.col(Foo::getId), condition -> condition.like(Foo::setName, "foo")));
   }
 
   @GetMapping("/get-by-id")
@@ -90,18 +88,13 @@ public class FooServiceController {
     // 支持返回基本类型,支持枚举
     final Long one =
         service.getOne(
-            query -> query.col(Foo::getId).getCondition().eq(Foo::setId, 1L), Long.class);
+            query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L), Long.class);
     log.info("getOne2:[{}]", one);
     // 返回自定义对象
     final FooThinResponse thinResponse =
         service.getOne(
-            query ->
-                query
-                    .col(Foo::getId)
-                    .col(Foo::getName)
-                    .col(Foo::getCreateTime)
-                    .getCondition()
-                    .eq(Foo::setId, 1L),
+            query -> query.col(Foo::getId).col(Foo::getName).col(Foo::getCreateTime),
+            condition -> condition.eq(Foo::setId, 1L),
             FooThinResponse.class);
     log.info("getOne2:[{}]", thinResponse);
     return Rs.ok(thinResponse);
@@ -126,9 +119,7 @@ public class FooServiceController {
   public Rs<Long> getOne4() {
     return Rs.ok(
         service.getOne(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            Long.class));
+            query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L), Long.class));
   }
 
   @GetMapping("/list-by-ids")
@@ -140,7 +131,7 @@ public class FooServiceController {
   @GetMapping("/list")
   @ApiOperation("查询,列表查询,指定条件")
   public Rs<Long> list() {
-    return Rs.ok(service.list(condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
+    return Rs.ok(service.list(condition -> condition.eq(Foo::setId, 1L)));
   }
 
   @GetMapping(value = "/list", params = "type=2")
@@ -153,9 +144,7 @@ public class FooServiceController {
   @ApiOperation("查询,列表查询,指定条件,指定返回列")
   public Rs<Long> list3() {
     return Rs.ok(
-        service.list(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L)));
+        service.list(query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L)));
   }
 
   @GetMapping(value = "/list", params = "type=4")
@@ -163,9 +152,7 @@ public class FooServiceController {
   public Rs<List<Long>> list4() {
     return Rs.ok(
         service.list(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
-            Long.class));
+            query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L), Long.class));
   }
 
   @GetMapping(value = "/list", params = "type=5")
@@ -173,7 +160,7 @@ public class FooServiceController {
   public Rs<List<Foo>> list5() {
     return Rs.ok(
         service.list(
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
+            condition -> condition.eq(Foo::setId, 1L),
             1,
             10,
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
@@ -185,7 +172,7 @@ public class FooServiceController {
     return Rs.ok(
         service.list(
             query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
+            condition -> condition.eq(Foo::setId, 1L),
             1,
             10,
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
@@ -209,7 +196,7 @@ public class FooServiceController {
   public Rs<Page<Foo>> page() {
     return Rs.ok(
         service.page(
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
+            condition -> condition.eq(Foo::setId, 1L),
             1,
             10,
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
@@ -233,7 +220,7 @@ public class FooServiceController {
     return Rs.ok(
         service.page(
             query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
+            condition -> condition.eq(Foo::setId, 1L),
             1,
             10,
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
@@ -245,7 +232,7 @@ public class FooServiceController {
     return Rs.ok(
         service.page(
             query -> query.col(Foo::getId),
-            condition -> condition.eq(AbstractEntityPoJo::setId, 1L),
+            condition -> condition.eq(Foo::setId, 1L),
             1,
             10,
             SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
