@@ -22,8 +22,6 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 @ToString
 public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
 
-  public StringCondition() {}
-
   public StringCondition(final QueryColumn<T> queryColumn) {
     super(queryColumn);
   }
@@ -35,11 +33,6 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
   public static <T extends AbstractEntityPoJo<T, ?>> StringCondition<T> getInstance(
       final QueryColumn<T> queryColumn) {
     return new StringCondition<>(queryColumn);
-  }
-
-  @Override
-  public StringCondition<T> defaultConstructor() {
-    return new StringCondition<>();
   }
 
   public <V> StringCondition<T> eq(@Nonnull final MappingInfo mappingInfo, final V value) {
@@ -58,6 +51,19 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
               .concat(toPreFormatSqlVal(value)));
       valueTypes.add(ValueType.of(value, mappingInfo.getReferenceField()));
     }
+    return this;
+  }
+
+  public <V> StringCondition<T> and(
+      final String column, final String operator, final Object value) {
+    conditionSql.add(
+        (conditionSql.size() > 0 ? AND.operator : "")
+            .concat(getQueryEntityMetaData().getTableAlia())
+            .concat(DOT.operator)
+            .concat(column)
+            .concat(operator)
+            .concat(toPreFormatSqlVal(value)));
+    valueTypes.add(ValueType.of(value));
     return this;
   }
 }

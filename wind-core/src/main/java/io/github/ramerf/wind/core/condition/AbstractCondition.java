@@ -42,7 +42,7 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
 
   private boolean containLogicNotDelete = false;
 
-  public AbstractCondition() {}
+  private AbstractCondition() {}
 
   public AbstractCondition(final QueryColumn<T> queryColumn) {
     setEntityInfo(queryColumn.getEntityInfo());
@@ -77,27 +77,23 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
     setQueryEntityMetaData(queryEntityMetaData);
   }
 
-  /** 默认构造器. */
-  protected abstract AbstractCondition<T> defaultConstructor();
-
   public AbstractCondition<T> condition(final boolean genAlia) {
     this.getQueryEntityMetaData().setContainTableAlia(true);
 
-    final AbstractCondition<T> condition = defaultConstructor();
     final EntityInfo entityInfo = new EntityInfo();
     BeanUtils.copyProperties(getEntityInfo(), entityInfo);
-    condition.setEntityInfo(entityInfo);
+    setEntityInfo(entityInfo);
 
     final QueryEntityMetaData<T> metaData = new QueryEntityMetaData<>();
     BeanUtils.copyProperties(getQueryEntityMetaData(), metaData);
-    condition.setQueryEntityMetaData(metaData);
+    setQueryEntityMetaData(metaData);
     if (genAlia) {
       // 我们需要为子查询设置表别名
       final String alia = RandomString.make(5);
       metaData.setFromTable(metaData.getTableName() + " " + alia);
       metaData.setTableAlia(alia);
     }
-    return condition;
+    return this;
   }
 
   public String getString() {

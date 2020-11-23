@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
-import io.github.ramerf.wind.core.handler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.handler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
@@ -61,6 +61,10 @@ public class TypeHandlerHelper {
       this.originVal = originVal;
       this.genericParameterType = genericParameterType;
       this.field = field;
+    }
+
+    public static ValueType of(final Object value) {
+      return new ValueType(value, null, null);
     }
 
     public static ValueType of(final Object originVal, final BeanFunction function) {

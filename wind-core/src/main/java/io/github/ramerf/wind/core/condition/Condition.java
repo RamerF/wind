@@ -29,9 +29,6 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 @ToString
 @SuppressWarnings("UnusedReturnValue")
 public class Condition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
-  public Condition() {
-    super();
-  }
 
   public Condition(final QueryColumn<T> queryColumn) {
     super(queryColumn);
@@ -44,11 +41,6 @@ public class Condition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondi
   public static <T extends AbstractEntityPoJo<T, ?>> Condition<T> getInstance(
       final QueryColumn<T> queryColumn) {
     return new Condition<>(queryColumn);
-  }
-
-  @Override
-  public Condition<T> defaultConstructor() {
-    return new Condition<>();
   }
 
   public <V> Condition<T> eq(@Nonnull final IConsumer<T, V> field, final V value) {

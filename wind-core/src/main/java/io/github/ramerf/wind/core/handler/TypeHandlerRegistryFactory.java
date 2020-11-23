@@ -26,6 +26,9 @@ public class TypeHandlerRegistryFactory {
   private static final Map<Field, ITypeHandler> toJavaTypeHandlers =
       Collections.synchronizedMap(new WeakHashMap<>());
 
+  private static final Map<Class<? extends ITypeHandler>, ITypeHandler> typeHandlerMap =
+      Collections.synchronizedMap(new WeakHashMap<>());
+
   /** Instantiates a new Type handler registry factory. */
   public TypeHandlerRegistryFactory() {}
 
@@ -39,7 +42,11 @@ public class TypeHandlerRegistryFactory {
           // 过滤掉特殊的类型处理器
           .filter(clazz -> !clazz.equals(LongTimestampTypeHandler.class))
           .map(BeanUtils::initial)
-          .forEach(this::addTypeHandlers);
+          .forEach(
+              typeHandler -> {
+                typeHandlerMap.put(typeHandler.getClass(), typeHandler);
+                addTypeHandlers(typeHandler);
+              });
     } catch (IOException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
@@ -81,6 +88,19 @@ public class TypeHandlerRegistryFactory {
    */
   public Set<ITypeHandler> getTypeHandlers() {
     return typeHandlers;
+  }
+
+  public ITypeHandler getTypeHandler(Class<? extends ITypeHandler> clazz) {
+    ITypeHandler typeHandler = typeHandlerMap.get(clazz);
+    if (typeHandler == null) {
+      try {
+        typeHandler = clazz.newInstance();
+        typeHandlerMap.put(clazz, typeHandler);
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return typeHandler;
   }
 
   /**
@@ -164,6 +184,9 @@ public class TypeHandlerRegistryFactory {
     if (Objects.isNull(value)) {
       return null;
     }
+    if (valueType.getField() == null) {
+      return null;
+    }
     final ITypeHandler typeHandler = getHandlerFromAnnotation(valueType);
     if (typeHandler != null) {
       return typeHandler;
@@ -177,13 +200,6 @@ public class TypeHandlerRegistryFactory {
   private ITypeHandler getHandlerFromAnnotation(final ValueType valueType) {
     final Field field = valueType.getField();
     final TypeHandler typeHandler = field.getAnnotation(TypeHandler.class);
-    if (typeHandler != null) {
-      try {
-        return typeHandler.value().newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return null;
+    return typeHandler == null ? null : getTypeHandler(typeHandler.value());
   }
 }

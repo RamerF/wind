@@ -62,22 +62,23 @@ public class FooUpdateController {
     // 可指定查询列
     final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
     // 可指定查询条件
-    final ConditionCustom<Product> condition = ConditionCustom.getInstance(queryColumn);
+    // final ConditionCustom<Product> condition = ConditionCustom.getInstance(queryColumn);
+    final StringCondition<Product> condition = StringCondition.getInstance(queryColumn);
     // 指定仅更新title字段
     final Fields<Product> fields = Fields.with(Product.class).include(Product::getTitle);
     // 获取Update实例
     final Update<Product> update = prototypeBean.update(Product.class);
     final int affectRow =
         update
-            .where(condition.eq(Product::setId, "2020-11-23T15:19:55.595"))
+            // .where(condition.notEq(Product::setId, "2020-11-23T15:19:55.595"))
+            .where(condition.and("id", "=", "2020-11-23T15:19:55.595"))
             .update(product, fields);
     return Rs.ok(affectRow);
   }
 
   /** 示例:自定义条件{@link ICondition},可用于扩展. */
-  public static class ConditionCustom<T extends AbstractEntityPoJo<T, ?>> extends Condition<T> {
-    public ConditionCustom() {}
-
+  public static class ConditionCustom<T extends AbstractEntityPoJo<T, ?>>
+      extends AbstractCondition<T> {
     public ConditionCustom(final QueryColumn<T> queryColumn) {
       super(queryColumn);
     }
@@ -89,11 +90,6 @@ public class FooUpdateController {
     public static <T extends AbstractEntityPoJo<T, ?>> ConditionCustom<T> getInstance(
         final QueryColumn<T> queryColumn) {
       return new ConditionCustom<>(queryColumn);
-    }
-
-    @Override
-    public ConditionCustom<T> defaultConstructor() {
-      return new ConditionCustom<>();
     }
 
     public <V> ConditionCustom<T> notEq(@Nonnull final IConsumer<T, V> field, final V value) {

@@ -24,8 +24,9 @@ public interface ICondition<T extends AbstractEntityPoJo<T, ?>> extends Predicat
    * 创建一个空的条件,包含表信息.
    *
    * @return the Condition
-   * @see Condition#defaultConstructor()
+   * @see Condition#getInstance(QueryColumn)
    */
+  @Deprecated
   default ICondition<T> condition() {
     return condition(false);
   }
@@ -36,6 +37,7 @@ public interface ICondition<T extends AbstractEntityPoJo<T, ?>> extends Predicat
    * @param genAlia 是否生成新的表别名,用于子查询时传true
    * @return the Condition
    */
+  @Deprecated
   ICondition<T> condition(final boolean genAlia);
 
   /**
