@@ -32,7 +32,7 @@ public class FooQueryController {
   public Rs<List<Foo>> query() {
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumn.fromClass(Foo.class);
-    final Condition<Foo> condition = Condition.getInstance(queryColumn);
+    final LambdaCondition<Foo> condition = LambdaCondition.getInstance(queryColumn);
     // 指定查询列
     queryColumn.col(Foo::getId);
     // 指定查询条件
@@ -47,7 +47,7 @@ public class FooQueryController {
   @ApiOperation("使用Query,groupBy,sum")
   public Rs<List<GroupBySum>> query2() {
     QueryColumn<Foo> queryColumn = QueryColumn.fromClass(Foo.class);
-    Condition<Foo> condition = Condition.getInstance(queryColumn);
+    LambdaCondition<Foo> condition = LambdaCondition.getInstance(queryColumn);
     final QueryEntityMetaData<Foo> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
     final GroupByClause<Foo> clause = queryEntityMetaData.getGroupByClause();
     final List<GroupBySum> list =
@@ -66,14 +66,14 @@ public class FooQueryController {
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> fooQueryColumn = QueryColumn.fromClass(Foo.class);
     final QueryColumn<Product> accountQueryColumn = QueryColumn.fromClass(Product.class);
-    final Condition<Foo> fooCondition = Condition.getInstance(fooQueryColumn);
+    final LambdaCondition<Foo> fooCondition = LambdaCondition.getInstance(fooQueryColumn);
     // 指定查询列
     fooQueryColumn.col(Foo::getId);
     // 指定查询条件
     fooCondition.eq(Foo::setId, 1L);
     // 执行连表: foo.id=account.id
     fooCondition.eq(Foo::getId, accountQueryColumn, Product::getId);
-    final Condition<Product> accountCondition = Condition.getInstance(accountQueryColumn);
+    final LambdaCondition<Product> accountCondition = LambdaCondition.getInstance(accountQueryColumn);
     accountCondition.eq(Product::setId, "1");
     return Rs.ok(
         Query.getInstance(Foo.class)
@@ -87,7 +87,7 @@ public class FooQueryController {
   public Rs<List<IdNameResponse>> query4() {
     // 获取查询列和查询条件对象
     final QueryColumn<Foo> queryColumn = QueryColumn.fromClass(Foo.class);
-    final Condition<Foo> condition = Condition.getInstance(queryColumn);
+    final LambdaCondition<Foo> condition = LambdaCondition.getInstance(queryColumn);
     final List<IdNameResponse> list =
         Query.getInstance(Foo.class)
             .select(queryColumn.col(Foo::getId).col(Foo::getName))

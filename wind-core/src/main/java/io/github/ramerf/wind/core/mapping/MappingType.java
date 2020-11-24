@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.annotation.OneToOne;
 import io.github.ramerf.wind.core.condition.QueryColumn;
+import io.github.ramerf.wind.core.condition.StringCondition;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
@@ -36,11 +37,13 @@ public enum MappingType {
     public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getReferenceClazz();
+      final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
+      final StringCondition<E> stringCondition = StringCondition.getInstance(queryColumn);
       @SuppressWarnings("unchecked")
       final Object mapping =
           Query.getInstance((Class<E>) poJo.getClass())
-              .select(QueryColumn.fromClass((Class<E>) type))
-              .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
+              .select(queryColumn)
+              .where(stringCondition.eq(mappingInfo, relationValue))
               .fetchOne(type);
       return (T) mapping;
     }
@@ -51,11 +54,13 @@ public enum MappingType {
     public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getClazz();
+      final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
+      final StringCondition<E> stringCondition = StringCondition.getInstance(queryColumn);
       @SuppressWarnings("unchecked")
       final Object mapping =
           Query.getInstance((Class<E>) poJo.getClass())
-              .select(QueryColumn.fromClass((Class<E>) type))
-              .stringWhere(condition -> condition.eq(mappingInfo.getField(), relationValue))
+              .select(queryColumn)
+              .where(stringCondition.eq(mappingInfo.getField(), relationValue))
               .fetchAll(type);
       return (T) mapping;
     }
@@ -66,11 +71,13 @@ public enum MappingType {
     public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getReferenceClazz();
+      final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
+      final StringCondition<E> stringCondition = StringCondition.getInstance(queryColumn);
       @SuppressWarnings("unchecked")
       final Object mapping =
           Query.getInstance((Class<E>) poJo.getClass())
-              .select(QueryColumn.fromClass((Class<E>) type))
-              .stringWhere(condition -> condition.eq(mappingInfo, relationValue))
+              .select(queryColumn)
+              .where(stringCondition.eq(mappingInfo, relationValue))
               .fetchOne(type);
       return (T) mapping;
     }

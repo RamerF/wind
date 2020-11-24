@@ -53,7 +53,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param condition the condition
    * @return long long
    */
-  default long count(final Consumer<Condition<T>> condition) {
+  default long count(final Consumer<LambdaCondition<T>> condition) {
     return count(null, condition);
   }
 
@@ -66,7 +66,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    */
   default long count(
       final Consumer<QueryColumn<T>> queryConsumer,
-      final Consumer<Condition<T>> conditionConsumer) {
+      final Consumer<LambdaCondition<T>> conditionConsumer) {
     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
     return getQuery()
         .select(queryBound.queryColumn)
@@ -94,7 +94,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param consumer 查询条件
    * @return the ones
    */
-  default T getOne(final Consumer<Condition<T>> consumer) {
+  default T getOne(final Consumer<LambdaCondition<T>> consumer) {
     return getOne(null, consumer, getPoJoClass());
   }
 
@@ -118,7 +118,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param condition 查询条件
    * @return T one
    */
-  default T getOne(final Consumer<QueryColumn<T>> query, final Consumer<Condition<T>> condition) {
+  default T getOne(final Consumer<QueryColumn<T>> query, final Consumer<LambdaCondition<T>> condition) {
     return getOne(query, condition, getPoJoClass());
   }
 
@@ -133,7 +133,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    */
   default <R> R getOne(
       final Consumer<QueryColumn<T>> queryConsumer,
-      final Consumer<Condition<T>> conditionConsumer,
+      final Consumer<LambdaCondition<T>> conditionConsumer,
       @Nonnull final Class<R> clazz) {
     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
@@ -199,7 +199,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param consumer the consumer
    * @return the list
    */
-  default List<T> list(final Consumer<Condition<T>> consumer) {
+  default List<T> list(final Consumer<LambdaCondition<T>> consumer) {
     return list(null, consumer, getPoJoClass());
   }
 
@@ -225,7 +225,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    */
   default List<T> list(
       final Consumer<QueryColumn<T>> queryConsumer,
-      final Consumer<Condition<T>> conditionConsumer) {
+      final Consumer<LambdaCondition<T>> conditionConsumer) {
     return list(queryConsumer, conditionConsumer, getPoJoClass());
   }
 
@@ -240,7 +240,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    */
   default <R> List<R> list(
       Consumer<QueryColumn<T>> queryConsumer,
-      Consumer<Condition<T>> conditionConsumer,
+      Consumer<LambdaCondition<T>> conditionConsumer,
       @Nonnull final Class<R> clazz) {
     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchAll(clazz);
@@ -256,7 +256,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @return PoJo对象列表 list
    */
   default List<T> list(
-      final Consumer<Condition<T>> conditionConsumer,
+      final Consumer<LambdaCondition<T>> conditionConsumer,
       final int page,
       final int size,
       final SortColumn sortColumn) {
@@ -277,7 +277,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    */
   default <R> List<R> list(
       final Consumer<QueryColumn<T>> queryConsumer,
-      final Consumer<Condition<T>> conditionConsumer,
+      final Consumer<LambdaCondition<T>> conditionConsumer,
       final int page,
       final int size,
       final SortColumn sortColumn,
@@ -327,7 +327,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @return PoJo分页数据 page
    */
   default Page<T> page(
-      final Consumer<Condition<T>> conditionConsumer,
+      final Consumer<LambdaCondition<T>> conditionConsumer,
       final int page,
       final int size,
       final SortColumn sortColumn) {
@@ -366,7 +366,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    */
   default Page<T> page(
       final Consumer<QueryColumn<T>> queryConsumer,
-      final Consumer<Condition<T>> conditionConsumer,
+      final Consumer<LambdaCondition<T>> conditionConsumer,
       final int page,
       final int size,
       final SortColumn sortColumn) {
@@ -387,7 +387,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    */
   default <R> Page<R> page(
       final Consumer<QueryColumn<T>> queryConsumer,
-      final Consumer<Condition<T>> conditionConsumer,
+      final Consumer<LambdaCondition<T>> conditionConsumer,
       final int page,
       final int size,
       final SortColumn sortColumn,
@@ -449,9 +449,9 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
 
   class QueryBound<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable> {
     protected Consumer<QueryColumn<T>> queryConsumer;
-    protected Consumer<Condition<T>> conditionConsumer;
+    protected Consumer<LambdaCondition<T>> conditionConsumer;
     protected QueryColumn<T> queryColumn;
-    protected ICondition<T> condition;
+    protected Condition<T> condition;
     protected InterService<T, ID> service;
 
     /**
@@ -466,7 +466,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
     public static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
         QueryBound<T, ID> consume(
             final Consumer<QueryColumn<T>> queryConsumer,
-            final Consumer<Condition<T>> conditionConsumer,
+            final Consumer<LambdaCondition<T>> conditionConsumer,
             final InterService<T, ID> service) {
       QueryBound<T, ID> queryBound = new QueryBound<>();
       queryBound.queryConsumer = queryConsumer;
@@ -476,7 +476,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
       if (queryConsumer != null) {
         queryConsumer.accept(queryColumn);
       }
-      final Condition<T> condition = Condition.getInstance(queryColumn);
+      final LambdaCondition<T> condition = LambdaCondition.getInstance(queryColumn);
       if (conditionConsumer != null) {
         conditionConsumer.accept(condition);
       }

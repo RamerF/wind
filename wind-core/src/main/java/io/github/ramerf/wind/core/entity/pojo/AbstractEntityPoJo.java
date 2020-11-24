@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.entity.pojo;
 
-import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.condition.LambdaCondition;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -72,7 +72,7 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends 
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  public final int updateByCondition(final Consumer<Condition<T>> conditionConsumer)
+  public final int updateByCondition(final Consumer<LambdaCondition<T>> conditionConsumer)
       throws DataAccessException {
     return genericService().update(instance(), null, conditionConsumer);
   }
@@ -100,7 +100,7 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends 
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
-  public int delete(Consumer<Condition<T>> consumer) throws DataAccessException {
+  public int delete(Consumer<LambdaCondition<T>> consumer) throws DataAccessException {
     return genericService().delete(consumer);
   }
 

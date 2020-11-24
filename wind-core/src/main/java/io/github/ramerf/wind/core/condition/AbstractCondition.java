@@ -34,7 +34,7 @@ import static java.util.stream.Collectors.toCollection;
 @Slf4j
 @ToString
 public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
-    extends AbstractQueryEntity<T> implements ICondition<T> {
+    extends AbstractQueryEntity<T> implements Condition<T> {
   /** where后的字符串,参数占位符为 ?. */
   protected final List<String> conditionSql = new LinkedList<>();
   /** 占位符对应的值. */
@@ -156,12 +156,12 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
   }
 
   @Override
-  public final ICondition<T> eq(@Nonnull final Field field, final Object value) {
+  public final Condition<T> eq(@Nonnull final Field field, final Object value) {
     return eq(true, field, value);
   }
 
   @Override
-  public final ICondition<T> eq(
+  public final Condition<T> eq(
       final boolean condition, @Nonnull final Field field, final Object value) {
     if (condition) {
       conditionSql.add(
@@ -177,12 +177,12 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
   }
 
   @Override
-  public final ICondition<T> in(@Nonnull final Field field, @Nonnull final Collection<?> values) {
+  public final Condition<T> in(@Nonnull final Field field, @Nonnull final Collection<?> values) {
     return in(true, field, values);
   }
 
   @Override
-  public final ICondition<T> in(
+  public final Condition<T> in(
       final boolean condition, @Nonnull final Field field, @Nonnull final Collection<?> values) {
     if (condition) {
       conditionSql.add(

@@ -57,7 +57,7 @@ import static java.util.stream.Collectors.toList;
 public final class Update<T extends AbstractEntityPoJo<T, ?>> {
 
   private final Class<T> clazz;
-  private ICondition<T> condition;
+  private Condition<T> condition;
   private Fields<T> fields;
   private final EntityInfo entityInfo;
   private static Executor executor;
@@ -119,7 +119,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    * @param condition the condition
    * @return the update
    */
-  public Update<T> where(@Nonnull final ICondition<T> condition) {
+  public Update<T> where(@Nonnull final Condition<T> condition) {
     this.condition = condition;
     return this;
   }
@@ -410,7 +410,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
-                      Condition.getInstance(QueryColumn.fromClass(clazz))
+                      LambdaCondition.getInstance(QueryColumn.fromClass(clazz))
                           .eq(idField, BeanUtils.getValue(obj, idField, null))
                           .getValues(index)
                           .forEach(val -> val.accept(ps));

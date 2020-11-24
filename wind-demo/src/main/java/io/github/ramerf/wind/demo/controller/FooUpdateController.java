@@ -76,7 +76,7 @@ public class FooUpdateController {
     return Rs.ok(affectRow);
   }
 
-  /** 示例:自定义条件{@link ICondition},可用于扩展. */
+  /** 示例:自定义条件{@link Condition},可用于扩展. */
   public static class ConditionCustom<T extends AbstractEntityPoJo<T, ?>>
       extends AbstractCondition<T> {
     public ConditionCustom(final QueryColumn<T> queryColumn) {

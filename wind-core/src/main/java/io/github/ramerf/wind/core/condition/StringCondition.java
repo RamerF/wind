@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.condition.ICondition.MatchPattern.EQUAL;
+import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.EQUAL;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.AND;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.DOT;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
@@ -35,12 +35,12 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return new StringCondition<>(queryColumn);
   }
 
-  public <V> StringCondition<T> eq(@Nonnull final MappingInfo mappingInfo, final V value) {
+  public StringCondition<T> eq(@Nonnull final MappingInfo mappingInfo, final Object value) {
     return eq(true, mappingInfo, value);
   }
 
-  public <V> StringCondition<T> eq(
-      final boolean condition, @Nonnull final MappingInfo mappingInfo, final V value) {
+  public StringCondition<T> eq(
+      final boolean condition, @Nonnull final MappingInfo mappingInfo, final Object value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -54,8 +54,7 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
-  public <V> StringCondition<T> and(
-      final String column, final String operator, final Object value) {
+  public StringCondition<T> and(final String column, final String operator, final Object value) {
     conditionSql.add(
         (conditionSql.size() > 0 ? AND.operator : "")
             .concat(getQueryEntityMetaData().getTableAlia())

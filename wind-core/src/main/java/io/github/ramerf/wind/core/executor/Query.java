@@ -55,7 +55,7 @@ import static java.util.stream.Collectors.toCollection;
  *
  * <p>当{@link QueryAlia#getSqlFunction()}为null时,退化为普通条件,否则就是函数
  *
- * <p>TODO: [延后] 完整的连表查询需要{@link ICondition}支持
+ * <p>TODO: [延后] 完整的连表查询需要{@link Condition}支持
  *
  * @author Tang Xiaofeng
  * @since 2019/12/28
@@ -75,7 +75,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    */
   private List<QueryColumn<T>> queryColumns;
 
-  private List<ICondition<?>> conditions;
+  private List<Condition<?>> conditions;
   private String queryString;
   private String conditionString;
   private String countString;
@@ -138,7 +138,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    * @param conditions the conditions
    * @return the query
    */
-  public Query<T> from(final ICondition<?>... conditions) {
+  public Query<T> from(final Condition<?>... conditions) {
     // TODO-WARN: from方法
     throw CommonException.of("方法未实现");
   }
@@ -150,11 +150,11 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    * @return the query
    */
   @SuppressWarnings("DuplicatedCode")
-  public Query<T> where(final ICondition<?>... conditions) {
+  public Query<T> where(final Condition<?>... conditions) {
     this.conditions = new LinkedList<>(Arrays.asList(conditions));
     String conditionString =
         this.conditions.stream()
-            .map(ICondition::getString)
+            .map(Condition::getString)
             .collect(Collectors.joining(AND.operator()));
 
     if (conditionString.endsWith(AND.operator())) {
@@ -185,22 +185,22 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    *
    * @param consumers the consumers
    * @return the query
-   * @see Condition
+   * @see LambdaCondition
    */
   @SafeVarargs
   @SuppressWarnings("DuplicatedCode")
-  public final Query<T> where(final Consumer<Condition<?>>... consumers) {
+  public final Query<T> where(final Consumer<LambdaCondition<?>>... consumers) {
     this.conditions =
         consumers.length > 0
             ? IntStream.range(0, consumers.length)
                 .mapToObj(
                     i -> {
-                      final Consumer<Condition<?>> consumer = consumers[i];
+                      final Consumer<LambdaCondition<?>> consumer = consumers[i];
                       if (consumer == null) {
                         return null;
                       }
                       final QueryColumn<T> queryColumn = queryColumns.get(i);
-                      final Condition<T> condition = Condition.getInstance(queryColumn);
+                      final LambdaCondition<T> condition = LambdaCondition.getInstance(queryColumn);
                       consumer.accept(condition);
                       return condition;
                     })
@@ -208,45 +208,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
             : new LinkedList<>();
     String conditionString =
         this.conditions.stream()
-            .map(ICondition::getString)
-            .collect(Collectors.joining(AND.operator()));
-
-    if (conditionString.endsWith(AND.operator())) {
-      conditionString =
-          conditionString.substring(0, conditionString.length() - AND.operator().length());
-    }
-    this.conditionString =
-        this.conditions.stream()
-            .map(o -> o.getQueryEntityMetaData().getFromTable())
-            .collect(Collectors.joining(SEMICOLON.operator()));
-    if (StringUtils.nonEmpty(conditionString)) {
-      this.conditionString = this.conditionString.concat(WHERE.operator()).concat(conditionString);
-    }
-    return this;
-  }
-
-  @SuppressWarnings("DuplicatedCode")
-  @SafeVarargs
-  public final Query<T> stringWhere(final Consumer<StringCondition<?>>... consumers) {
-    this.conditions =
-        consumers.length > 0
-            ? IntStream.range(0, consumers.length)
-                .mapToObj(
-                    i -> {
-                      final Consumer<StringCondition<?>> consumer = consumers[i];
-                      if (consumer == null) {
-                        return null;
-                      }
-                      final QueryColumn<T> queryColumn = queryColumns.get(i);
-                      final StringCondition<T> condition = StringCondition.getInstance(queryColumn);
-                      consumer.accept(condition);
-                      return condition;
-                    })
-                .collect(toCollection(LinkedList::new))
-            : new LinkedList<>();
-    String conditionString =
-        this.conditions.stream()
-            .map(ICondition::getString)
+            .map(Condition::getString)
             .collect(Collectors.joining(AND.operator()));
 
     if (conditionString.endsWith(AND.operator())) {
@@ -265,7 +227,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
 
   /**
    * Group by 语句.<br>
-   * TODO-WARN 这个思路有问题,groupBy的实现应该是{@link ICondition},只是最后取sql做聚合
+   * TODO-WARN 这个思路有问题,groupBy的实现应该是{@link Condition},只是最后取sql做聚合
    *
    * <pre>
    *   初始化:

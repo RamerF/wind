@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.executor;
 
-import io.github.ramerf.wind.core.condition.ICondition;
+import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
@@ -206,8 +206,8 @@ public interface Executor {
     protected List<QueryColumn<T>> queryColumns;
     /** 参数填充起始位置. */
     protected AtomicInteger startIndex;
-    /** sql条件,可获取占位符对应的值,用于redis缓存唯一key生成.{@link ICondition#getValues(AtomicInteger)} */
-    protected List<ICondition<?>> conditions;
+    /** sql条件,可获取占位符对应的值,用于redis缓存唯一key生成.{@link Condition#getValues(AtomicInteger)} */
+    protected List<Condition<?>> conditions;
     /** 执行聚合函数,可为空. */
     protected SqlAggregateFunction aggregateFunction;
 

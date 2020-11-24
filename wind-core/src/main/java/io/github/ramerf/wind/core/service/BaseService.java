@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.condition.LambdaCondition;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -89,7 +89,7 @@ public interface BaseService<T extends AbstractEntityPoJo<T, ID>, ID extends Ser
    * @return the t
    * @throws RuntimeException the runtime exception
    */
-  default T updateByConditionAndGet(final T t, final Consumer<Condition<T>> conditionConsumer)
+  default T updateByConditionAndGet(final T t, final Consumer<LambdaCondition<T>> conditionConsumer)
       throws RuntimeException {
     updateByCondition(t, conditionConsumer);
     @SuppressWarnings("unchecked")
@@ -108,7 +108,7 @@ public interface BaseService<T extends AbstractEntityPoJo<T, ID>, ID extends Ser
   default T updateAndGet(
       final T t,
       final Consumer<Fields<T>> fieldsConsumer,
-      final Consumer<Condition<T>> conditionConsumer)
+      final Consumer<LambdaCondition<T>> conditionConsumer)
       throws RuntimeException {
     update(t, fieldsConsumer, conditionConsumer);
     @SuppressWarnings("unchecked")

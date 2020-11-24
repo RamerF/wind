@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.condition.LambdaCondition;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
@@ -134,7 +134,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  default int updateByCondition(final T t, final Consumer<Condition<T>> consumer)
+  default int updateByCondition(final T t, final Consumer<LambdaCondition<T>> consumer)
       throws DataAccessException {
     return update(t, null, consumer);
   }
@@ -150,7 +150,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    */
   @SuppressWarnings("unchecked")
   default int update(
-      final T t, Consumer<Fields<T>> fieldsConsumer, final Consumer<Condition<T>> conditionConsumer)
+      final T t, Consumer<Fields<T>> fieldsConsumer, final Consumer<LambdaCondition<T>> conditionConsumer)
       throws DataAccessException {
     Fields<T> fields = null;
     if (fieldsConsumer != null) {
@@ -160,7 +160,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
     if (conditionConsumer == null) {
       return getUpdate().update(t, fields);
     }
-    final Condition<T> condition = Condition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    final LambdaCondition<T> condition = LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     conditionConsumer.accept(condition);
     return getUpdate().where(condition).update(t, fields);
   }
@@ -212,7 +212,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * @see CommonException
    */
   default int delete(final ID id) throws DataAccessException {
-    final Condition<T> condition = Condition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    final LambdaCondition<T> condition = LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     return getUpdate()
         .where(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id))
         .delete();
@@ -227,8 +227,8 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
-  default int delete(@Nonnull Consumer<Condition<T>> consumer) throws DataAccessException {
-    final Condition<T> condition = Condition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+  default int delete(@Nonnull Consumer<LambdaCondition<T>> consumer) throws DataAccessException {
+    final LambdaCondition<T> condition = LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     consumer.accept(condition);
     return getUpdate().where(condition).delete();
   }
@@ -245,7 +245,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
     if (CollectionUtils.isEmpty(ids)) {
       return Optional.empty();
     }
-    final Condition<T> condition = Condition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    final LambdaCondition<T> condition = LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids);
     final int affectRow = getUpdate().where(condition).delete();
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);
