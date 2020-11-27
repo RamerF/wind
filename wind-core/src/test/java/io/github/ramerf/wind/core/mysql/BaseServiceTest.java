@@ -4,7 +4,7 @@ import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
-import io.github.ramerf.wind.core.service.UpdateService.Fields;
+import io.github.ramerf.wind.core.service.InterService.Fields;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;

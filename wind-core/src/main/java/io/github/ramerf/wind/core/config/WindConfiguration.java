@@ -73,10 +73,12 @@ public class WindConfiguration {
   }
 
   public enum CacheType {
+    /** none cache. */
+    NONE,
     /** redis. */
     REDIS,
     /** memory. */
-    MEMORY
+    MEMORY,
   }
 
   /**

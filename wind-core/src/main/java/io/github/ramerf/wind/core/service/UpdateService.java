@@ -5,20 +5,14 @@ import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.BeanFunction;
-import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
-import lombok.Getter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.annotation.Transactional;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * 执行写数据.
@@ -150,7 +144,9 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    */
   @SuppressWarnings("unchecked")
   default int update(
-      final T t, Consumer<Fields<T>> fieldsConsumer, final Consumer<LambdaCondition<T>> conditionConsumer)
+      final T t,
+      Consumer<Fields<T>> fieldsConsumer,
+      final Consumer<LambdaCondition<T>> conditionConsumer)
       throws DataAccessException {
     Fields<T> fields = null;
     if (fieldsConsumer != null) {
@@ -160,7 +156,8 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
     if (conditionConsumer == null) {
       return getUpdate().update(t, fields);
     }
-    final LambdaCondition<T> condition = LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    final LambdaCondition<T> condition =
+        LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     conditionConsumer.accept(condition);
     return getUpdate().where(condition).update(t, fields);
   }
@@ -212,7 +209,8 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * @see CommonException
    */
   default int delete(final ID id) throws DataAccessException {
-    final LambdaCondition<T> condition = LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    final LambdaCondition<T> condition =
+        LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     return getUpdate()
         .where(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id))
         .delete();
@@ -228,7 +226,8 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * @see DataAccessException
    */
   default int delete(@Nonnull Consumer<LambdaCondition<T>> consumer) throws DataAccessException {
-    final LambdaCondition<T> condition = LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    final LambdaCondition<T> condition =
+        LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     consumer.accept(condition);
     return getUpdate().where(condition).delete();
   }
@@ -245,46 +244,10 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
     if (CollectionUtils.isEmpty(ids)) {
       return Optional.empty();
     }
-    final LambdaCondition<T> condition = LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    final LambdaCondition<T> condition =
+        LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
     condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids);
     final int affectRow = getUpdate().where(condition).delete();
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);
-  }
-
-  /** 可用于指定一个操作包含/不包含的字段. */
-  class Fields<T> {
-    @Getter private final List<IFunction<T, ?>> includes = new ArrayList<>();
-    @Getter private final List<IFunction<T, ?>> excludes = new ArrayList<>();
-
-    public static <T extends AbstractEntityPoJo<T, ?>> Fields<T> with(Class<T> clazz) {
-      return new Fields<>();
-    }
-
-    @SafeVarargs
-    public final Fields<T> include(final IFunction<T, ?>... includeFields) {
-      this.includes.addAll(Arrays.asList(includeFields));
-      return this;
-    }
-
-    @SafeVarargs
-    public final Fields<T> exclude(@Nonnull final IFunction<T, ?>... excludeFields) {
-      for (final IFunction<T, ?> function : excludeFields) {
-        this.includes.remove(function);
-      }
-      this.excludes.addAll(Arrays.asList(excludeFields));
-      return this;
-    }
-
-    public List<Field> getIncludeFields() {
-      return includes.isEmpty()
-          ? Collections.emptyList()
-          : includes.stream().map(BeanFunction::getField).collect(toList());
-    }
-
-    public List<Field> getExcludeFields() {
-      return excludes.isEmpty()
-          ? Collections.emptyList()
-          : excludes.stream().map(BeanFunction::getField).collect(toList());
-    }
   }
 }

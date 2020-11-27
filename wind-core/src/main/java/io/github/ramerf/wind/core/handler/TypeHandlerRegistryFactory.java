@@ -191,8 +191,12 @@ public class TypeHandlerRegistryFactory {
     if (typeHandler != null) {
       return typeHandler;
     }
-    if (InterEnum.class.isAssignableFrom(valueType.getField().getType())) {
-      return new EnumTypeHandler();
+    final Class<?> type = valueType.getField().getType();
+    if (InterEnum.class.isAssignableFrom(type)) {
+      return typeHandlerMap.get(EnumTypeHandler.class);
+    }
+    if (Date.class.isAssignableFrom(type)) {
+      return typeHandlerMap.get(DateTypeHandler.class);
     }
     return null;
   }

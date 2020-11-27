@@ -6,8 +6,16 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
+import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.*;
+import javax.annotation.Nonnull;
+import lombok.Getter;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * The interface Inter service.
@@ -81,5 +89,42 @@ public interface InterService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    */
   default <U> U getRepository() throws RuntimeException {
     throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+  }
+
+  /** 可用于指定一个操作包含/不包含的字段. */
+  class Fields<T> {
+    @Getter private final List<IFunction<T, ?>> includes = new ArrayList<>();
+    @Getter private final List<IFunction<T, ?>> excludes = new ArrayList<>();
+
+    public static <T extends AbstractEntityPoJo<T, ?>> Fields<T> with(Class<T> clazz) {
+      return new Fields<>();
+    }
+
+    @SafeVarargs
+    public final Fields<T> include(final IFunction<T, ?>... includeFields) {
+      this.includes.addAll(Arrays.asList(includeFields));
+      return this;
+    }
+
+    @SafeVarargs
+    public final Fields<T> exclude(@Nonnull final IFunction<T, ?>... excludeFields) {
+      for (final IFunction<T, ?> function : excludeFields) {
+        this.includes.remove(function);
+      }
+      this.excludes.addAll(Arrays.asList(excludeFields));
+      return this;
+    }
+
+    public List<Field> getIncludeFields() {
+      return includes.isEmpty()
+          ? Collections.emptyList()
+          : includes.stream().map(BeanFunction::getField).collect(toList());
+    }
+
+    public List<Field> getExcludeFields() {
+      return excludes.isEmpty()
+          ? Collections.emptyList()
+          : excludes.stream().map(BeanFunction::getField).collect(toList());
+    }
   }
 }

@@ -1,8 +1,7 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.PrototypeBean;
-import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
@@ -10,7 +9,7 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.service.UpdateService.Fields;
+import io.github.ramerf.wind.core.service.InterService.Fields;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -66,6 +65,9 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
   private static Dialect dialect;
   private static PrototypeBean prototypeBean;
   private final Field idField;
+  private Field logicDeleteField;
+  private boolean logicDeletedValue;
+  private boolean logicNotDeleteValue;
 
   /**
    * Instantiates a new Update.
@@ -76,9 +78,15 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    */
   public Update(final Class<T> clazz) {
     this.clazz = clazz;
-    // this.condition = QueryColumn.fromClass(clazz).getCondition();
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
     this.idField = EntityHelper.getEntityIdField(clazz);
+    final EntityColumn deletePropColumn = this.entityInfo.getLogicDeletePropColumn();
+    if (deletePropColumn != null) {
+      logicDeleteField = deletePropColumn.getField();
+      final LogicDeleteProp logicDeleteProp = this.entityInfo.getLogicDeleteProp();
+      logicDeletedValue = logicDeleteProp.isDeleted();
+      logicNotDeleteValue = logicDeleteProp.isNotDelete();
+    }
   }
 
   /**
@@ -173,9 +181,9 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     final int update =
         executor.update(
             clazz,
-            con -> {
+            connection -> {
               final PreparedStatement ps =
-                  con.prepareStatement(execSql, Statement.RETURN_GENERATED_KEYS);
+                  connection.prepareStatement(execSql, Statement.RETURN_GENERATED_KEYS);
               list.forEach(val -> val.accept(ps));
               return ps;
             },
@@ -336,6 +344,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     if (condition.isEmpty()) {
       this.condition.eq(idField, BeanUtils.getValue(t, idField, null));
     }
+    this.condition.appendLogicNotDelete();
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
@@ -387,6 +396,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
                     setBuilder.length() > 0 ? ",%s=?" : "%s=?", EntityUtils.fieldToColumn(field))));
     // 保证占位符对应
     this.condition.eq(idField, null);
+    this.condition.appendLogicNotDelete();
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
@@ -438,6 +448,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     if (condition.isEmpty()) {
       throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
     }
+    this.condition.appendLogicNotDelete();
     // 如果不支持逻辑删除
     if (!entityInfo.getLogicDeleteProp().isEnable()) {
       final String delSql = "delete from %s where %s";
@@ -453,7 +464,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     if (containUpdateTime) {
       final String updateString =
           String.format(
-              "update %s set %s=%s,%s=? where %s",
+              "update %s set %s=%s, %s=? where %s",
               entityInfo.getName(),
               entityInfo.getLogicDeletePropColumn().getName(),
               entityInfo.getLogicDeleteProp().isDeleted(),

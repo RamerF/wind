@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.utility.RandomString;
@@ -37,10 +38,11 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
     extends AbstractQueryEntity<T> implements Condition<T> {
   /** where后的字符串,参数占位符为 ?. */
   protected final List<String> conditionSql = new LinkedList<>();
-  /** 占位符对应的值. */
-  protected final List<ValueType> valueTypes = new LinkedList<>();
 
-  private boolean containLogicNotDelete = false;
+  /** 占位符对应的值. */
+  @Getter protected final List<ValueType> valueTypes = new LinkedList<>();
+
+  @Getter private boolean containLogicNotDelete = false;
 
   private AbstractCondition() {}
 
@@ -97,36 +99,18 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
   }
 
   public String getString() {
-    if (!containLogicNotDelete) {
-      appendLogicNotDelete();
-      containLogicNotDelete = true;
-    }
+    // if (!containLogicNotDelete) {
+    //   appendLogicNotDelete();
+    //   containLogicNotDelete = true;
+    // }
     return String.join("", conditionSql);
   }
 
-  private synchronized void appendLogicNotDelete() {
-    final LogicDeleteProp logicDeleteProp = getEntityInfo().getLogicDeleteProp();
-    if (logicDeleteProp.isEnable()) {
-      final Field logicDeleteField =
-          EntityHelper.getEntityInfo(getQueryEntityMetaData().getClazz())
-              .getLogicDeletePropColumn()
-              .getField();
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(EntityUtils.fieldToColumn(logicDeleteField))
-              .concat(MatchPattern.EQUAL.operator)
-              .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
-      valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), logicDeleteField));
-    }
-  }
-
   public List<Consumer<PreparedStatement>> getValues(final AtomicInteger startIndex) {
-    if (!containLogicNotDelete) {
-      appendLogicNotDelete();
-      containLogicNotDelete = true;
-    }
+    // if (!containLogicNotDelete) {
+    //   appendLogicNotDelete();
+    //   containLogicNotDelete = true;
+    // }
     return valueTypes.stream()
         .map(
             valueType ->
@@ -197,6 +181,28 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
       values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
+    }
+    return this;
+  }
+
+  @Override
+  public synchronized Condition<T> appendLogicNotDelete() {
+    final LogicDeleteProp logicDeleteProp = getEntityInfo().getLogicDeleteProp();
+    final EntityColumn logicDeletePropColumn = getEntityInfo().getLogicDeletePropColumn();
+    // 启用逻辑删除且当前未包含该条件(这个有必要?)
+    if (logicDeleteProp.isEnable()
+        && valueTypes.stream()
+            .noneMatch(
+                valueType -> valueType.getField().equals(logicDeletePropColumn.getField()))) {
+      final Field logicDeleteField = logicDeletePropColumn.getField();
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(EntityUtils.fieldToColumn(logicDeleteField))
+              .concat(MatchPattern.EQUAL.operator)
+              .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
+      valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), logicDeleteField));
     }
     return this;
   }

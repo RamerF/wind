@@ -71,6 +71,9 @@ public interface Condition<T extends AbstractEntityPoJo<T, ?>> extends Predicate
 
   Condition<T> in(boolean condition, @Nonnull Field field, @Nonnull Collection<?> values);
 
+  /** 拼接逻辑未删除条件,如果不支持逻辑删除,不执行操作. */
+  Condition<T> appendLogicNotDelete();
+
   /** 属性匹配模式 */
   enum MatchPattern {
     /** = */

@@ -13,8 +13,8 @@ import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.stream.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,7 +23,6 @@ import org.springframework.data.domain.PageRequest;
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
 import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
-import static java.util.stream.Collectors.toCollection;
 
 /**
  * 通用查询操作对象.
@@ -151,6 +150,10 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    */
   @SuppressWarnings("DuplicatedCode")
   public Query<T> where(final Condition<?>... conditions) {
+    // 拼接逻辑删除
+    for (Condition<?> condition : conditions) {
+      condition.appendLogicNotDelete();
+    }
     this.conditions = new LinkedList<>(Arrays.asList(conditions));
     String conditionString =
         this.conditions.stream()
@@ -176,51 +179,6 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
 
     if (StringUtils.nonEmpty(this.conditionString)) {
       this.countString = this.conditionString;
-    }
-    return this;
-  }
-
-  /**
-   * 指定查询条件.
-   *
-   * @param consumers the consumers
-   * @return the query
-   * @see LambdaCondition
-   */
-  @SafeVarargs
-  @SuppressWarnings("DuplicatedCode")
-  public final Query<T> where(final Consumer<LambdaCondition<?>>... consumers) {
-    this.conditions =
-        consumers.length > 0
-            ? IntStream.range(0, consumers.length)
-                .mapToObj(
-                    i -> {
-                      final Consumer<LambdaCondition<?>> consumer = consumers[i];
-                      if (consumer == null) {
-                        return null;
-                      }
-                      final QueryColumn<T> queryColumn = queryColumns.get(i);
-                      final LambdaCondition<T> condition = LambdaCondition.getInstance(queryColumn);
-                      consumer.accept(condition);
-                      return condition;
-                    })
-                .collect(toCollection(LinkedList::new))
-            : new LinkedList<>();
-    String conditionString =
-        this.conditions.stream()
-            .map(Condition::getString)
-            .collect(Collectors.joining(AND.operator()));
-
-    if (conditionString.endsWith(AND.operator())) {
-      conditionString =
-          conditionString.substring(0, conditionString.length() - AND.operator().length());
-    }
-    this.conditionString =
-        this.conditions.stream()
-            .map(o -> o.getQueryEntityMetaData().getFromTable())
-            .collect(Collectors.joining(SEMICOLON.operator()));
-    if (StringUtils.nonEmpty(conditionString)) {
-      this.conditionString = this.conditionString.concat(WHERE.operator()).concat(conditionString);
     }
     return this;
   }

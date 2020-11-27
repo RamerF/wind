@@ -5,7 +5,7 @@ import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.service.GenericService;
-import io.github.ramerf.wind.core.service.UpdateService.Fields;
+import io.github.ramerf.wind.core.service.InterService.Fields;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.io.Serializable;
 import java.lang.reflect.Field;

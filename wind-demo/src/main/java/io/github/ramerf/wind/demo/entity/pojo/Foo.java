@@ -5,7 +5,7 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.service.UpdateService.Fields;
+import io.github.ramerf.wind.core.service.InterService.Fields;
 import java.math.BigDecimal;
 import java.util.*;
 import javax.persistence.*;

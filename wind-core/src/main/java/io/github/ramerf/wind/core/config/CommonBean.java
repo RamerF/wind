@@ -9,7 +9,6 @@ import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.*;
-import io.github.ramerf.wind.core.util.EnvironmentUtil;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -115,8 +114,9 @@ public class CommonBean {
   }
 
   /**
-   * Default redis cache redis cache.
+   * In memory cache cache.
    *
+   * @param configuration the configuration
    * @return the redis cache
    */
   @Bean
@@ -132,8 +132,8 @@ public class CommonBean {
    * @return the executor
    */
   @Bean
-  public Executor jdbcTemplateExecutor(ObjectProvider<RedisCache> redisCache) {
-    return new JdbcTemplateExecutor(redisCache.getIfAvailable());
+  public Executor jdbcTemplateExecutor(ObjectProvider<Cache> cacheObjectProvider) {
+    return new JdbcTemplateExecutor(cacheObjectProvider.getIfAvailable());
   }
 
   /**
@@ -145,15 +145,5 @@ public class CommonBean {
   @ConditionalOnMissingBean(IdGenerator.class)
   public IdGenerator snowflakeIdGenerator() {
     return new SnowflakeIdGenerator();
-  }
-
-  /**
-   * Environment util environment util.
-   *
-   * @return the environment util
-   */
-  @Bean
-  public EnvironmentUtil environmentUtil() {
-    return new EnvironmentUtil();
   }
 }

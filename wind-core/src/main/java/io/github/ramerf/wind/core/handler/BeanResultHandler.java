@@ -57,6 +57,7 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
     super(clazz, queryColumns);
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
   public E handle(Map<String, Object> map) {
     // map = {alia:value}
@@ -128,6 +129,7 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
    * @param field the field
    * @param paramType 关联对象类型
    */
+  @SuppressWarnings("rawtypes")
   private <T extends AbstractEntityPoJo> void initMappingObj(
       final Map<String, Object> map,
       final T obj,
