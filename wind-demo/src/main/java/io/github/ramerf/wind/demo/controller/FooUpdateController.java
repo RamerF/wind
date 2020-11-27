@@ -77,8 +77,8 @@ public class FooUpdateController {
     final Fields<Product> fields =
         Fields.with(Product.class).include(Product::getTitle, Product::getName);
     ConditionGroup<Product> conditionGroup = ConditionGroup.getInstance(queryColumn);
-    conditionGroup.ne(Product::setId, "2020-11-23T15:19:55.595");
-    conditionGroup.eq(Product::setName, "name2020-11-23T15:21:00.073");
+    conditionGroup.andNe(Product::setId, "2020-11-23T15:19:55.595");
+    conditionGroup.andEq(Product::setName, "name2020-11-23T15:21:00.073");
     // 获取Update实例
     final Update<Product> update = prototypeBean.update(Product.class);
     final int affectRow =
@@ -98,11 +98,9 @@ public class FooUpdateController {
     // 可指定查询条件
     // final ConditionCustom<Product> condition = ConditionCustom.getInstance(queryColumn);
     final CustomCondition<Product> condition = CustomCondition.getInstance(queryColumn);
-    // 指定仅更新title字段
-    final Fields<Product> fields = Fields.with(Product.class).include(Product::getTitle);
     ConditionGroup<Product> conditionGroup = ConditionGroup.getInstance(queryColumn);
-    conditionGroup.ne(Product::setId, "2020-11-23T15:19:55.595");
-    conditionGroup.eq(Product::setName, "name2020-11-23T15:21:00.073");
+    conditionGroup.andNe(Product::setId, "2020-11-23T15:19:55.595");
+    conditionGroup.andEq(Product::setName, "name2020-11-23T15:21:00.073");
     // 获取Update实例
     final Query<Product> update = prototypeBean.query(Product.class);
     final List<Product> affectRow =
@@ -111,6 +109,26 @@ public class FooUpdateController {
             // .where(condition.notEq(Product::setId, "2020-11-23T15:19:55.595"))
             // .where(condition.and("id", "=", "2020-11-23T15:19:55.595"))
             .where(condition.notEq(Product::setId, "2020-11-23T15:19:55.595").and(conditionGroup))
+            .fetchAll(Product.class);
+    return Rs.ok(affectRow);
+  }
+
+  @GetMapping(value = "/query", params = "type=2")
+  @ApiOperation("查询")
+  public Rs<List<Product>> query2() {
+    // 可指定查询列
+    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
+    // 可指定查询条件
+    final LambdaCondition<Product> condition = LambdaCondition.getInstance(queryColumn);
+    ConditionGroup<Product> conditionGroup = ConditionGroup.getInstance(queryColumn);
+    conditionGroup.andNe(Product::setId, "2020-11-23T15:19:55.595");
+    conditionGroup.andEq(Product::setName, "name2020-11-23T15:21:00.073");
+    // 获取Update实例
+    final Query<Product> update = prototypeBean.query(Product.class);
+    final List<Product> affectRow =
+        update
+            .select(queryColumn.col(Product::getName))
+            .where(condition.and(conditionGroup))
             .fetchAll(Product.class);
     return Rs.ok(affectRow);
   }

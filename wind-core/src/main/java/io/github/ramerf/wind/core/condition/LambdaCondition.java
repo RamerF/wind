@@ -175,7 +175,8 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
-  public <V> LambdaCondition<T> notLike(@Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+  public <V> LambdaCondition<T> notLike(
+      @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     return notLike(true, field, value);
   }
 
@@ -249,7 +250,8 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return isNull(true, field);
   }
 
-  public <V> LambdaCondition<T> isNull(final boolean condition, @Nonnull final IConsumer<T, V> field) {
+  public <V> LambdaCondition<T> isNull(
+      final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -265,7 +267,8 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return isNotNull(true, field);
   }
 
-  public <V> LambdaCondition<T> isNotNull(final boolean condition, @Nonnull final IConsumer<T, V> field) {
+  public <V> LambdaCondition<T> isNotNull(
+      final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -359,9 +362,6 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return exists(true, childConditions);
   }
 
-  // TODO-WARN 很明显这里的拼接有问题,要传递的参数是(Query+Condition)最上层的接口,能够获取到每个段的sql.
-  //  因为涉及到整个模式调整,暂时不动
-
   public LambdaCondition<T> exists(
       final boolean condition, @Nonnull final Condition<T> childConditions) {
     if (condition) {
@@ -369,9 +369,347 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
       if (StringUtils.nonEmpty(childConditionsSql)) {
         final QueryEntityMetaData<T> entityMetaData = childConditions.getQueryEntityMetaData();
         String childQuery =
-            SqlAggregateFunction.EXISTS.string(
-                "SELECT 1 FROM ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
+            (conditionSql.size() > 0 ? AND.operator : "")
+                + SqlAggregateFunction.EXISTS.string(
+                    "SELECT 1 FROM ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
 
+        conditionSql.add(childQuery);
+        valueTypes.addAll(((LambdaCondition<T>) childConditions).valueTypes);
+      }
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orEq(@Nonnull final IConsumer<T, V> field, final V value) {
+    return orEq(true, field, value);
+  }
+
+  public <V> LambdaCondition<T> orEq(
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.EQUAL.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orNe(@Nonnull final IConsumer<T, V> field, final V value) {
+    return orNe(true, field, value);
+  }
+
+  public <V> LambdaCondition<T> orNe(
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.NOT_EQUAL.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orGt(@Nonnull final IConsumer<T, V> field, final V value) {
+    return orGt(true, field, value);
+  }
+
+  public <V> LambdaCondition<T> orGt(
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.GREATER.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orGe(@Nonnull final IConsumer<T, V> field, final V value) {
+    return orGe(true, field, value);
+  }
+
+  public <V> LambdaCondition<T> orGe(
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.GE.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orLt(@Nonnull final IConsumer<T, V> field, final V value) {
+    return orLt(true, field, value);
+  }
+
+  public <V> LambdaCondition<T> orLt(
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.LESS.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orLe(@Nonnull final IConsumer<T, V> field, final V value) {
+    return orLe(true, field, value);
+  }
+
+  public <V> LambdaCondition<T> orLe(
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.LE.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orLike(
+      @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+    return orLike(true, field, value);
+  }
+
+  public <V> LambdaCondition<T> orLike(
+      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
+      valueTypes.add(ValueType.of(value, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orNotLike(
+      @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+    return orNotLike(true, field, value);
+  }
+
+  public <V> LambdaCondition<T> orNotLike(
+      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
+      valueTypes.add(ValueType.of(value, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orBetween(
+      @Nonnull final IConsumer<T, V> field, @Nonnull final V start, @Nonnull final V end) {
+    return orBetween(true, field, start, end);
+  }
+
+  public <V> LambdaCondition<T> orBetween(
+      final boolean condition,
+      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final V start,
+      @Nonnull final V end) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(
+                  String.format(
+                      MatchPattern.BETWEEN.operator,
+                      toPreFormatSqlVal(start),
+                      toPreFormatSqlVal(end))));
+      valueTypes.add(ValueType.of(start, field));
+      valueTypes.add(ValueType.of(end, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orNotBetween(
+      @Nonnull final IConsumer<T, V> field, @Nonnull final V start, @Nonnull final V end) {
+    return orNotBetween(true, field, start, end);
+  }
+
+  public <V> LambdaCondition<T> orNotBetween(
+      final boolean condition,
+      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final V start,
+      @Nonnull final V end) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(
+                  String.format(
+                      NOT_BETWEEN.operator, toPreFormatSqlVal(start), toPreFormatSqlVal(end))));
+      valueTypes.add(ValueType.of(start, field));
+      valueTypes.add(ValueType.of(end, field));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orIsNull(@Nonnull final IConsumer<T, V> field) {
+    return orIsNull(true, field);
+  }
+
+  public <V> LambdaCondition<T> orIsNull(
+      final boolean condition, @Nonnull final IConsumer<T, V> field) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.IS_NULL.operator));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orIsNotNull(@Nonnull final IConsumer<T, V> field) {
+    return orIsNotNull(true, field);
+  }
+
+  public <V> LambdaCondition<T> orIsNotNull(
+      final boolean condition, @Nonnull final IConsumer<T, V> field) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.IS_NOT_NULL.operator));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orIn(
+      @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
+    return orIn(true, field, values);
+  }
+
+  public <V> LambdaCondition<T> orIn(
+      final boolean condition,
+      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final Collection<V> values) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(
+                  String.format(
+                      MatchPattern.IN.operator,
+                      values.stream()
+                          .map(SqlHelper::toPreFormatSqlVal)
+                          .collect(Collectors.joining(SEMICOLON.operator)))));
+      values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
+    }
+    return this;
+  }
+
+  public <V> LambdaCondition<T> orNotIn(
+      @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
+    return orNotIn(true, field, values);
+  }
+
+  public <V> LambdaCondition<T> orNotIn(
+      final boolean condition,
+      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final Collection<V> values) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(
+                  String.format(
+                      NOT_IN.operator,
+                      values.stream()
+                          .map(SqlHelper::toPreFormatSqlVal)
+                          .collect(Collectors.joining(SEMICOLON.operator)))));
+      values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
+    }
+    return this;
+  }
+
+  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>> LambdaCondition<T> orEq(
+      @Nonnull final IFunction<T, ?> field,
+      @Nonnull final QueryColumn<Q> queryColumn,
+      @Nonnull final IFunction<R, ?> field2) {
+    return orEq(true, field, queryColumn, field2);
+  }
+
+  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>> LambdaCondition<T> orEq(
+      final boolean condition,
+      @Nonnull final IFunction<T, ?> field,
+      @Nonnull final AbstractQueryEntity<Q> queryColumn,
+      @Nonnull final IFunction<R, ?> field2) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field.getColumn())
+              .concat(MatchPattern.EQUAL.operator)
+              .concat(queryColumn.getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(field2.getColumn()));
+    }
+    return this;
+  }
+
+  public LambdaCondition<T> orExists(@Nonnull final Condition<T> childConditions) {
+    return orExists(true, childConditions);
+  }
+
+  public LambdaCondition<T> orExists(
+      final boolean condition, @Nonnull final Condition<T> childConditions) {
+    if (condition) {
+      final String childConditionsSql = childConditions.getString();
+      if (StringUtils.nonEmpty(childConditionsSql)) {
+        final QueryEntityMetaData<T> entityMetaData = childConditions.getQueryEntityMetaData();
+        String childQuery =
+            (conditionSql.size() > 0 ? OR.operator : "")
+                + SqlAggregateFunction.EXISTS.string(
+                    "SELECT 1 FROM ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
         conditionSql.add(childQuery);
         valueTypes.addAll(((LambdaCondition<T>) childConditions).valueTypes);
       }
@@ -402,6 +740,16 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(PARENTHESIS_FORMAT.format(children.getString())));
       valueTypes.addAll(((LambdaCondition<T>) children).valueTypes);
+    }
+    return this;
+  }
+
+  public LambdaCondition<T> and(@Nonnull ConditionGroup<T> group) {
+    if (!group.isEmpty()) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator() : "")
+              .concat(PARENTHESIS_FORMAT.format(group.getCondition().getString())));
+      valueTypes.addAll(group.getCondition().getValueTypes());
     }
     return this;
   }
