@@ -79,7 +79,7 @@ public interface Condition<T extends AbstractEntityPoJo<T, ?>> extends Predicate
     /** = */
     EQUAL("="),
     /** != */
-    NOT_EQUAL("!="),
+    NOT_EQUAL("<>"),
     /** &gt; */
     GREATER(">"),
     /** &gt;= */

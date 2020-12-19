@@ -42,8 +42,6 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
   /** 占位符对应的值. */
   @Getter protected final List<ValueType> valueTypes = new LinkedList<>();
 
-  @Getter private boolean containLogicNotDelete = false;
-
   private AbstractCondition() {}
 
   public AbstractCondition(final QueryColumn<T> queryColumn) {
@@ -190,10 +188,18 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
     final LogicDeleteProp logicDeleteProp = getEntityInfo().getLogicDeleteProp();
     final EntityColumn logicDeletePropColumn = getEntityInfo().getLogicDeletePropColumn();
     // 启用逻辑删除且当前未包含该条件(这个有必要?)
-    if (logicDeleteProp.isEnable()
-        && valueTypes.stream()
-            .noneMatch(
-                valueType -> valueType.getField().equals(logicDeletePropColumn.getField()))) {
+    boolean append = true;
+    if (valueTypes.size() > 0) {
+      append =
+          valueTypes.get(0).getField() == null
+              ? conditionSql.stream()
+                  .noneMatch(
+                      condition -> condition.matches(logicDeletePropColumn.getName() + "[ ]+="))
+              : valueTypes.stream()
+                  .noneMatch(
+                      valueType -> logicDeletePropColumn.getField().equals(valueType.getField()));
+    }
+    if (logicDeleteProp.isEnable() && append) {
       final Field logicDeleteField = logicDeletePropColumn.getField();
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")

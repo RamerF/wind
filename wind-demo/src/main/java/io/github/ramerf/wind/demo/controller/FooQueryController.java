@@ -73,7 +73,8 @@ public class FooQueryController {
     fooCondition.eq(Foo::setId, 1L);
     // 执行连表: foo.id=account.id
     fooCondition.eq(Foo::getId, accountQueryColumn, Product::getId);
-    final LambdaCondition<Product> accountCondition = LambdaCondition.getInstance(accountQueryColumn);
+    final LambdaCondition<Product> accountCondition =
+        LambdaCondition.getInstance(accountQueryColumn);
     accountCondition.eq(Product::setId, "1");
     return Rs.ok(
         Query.getInstance(Foo.class)

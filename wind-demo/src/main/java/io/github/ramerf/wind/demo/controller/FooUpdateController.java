@@ -133,6 +133,27 @@ public class FooUpdateController {
     return Rs.ok(affectRow);
   }
 
+  @GetMapping(value = "/query", params = "type=3")
+  @ApiOperation("查询")
+  public Rs<List<Product>> query3() {
+    // 可指定查询列
+    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
+    // 可指定查询条件
+    final StringCondition<Product> condition = StringCondition.getInstance(queryColumn);
+    // 获取Update实例
+    final Query<Product> update = prototypeBean.query(Product.class);
+    final List<Product> affectRow =
+        update
+            .select(queryColumn) //
+            .where(
+                condition
+                    .and("id='2020-11-23T15:19:55.595'")
+                    .lt("create_time", LocalDateTime.now())
+                    .or("(name like 'ramer%' or name like '1234%')"))
+            .fetchAll(Product.class);
+    return Rs.ok(affectRow);
+  }
+
   /** 示例:自定义条件{@link Condition},可用于扩展. */
   public static class CustomCondition<T extends AbstractEntityPoJo<T, ?>>
       extends AbstractCondition<T> {
