@@ -47,7 +47,7 @@ public class WindConfiguration {
   /** 数据库方言全路径. */
   private String dialect;
 
-  /** 新增/更新时写入值为null的属性,默认不写入. */
+  /** 新增/更新时写入值为null的属性,默认写入所有字段. */
   private boolean writeNullProp = true;
 
   /** 雪花分布式id. */

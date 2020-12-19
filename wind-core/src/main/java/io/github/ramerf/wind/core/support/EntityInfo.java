@@ -62,7 +62,7 @@ public final class EntityInfo {
   /** 关联对象. */
   private List<MappingInfo> mappingInfos = new ArrayList<>();
 
-  /** TODO-WARN 保存字段的写入方法，更新时可以避免使用反射. */
+  /** TODO WARN 保存字段的写入方法，更新时可以避免使用反射. */
   private Map<Field, IConsumer<?, ?>> writeMethods =
       Collections.synchronizedSortedMap(new TreeMap<>((o1, o2) -> o1.equals(o2) ? 0 : 1));
 

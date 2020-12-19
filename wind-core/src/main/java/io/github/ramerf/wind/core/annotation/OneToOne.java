@@ -24,7 +24,7 @@ public @interface OneToOne {
   /** 当前对象属性名.默认[属性类型Id],如:fooId */
   String field() default "";
 
-  /** 关联对象属性名.默认关联id TODO-WARN 关联对象的属性可能不存在，因为可能是自己维护关系 */
+  /** 关联对象属性名.默认关联id TODO WARN 关联对象的属性可能不存在，因为可能是自己维护关系 */
   String referenceField() default "id";
 
   /** 是否新增列. */

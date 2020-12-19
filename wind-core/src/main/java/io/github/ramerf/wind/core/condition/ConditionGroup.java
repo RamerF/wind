@@ -456,7 +456,7 @@ public class ConditionGroup<T extends AbstractEntityPoJo<T, ?>> {
     ConditionGroup 的获取:
     1. 使用Consumer
     2. 传入Condition构造
-    TODO-WARN 把LambdaCondition中的方法拷贝过来,实现直接用condition调用原方法
+    TODO WARN 把LambdaCondition中的方法拷贝过来,实现直接用condition调用原方法
       LambdaContion添加方法or(ConditionGroup)/and(ConditionGroup),实现:获取ConditionGroup的condition,外加括号
       io.github.ramerf.wind.core.condition.LambdaCondition.or(boolean,
       io.github.ramerf.wind.core.condition.Condition<T>)方法签名改了就可以啦

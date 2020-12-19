@@ -41,8 +41,8 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @Override
-  public <T extends AbstractEntityPoJo<T, ?>, R> R fetchOne(
-      @Nonnull final SqlParam<T> sqlParam) throws DataAccessException {
+  public <T extends AbstractEntityPoJo<T, ?>, R> R fetchOne(@Nonnull final SqlParam<T> sqlParam)
+      throws DataAccessException {
     return fetchOne(sqlParam, null);
   }
 
@@ -173,8 +173,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   @SuppressWarnings("ConstantConditions")
-  public <T extends AbstractEntityPoJo<T, ?>> long fetchCount(
-      @Nonnull final SqlParam<T> sqlParam) {
+  public <T extends AbstractEntityPoJo<T, ?>> long fetchCount(@Nonnull final SqlParam<T> sqlParam) {
     return cacheIfAbsent(
         sqlParam,
         () ->
@@ -284,7 +283,8 @@ public class JdbcTemplateExecutor implements Executor {
     if (log.isDebugEnabled()) {
       log.debug("cacheIfAbsent:Put cache[{}]", key);
     }
-    // 空数据缓存50ms,防止穿透数据库,这个数值可能应该允许让用户自定义
+    // 空数据缓存50ms,防止穿透数据库,
+    // TODO POST 这个数值可能应该允许让用户自定义
     if (Objects.isNull(t)) {
       cache.put(key, null, 50, TimeUnit.MILLISECONDS);
     } else {

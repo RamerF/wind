@@ -1,4 +1,4 @@
-// TODO-WARN 暂时禁用controllerHelper
+// TODO WARN 暂时禁用controllerHelper
 // package io.github.ramerf.wind.core.helper;
 //
 // import io.github.ramerf.wind.core.entity.AbstractEntity;

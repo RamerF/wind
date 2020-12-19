@@ -75,7 +75,7 @@ public class CommonBean {
 
       @Override
       public void addCorsMappings(@Nonnull CorsRegistry registry) {
-        // TODO-WARN 这个跨域配置有问题
+        // TODO WARN 这个跨域配置有问题
         final long maxAge = 3600L;
         registry
             .addMapping("/**")

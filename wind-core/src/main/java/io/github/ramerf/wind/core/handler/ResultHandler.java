@@ -35,11 +35,9 @@ public interface ResultHandler<T, E> {
    */
   List<E> handle(List<T> ts);
 
+  /** TODO POST 实现语法: case when 时,QueryAlia.case(1).then().case(2).then().else() */
   @Data
   class QueryAlia {
-    /*
-     TODO: 实现语法: case when 时,QueryAlia.case(1).then().case(2).then().else()
-    */
     /** 字段名. */
     private String fieldName;
     /** 列名(字段名下划线分割). */

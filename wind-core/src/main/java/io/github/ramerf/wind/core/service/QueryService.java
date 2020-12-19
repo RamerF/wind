@@ -157,7 +157,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
         final Object relationValue = BeanUtils.getValue(t, infactMapping.getReferenceField(), null);
         return mappingType.fetchMapping(t, infactMapping, relationValue);
       } else {
-        // TODO-WARN 这里有问题，可能没有保存对面的字段
+        // TODO WARN 这里有问题，可能没有保存对面的字段
         final R mappingObj = field.apply(t);
         if (mappingObj == null) {
           return null;

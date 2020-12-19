@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
 /**
  * The interface Condition.
  *
- * <p>TODO 如果要实现完整的连表查询,考虑在该类添加join方法
+ * <p>TODO POST 如果要实现完整的连表查询,考虑在该类添加join方法
  *
  * @param <T> the type parameter
  * @since 2020.01.06
@@ -20,7 +20,7 @@ import javax.annotation.Nonnull;
  */
 public interface Condition<T extends AbstractEntityPoJo<T, ?>> extends Predicate<T> {
 
-  // TODO-WARN 使用ConditionGroup实现and/or后,删除<br>
+  // TODO WARN 使用ConditionGroup实现and/or后,删除<br>
   /**
    * 创建一个空的条件,包含表信息.
    *

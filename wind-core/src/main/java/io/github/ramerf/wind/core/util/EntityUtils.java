@@ -307,7 +307,7 @@ public final class EntityUtils {
       return classes;
     }
 
-    // TODO-WARN 这里应该通过循环，获取pojo，如果arguments包含AbstraentityPojo的之类，就停止
+    // TODO WARN 这里应该通过循环，获取pojo，如果arguments包含AbstraentityPojo的之类，就停止
     final Type baseServiceType = serviceClazz.getInterfaces()[0].getGenericInterfaces()[0];
     ParameterizedType parameterizedType = (ParameterizedType) baseServiceType;
     final Type[] arguments = parameterizedType.getActualTypeArguments();

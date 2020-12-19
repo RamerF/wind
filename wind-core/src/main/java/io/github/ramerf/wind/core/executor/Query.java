@@ -54,7 +54,7 @@ import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
  *
  * <p>当{@link QueryAlia#getSqlFunction()}为null时,退化为普通条件,否则就是函数
  *
- * <p>TODO: [延后] 完整的连表查询需要{@link Condition}支持
+ * <p>TODO POST 完整的连表查询需要{@link Condition}支持
  *
  * @author Tang Xiaofeng
  * @since 2019/12/28
@@ -65,7 +65,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    *
    *
    * <pre>
-   * TODO-POST 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
+   * TODO POST 添加支持: 查询包含指定数据(可能是多个)的分页数据,并置于首位
    * 思路: 构造OrderByClause,使用sql语法:
    * 1. orderBy id <> ?
    * 2. orderBy id not in (?,?) 特性
@@ -138,7 +138,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    * @return the query
    */
   public Query<T> from(final Condition<?>... conditions) {
-    // TODO-WARN: from方法
+    // TODO WARN from方法
     throw CommonException.of("方法未实现");
   }
 
@@ -169,7 +169,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
         this.conditions.stream()
             .map(o -> o.getQueryEntityMetaData().getFromTable())
             .collect(Collectors.joining(SEMICOLON.operator()));
-    // TODO-WARN 修复orderBy从这里下手
+    // TODO WARN 修复orderBy从这里下手
     // 每个条件带表别名
     // 定义orderByString ,这里赋值
 
@@ -185,7 +185,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
 
   /**
    * Group by 语句.<br>
-   * TODO-WARN 这个思路有问题,groupBy的实现应该是{@link Condition},只是最后取sql做聚合
+   * TODO WARN 这个思路有问题,groupBy的实现应该是{@link Condition},只是最后取sql做聚合
    *
    * <pre>
    *   初始化:
@@ -279,7 +279,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
   @SuppressWarnings("DuplicatedCode")
   public <R> List<R> fetchAll(final Class<R> clazz, final PageRequest pageable) {
     doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
-    // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
+    // TODO WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
     orderByString =
         pageable.getSort().stream()
@@ -321,7 +321,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
   public <R> Page<R> fetchPage(final Class<R> clazz, final PageRequest pageable) {
     doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
 
-    // TODO-WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
+    // TODO WARN 这个orderBy有问题,需要拼接表别名,目前单表不会报错
     // 解决思路: 定义排序的对象里面包含表别名,自定义分页对象
     orderByString =
         pageable.getSort().stream()

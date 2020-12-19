@@ -127,7 +127,7 @@ public class FooUpdateController {
     final Query<Product> update = prototypeBean.query(Product.class);
     final List<Product> affectRow =
         update
-            .select(queryColumn.col(Product::getName))
+            .select(queryColumn) //
             .where(condition.and(conditionGroup))
             .fetchAll(Product.class);
     return Rs.ok(affectRow);

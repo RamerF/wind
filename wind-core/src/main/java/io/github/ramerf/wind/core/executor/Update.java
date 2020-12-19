@@ -133,7 +133,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
   }
 
   /**
-   * 创建,默认不保存值为null的列.
+   * 创建.
    *
    * @param t the t
    * @return the t
@@ -155,9 +155,9 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     if (id != null) {
       BeanUtils.setValue(t, idField, id, null);
     }
-    // TODO-POST 如果sql ddl 包含default这里就不需要设置
-    setCurrentTime(t, entityInfo.getCreateTimeField(), false);
-    setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
+    // TODO POST 如果sql ddl 包含default这里就不需要设置
+    setCurrentCreateTime(t, entityInfo.getCreateTimeField());
+    setCurrentUpdateTime(t, entityInfo.getUpdateTimeField());
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -166,7 +166,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     final AtomicInteger index = new AtomicInteger(1);
 
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
-    getSavingFields(t, fields)
+    getWritingFields(t, fields)
         .forEach(
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
@@ -211,7 +211,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
   }
 
   /**
-   * 批量创建,默认不保存null值.
+   * 批量创建.
    *
    * @param ts the ts
    * @param fields the fields
@@ -224,12 +224,12 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     // 取第一条记录获取批量保存sql
     ts.forEach(
         t -> {
-          setCurrentTime(t, entityInfo.getCreateTimeField(), false);
-          setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
+          setCurrentCreateTime(t, entityInfo.getCreateTimeField());
+          setCurrentUpdateTime(t, entityInfo.getUpdateTimeField());
           BeanUtils.setValue(t, idField, idGenerator.nextId(t), null);
         });
     final T t = ts.get(0);
-    final List<Field> savingFields = getSavingFields(t, fields);
+    final List<Field> savingFields = getWritingFields(t, fields);
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -259,7 +259,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
                     public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                       final AtomicInteger index = new AtomicInteger(1);
                       final T obj = execList.get(i);
-                      // TODO-WARN 创建时间戳
+                      // TODO WARN 创建时间戳
                       // obj.setCreateTime(new Date());
                       savingFields.forEach(
                           field ->
@@ -329,11 +329,11 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    */
   @SuppressWarnings("DuplicatedCode")
   public int update(@Nonnull final T t, final Fields<T> fields) {
-    setCurrentTime(t, entityInfo.getUpdateTimeField(), true);
+    setCurrentUpdateTime(t, entityInfo.getUpdateTimeField());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
-    getSavingFields(t, fields)
+    getWritingFields(t, fields)
         .forEach(
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
@@ -381,11 +381,11 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
       return Optional.empty();
     }
     // 保存更新时间
-    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeField(), true));
+    ts.forEach(o -> setCurrentUpdateTime(o, entityInfo.getUpdateTimeField()));
 
     // 取第一条记录获取批量更新sql
     final T t = ts.get(0);
-    final List<Field> savingFields = getSavingFields(t, fields);
+    final List<Field> savingFields = getWritingFields(t, fields);
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger();
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
@@ -416,7 +416,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
                     public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                       final AtomicInteger index = new AtomicInteger(1);
                       final T obj = execList.get(i);
-                      setCurrentTime(obj, entityInfo.getUpdateTimeField(), true);
+                      setCurrentUpdateTime(obj, entityInfo.getUpdateTimeField());
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
@@ -459,9 +459,8 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     }
     // 执行逻辑删除
     final Field updateTimeField = entityInfo.getUpdateTimeField();
-    final boolean containUpdateTime = updateTimeField != null;
     // 包含更新时间
-    if (containUpdateTime) {
+    if (updateTimeField != null) {
       final String updateString =
           String.format(
               "update %s set %s=%s, %s=? where %s",
@@ -492,7 +491,12 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     }
   }
 
-  private List<Field> getSavingFields(final @Nonnull T t, final Fields<T> fields) {
+  /**
+   * 获取写入字段.{@code fields}为null时,根据配置判断是否写入null字段
+   *
+   * @see WindConfiguration#isWriteNullProp()
+   */
+  private List<Field> getWritingFields(final @Nonnull T t, final Fields<T> fields) {
     final List<Field> savingFields;
     if (fields == null) {
       savingFields =
@@ -518,6 +522,16 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     return savingFields;
   }
 
+  /** 设置更新时间为当前. */
+  private void setCurrentUpdateTime(@Nonnull final T t, final Field field) {
+    setCurrentTime(t, field, true);
+  }
+
+  /** 设置创建时间为当前. */
+  private void setCurrentCreateTime(@Nonnull final T t, final Field field) {
+    setCurrentTime(t, field, false);
+  }
+
   private void setCurrentTime(@Nonnull final T t, final Field field, final boolean isUpdateTime) {
     if (field == null) {
       return;
@@ -531,6 +545,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
     }
   }
 
+  /** 获取当前时间特定类型值,如果是Long/long型,使用毫秒;如果是Integer/int型,使用秒. */
   private Object getUpdateTimeValue(final Field updateTimeField) {
     final Class<?> fieldType = updateTimeField.getType();
     final Object value;
