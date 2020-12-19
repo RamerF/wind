@@ -70,6 +70,7 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
       final String fieldName = BeanUtils.methodToProperty(method.getName());
       final Field field = getField(method, fieldName);
       final Class<?> paramType = method.getParameterTypes()[0];
+      /*关联查询暂不开启
       if (isPoJo) {
         if (MappingInfo.isOneMapping(field)) {
           //noinspection unchecked
@@ -83,7 +84,7 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
         } else if (MappingInfo.isManyMapping(field)) {
           continue;
         }
-      }
+      }*/
       final String columnAlia = fieldAliaMap.get(fieldName);
 
       Object value = map.get(columnAlia);

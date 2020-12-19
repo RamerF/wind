@@ -11,7 +11,7 @@ import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.math.BigDecimal;
-import java.util.Objects;
+import javax.annotation.Nonnull;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,6 +110,22 @@ public class QueryColumn<T extends AbstractEntityPoJo<T, ?>> extends AbstractQue
    */
   public QueryColumn<T> col(final IFunction<T, ?> function, final String alia) {
     return add(function, alia, null);
+  }
+
+  /**
+   * 新增自定义查询列.
+   *
+   * <p>示例:col("id,case sex when 1 then '男' when 2 then '女' else '未知' end alia")
+   *
+   * @param sql 查询列表达式
+   * @return the query column
+   */
+  public QueryColumn<T> col(@Nonnull final String sql) {
+    if (!sql.isEmpty()) {
+      final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
+      metaData.queryAlias.add(QueryAlia.of(sql));
+    }
+    return this;
   }
 
   /**
@@ -218,11 +234,18 @@ public class QueryColumn<T extends AbstractEntityPoJo<T, ?>> extends AbstractQue
 
   @Override
   public String getString() {
+    return getString(true);
+  }
+
+  /** 是否包含列别名,单表时不需要包含别名,传false. */
+  public String getString(final boolean containAlia) {
     final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
     if (CollectionUtils.isEmpty(metaData.queryAlias)) {
       EntityHelper.getEntityInfo(metaData.clazz).getEntityColumns().forEach(this::add);
     }
-    return metaData.queryAlias.stream().map(QueryColumn::toColumnWithAlia).collect(joining(","));
+    return metaData.queryAlias.stream()
+        .map(o -> toColumnWithAlia(o, containAlia))
+        .collect(joining(","));
   }
 
   /** 添加查询对象(列/聚合函数). */
@@ -231,7 +254,8 @@ public class QueryColumn<T extends AbstractEntityPoJo<T, ?>> extends AbstractQue
         .queryAlias
         .add(
             QueryAlia.of(
-                entityColumn.getField().getName(), // constraint format
+                entityColumn.getField().getName(),
+                entityColumn.getName(),
                 entityColumn.getName(),
                 getQueryEntityMetaData().getTableName(),
                 getQueryEntityMetaData().getTableAlia()));
@@ -239,16 +263,21 @@ public class QueryColumn<T extends AbstractEntityPoJo<T, ?>> extends AbstractQue
   }
 
   /** 增加额外的表别名前缀 */
-  private static String toColumnWithAlia(final QueryAlia queryAlia) {
+  private static String toColumnWithAlia(final QueryAlia queryAlia, final boolean containAlia) {
+    final String customSql = queryAlia.getCustomSql();
+    if (customSql != null) {
+      return customSql;
+    }
+
     final String alia = queryAlia.getColumnAlia();
     final String name = queryAlia.getColumnName();
     final String tableAlias = queryAlia.getTableAlia();
 
     final SqlFunction sqlFunction = queryAlia.getSqlFunction();
     final String queryName =
-        Objects.isNull(sqlFunction)
-            ? tableAlias.concat(DOT.operator()).concat(name)
-            : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
-    return queryName.concat(AS.operator()).concat(alia);
+        sqlFunction != null
+            ? sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name))
+            : tableAlias.concat(DOT.operator()).concat(name);
+    return containAlia ? queryName.concat(AS.operator()).concat(alia) : queryName;
   }
 }

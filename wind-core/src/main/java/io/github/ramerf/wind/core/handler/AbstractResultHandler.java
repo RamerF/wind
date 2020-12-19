@@ -85,6 +85,7 @@ public abstract class AbstractResultHandler<P extends AbstractEntityPoJo<P, ?>, 
         this.fieldAliaMap =
             queryColumns.stream()
                 .flatMap(o -> o.getQueryEntityMetaData().getQueryAlias().stream())
+                .filter(o -> o.getFieldName() != null && o.getColumnAlia() != null)
                 .collect(toMap(QueryAlia::getFieldName, QueryAlia::getColumnAlia));
       } else if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {
         final Class<AbstractEntityPoJo> entityClass = (Class<AbstractEntityPoJo>) clazz;

@@ -7,6 +7,7 @@ import io.github.ramerf.wind.core.helper.*;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
+import io.github.ramerf.wind.core.util.StringUtils;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -83,13 +84,17 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
 
   /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
   public Condition<T> and(final String sql) {
-    conditionSql.add((conditionSql.size() > 0 ? AND.operator : "").concat(sql));
+    if (StringUtils.nonEmpty(sql)) {
+      conditionSql.add((conditionSql.size() > 0 ? AND.operator : "").concat(sql));
+    }
     return this;
   }
 
   /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
   public Condition<T> or(final String sql) {
-    conditionSql.add((conditionSql.size() > 0 ? OR.operator : "").concat(sql));
+    if (StringUtils.nonEmpty(sql)) {
+      conditionSql.add((conditionSql.size() > 0 ? OR.operator : "").concat(sql));
+    }
     return this;
   }
 

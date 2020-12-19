@@ -119,15 +119,9 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
   public final Query<T> select(@Nonnull final QueryColumn<T>... queryColumns) {
     this.queryColumns = new LinkedList<>(Arrays.asList(queryColumns));
     this.queryString =
-        this.queryColumns.stream().map(QueryColumn::getString).collect(Collectors.joining(","));
-    // 单表查询时,不包含表别名
-    if (queryColumns.length == 1) {
-      this.queryString =
-          Arrays.stream(queryString.split(","))
-              .map(col -> col.substring(col.lastIndexOf(" ") + 1))
-              .map(col -> col.substring(col.indexOf(".") + 1))
-              .collect(Collectors.joining(","));
-    }
+        this.queryColumns.stream()
+            .map(queryColumn -> queryColumn.getString(false))
+            .collect(Collectors.joining(","));
     return this;
   }
 

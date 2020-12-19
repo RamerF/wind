@@ -6,6 +6,7 @@ import io.github.ramerf.wind.core.util.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.*;
+import javax.annotation.Nonnull;
 import lombok.Data;
 
 /**
@@ -51,6 +52,9 @@ public interface ResultHandler<T, E> {
     /** sql函数. */
     private SqlFunction sqlFunction;
 
+    /** 自定义sql,用于扩展支持. */
+    private String customSql;
+
     private QueryAlia() {}
 
     /** {@link BeanFunction#getImplClassFullPath()} :tableName */
@@ -68,12 +72,25 @@ public interface ResultHandler<T, E> {
       return of(function, columnAlia, tableName, tableAlia, null);
     }
 
+    public static QueryAlia of(@Nonnull final String customSql) {
+      final QueryAlia queryAlia = new QueryAlia();
+      queryAlia.setCustomSql(customSql);
+      return queryAlia;
+    }
+
     public static QueryAlia of(
-        final String fieldName, final String columnAlia, String tableName, final String tableAlia) {
+        @Nonnull final String fieldName,
+        @Nonnull final String columnName,
+        final String columnAlia,
+        @Nonnull String tableName,
+        @Nonnull final String tableAlia) {
       final QueryAlia queryAlia = new QueryAlia();
       queryAlia.setFieldName(fieldName);
-      queryAlia.setColumnName(fieldName);
+      queryAlia.setColumnName(columnName);
       queryAlia.setColumnAlia(columnAlia);
+      if (StringUtils.isEmpty(columnAlia)) {
+        queryAlia.setColumnAlia(columnName);
+      }
       queryAlia.setTableName(tableName);
       queryAlia.setTableAlia(tableAlia);
       return queryAlia;
