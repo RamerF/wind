@@ -209,15 +209,10 @@ public class QueryColumn<T extends AbstractEntityPoJo<T, ?>> extends AbstractQue
   /** 添加查询对象(列/聚合函数). */
   private QueryColumn<T> add(
       final IFunction<T, ?> function, final String alia, final SqlFunction sqlFunction) {
-    getQueryEntityMetaData()
-        .queryAlias
-        .add(
-            QueryAlia.of(
-                function,
-                alia,
-                getQueryEntityMetaData().getTableName(),
-                getQueryEntityMetaData().getTableAlia(),
-                sqlFunction));
+    final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
+    metaData.queryAlias.add(
+        QueryAlia.of(
+            function, alia, metaData.getTableName(), metaData.getTableAlia(), sqlFunction));
     return this;
   }
 

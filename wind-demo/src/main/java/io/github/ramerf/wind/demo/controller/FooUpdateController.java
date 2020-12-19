@@ -76,7 +76,7 @@ public class FooUpdateController {
     // 指定仅更新title字段
     final Fields<Product> fields =
         Fields.with(Product.class).include(Product::getTitle, Product::getName);
-    ConditionGroup<Product> conditionGroup = ConditionGroup.getInstance(queryColumn);
+    LambdaConditionGroup<Product> conditionGroup = LambdaConditionGroup.getInstance(queryColumn);
     conditionGroup.andNe(Product::setId, "2020-11-23T15:19:55.595");
     conditionGroup.andEq(Product::setName, "name2020-11-23T15:21:00.073");
     // 获取Update实例
@@ -96,10 +96,9 @@ public class FooUpdateController {
     // 可指定查询列
     final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
     // 可指定查询条件
-    // final ConditionCustom<Product> condition = ConditionCustom.getInstance(queryColumn);
     final CustomCondition<Product> condition = CustomCondition.getInstance(queryColumn);
-    ConditionGroup<Product> conditionGroup = ConditionGroup.getInstance(queryColumn);
-    conditionGroup.andNe(Product::setId, "2020-11-23T15:19:55.595");
+    LambdaConditionGroup<Product> conditionGroup = LambdaConditionGroup.getInstance(queryColumn);
+    conditionGroup.orEq(Product::setId, "2020-11-23T15:19:55.595");
     conditionGroup.andEq(Product::setName, "name2020-11-23T15:21:00.073");
     // 获取Update实例
     final Query<Product> update = prototypeBean.query(Product.class);
@@ -118,18 +117,15 @@ public class FooUpdateController {
   public Rs<List<Product>> query2() {
     // 可指定查询列
     final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
-    // 可指定查询条件
+    // 可指定查询条件: (id='ramer' and name like 'a%') or (id='jerry' and name like 'b%')
     final LambdaCondition<Product> condition = LambdaCondition.getInstance(queryColumn);
-    ConditionGroup<Product> conditionGroup = ConditionGroup.getInstance(queryColumn);
-    conditionGroup.andNe(Product::setId, "2020-11-23T15:19:55.595");
-    conditionGroup.andEq(Product::setName, "name2020-11-23T15:21:00.073");
+    condition
+        .and(group -> group.andEq(Product::setId, "ramer").andLike(Product::setName, "a%"))
+        .or(group -> group.andEq(Product::setId, "jerry").andLike(Product::setName, "b%"));
     // 获取Update实例
     final Query<Product> update = prototypeBean.query(Product.class);
     final List<Product> affectRow =
-        update
-            .select(queryColumn) //
-            .where(condition.and(conditionGroup))
-            .fetchAll(Product.class);
+        update.select(queryColumn).where(condition).fetchAll(Product.class);
     return Rs.ok(affectRow);
   }
 
@@ -182,7 +178,7 @@ public class FooUpdateController {
       return this;
     }
 
-    public CustomCondition<T> and(@Nonnull ConditionGroup<T> group) {
+    public CustomCondition<T> and(@Nonnull LambdaConditionGroup<T> group) {
       if (group.getCondition().getValueTypes().size() > 0) {
         conditionSql.add(
             (conditionSql.size() > 0 ? AND.operator() : "")

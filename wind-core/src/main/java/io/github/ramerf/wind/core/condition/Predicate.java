@@ -49,21 +49,21 @@ public interface Predicate<T extends AbstractEntityPoJo<T, ?>> extends QueryEnti
     RIGHT_SQUARE_BRACKETS("["),
     SQUARE_BRACKETS_FORMAT("[%s]"),
 
-    INSERT_INTO("INSERT INTO "),
+    INSERT_INTO("insert into "),
 
-    VALUES(" VALUES"),
+    VALUES(" values"),
 
-    WHERE(" WHERE "),
+    WHERE(" where "),
 
-    AS(" AS "),
+    AS(" as "),
 
-    AND(" AND "),
+    AND(" and "),
 
-    ORDER_BY(" ORDER BY "),
+    ORDER_BY(" order by "),
 
-    GROUP_BY(" GROUP BY "),
+    GROUP_BY(" group by "),
 
-    OR(" OR "),
+    OR(" or "),
     ;
 
     protected final String operator;

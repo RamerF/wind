@@ -88,40 +88,40 @@ public interface Condition<T extends AbstractEntityPoJo<T, ?>> extends Predicate
     LESS("<"),
     /** &lt;= */
     LE("<="),
-    LIKE_PLAIN(" LIKE %s "),
+    LIKE_PLAIN(" like %s "),
     /** LIKE %criteria% */
-    LIKE(" LIKE '%%%s%%'"),
+    LIKE(" like '%%%s%%'"),
     /** LIKE %criteria */
-    LIKE_LEFT(" LIKE '%%%s'"),
+    LIKE_LEFT(" like '%%%s'"),
     /** LIKE criteria% */
-    LIKE_RIGHT(" LIKE '%s%%'"),
+    LIKE_RIGHT(" like '%s%%'"),
     /** NOT LIKE %criteria% */
-    NOT_LIKE_PLAIN(" NOT LIKE %s "),
-    NOT_LIKE(" NOT LIKE '%%%s%%'"),
+    NOT_LIKE_PLAIN(" not like %s "),
+    NOT_LIKE(" not like '%%%s%%'"),
     /** BETWEEN start AND end */
-    BETWEEN(" BETWEEN %s and %s"),
+    BETWEEN(" between %s and %s"),
     /** NOT BETWEEN start AND end */
-    NOT_BETWEEN(" NOT BETWEEN %s and %s"),
+    NOT_BETWEEN(" not between %s and %s"),
     /** IS NULL */
-    IS_NULL(" IS NULL"),
+    IS_NULL(" is null"),
     /** IS NOT NULL */
-    IS_NOT_NULL(" IS NOT NULL"),
+    IS_NOT_NULL(" is not null"),
     /** EXISTS */
-    EXISTS(" EXISTS(%s)"),
+    EXISTS(" exists(%s)"),
     /** NOT EXISTS */
-    NOT_EXISTS(" NOT EXISTS(%s)"),
+    NOT_EXISTS(" not exists(%s)"),
     /** IN () */
-    IN(" IN (%s)"),
+    IN(" in (%s)"),
     /** NOT IN () */
-    NOT_IN(" NOT IN (%s)"),
+    NOT_IN(" not in (%s)"),
     /** &gt;ANY() */
-    GREATER_ANY(" >ANY(%s)"),
+    GREATER_ANY(" >any(%s)"),
     /** &gt;=ANY() */
-    GE_ANY(" >=ANY(%s)"),
+    GE_ANY(" >=any(%s)"),
     /** &lt;ANY() */
-    LESS_ANY(" <ANY(%s)"),
+    LESS_ANY(" <any(%s)"),
     /** &lt;=ANY() */
-    LE_ANY(" <=ANY(%s)");
+    LE_ANY(" <=any(%s)");
 
     final String operator;
 

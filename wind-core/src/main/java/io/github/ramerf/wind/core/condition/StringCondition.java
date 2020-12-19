@@ -270,6 +270,240 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
+  public StringCondition<T> orEq(@Nonnull final String column, @Nonnull final Object value) {
+    return orEq(true, column, value);
+  }
+
+  public StringCondition<T> orEq(
+      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+    if (condition) {
+      or(column, MatchPattern.EQUAL, value);
+    }
+    return this;
+  }
+
+  public StringCondition<T> orNe(@Nonnull final String column, @Nonnull final Object value) {
+    return orNe(true, column, value);
+  }
+
+  public StringCondition<T> orNe(
+      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+    if (condition) {
+      or(column, MatchPattern.NOT_EQUAL, value);
+    }
+    return this;
+  }
+
+  public StringCondition<T> orGt(@Nonnull final String column, @Nonnull final Object value) {
+    return orGt(true, column, value);
+  }
+
+  public StringCondition<T> orGt(
+      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+    if (condition) {
+      or(column, MatchPattern.GREATER, value);
+    }
+    return this;
+  }
+
+  public StringCondition<T> orGe(@Nonnull final String column, @Nonnull final Object value) {
+    return orGe(true, column, value);
+  }
+
+  public StringCondition<T> orGe(
+      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+    if (condition) {
+      or(column, MatchPattern.GE, value);
+    }
+    return this;
+  }
+
+  public StringCondition<T> orLt(@Nonnull final String column, @Nonnull final Object value) {
+    return orLt(true, column, value);
+  }
+
+  public StringCondition<T> orLt(
+      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+    if (condition) {
+      or(column, MatchPattern.LESS, value);
+    }
+    return this;
+  }
+
+  public StringCondition<T> orLe(@Nonnull final String column, @Nonnull final Object value) {
+    return orLe(true, column, value);
+  }
+
+  public StringCondition<T> orLe(
+      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+    if (condition) {
+      or(column, MatchPattern.LE, value);
+    }
+    return this;
+  }
+
+  public StringCondition<T> orLike(@Nonnull final String column, @Nonnull final Object value) {
+    return orLike(true, column, value);
+  }
+
+  public StringCondition<T> orLike(
+      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+    if (condition) {
+      or(column, MatchPattern.LIKE, value);
+    }
+    return this;
+  }
+
+  public StringCondition<T> orNotLike(@Nonnull final String column, @Nonnull final Object value) {
+    return orNotLike(true, column, value);
+  }
+
+  public StringCondition<T> orNotLike(
+      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+    if (condition) {
+      or(column, MatchPattern.NOT_LIKE, value);
+    }
+    return this;
+  }
+
+  public StringCondition<T> orBetween(
+      @Nonnull final String column, @Nonnull final Object start, @Nonnull final Object end) {
+    return orBetween(true, column, start, end);
+  }
+
+  public StringCondition<T> orBetween(
+      final boolean condition,
+      @Nonnull final String column,
+      @Nonnull final Object start,
+      @Nonnull final Object end) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(column)
+              .concat(
+                  String.format(
+                      MatchPattern.BETWEEN.operator,
+                      toPreFormatSqlVal(start),
+                      toPreFormatSqlVal(end))));
+      valueTypes.add(ValueType.of(start));
+      valueTypes.add(ValueType.of(end));
+    }
+    return this;
+  }
+
+  public StringCondition<T> orNotBetween(
+      @Nonnull final String column, @Nonnull final Object start, @Nonnull final Object end) {
+    return orNotBetween(true, column, start, end);
+  }
+
+  public StringCondition<T> orNotBetween(
+      final boolean condition,
+      @Nonnull final String column,
+      @Nonnull final Object start,
+      @Nonnull final Object end) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(column)
+              .concat(
+                  String.format(
+                      MatchPattern.NOT_BETWEEN.operator,
+                      toPreFormatSqlVal(start),
+                      toPreFormatSqlVal(end))));
+      valueTypes.add(ValueType.of(start));
+      valueTypes.add(ValueType.of(end));
+    }
+    return this;
+  }
+
+  public StringCondition<T> orIsNull(@Nonnull final String column) {
+    return orIsNull(true, column);
+  }
+
+  public StringCondition<T> orIsNull(final boolean condition, @Nonnull final String column) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(column)
+              .concat(MatchPattern.IS_NULL.operator));
+    }
+    return this;
+  }
+
+  public StringCondition<T> orIsNotNull(@Nonnull final String column) {
+    return orIsNotNull(true, column);
+  }
+
+  public StringCondition<T> orIsNotNull(final boolean condition, @Nonnull final String column) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(column)
+              .concat(MatchPattern.IS_NOT_NULL.operator));
+    }
+    return this;
+  }
+
+  public StringCondition<T> orIn(
+      @Nonnull final String column, @Nonnull final Collection<? extends Iterable<?>> values) {
+    return orIn(true, column, values);
+  }
+
+  public StringCondition<T> orIn(
+      final boolean condition,
+      @Nonnull final String column,
+      @Nonnull final Collection<? extends Iterable<?>> values) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(column)
+              .concat(
+                  String.format(
+                      MatchPattern.IN.operator,
+                      values.stream()
+                          .map(SqlHelper::toPreFormatSqlVal)
+                          .collect(Collectors.joining(SEMICOLON.operator)))));
+      values.forEach(value -> valueTypes.add(ValueType.of(value)));
+    }
+    return this;
+  }
+
+  public StringCondition<T> orNotIn(
+      @Nonnull final String column, @Nonnull final Collection<? extends Iterable<?>> values) {
+    return orNotIn(true, column, values);
+  }
+
+  public StringCondition<T> orNotIn(
+      final boolean condition,
+      @Nonnull final String column,
+      @Nonnull final Collection<? extends Iterable<?>> values) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator : "")
+              .concat(getQueryEntityMetaData().getTableAlia())
+              .concat(DOT.operator)
+              .concat(column)
+              .concat(
+                  String.format(
+                      MatchPattern.NOT_IN.operator,
+                      values.stream()
+                          .map(SqlHelper::toPreFormatSqlVal)
+                          .collect(Collectors.joining(SEMICOLON.operator)))));
+      values.forEach(value -> valueTypes.add(ValueType.of(value)));
+    }
+    return this;
+  }
+
   /** 用于关联对象. */
   public StringCondition<T> eq(@Nonnull final MappingInfo mappingInfo, final Object value) {
     return eq(true, mappingInfo, value);
@@ -298,6 +532,23 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
   public StringCondition<T> and(final String column, final String operator, final Object value) {
     conditionSql.add(
         (conditionSql.size() > 0 ? AND.operator : "")
+            .concat(getQueryEntityMetaData().getTableAlia())
+            .concat(DOT.operator)
+            .concat(column)
+            .concat(operator)
+            .concat(toPreFormatSqlVal(value)));
+    valueTypes.add(ValueType.of(value));
+    return this;
+  }
+
+  protected StringCondition<T> or(
+      final String column, final MatchPattern operator, final Object value) {
+    return or(column, operator.operator, value);
+  }
+
+  public StringCondition<T> or(final String column, final String operator, final Object value) {
+    conditionSql.add(
+        (conditionSql.size() > 0 ? OR.operator : "")
             .concat(getQueryEntityMetaData().getTableAlia())
             .concat(DOT.operator)
             .concat(column)

@@ -30,6 +30,10 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 @SuppressWarnings("UnusedReturnValue")
 public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
 
+  public LambdaCondition() {
+    super();
+  }
+
   public LambdaCondition(final QueryColumn<T> queryColumn) {
     super(queryColumn);
   }
@@ -371,7 +375,7 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
         String childQuery =
             (conditionSql.size() > 0 ? AND.operator : "")
                 + SqlAggregateFunction.EXISTS.string(
-                    "SELECT 1 FROM ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
+                    "select 1 from ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
 
         conditionSql.add(childQuery);
         valueTypes.addAll(((LambdaCondition<T>) childConditions).valueTypes);
@@ -709,7 +713,7 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
         String childQuery =
             (conditionSql.size() > 0 ? OR.operator : "")
                 + SqlAggregateFunction.EXISTS.string(
-                    "SELECT 1 FROM ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
+                    "select 1 from ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
         conditionSql.add(childQuery);
         valueTypes.addAll(((LambdaCondition<T>) childConditions).valueTypes);
       }
@@ -717,39 +721,24 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
-  public LambdaCondition<T> and(@Nonnull Consumer<Condition<T>> consumer) {
-    return and(true, consumer);
-  }
-
-  public LambdaCondition<T> and(final boolean condition, @Nonnull Consumer<Condition<T>> consumer) {
-    if (condition) {
-      final LambdaCondition<T> children = (LambdaCondition<T>) this.condition();
-      consumer.accept(children);
-      return and(true, children);
-    }
-    return this;
-  }
-
-  public LambdaCondition<T> and(@Nonnull Condition<T> children) {
-    return and(true, children);
-  }
-
-  public LambdaCondition<T> and(final boolean condition, @Nonnull Condition<T> children) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(PARENTHESIS_FORMAT.format(children.getString())));
-      valueTypes.addAll(((LambdaCondition<T>) children).valueTypes);
-    }
-    return this;
-  }
-
-  public LambdaCondition<T> and(@Nonnull ConditionGroup<T> group) {
+  public LambdaCondition<T> and(@Nonnull LambdaConditionGroup<T> group) {
     if (!group.isEmpty()) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator() : "")
               .concat(PARENTHESIS_FORMAT.format(group.getCondition().getString())));
       valueTypes.addAll(group.getCondition().getValueTypes());
+    }
+    return this;
+  }
+
+  public LambdaCondition<T> and(@Nonnull Consumer<LambdaConditionGroup<T>> group) {
+    LambdaConditionGroup<T> conditionGroup = LambdaConditionGroup.getInstance(this);
+    group.accept(conditionGroup);
+    if (!conditionGroup.isEmpty()) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator() : "")
+              .concat(PARENTHESIS_FORMAT.format(conditionGroup.getCondition().getString())));
+      valueTypes.addAll(conditionGroup.getCondition().getValueTypes());
     }
     return this;
   }
@@ -760,36 +749,31 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
+  public LambdaCondition<T> or(@Nonnull LambdaConditionGroup<T> group) {
+    if (!group.isEmpty()) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator() : "")
+              .concat(PARENTHESIS_FORMAT.format(group.getCondition().getString())));
+      valueTypes.addAll(group.getCondition().getValueTypes());
+    }
+    return this;
+  }
+
+  public LambdaCondition<T> or(@Nonnull Consumer<LambdaConditionGroup<T>> group) {
+    LambdaConditionGroup<T> conditionGroup = LambdaConditionGroup.getInstance(this);
+    group.accept(conditionGroup);
+    if (!conditionGroup.isEmpty()) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? OR.operator() : "")
+              .concat(PARENTHESIS_FORMAT.format(conditionGroup.getCondition().getString())));
+      valueTypes.addAll(conditionGroup.getCondition().getValueTypes());
+    }
+    return this;
+  }
+
   @Override
   public LambdaCondition<T> or(final String sql) {
     super.or(sql);
-    return this;
-  }
-
-  public LambdaCondition<T> or(@Nonnull Consumer<Condition<T>> consumer) {
-    return or(true, consumer);
-  }
-
-  public LambdaCondition<T> or(final boolean condition, @Nonnull Consumer<Condition<T>> consumer) {
-    if (condition) {
-      final LambdaCondition<T> children = (LambdaCondition<T>) this.condition();
-      consumer.accept(children);
-      return or(true, children);
-    }
-    return this;
-  }
-
-  public LambdaCondition<T> or(@Nonnull Condition<T> children) {
-    return or(true, children);
-  }
-
-  public LambdaCondition<T> or(final boolean condition, @Nonnull Condition<T> children) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(PARENTHESIS_FORMAT.format(children.getString())));
-      valueTypes.addAll(((LambdaCondition<T>) children).valueTypes);
-    }
     return this;
   }
 }

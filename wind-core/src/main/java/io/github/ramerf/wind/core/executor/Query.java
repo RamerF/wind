@@ -230,7 +230,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
   public <R> R fetchOne(
       final Class<R> clazz, final ResultHandler<Map<String, Object>, R> resultHandler) {
     doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
-    final String sql = "SELECT %s FROM %s";
+    final String sql = "select %s from %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
     return executor.fetchOne(
@@ -252,7 +252,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    */
   public <R> List<R> fetchAll(final Class<R> clazz) {
     doIfNonEmpty(afterWhereString.toString(), str -> conditionString = conditionString.concat(str));
-    final String sql = "SELECT %s FROM %s";
+    final String sql = "select %s from %s";
     final String queryString =
         String.format(sql, optimizeQueryString(this.queryString, clazz), conditionString);
     if (log.isTraceEnabled()) {
@@ -291,7 +291,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
     if (log.isTraceEnabled()) {
       log.trace("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
     }
-    final String sql = "SELECT %s FROM %s LIMIT %s OFFSET %s";
+    final String sql = "select %s from %s limit %s offset %s";
     final String queryString =
         String.format(
             sql,
@@ -334,7 +334,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
       log.trace("fetch:[queryString:{},conditionString:{}]", queryString, conditionString);
     }
 
-    final String sql = "SELECT %s FROM %s LIMIT %s OFFSET %s";
+    final String sql = "select %s from %s limit %s offset %s";
     final String queryString =
         String.format(
             sql,
@@ -366,8 +366,8 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
     final boolean nonEmpty = StringUtils.nonEmpty(countString);
     final String sql =
         nonEmpty && countString.contains(GROUP_BY.operator())
-            ? "SELECT SUM(b.a) FROM (SELECT 1 a FROM %s) b"
-            : "SELECT COUNT(1) FROM %s";
+            ? "select sum(b.a) from (select 1 a from %s) b"
+            : "select count(1) from %s";
     return executor.fetchCount(
         new SqlParam<T>()
             .setSql(String.format(sql, countString))

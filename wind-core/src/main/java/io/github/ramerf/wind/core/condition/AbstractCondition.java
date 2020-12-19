@@ -42,11 +42,15 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
   /** 占位符对应的值. */
   @Getter protected final List<ValueType> valueTypes = new LinkedList<>();
 
-  private AbstractCondition() {}
+  protected AbstractCondition() {}
 
   public AbstractCondition(final QueryColumn<T> queryColumn) {
     setEntityInfo(queryColumn.getEntityInfo());
     setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
+  }
+
+  public AbstractCondition(final Class<T> clazz) {
+    this(clazz, null, null);
   }
 
   public AbstractCondition(final Class<T> clazz, String tableName, String tableAlia) {
