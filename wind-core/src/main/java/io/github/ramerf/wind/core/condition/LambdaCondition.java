@@ -754,6 +754,18 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
+  @Override
+  public LambdaCondition<T> and(final String sql) {
+    super.and(sql);
+    return this;
+  }
+
+  @Override
+  public LambdaCondition<T> or(final String sql) {
+    super.or(sql);
+    return this;
+  }
+
   public LambdaCondition<T> or(@Nonnull Consumer<Condition<T>> consumer) {
     return or(true, consumer);
   }

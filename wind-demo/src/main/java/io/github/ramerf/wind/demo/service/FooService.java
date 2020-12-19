@@ -44,15 +44,4 @@ public interface FooService extends BaseService<Foo, Long> {
    * @return the int
    */
   int deleteWithResult();
-
-  /*
-  create,
-  createBatch,
-  getOne,
-  list,
-  update,
-  updateBatch,
-  delete,
-  deleteBatch,
-  */
 }

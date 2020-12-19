@@ -76,7 +76,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    * @since 2020.11.13
    * @author Tang Xiaofeng
    */
-  public Update(final Class<T> clazz) {
+  public Update(@Nonnull final Class<T> clazz) {
     this.clazz = clazz;
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
     this.idField = EntityHelper.getEntityIdField(clazz);
@@ -87,6 +87,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
       logicDeletedValue = logicDeleteProp.isDeleted();
       logicNotDeleteValue = logicDeleteProp.isNotDelete();
     }
+    this.condition = LambdaCondition.getInstance(QueryColumn.fromClass(clazz));
   }
 
   /**
@@ -518,6 +519,15 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
                 .filter(field -> !excludeFields.contains(field))
                 .collect(toList());
       }
+    }
+    Object id = null;
+    try {
+      id = idField.get(t);
+    } catch (IllegalAccessException ignored) {
+    }
+    // 自增id,需要去掉
+    if (id == null) {
+      savingFields.remove(idField);
     }
     return savingFields;
   }

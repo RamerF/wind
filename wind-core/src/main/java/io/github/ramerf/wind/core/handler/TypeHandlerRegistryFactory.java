@@ -6,8 +6,7 @@ import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -197,6 +196,23 @@ public class TypeHandlerRegistryFactory {
     }
     if (Date.class.isAssignableFrom(type)) {
       return typeHandlerMap.get(DateTypeHandler.class);
+    }
+    if (List.class.isAssignableFrom(type)) {
+      ParameterizedType parameterizedType =
+          (ParameterizedType) valueType.getField().getGenericType();
+      final Type[] arguments = parameterizedType.getActualTypeArguments();
+      if (arguments.length > 0) {
+        final Class<?> argument = (Class<?>) arguments[0];
+        if (Integer.class.isAssignableFrom(argument)) {
+          return typeHandlerMap.get(ListIntegerArrayTypeHandler.class);
+        }
+        if (Long.class.isAssignableFrom(argument)) {
+          return typeHandlerMap.get(ListLongArrayTypeHandler.class);
+        }
+        if (String.class.isAssignableFrom(argument)) {
+          return typeHandlerMap.get(ListStringArrayTypeHandler.class);
+        }
+      }
     }
     return null;
   }

@@ -307,15 +307,15 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
-  /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
+  @Override
   public StringCondition<T> and(final String sql) {
-    conditionSql.add((conditionSql.size() > 0 ? AND.operator : "").concat(sql));
+    super.and(sql);
     return this;
   }
 
-  /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
+  @Override
   public StringCondition<T> or(final String sql) {
-    conditionSql.add((conditionSql.size() > 0 ? OR.operator : "").concat(sql));
+    super.or(sql);
     return this;
   }
 }

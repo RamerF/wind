@@ -1,7 +1,7 @@
 ﻿#  wind
 
 ---
-基于JdbcTemplate实现的快速开发框架,开箱即用,始终坚持低学习成本,所以它非常简单,使用它你会感觉很自然.
+基于JdbcTemplate实现的快速开发框架,学习成本超低.
 
 ### 特性
  - 支持Mysql,Postgresql
@@ -11,7 +11,7 @@
  - 枚举支持: Controller枚举参数,自定义枚举序列化
  - 类型支持: 支持自定义类型转换器,支持BitSet
  - 支持自动建表
- - 可定制: 
+ - 可定制:
    - 自定义ID生成策略,默认使用雪花算法
    - 缓存: 支持缓存扩展,目前支持内存和redis缓存
    - 禁用公共字段
@@ -533,19 +533,11 @@ public ResponseEntity<Rs<Integer>> update() {
 private String largeText;
 ```
 
-#### 禁用公共字段
-
-```yml
-wind:
-  # 禁用公共字段,可选:deleted,created_time,update_time
-  disable-fields: create_time,update_time
-```
-
 #### 自动建表
 
 ```yml
 wind:
-  # 自动建表,扫描entity-package下包含@Entity/@TableInfo的类.可选值:none,create,update.默认:none
+  # 自动建表,扫描entity-package下包含@TableInfo的类.可选值:none,create,update.默认:none
   ddl-auto: update
 ```
 
@@ -598,23 +590,21 @@ wind:
       # 是否启用逻辑删除,可以在类上使用@TableInfo(logicDelete = @LogicDelete(enable = true))属性覆盖
       enable: false
       # 逻辑删除字段名,@TableInfo会覆盖该配置
-      column: deleted
+      field-name: deleted
       # 逻辑未删除值(默认为 false),@TableInfo会覆盖该配置
       not-delete: false
       # 逻辑已删除值(默认为 true),@TableInfo会覆盖该配置
       deleted: true
   # entity所在包路径,多个以,分割
   entity-package: io.github.ramerf.wind.demo.entity.pojo
-  # 自动建表,扫描entity-package下包含@Entity/@TableInfo的类.可选值:none,create,update.默认:none
+  # 自动建表,扫描entity-package下包含@TableInfo的类.可选值:none,create,update.默认:none
   ddl-auto: update
-  # 禁用公共字段,可选:deleted,created_time,update_time
-  disable-fields: create_time,update_time
   # 批量操作时每次处理的大小,默认为150
   batch-size: 500
   # 是否自定义枚举反序列化,默认为false.设置为true时,可能需要编写枚举反序列化代码
   custom-enum-deserializer: false
   cache:
-    # 缓存类型.可选值: redis,memory 默认memory
+    # 缓存类型.可选值: redis,memory,none 默认memory
     type: redis
     # 缓存key前缀
     key-prefix: io.github.ramerf.wind
@@ -630,7 +620,7 @@ wind:
 
 #### 可用注解
 
-- @TableInfo 用于指定表信息,配合@Entity使用
+- @TableInfo 用于指定表信息
 - @TableColumn 用于指定列信息
 - @LogicDelete 用于@TableInfo注解指定逻辑删除信息
 - @TypeHandler 当全局类型处理器不满足需求时,用于指定特定字段使用的类型处理器
@@ -655,8 +645,7 @@ wind:
 
 如果你在使用本项目时遇到问题,可以通过以下方式联系到我,我将提供免费技术支持
 
-- WX: ramer-
-- QQ: 1390635973
+- QQ群: 975225058
 - Mail: [1390635973@qq.com](mailto:1390635973@qq.com)
 
 #### 开源协议

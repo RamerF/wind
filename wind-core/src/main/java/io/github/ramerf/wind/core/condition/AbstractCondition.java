@@ -77,6 +77,18 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
     setQueryEntityMetaData(queryEntityMetaData);
   }
 
+  /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
+  public Condition<T> and(final String sql) {
+    conditionSql.add((conditionSql.size() > 0 ? AND.operator : "").concat(sql));
+    return this;
+  }
+
+  /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
+  public Condition<T> or(final String sql) {
+    conditionSql.add((conditionSql.size() > 0 ? OR.operator : "").concat(sql));
+    return this;
+  }
+
   public AbstractCondition<T> condition(final boolean genAlia) {
     this.getQueryEntityMetaData().setContainTableAlia(true);
 
@@ -188,18 +200,9 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
     final LogicDeleteProp logicDeleteProp = getEntityInfo().getLogicDeleteProp();
     final EntityColumn logicDeletePropColumn = getEntityInfo().getLogicDeletePropColumn();
     // 启用逻辑删除且当前未包含该条件(这个有必要?)
-    boolean append = true;
-    if (valueTypes.size() > 0) {
-      append =
-          valueTypes.get(0).getField() == null
-              ? conditionSql.stream()
-                  .noneMatch(
-                      condition -> condition.matches(logicDeletePropColumn.getName() + "[ ]+="))
-              : valueTypes.stream()
-                  .noneMatch(
-                      valueType -> logicDeletePropColumn.getField().equals(valueType.getField()));
-    }
-    if (logicDeleteProp.isEnable() && append) {
+    if (logicDeleteProp.isEnable()
+        && conditionSql.stream()
+            .noneMatch(condition -> condition.matches(logicDeletePropColumn.getName() + "[ ]+="))) {
       final Field logicDeleteField = logicDeletePropColumn.getField();
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")

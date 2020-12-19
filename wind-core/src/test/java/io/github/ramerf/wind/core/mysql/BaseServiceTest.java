@@ -266,6 +266,7 @@ public class BaseServiceTest {
   @DisplayName("单个创建")
   @Transactional(rollbackFor = Exception.class)
   public void testCreate1() {
+    foo.setId(null);
     assertNotNull(service.create(foo));
   }
 
@@ -274,8 +275,10 @@ public class BaseServiceTest {
   @DisplayName("单个创建: 指定属性")
   @Transactional(rollbackFor = Exception.class)
   public void testCreate2() {
+    foo.setId(null);
     // assertTrue(service.create(foo, fields -> fields.exclude(Foo::getAge)) > 0);
-    assertNotNull(service.create(foo, fields -> fields.include(Foo::getAge)));
+    assertNotNull(
+        service.create(foo, fields -> fields.include(Foo::getAge, Foo::isString, Foo::isNumber)));
   }
 
   @Test
@@ -283,8 +286,12 @@ public class BaseServiceTest {
   @DisplayName("单个创建:域对象")
   @Transactional(rollbackFor = Exception.class)
   public void testCreate3() {
+    foo.setId(null);
     final Consumer<Fields<Foo>> consumer =
-        fields -> fields.include(Foo::getName, Foo::getAge).exclude(Foo::getLargeText);
+        fields ->
+            fields
+                .include(Foo::getName, Foo::getAge, Foo::isString, Foo::isNumber)
+                .exclude(Foo::getBigText);
     assertNotNull(foo.create(consumer));
   }
 
@@ -293,6 +300,7 @@ public class BaseServiceTest {
   @DisplayName("单个创建:返回对象")
   @Transactional(rollbackFor = Exception.class)
   public void testCreateAndGet1() {
+    foo.setId(null);
     assertNotNull(service.createAndGet(foo));
   }
 
@@ -301,13 +309,15 @@ public class BaseServiceTest {
   @DisplayName("单个创建:返回对象,指定属性")
   @Transactional(rollbackFor = Exception.class)
   public void testCreateAndGet2() {
-    assertNotNull(service.createAndGet(foo, fields -> fields.exclude(Foo::getLargeText)));
+    foo.setId(null);
+    assertNotNull(service.createAndGet(foo, fields -> fields.exclude(Foo::getBigText)));
   }
 
   @Test
   @DisplayName("批量创建")
   @Transactional(rollbackFor = Exception.class)
   public void testCreateBatch1() {
+    foo.setId(null);
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -344,7 +354,11 @@ public class BaseServiceTest {
             .collect(toList());
     long start = System.currentTimeMillis();
     assertFalse(
-        service.createBatch(list, fields -> fields.include(Foo::getName, Foo::getAge)).isPresent());
+        service
+            .createBatch(
+                list,
+                fields -> fields.include(Foo::getName, Foo::getAge, Foo::isString, Foo::isNumber))
+            .isPresent());
   }
 
   @Test
@@ -399,7 +413,7 @@ public class BaseServiceTest {
 
   @Test
   @DisplayName("批量更新")
-  // @Transactional(rollbackFor = Exception.class)
+  @Transactional(rollbackFor = Exception.class)
   public void testUpdateBatch1() {
     final List<Foo> list =
         LongStream.range(1, 101)

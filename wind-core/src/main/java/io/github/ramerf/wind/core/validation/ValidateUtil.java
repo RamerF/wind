@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.*;
 
 /**
- * 校验工具类.建议使用静态导入.
+ * 校验工具类.
  *
  * <pre>
  * 用法一: 手动校验<br>
@@ -28,7 +28,7 @@ import org.springframework.validation.*;
  *
  * 用法二: @Valid自动校验<br>
  * {@code @PostMapping}
- * public Result foo(@Valid Foo foo, BindingResult bindingResult) {
+ * public Rs foo(@Valid Foo foo, BindingResult bindingResult) {
  *  if (bindingResult.hasErrors()) {
  *    return Result.error(ValidateUtil.collectFirst(bindingResult));
  *  }
@@ -39,7 +39,6 @@ import org.springframework.validation.*;
  *
  * @author Tang Xiaofeng
  * @since 2020.08.31
- * @see InterEnumConstraint
  */
 @Component
 public final class ValidateUtil implements ApplicationContextAware {
@@ -190,7 +189,19 @@ public final class ValidateUtil implements ApplicationContextAware {
     @Override
     @Nonnull
     public Iterator<ViolationErrors> iterator() {
-      return new ViolationResultIterator();
+      return new Iterator<ViolationErrors>() {
+        private final AtomicInteger index = new AtomicInteger();
+
+        @Override
+        public final boolean hasNext() {
+          return index.get() < violationErrors.size();
+        }
+
+        @Override
+        public ViolationErrors next() {
+          return violationErrors.get(index.getAndIncrement());
+        }
+      };
     }
 
     /**
@@ -200,21 +211,6 @@ public final class ValidateUtil implements ApplicationContextAware {
      */
     public Stream<ViolationErrors> stream() {
       return StreamSupport.stream(spliterator(), false);
-    }
-
-    /** The type Violation result iterator. */
-    class ViolationResultIterator implements Iterator<ViolationErrors> {
-      private final AtomicInteger index = new AtomicInteger();
-
-      @Override
-      public final boolean hasNext() {
-        return index.get() < violationErrors.size();
-      }
-
-      @Override
-      public ViolationErrors next() {
-        return violationErrors.get(index.getAndIncrement());
-      }
     }
 
     @Override

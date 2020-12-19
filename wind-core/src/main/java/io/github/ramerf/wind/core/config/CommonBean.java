@@ -94,10 +94,10 @@ public class CommonBean {
    */
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer jacksonObjectMapperCustomizer(
-      InterEnumSerializer interEnumSerializer) {
+      ObjectProvider<InterEnumSerializer> interEnumSerializer) {
     return objectMapperBuilder ->
         objectMapperBuilder.serializerByType(
-            InterEnum.class, new JacksonEnumSerializer(interEnumSerializer));
+            InterEnum.class, new JacksonEnumSerializer(interEnumSerializer.getIfAvailable()));
   }
 
   /**

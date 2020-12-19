@@ -3,13 +3,7 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.entity.constant.Constant;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
-import io.github.ramerf.wind.core.mapping.EntityMapping;
-import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
-import io.github.ramerf.wind.core.mapping.MappingType;
-import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
 import java.util.*;
@@ -118,7 +112,8 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param condition 查询条件
    * @return T one
    */
-  default T getOne(final Consumer<QueryColumn<T>> query, final Consumer<LambdaCondition<T>> condition) {
+  default T getOne(
+      final Consumer<QueryColumn<T>> query, final Consumer<LambdaCondition<T>> condition) {
     return getOne(query, condition, getPoJoClass());
   }
 
@@ -139,7 +134,8 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
   }
 
-  default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> field) {
+  /* 关联查询暂不开启
+    default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> field) {
     final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
     if (optional.isPresent()) {
       final MappingInfo mappingInfo = optional.get();
@@ -168,7 +164,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
       }
     }
     return null;
-  }
+  }*/
 
   /**
    * 通过id集合查询PoJo列表.
