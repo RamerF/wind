@@ -66,7 +66,7 @@ public class WindConfiguration {
   @Getter
   public static class CacheConfig {
     /** 是否启用. */
-    private CacheType type = CacheType.MEMORY;
+    private CacheType type = CacheType.NONE;
 
     /** 缓存key前缀. */
     private String keyPrefix = "io.github.ramerf.wind";

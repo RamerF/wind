@@ -5,7 +5,6 @@ import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.util.StringUtils;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2020 /5/26
  */
 @Slf4j
-public abstract class AbstractCache implements RedisCache {
+public abstract class AbstractCache implements Cache {
   final WindConfiguration configuration;
 
   AbstractCache(WindConfiguration configuration) {
@@ -53,13 +52,15 @@ public abstract class AbstractCache implements RedisCache {
         + methodName
         + ":"
         + sqlParam.getSql()
-        + ":"
-        + (Objects.nonNull(sqlParam.getAggregateFunction())
-            ? sqlParam.getAggregateFunction().name()
-            : sqlParam.getConditions().stream()
-                .flatMap(o -> o.getOriginValues().stream())
-                .map(SqlHelper::toSqlString)
-                .collect(Collectors.joining()));
+        + (sqlParam.getAggregateFunction() != null
+            ? ":" + sqlParam.getAggregateFunction().name()
+            : sqlParam.getConditions() != null
+                ? ":"
+                    + sqlParam.getConditions().stream()
+                        .flatMap(o -> o.getOriginValues().stream())
+                        .map(SqlHelper::toSqlString)
+                        .collect(Collectors.joining())
+                : "");
   }
 
   /**

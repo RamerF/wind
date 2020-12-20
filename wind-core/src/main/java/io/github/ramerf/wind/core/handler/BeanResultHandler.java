@@ -11,7 +11,10 @@ import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.lang.reflect.Field;
+import java.sql.Array;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -75,37 +78,49 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
       return null;
     }
     final E obj = BeanUtils.initial(clazz);
-    map.forEach(
-        (column, value) -> {
-          final ClazzColumn clazzColumn = ClazzColumn.of(clazz, column);
-          final Field field =
-              Optional.ofNullable(CLAZZ_COLUMN_FIELD.get(clazzColumn))
-                  .orElseGet(
-                      () -> {
-                        final Field f = columnFieldMap.get(column);
-                        CLAZZ_COLUMN_FIELD.put(clazzColumn, f);
-                        return f;
-                      });
-          if (field != null) {
-            final Object finalValue =
-                TypeHandlerHelper.toJavaValue(
-                    ValueType.of(value, field.getGenericType(), field), field.getType());
-            BeanUtils.setValue(
-                obj,
-                field,
-                finalValue,
-                exception ->
-                    log.warn(
-                        "handle:跳过类型不匹配的字段[fieldName:{},paramType:{},valueType:{}]",
-                        field.getName(),
-                        field.getType().getSimpleName(),
-                        Optional.ofNullable(finalValue)
-                            .map(Object::getClass)
-                            .map(Class::getSimpleName)
-                            .orElse(null)));
-          }
-        });
-
+    for (Entry<String, Object> entry : map.entrySet()) {
+      final String column = entry.getKey();
+      Object value = entry.getValue();
+      if (value == null) {
+        continue;
+      }
+      // 如果是数据库数组类型,获取对应的java数组
+      if (value instanceof Array) {
+        try {
+          value = ((Array) value).getArray();
+        } catch (SQLException e) {
+          log.warn("handle:fail to get array[{}]", e.getMessage());
+          log.error(e.getMessage(), e);
+        }
+      }
+      final ClazzColumn clazzColumn = ClazzColumn.of(clazz, column);
+      final Field field =
+          Optional.ofNullable(CLAZZ_COLUMN_FIELD.get(clazzColumn))
+              .orElseGet(
+                  () -> {
+                    final Field f = columnFieldMap.get(column);
+                    CLAZZ_COLUMN_FIELD.put(clazzColumn, f);
+                    return f;
+                  });
+      if (field != null) {
+        final Object finalValue =
+            TypeHandlerHelper.toJavaValue(
+                ValueType.of(value, field.getGenericType(), field), field.getType());
+        BeanUtils.setValue(
+            obj,
+            field,
+            finalValue,
+            exception ->
+                log.warn(
+                    "handle:跳过类型不匹配的字段[fieldName:{},paramType:{},valueType:{}]",
+                    field.getName(),
+                    field.getType().getSimpleName(),
+                    Optional.ofNullable(finalValue)
+                        .map(Object::getClass)
+                        .map(Class::getSimpleName)
+                        .orElse(null)));
+      }
+    }
     // 保存关联字段值
     /*TODO POST 关联查询暂不开启
     if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {

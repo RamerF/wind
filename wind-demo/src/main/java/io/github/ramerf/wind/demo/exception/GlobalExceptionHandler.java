@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
    * 自定义异常处理,会覆盖wind中相应的异常处理.
    *
    * <p><b>如果捕捉了{@link Exception},即{@code @ExceptionHandler(value =
-   * Exception.class)}*,会覆盖wind中的所有异常处理定义.</b>
+   * Exception.class)},会覆盖wind中的所有异常处理定义.</b>
    *
    * @param request the request
    * @param exception the exception

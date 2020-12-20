@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.cache;
 
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class InMemoryCache extends AbstractCache {
-  private final Map<String, InMemoryCacheObj> cacheMap = new ConcurrentHashMap<>();
+  private final Map<String, InMemoryCacheObj> cacheMap =
+      Collections.synchronizedMap(new WeakHashMap<>());
 
   public InMemoryCache(final WindConfiguration configuration) {
     super(configuration);

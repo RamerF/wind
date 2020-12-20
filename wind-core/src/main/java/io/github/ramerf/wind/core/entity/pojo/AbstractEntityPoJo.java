@@ -25,10 +25,9 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends 
   /**
    * 创建记录.
    *
-   * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  public final AbstractEntityPoJo<T, ID> create() throws DataAccessException {
+  public final T create() throws DataAccessException {
     return genericService().create(instance());
   }
 
@@ -39,8 +38,7 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends 
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  public final AbstractEntityPoJo<T, ID> create(final Consumer<Fields<T>> fieldsConsumer)
-      throws DataAccessException {
+  public final T create(final Consumer<Fields<T>> fieldsConsumer) throws DataAccessException {
     return genericService().create(instance(), fieldsConsumer);
   }
 

@@ -219,7 +219,7 @@ public class Rs<T> implements Serializable {
    * @param data the data
    * @return the response entity
    */
-  public static <T, R> Rs<R> ok(final T data) {
+  public static <T> Rs<T> ok(final T data) {
     return Rs.of(data);
   }
 

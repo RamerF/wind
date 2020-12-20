@@ -113,6 +113,17 @@ public interface Executor {
    * @return the list
    * @throws DataAccessException the data access exception
    */
+  Map<String, Object> queryForMap(@Nonnull final SqlParam<?> sqlParam, @Nullable Object... args)
+      throws DataAccessException;
+
+  /**
+   * Query for list list.
+   *
+   * @param sqlParam the sql param
+   * @param args the args
+   * @return the list
+   * @throws DataAccessException the data access exception
+   */
   List<Map<String, Object>> queryForList(
       @Nonnull final SqlParam<?> sqlParam, @Nullable Object... args) throws DataAccessException;
 

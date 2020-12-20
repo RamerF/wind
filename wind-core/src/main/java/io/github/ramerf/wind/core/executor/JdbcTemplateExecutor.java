@@ -203,6 +203,15 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @Override
+  public Map<String, Object> queryForMap(@Nonnull final SqlParam<?> sqlParam, final Object... args)
+      throws DataAccessException {
+    return cacheIfAbsent(
+        sqlParam,
+        () -> jdbcTemplate.queryForMap(sqlParam.sql, args),
+        Thread.currentThread().getStackTrace()[1].getMethodName());
+  }
+
+  @Override
   public List<Map<String, Object>> queryForList(
       @Nonnull final SqlParam<?> sqlParam, final Object... args) throws DataAccessException {
     return cacheIfAbsent(

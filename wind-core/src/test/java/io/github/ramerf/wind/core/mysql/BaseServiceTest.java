@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.mysql;
 
 import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.service.InterService.Fields;
@@ -53,7 +54,7 @@ public class BaseServiceTest {
             .type(Type.SPORT)
             .column("non_match_column")
             .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
-            // .largeText("")
+            // .bigText("")
             .isNumber(false)
             .isNull(false)
             .string(true)
@@ -126,6 +127,24 @@ public class BaseServiceTest {
   }
 
   @Test
+  @DisplayName("查询单个:自定义sql")
+  @Transactional(rollbackFor = Exception.class)
+  public void testGetOne4() {
+    service.getOne(
+        query ->
+            query.col(
+                "(case name when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) as name,id"),
+        condition -> condition.eq(Foo::setId, 10000L).and("name is not null"));
+  }
+
+  @Test
+  @DisplayName("查询单个:自定义sql")
+  @Transactional(rollbackFor = Exception.class)
+  public void testGetOne5() {
+    assertNotNull(service.getOne("select id,name from foo limit 1", IdNameResponse.class));
+  }
+
+  @Test
   @DisplayName("查询列表:通过id列表查询")
   @Transactional(rollbackFor = Exception.class)
   public void testListByIds() {
@@ -161,12 +180,7 @@ public class BaseServiceTest {
   @DisplayName("查询列表:条件查询指定页,带排序")
   @Transactional(rollbackFor = Exception.class)
   public void testList4() {
-    assertNotNull(
-        service.list(
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC)));
+    assertNotNull(service.list(condition -> condition.gt(Foo::setId, 0L), 1, 10));
   }
 
   @Test
@@ -207,6 +221,13 @@ public class BaseServiceTest {
   public void testListAll2() {
     assertNotNull(
         service.listAll(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
+  }
+
+  @Test
+  @DisplayName("查询列表:自定义sql")
+  @Transactional(rollbackFor = Exception.class)
+  public Rs<List<Foo>> testListAll3() {
+    return Rs.ok(service.listAll("select * from foo", Foo.class));
   }
 
   @Test

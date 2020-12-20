@@ -6,7 +6,6 @@ import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.PrototypeBean;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
@@ -123,17 +122,6 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
             .map(queryColumn -> queryColumn.getString(false))
             .collect(Collectors.joining(","));
     return this;
-  }
-
-  /**
-   * 该方法暂时不用.
-   *
-   * @param conditions the conditions
-   * @return the query
-   */
-  public Query<T> from(final Condition<?>... conditions) {
-    // TODO WARN from方法
-    throw CommonException.of("方法未实现");
   }
 
   /**
@@ -373,6 +361,30 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
   }
 
   /**
+   * 自定义sql查询单个.
+   *
+   * @param <R> the type parameter
+   * @param sql the sql
+   * @param respClazz the clazz
+   * @param args the args
+   * @return the list
+   */
+  public <R> R fetchOneBySql(final String sql, final Class<R> respClazz, final Object... args) {
+    final Map<String, Object> map =
+        executor.queryForMap(
+            new SqlParam<T>().setSql(sql).setClazz(respClazz).setConditions(conditions), args);
+    if (CollectionUtils.isEmpty(map)) {
+      return null;
+    }
+    // 用于转换列
+    ResultHandler<Map<String, Object>, R> resultHandler =
+        BeanUtils.isPrimitiveType(respClazz) || respClazz.isArray()
+            ? new PrimitiveResultHandler<>(respClazz)
+            : new BeanResultHandler<>(respClazz, queryColumns);
+    return resultHandler.handle(map);
+  }
+
+  /**
    * 自定义sql查询列表.
    *
    * @param <R> the type parameter
@@ -381,7 +393,8 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    * @param args the args
    * @return the list
    */
-  public <R> List<R> fetchBySql(final String sql, final Class<R> respClazz, final Object... args) {
+  public <R> List<R> fetchAllBySql(
+      final String sql, final Class<R> respClazz, final Object... args) {
     final List<Map<String, Object>> list =
         executor.queryForList(
             new SqlParam<T>().setSql(sql).setClazz(respClazz).setConditions(conditions), args);

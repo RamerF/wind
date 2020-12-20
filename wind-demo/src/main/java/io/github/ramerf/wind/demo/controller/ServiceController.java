@@ -3,6 +3,7 @@ package io.github.ramerf.wind.demo.controller;
 import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.condition.SortColumn.Order;
 import io.github.ramerf.wind.core.entity.response.Rs;
+import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.pojo.Foo.Type;
 import io.github.ramerf.wind.demo.entity.response.FooThinResponse;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import static java.util.stream.Collectors.toList;
 
 /**
- * 该类用于辅助测试.
+ * service层方法使用示例.
  *
  * @author Tang Xiaofeng
  * @since 2020/4/28
@@ -31,8 +32,7 @@ import static java.util.stream.Collectors.toList;
 @RestController
 @RequestMapping("/service")
 @Api(tags = "service层方法使用示例")
-@CrossOrigin(origins = "*", maxAge = 3600)
-public class FooServiceController {
+public class ServiceController {
   @Resource private FooService service;
   private static final Foo foo =
       Foo.builder()
@@ -49,6 +49,12 @@ public class FooServiceController {
           .column("non_match_column")
           .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
           .build();
+
+  @GetMapping("/generic-service")
+  @ApiOperation("通用service")
+  public Rs<Long> genericService() {
+    return Rs.ok(GenericService.with(Foo.class, Long.class).count());
+  }
 
   @GetMapping("/count")
   @ApiOperation("count,所有(不包含已删除)")
@@ -122,6 +128,12 @@ public class FooServiceController {
             query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L), Long.class));
   }
 
+  @GetMapping(value = "/get-one", params = "type=5")
+  @ApiOperation("查询,单条查询,自定义sql")
+  public Rs<Foo> getOne5() {
+    return Rs.ok(service.getOne("select * from foo limit 1", Foo.class));
+  }
+
   @GetMapping("/list-by-ids")
   @ApiOperation("查询,列表查询,通过id集合查询poJo")
   public Rs<List<Foo>> listByIds() {
@@ -130,19 +142,19 @@ public class FooServiceController {
 
   @GetMapping("/list")
   @ApiOperation("查询,列表查询,指定条件")
-  public Rs<Long> list() {
+  public Rs<List<Foo>> list() {
     return Rs.ok(service.list(condition -> condition.eq(Foo::setId, 1L)));
   }
 
   @GetMapping(value = "/list", params = "type=2")
   @ApiOperation("查询,列表查询,指定返回列,返回自定义对象")
-  public Rs<Long> list2() {
+  public Rs<List<Long>> list2() {
     return Rs.ok(service.list(query -> query.col(Foo::getId), Long.class));
   }
 
   @GetMapping(value = "/list", params = "type=3")
   @ApiOperation("查询,列表查询,指定条件,指定返回列")
-  public Rs<Long> list3() {
+  public Rs<List<Foo>> list3() {
     return Rs.ok(
         service.list(query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L)));
   }
@@ -179,6 +191,23 @@ public class FooServiceController {
             Long.class));
   }
 
+  @GetMapping(value = "/list", params = "type=7")
+  @ApiOperation("查询,列表查询,自定义sql")
+  public Rs<List<Foo>> list7() {
+    return Rs.ok(
+        service.list(
+            query ->
+                query.col(
+                    "(case title when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) title,id"),
+            condition -> condition.eq(Foo::setId, 1L).and("title is not null")));
+  }
+
+  @GetMapping(value = "/list", params = "type=8")
+  @ApiOperation("查询,列表查询,自定义sql")
+  public Rs<List<Foo>> list8() {
+    return Rs.ok(service.listAll("select * from foo", Foo.class));
+  }
+
   @GetMapping(value = "/listAll")
   @ApiOperation("查询,列表查询,所有记录,指定返回列,返回自定义对象")
   public Rs<List<Long>> listAll() {
@@ -189,6 +218,12 @@ public class FooServiceController {
   @ApiOperation("查询,列表查询,所有记录,指定返回列,返回自定义对象")
   public Rs<List<Foo>> listAll2() {
     return Rs.ok(service.listAll(query -> query.col(Foo::getId), Foo.class));
+  }
+
+  @GetMapping(value = "/listAll", params = "type=3")
+  @ApiOperation("查询,自定义sql")
+  public Rs<List<Foo>> listAll3() {
+    return Rs.ok(service.listAll("select * from foo", Foo.class));
   }
 
   @GetMapping(value = "/page")
@@ -216,7 +251,7 @@ public class FooServiceController {
 
   @GetMapping(value = "/page", params = "type=3")
   @ApiOperation("查询,分页查询,指定返回列,指定条件,指定排序规则")
-  public Rs<Page<Long>> page3() {
+  public Rs<Page<Foo>> page3() {
     return Rs.ok(
         service.page(
             query -> query.col(Foo::getId),
@@ -228,7 +263,7 @@ public class FooServiceController {
 
   @GetMapping(value = "/page", params = "type=4")
   @ApiOperation("查询,分页查询,指定返回列,指定条件,指定排序规则,返回自定义对象")
-  public Rs<Page<Foo>> page4() {
+  public Rs<Page<Long>> page4() {
     return Rs.ok(
         service.page(
             query -> query.col(Foo::getId),
@@ -241,25 +276,25 @@ public class FooServiceController {
 
   @PostMapping(value = "/create")
   @ApiOperation("创建")
-  public Rs<Long> create() {
+  public Rs<Foo> create() {
     return Rs.ok(service.create(foo));
   }
 
   @PostMapping(value = "/create", params = "type=2")
   @ApiOperation("创建,指定属性")
-  public Rs<Long> create2() {
+  public Rs<Foo> create2() {
     return Rs.ok(service.create(foo, fields -> fields.include(Foo::getName)));
   }
 
   @PostMapping(value = "/create", params = "type=3")
   @ApiOperation("创建,域对象")
-  public Rs<Long> create3() {
+  public Rs<Foo> create3() {
     return Rs.ok(foo.create());
   }
 
   @PostMapping(value = "/createBatch")
   @ApiOperation("创建,批量创建,指定属性")
-  public Rs<Long> createBatch() {
+  public Rs<Integer> createBatch() {
     final List<Foo> list =
         LongStream.range(0, 100)
             .mapToObj(
@@ -292,7 +327,7 @@ public class FooServiceController {
 
   @PostMapping(value = "/update")
   @ApiOperation("更新")
-  public Rs<Long> update1() {
+  public Rs<Integer> update1() {
     foo.setId(1L);
     foo.setName("<" + LocalDateTime.now() + ">");
     return Rs.ok(service.update(foo));
@@ -300,7 +335,7 @@ public class FooServiceController {
 
   @PostMapping(value = "/update", params = "type=2")
   @ApiOperation("更新,指定属性")
-  public Rs<Long> update2() {
+  public Rs<Integer> update2() {
     foo.setId(1L);
     foo.setName("<" + LocalDateTime.now() + ">");
     return Rs.ok(service.update(foo, fields -> fields.include(Foo::getName)));
@@ -308,7 +343,7 @@ public class FooServiceController {
 
   @PostMapping(value = "/update", params = "type=3")
   @ApiOperation("更新,条件更新")
-  public Rs<Long> update3() {
+  public Rs<Integer> update3() {
     foo.setName("<" + LocalDateTime.now() + ">");
     return Rs.ok(
         service.updateByCondition(
@@ -383,7 +418,7 @@ public class FooServiceController {
 
   @GetMapping(value = "/delete")
   @ApiOperation("删除")
-  public Rs<Long> delete() {
+  public Rs<Integer> delete() {
     return Rs.ok(service.delete(1L));
   }
 

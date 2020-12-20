@@ -17,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 执行写数据.
  *
- * <p>Note:默认不写入值为null的属性,通过{@link WindConfiguration#isWriteNullProp()}开关
- *
  * @param <T> the type parameter
  * @author Tang Xiaofeng
  * @since 2020/1/5

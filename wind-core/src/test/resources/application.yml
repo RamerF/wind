@@ -98,3 +98,5 @@ wind:
   snowflake-prop:
     worker-id: 3
     data-center-id: 2
+  # 新增/更新时写入值为null的属性,默认写入
+  write-null-prop: false

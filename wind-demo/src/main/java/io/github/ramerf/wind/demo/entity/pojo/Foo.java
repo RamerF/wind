@@ -93,7 +93,7 @@ public class Foo extends AbstractEntityPoJo<Foo, Long> {
 
   /** 大文本字段,测试{@link Fields} include/exclude. */
   @TableColumn(comment = "大文本字段,测试Fields include/exclude", columnDefinition = "text")
-  private String largeText;
+  private String bigText;
 
   /* boolean类型. */
   private boolean isNumber;

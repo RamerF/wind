@@ -61,11 +61,7 @@ public interface BeanFunction extends Serializable {
               try {
                 field = BeanUtils.getClazz(classPath).getDeclaredField(property);
                 LAMBDA_FIELD_MAP.put(this, new WeakReference<>(field));
-              } catch (Exception ex) {
-                if (log.isDebugEnabled()) {
-                  log.warn(ex.getMessage());
-                  log.error(ex.getMessage(), ex);
-                }
+              } catch (Exception ignored) {
                 try {
                   field =
                       BeanUtils.getClazz(classPath)
@@ -74,7 +70,7 @@ public interface BeanFunction extends Serializable {
                 } catch (Exception e) {
                   log.warn(
                       "getField:cannot get field from lambda[{},{}]",
-                      ex.getMessage(),
+                      e.getMessage(),
                       e.getMessage());
                   log.error(e.getMessage(), e);
                   throw CommonException.of(e.getMessage(), e);

@@ -106,11 +106,11 @@ public class CommonBean {
    * @return the redis cache
    */
   @Bean
-  @ConditionalOnMissingBean(RedisCache.class)
+  @ConditionalOnMissingBean(Cache.class)
   @DependsOn("redisCacheRedisTemplate")
   @ConditionalOnProperty(value = "wind.cache.type", havingValue = "redis")
   public Cache defaultRedisCache(WindConfiguration configuration) {
-    return new DefaultRedisCache(configuration);
+    return new RedisCache(configuration);
   }
 
   /**

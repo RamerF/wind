@@ -134,6 +134,15 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
   }
 
+  /**
+   * 自定义sql查询.
+   *
+   * @param args 占位符?参数
+   */
+  default <R> R getOne(final String sql, @Nonnull final Class<R> respClazz, final Object... args) {
+    return getQuery().fetchOneBySql(sql, respClazz, args);
+  }
+
   /* 关联查询暂不开启
     default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> field) {
     final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
@@ -248,7 +257,19 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param conditionConsumer 查询条件
    * @param page 当前页码,从1开始
    * @param size 每页大小
-   * @param sortColumn 排序规则{@link SortColumn},null时按update_time倒序
+   * @return PoJo对象列表 list
+   */
+  default List<T> list(
+      final Consumer<LambdaCondition<T>> conditionConsumer, final int page, final int size) {
+    return list(null, conditionConsumer, page, size, null, getPoJoClass());
+  }
+
+  /**
+   * 获取某页列表数据,返回PoJo对象.
+   *
+   * @param conditionConsumer 查询条件
+   * @param page 当前页码,从1开始
+   * @param size 每页大小
    * @return PoJo对象列表 list
    */
   default List<T> list(
@@ -314,12 +335,35 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }
 
   /**
+   * 自定义sql查询.
+   *
+   * @param args 占位符?参数
+   */
+  default <R> List<R> listAll(
+      final String sql, @Nonnull final Class<R> respClazz, final Object... args) {
+    return getQuery().fetchAllBySql(sql, respClazz, args);
+  }
+
+  /**
    * 查询分页.
    *
    * @param conditionConsumer 查询条件
    * @param page 当前页码,从1开始
    * @param size 每页大小
-   * @param sortColumn 排序规则{@link SortColumn},null时按update_time倒序
+   * @return PoJo分页数据 page
+   */
+  default Page<T> page(
+      final Consumer<LambdaCondition<T>> conditionConsumer, final int page, final int size) {
+    return page(null, conditionConsumer, page, size, null, getPoJoClass());
+  }
+
+  /**
+   * 查询分页.
+   *
+   * @param conditionConsumer 查询条件
+   * @param page 当前页码,从1开始
+   * @param size 每页大小
+   * @param sortColumn 排序规则
    * @return PoJo分页数据 page
    */
   default Page<T> page(
@@ -337,7 +381,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param queryConsumer 查询列
    * @param page 当前页码,从1开始
    * @param size 每页大小
-   * @param sortColumn 排序规则{@link SortColumn},null时按update_time倒序
+   * @param sortColumn 排序规则
    * @param clazz the clazz
    * @return the page
    */
@@ -357,7 +401,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param conditionConsumer 查询条件
    * @param page 当前页,从1开始
    * @param size 每页大小
-   * @param sortColumn 排序规则{@link SortColumn},null时按update_time倒序
+   * @param sortColumn 排序规则
    * @return the page
    */
   default Page<T> page(
@@ -421,9 +465,8 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @see Order
    * @see Sort
    */
-  default PageRequest pageRequest(
-      final int page, final int size, @Nonnull final SortColumn sortColumn) {
-    return pageRequest(page, size, sortColumn.getSort());
+  default PageRequest pageRequest(final int page, final int size, final SortColumn sortColumn) {
+    return pageRequest(page, size, (sortColumn == null ? new SortColumn() : sortColumn).getSort());
   }
 
   /**

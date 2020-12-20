@@ -30,16 +30,25 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 @SuppressWarnings("UnusedReturnValue")
 public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
 
-  public LambdaCondition() {
+  protected LambdaCondition() {
     super();
   }
 
-  public LambdaCondition(final QueryColumn<T> queryColumn) {
+  protected LambdaCondition(final Class<T> clazz) {
+    super(clazz);
+  }
+
+  protected LambdaCondition(final QueryColumn<T> queryColumn) {
     super(queryColumn);
   }
 
   protected LambdaCondition(final Class<T> clazz, final String tableName, final String tableAlia) {
     super(clazz, tableName, tableAlia);
+  }
+
+  public static <T extends AbstractEntityPoJo<T, ?>> LambdaCondition<T> getInstance(
+      final Class<T> clazz) {
+    return new LambdaCondition<>(clazz);
   }
 
   public static <T extends AbstractEntityPoJo<T, ?>> LambdaCondition<T> getInstance(

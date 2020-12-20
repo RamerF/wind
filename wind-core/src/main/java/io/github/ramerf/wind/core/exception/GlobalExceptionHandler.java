@@ -16,6 +16,7 @@ import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Component;
@@ -194,6 +195,10 @@ public class GlobalExceptionHandler {
   @ResponseStatus
   @ExceptionHandler(value = DataAccessException.class)
   public Rs<Object> handleDataAccessException(HttpServletRequest request, Exception exception) {
+    if (exception instanceof IncorrectResultSizeDataAccessException) {
+      handleError(request, exception);
+      return Rs.fail(ResultCode.API_TOO_MANY_RESULTS);
+    }
     final Throwable cause = exception.getCause();
     if (cause instanceof SQLException) {
       handleError(request, (SQLException) cause);
