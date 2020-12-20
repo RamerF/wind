@@ -553,14 +553,7 @@ public class BaseServiceTest {
 }
 
 ```
-### 自定义类型处理器
 
-```java
-@Bean
-public ITypeHandler customTypeHandler() {
-
-}
-```
 
 #### repository层(Query/Update)
 
@@ -796,9 +789,19 @@ public class QueryUpdateController {
 
 ```
 
+#### 自定义类型处理器
+
+```java
+@Bean
+public ITypeHandler customTypeHandler() {
+```
+
+}
+```
+
 #### 自动建表
 
-```yml
+​```yml
 wind:
   # 自动建表,扫描entity-package下包含@TableInfo的类.可选值:none,create,update.默认:none
   ddl-auto: update
@@ -833,6 +836,7 @@ public IdGenerator autoIncrementGenerator() {
 ```
 
 #### 缓存
+
 ```yaml
 wind:  
   cache:
@@ -848,6 +852,7 @@ wind:
 cache.clear(Foo.class);
 ```
 #### 可配置项
+
 ```yaml
 wind:
   logic-delete-prop:
