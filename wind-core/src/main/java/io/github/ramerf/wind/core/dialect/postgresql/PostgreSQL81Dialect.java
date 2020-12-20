@@ -33,8 +33,8 @@ public class PostgreSQL81Dialect extends Dialect {
     registerColumnType(Boolean.class, "bool");
 
     registerColumnType(String.class, "text");
-    registerColumnType(String.class, 255, "text");
-    registerColumnType(String.class, 65535, "text");
+    /// registerColumnType(String.class, 255, "text($l)");
+    // registerColumnType(String.class, 65535, "text($l)");
 
     registerColumnType(Date.class, "timestamp");
     // array

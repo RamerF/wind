@@ -10,10 +10,10 @@ import io.github.ramerf.wind.demo.entity.pojo.Foo;
  * @since 2019 /12/17
  */
 @SuppressWarnings("unused")
-public interface FooService extends BaseService<Foo> {
+public interface FooService extends BaseService<Foo, Long> {
 
   /**
-   * Enable cache demo product po jo.
+   * Enable cache foo.
    *
    * @param id the id
    * @return the demo product po jo
@@ -21,7 +21,7 @@ public interface FooService extends BaseService<Foo> {
   Foo enableCache(final long id);
 
   /**
-   * Redis cache demo product po jo.
+   * Redis cache foo.
    *
    * @param id the id
    * @return the demo product po jo
@@ -29,7 +29,7 @@ public interface FooService extends BaseService<Foo> {
   Foo redisCache(final long id);
 
   /**
-   * Redis cache clear demo product po jo.
+   * Redis cache clear.
    *
    * @param poJo the po jo
    */
@@ -44,15 +44,4 @@ public interface FooService extends BaseService<Foo> {
    * @return the int
    */
   int deleteWithResult();
-
-  /*
-  create,
-  createBatch,
-  getOne,
-  list,
-  update,
-  updateBatch,
-  delete,
-  deleteBatch,
-  */
 }

@@ -29,7 +29,7 @@ public class MySQL57Dialect extends MySQL55Dialect {
     // MySQL 5.7 brings JSON native support with a dedicated datatype.
     // For more details about MySql new JSON datatype support, see:
     // https://dev.mysql.com/doc/refman/5.7/en/json.html
-    // TODO-WARN MYSQL JSON 对应Java类型
+    // TODO WARN MYSQL JSON 对应Java类型
     // registerColumnType(Types.JAVA_OBJECT, "json");
   }
 

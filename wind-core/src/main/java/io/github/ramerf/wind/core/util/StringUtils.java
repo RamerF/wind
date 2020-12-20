@@ -79,7 +79,9 @@ public class StringUtils {
         .mapToObj(i -> String.valueOf(chars[i]))
         .forEach(
             s -> {
-              if (s.matches("[A-Z]") && stringBuilder.length() > 0) {
+              if (s.matches("[A-Z]")
+                  && stringBuilder.length() > 0
+                  && stringBuilder.charAt(stringBuilder.length() - 1) != '_') {
                 stringBuilder.append("_");
               }
               stringBuilder.append(s.toLowerCase());
@@ -225,9 +227,7 @@ public class StringUtils {
     log.info("main:hasText[{}]", hasText(" "));
     log.info("main:hasLength[{}]", hasLength(" "));
     log.info("main:trimAllWhitespace[{}]", trimWhitespace(" Q W E "));
-    log.info("main:trimAllWhitespace[{}]", trimAllWhitespace(" Q W E "));
-    log.info("main:camelToUnderline[{}]", camelToUnderline("name"));
-    log.info("main:camelToUnderline[{}]", camelToUnderline("name2"));
-    log.info("main:camelToUnderline[{}]", camelToUnderline("bigDecimal"));
+    log.info("main:camelToUnderline[{}]", camelToUnderline("bigId"));
+    log.info("main:camelToUnderline[{}]", camelToUnderline("bigDecimal_Id"));
   }
 }

@@ -1,14 +1,14 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.cache.*;
-import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.executor.JdbcTemplateExecutor;
-import io.github.ramerf.wind.core.factory.TypeHandlerRegistryFactory;
+import io.github.ramerf.wind.core.handler.TypeHandlerRegistryFactory;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
+import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
 import io.github.ramerf.wind.core.support.*;
-import io.github.ramerf.wind.core.util.EnvironmentUtil;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -75,7 +75,7 @@ public class CommonBean {
 
       @Override
       public void addCorsMappings(@Nonnull CorsRegistry registry) {
-        // TODO-WARN 这个跨域配置有问题
+        // TODO WARN 这个跨域配置有问题
         final long maxAge = 3600L;
         registry
             .addMapping("/**")
@@ -93,9 +93,11 @@ public class CommonBean {
    * @return the jackson 2 object mapper builder customizer
    */
   @Bean
-  public Jackson2ObjectMapperBuilderCustomizer jacksonObjectMapperCustomizer() {
+  public Jackson2ObjectMapperBuilderCustomizer jacksonObjectMapperCustomizer(
+      ObjectProvider<InterEnumSerializer> interEnumSerializer) {
     return objectMapperBuilder ->
-        objectMapperBuilder.serializerByType(InterEnum.class, new JacksonEnumSerializer());
+        objectMapperBuilder.serializerByType(
+            InterEnum.class, new JacksonEnumSerializer(interEnumSerializer.getIfAvailable()));
   }
 
   /**
@@ -104,16 +106,17 @@ public class CommonBean {
    * @return the redis cache
    */
   @Bean
-  @ConditionalOnMissingBean(RedisCache.class)
+  @ConditionalOnMissingBean(Cache.class)
   @DependsOn("redisCacheRedisTemplate")
   @ConditionalOnProperty(value = "wind.cache.type", havingValue = "redis")
   public Cache defaultRedisCache(WindConfiguration configuration) {
-    return new DefaultRedisCache(configuration);
+    return new RedisCache(configuration);
   }
 
   /**
-   * Default redis cache redis cache.
+   * In memory cache cache.
    *
+   * @param configuration the configuration
    * @return the redis cache
    */
   @Bean
@@ -129,8 +132,8 @@ public class CommonBean {
    * @return the executor
    */
   @Bean
-  public Executor jdbcTemplateExecutor(ObjectProvider<RedisCache> redisCache) {
-    return new JdbcTemplateExecutor(redisCache.getIfAvailable());
+  public Executor jdbcTemplateExecutor(ObjectProvider<Cache> cacheObjectProvider) {
+    return new JdbcTemplateExecutor(cacheObjectProvider.getIfAvailable());
   }
 
   /**
@@ -142,15 +145,5 @@ public class CommonBean {
   @ConditionalOnMissingBean(IdGenerator.class)
   public IdGenerator snowflakeIdGenerator() {
     return new SnowflakeIdGenerator();
-  }
-
-  /**
-   * Environment util environment util.
-   *
-   * @return the environment util
-   */
-  @Bean
-  public EnvironmentUtil environmentUtil() {
-    return new EnvironmentUtil();
   }
 }

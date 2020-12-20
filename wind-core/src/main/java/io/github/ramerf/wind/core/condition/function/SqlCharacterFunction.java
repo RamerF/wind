@@ -12,10 +12,10 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  */
 public enum SqlCharacterFunction implements SqlFunction {
   /** 取小写字母. */
-  LOWER(str -> " LOWER(" + String.join("", str) + ") "),
-  UPPER(str -> " UPPER(" + String.join("", str) + ") "),
-  TRIM(str -> " TRIM(" + String.join("", str) + ") "),
-  TRANSLATE(str -> " TRANSLATE(" + String.join("", str) + ") "),
+  LOWER(str -> " lower(" + String.join("", str) + ") "),
+  UPPER(str -> " upper(" + String.join("", str) + ") "),
+  TRIM(str -> " trim(" + String.join("", str) + ") "),
+  TRANSLATE(str -> " translate(" + String.join("", str) + ") "),
   ;
   private final VarArgsFunction<String, String> exec;
 

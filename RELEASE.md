@@ -1,10 +1,35 @@
-#  版本日志
+# 版本日志
 
 ---
+
+#### 4.0.2-RELEASE
+
+- 新增：更新指定字段
+- 新增：查询支持
+- 新增：字符串条件构造`StringCondition`。如：`condition.eq("id", 1);`
+- 新增：主键支持任意类型
+- 新增：条件组，拼接or条件更清晰
+- 新增：`GenericService`支持操作任意表
+- 新增：支持内存缓存。通过`wind.cache.type=memory`开启
+- 新增：实体现在自带保存/更新方法 `product.create();`
+- 新增：枚举校验注解
+- 新增：校验器工具类
+- 新增：全局异常处理
+- 更新：默认关闭缓存
+- 更新：默认关闭逻辑删除
+- 更新：默认写入所有(包括null值)属性，通过`wind.write-null-prop=true/false`开关
+- 更新：InterEnum枚举值由整型改为泛型。controller枚举支持接收名称和value值
+- 更新：@Column替换为@TableColumn
+- 更新：弃用@Entity，使用@TableInfo
+- 更新：其他易用性更新
+- 优化：缓存清除时改为使用scan指令
+- 修复：字段为boolean时，lambda无法获取到field
+- 修复：缓存没有正确清除
+
 #### 4.0.1-RELEASE
 
-- 新增：缓存支持自定义扩展，目前支持内存和Redis,默认使用内存缓存
-- 新增：校验器工具类,用于支持手动校验和获取校验错误信息
+- 新增：缓存支持自定义扩展，目前支持内存和Redis，默认使用内存缓存
+- 新增：校验器工具类，用于支持手动校验和获取校验错误信息
 - 新增：支持controller接收枚举参数并自动校验有效性
 - 新增：全局异常处理
 - 修复：缓存没有正确清除
@@ -22,24 +47,22 @@
 
 #### 3.8.3-RELEASE
 
-- 新增：清除redis缓存，用于其它orm框架执行对象写入后的缓存清除
+- 新增：清除缓存
 
-  ```java
-  @Resource private RedisCache redisCache;
-  redisCache.clear(Foo.class);
-  ```
+```java
+@Resource private Cache cache;
+cache.clear(Foo.class);
+```
 
 - 新增：字段支持使用TypeHandler注解指定类型处理器
 
-  ```java
-  @TypeHandler(EnumTypeHandler.class)
-  private Type type;
-  ```
+```java
+@TypeHandler(XxxHandler.class)
+private Type type;
+```
 
 - 新增：与spring-data-jpa结合示例
-
 - 更新：类型处理器移动到handler/typehandler下
-
 - 修复：注入顺序错误导致整合应用启动失败
 
 #### 3.8.0-RELEASE

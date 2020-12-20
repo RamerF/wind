@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import lombok.Data;
 
 /**
@@ -11,7 +11,7 @@ import lombok.Data;
  * @since 2020 /4/11
  */
 @Data
-public class EntityMetaData<T extends AbstractEntity> {
+public class EntityMetaData<T extends AbstractEntityPoJo<T, ?>> {
   /** 表名. */
   protected String tableName;
 

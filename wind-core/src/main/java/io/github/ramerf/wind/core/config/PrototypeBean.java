@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.config.PrototypeBean.QueryUpdateRegister;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import javax.annotation.Nonnull;
@@ -30,12 +31,12 @@ import org.springframework.core.type.AnnotationMetadata;
 @ConditionalOnMissingBean({Query.class, Update.class})
 public class PrototypeBean {
   @Lookup
-  public Query query() {
+  public <T extends AbstractEntityPoJo<T, ?>> Query<T> query(Class<T> clazz) {
     return null;
   }
 
   @Lookup
-  public Update update() {
+  public <T extends AbstractEntityPoJo<T, ?>> Update<T> update(Class<T> clazz) {
     return null;
   }
 

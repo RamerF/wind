@@ -2,20 +2,21 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
-import io.github.ramerf.wind.core.config.WindConfiguration;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
-import io.github.ramerf.wind.core.util.EntityUtils;
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.Objects;
+import javax.annotation.Nonnull;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
+import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.AS;
+import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.DOT;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -31,25 +32,63 @@ import static java.util.stream.Collectors.joining;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @SuppressWarnings("UnusedReturnValue")
-public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T> {
+public class QueryColumn<T extends AbstractEntityPoJo<T, ?>> extends AbstractQueryEntity<T> {
   /** 预留嵌套语句. */
   //  private List<QueryColumn<T>> children = new ArrayList<>();
 
-  private Condition<T> condition = null;
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromClass(
+      final Class<T> clazz) {
+    return getInstance(clazz, null, null);
+  }
+
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromClassAndTableAlia(
+      final Class<T> clazz, final String tableAlia) {
+    return getInstance(clazz, null, tableAlia);
+  }
+
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromTableName(
+      final String tableName) {
+    return getInstance(null, tableName, null);
+  }
+
+  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromTableNameAndAlia(
+      final String tableName, final String tableAlia) {
+    return getInstance(null, tableName, tableAlia);
+  }
+
+  private static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> getInstance(
+      final Class<T> clazz, String tableName, String tableAlia) {
+    if (clazz == null && tableName == null && tableAlia == null) {
+      throw CommonException.of("[clazz,tableName,tableAlia]不能同时为空");
+    }
+    final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
+    final QueryColumn<T> queryColumn = new QueryColumn<>(EntityInfo.of(configuration));
+    if (clazz != null) {
+      final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
+      // 如果tableName不为空,需要覆盖entityInfo的值.传入的tableName优先级最高,因为支持使用不相关的类查询表
+      if (tableName != null) {
+        entityInfo.setName(tableName);
+      } else {
+        tableName = entityInfo.getName();
+      }
+      queryColumn.setEntityInfo(entityInfo);
+    }
+
+    final QueryEntityMetaData<T> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
+    queryEntityMetaData.setClazz(clazz);
+    queryEntityMetaData.setTableName(tableName);
+    tableAlia = tableAlia == null ? tableName : tableAlia;
+    queryEntityMetaData.setTableAlia(tableAlia);
+    String fromTable = tableName;
+    if (tableAlia != null && !tableAlia.equals(tableName)) {
+      fromTable = tableName.concat(" ").concat(tableAlia);
+    }
+    queryEntityMetaData.setFromTable(fromTable);
+    return queryColumn;
+  }
 
   private QueryColumn(final EntityInfo entityInfo) {
     setEntityInfo(entityInfo);
-  }
-
-  /**
-   * Of query column.
-   *
-   * @param <T> the type parameter
-   * @param configuration the configuration
-   * @return the query column
-   */
-  public static <T extends AbstractEntity> QueryColumn<T> of(WindConfiguration configuration) {
-    return new QueryColumn<>(EntityInfo.of(configuration));
   }
 
   /**
@@ -71,6 +110,22 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
    */
   public QueryColumn<T> col(final IFunction<T, ?> function, final String alia) {
     return add(function, alia, null);
+  }
+
+  /**
+   * 新增自定义查询列.
+   *
+   * <p>示例:col("id,case sex when 1 then '男' when 2 then '女' else '未知' end alia")
+   *
+   * @param sql 查询列表达式
+   * @return the query column
+   */
+  public QueryColumn<T> col(@Nonnull final String sql) {
+    if (!sql.isEmpty()) {
+      final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
+      metaData.queryAlias.add(QueryAlia.of(sql));
+    }
+    return this;
   }
 
   /**
@@ -170,53 +225,59 @@ public class QueryColumn<T extends AbstractEntity> extends AbstractQueryEntity<T
   /** 添加查询对象(列/聚合函数). */
   private QueryColumn<T> add(
       final IFunction<T, ?> function, final String alia, final SqlFunction sqlFunction) {
-    getQueryEntityMetaData()
-        .queryAlias
-        .add(QueryAlia.of(function, alia, getQueryEntityMetaData().getTableAlia(), sqlFunction));
+    final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
+    metaData.queryAlias.add(
+        QueryAlia.of(
+            function, alia, metaData.getTableName(), metaData.getTableAlia(), sqlFunction));
     return this;
   }
 
   @Override
   public String getString() {
-    final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
-    return CollectionUtils.isEmpty(metaData.queryAlias)
-        ? EntityUtils.getAllColumnFields(metaData.clazz).stream()
-            .filter(EntityUtils::isNotDontFetch)
-            .map(this::fieldToColumnWithAlia)
-            .collect(joining(","))
-        : metaData.queryAlias.stream().map(QueryColumn::toColumnWithAlia).collect(joining(","));
+    return getString(true);
   }
 
-  private String fieldToColumnWithAlia(final Field field) {
-    return getQueryEntityMetaData()
-        .tableAlia
-        .concat(DOT.operator())
-        .concat(EntityUtils.fieldToColumn(field));
+  /** 是否包含列别名,单表时不需要包含别名,传false. */
+  public String getString(final boolean containAlia) {
+    final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
+    if (CollectionUtils.isEmpty(metaData.queryAlias)) {
+      EntityHelper.getEntityInfo(metaData.clazz).getEntityColumns().forEach(this::add);
+    }
+    return metaData.queryAlias.stream()
+        .map(o -> toColumnWithAlia(o, containAlia))
+        .collect(joining(","));
+  }
+
+  /** 添加查询对象(列/聚合函数). */
+  private QueryColumn<T> add(final EntityColumn entityColumn) {
+    getQueryEntityMetaData()
+        .queryAlias
+        .add(
+            QueryAlia.of(
+                entityColumn.getField().getName(),
+                entityColumn.getName(),
+                entityColumn.getName(),
+                getQueryEntityMetaData().getTableName(),
+                getQueryEntityMetaData().getTableAlia()));
+    return this;
   }
 
   /** 增加额外的表别名前缀 */
-  private static String toColumnWithAlia(final QueryAlia queryAlia) {
+  private static String toColumnWithAlia(final QueryAlia queryAlia, final boolean containAlia) {
+    final String customSql = queryAlia.getCustomSql();
+    if (customSql != null) {
+      return customSql;
+    }
+
     final String alia = queryAlia.getColumnAlia();
     final String name = queryAlia.getColumnName();
     final String tableAlias = queryAlia.getTableAlia();
 
     final SqlFunction sqlFunction = queryAlia.getSqlFunction();
     final String queryName =
-        Objects.isNull(sqlFunction)
-            ? tableAlias.concat(DOT.operator()).concat(name)
-            : sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name));
-    return queryName.concat(AS.operator()).concat(alia);
-  }
-
-  /**
-   * Gets condition.
-   *
-   * @return the condition
-   */
-  public Condition<T> getCondition() {
-    if (Objects.isNull(condition)) {
-      condition = Condition.of(this);
-    }
-    return condition;
+        sqlFunction != null
+            ? sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name))
+            : tableAlias.concat(DOT.operator()).concat(name);
+    return containAlia ? queryName.concat(AS.operator()).concat(alia) : queryName;
   }
 }

@@ -14,10 +14,9 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>wind</artifactId>
     <name>wind</name>
-    <version>4.0.1-RELEASE</version>
+    <version>4.0.2-RELEASE</version>
     <modules>
         <module>wind-core</module>
-        <module>wind-annotation</module>
     </modules>
     <url>http://maven.apache.org</url>
     <description>springboot web at once.</description>
@@ -49,7 +48,7 @@
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <wind.version>4.0.1-RELEASE</wind.version>
+        <wind.version>4.0.2-RELEASE</wind.version>
     </properties>
     <dependencies>
         <dependency>

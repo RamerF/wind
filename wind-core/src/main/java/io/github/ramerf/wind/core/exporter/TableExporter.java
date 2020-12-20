@@ -13,8 +13,10 @@ import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @author ramer
- * @since 15/08/2020
+ * 自动建表.
+ *
+ * @since 2020.10.28
+ * @author Tang Xiaofeng
  */
 @Slf4j
 public class TableExporter {
@@ -37,7 +39,7 @@ public class TableExporter {
     final String columnDefinition =
         columns.stream()
             .filter(EntityColumn::isSupported)
-            .map(column -> column.getColumnDefinition(dialect))
+            .map(column -> column.getColumnDdl(dialect))
             .collect(Collectors.joining(",\n\t"));
     sql.append(columnDefinition).append(",\n\t");
     final List<EntityColumn> keys = entityInfo.getPrimaryKeys();
@@ -73,7 +75,7 @@ public class TableExporter {
       }
     }
     log.info("createTable:[\n{}\n]", sql.toString());
-    windContext.getJdbcTemplateExecutor().getJdbcTemplate().execute(sql.toString());
+    windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
   public void updateTable(@Nonnull final EntityInfo entityInfo) {
@@ -93,7 +95,7 @@ public class TableExporter {
     final String columnDefinition =
         updateColumns.stream()
             .filter(EntityColumn::isSupported)
-            .map(column -> " add column " + column.getColumnDefinition(dialect))
+            .map(column -> " add column " + column.getColumnDdl(dialect))
             .collect(Collectors.joining(",\n\t"));
     sql.append(columnDefinition);
     // 列注释
@@ -107,7 +109,7 @@ public class TableExporter {
       sql.append(";\n\t").append(columnComment);
     }
     log.info("updateTable:[\n{}\n]", sql.toString());
-    windContext.getJdbcTemplateExecutor().getJdbcTemplate().execute(sql.toString());
+    windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
   /** 获取需要更新的列. */

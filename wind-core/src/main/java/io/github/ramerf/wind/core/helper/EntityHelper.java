@@ -1,22 +1,23 @@
 package io.github.ramerf.wind.core.helper;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.sql.Types;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
-import javax.persistence.Column;
-import javax.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -29,7 +30,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @Slf4j
 public class EntityHelper {
   /** 实体信息:{类全路径:EntityInfo} */
-  private static final Map<String, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
+  private static final Map<Class<?>, EntityInfo> CLAZZ_ENTITY_MAP = new ConcurrentHashMap<>();
 
   private static WindContext windContext;
 
@@ -43,13 +44,22 @@ public class EntityHelper {
    * @param <T> the type parameter
    * @param clazz the clazz
    */
-  public static <T extends AbstractEntityPoJo> void initEntity(final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo<T, ?>> void initEntity(final Class<T> clazz) {
     final EntityInfo entityInfo =
         EntityInfo.of(
             clazz, windContext.getWindConfiguration(), windContext.getDbMetaData().getDialect());
-    CLAZZ_ENTITY_MAP.put(clazz.getTypeName(), entityInfo);
+    CLAZZ_ENTITY_MAP.put(clazz, entityInfo);
     // 这里进行表定义更新
     ddlAuto(entityInfo);
+  }
+
+  /** 初始化关系映射. */
+  public static void initEntityMapping() {
+    CLAZZ_ENTITY_MAP.values().stream()
+        .filter(o -> !o.getClazz().equals(AbstractEntityPoJo.class))
+        .filter(o -> AbstractEntityPoJo.class.isAssignableFrom(o.getClazz()))
+        .forEach(EntityMapping::initial);
+    EntityMapping.valid(CLAZZ_ENTITY_MAP);
   }
 
   /**
@@ -69,7 +79,7 @@ public class EntityHelper {
 
   /**
    * 获取Field对应的jdbcType名称,用于sql设置值.<br>
-   * 默认使用{@link Column#columnDefinition()}内的列定义,如果为空则使用默认值.
+   * 默认使用{@link TableColumn#columnDefinition()}内的列定义,如果为空则使用默认值.
    *
    * @param field the field
    * @param defaultValue 默认值
@@ -78,7 +88,7 @@ public class EntityHelper {
    */
   public static String getJdbcTypeName(final Field field, final String defaultValue) {
     String typeName = defaultValue;
-    final Column column = field.getAnnotation(Column.class);
+    final TableColumn column = field.getAnnotation(TableColumn.class);
     if (Objects.nonNull(column)) {
       final String columnDefinition = column.columnDefinition();
       if (StringUtils.nonEmpty(columnDefinition)) {
@@ -105,30 +115,44 @@ public class EntityHelper {
    * @param clazz the clazz
    * @return the entity info
    */
-  public static <T extends AbstractEntity> EntityInfo getEntityInfo(@Nonnull final Class<T> clazz) {
+  public static <T extends AbstractEntityPoJo<T, ?>> EntityInfo getEntityInfo(
+      @Nonnull final Class<T> clazz) {
     return initEntityIfNeeded(clazz);
   }
 
-  private static <T extends AbstractEntity> EntityInfo initEntityIfNeeded(
+  /**
+   * 获取实体的主键字段.
+   *
+   * @param <T> the type parameter
+   * @param clazz the clazz
+   * @return the entity id field
+   */
+  public static <T extends AbstractEntityPoJo<T, ?>> Field getEntityIdField(
+      @Nonnull final Class<T> clazz) {
+    return getEntityInfo(clazz).getIdColumn().getField();
+  }
+
+  private static <T extends AbstractEntityPoJo<T, ?>> EntityInfo initEntityIfNeeded(
       @Nonnull final Class<T> clazz) {
     final String fullPath = clazz.getTypeName();
     synchronized (EntityHelper.class) {
-      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(fullPath);
+      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(clazz);
       if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {
-        initEntity(BeanUtils.getClazz(fullPath));
+        initEntity(clazz);
       }
     }
-    return CLAZZ_ENTITY_MAP.get(fullPath);
+    return CLAZZ_ENTITY_MAP.get(clazz);
   }
 
   private static EntityInfo initEntityIfNeeded(final String fullPath) {
+    final Class<AbstractEntityPoJo> clazz = BeanUtils.getClazz(fullPath);
     synchronized (EntityHelper.class) {
-      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(fullPath);
+      final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(clazz);
       if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {
-        initEntity(BeanUtils.getClazz(fullPath));
+        initEntity(clazz);
       }
     }
-    return CLAZZ_ENTITY_MAP.get(fullPath);
+    return CLAZZ_ENTITY_MAP.get(clazz);
   }
 
   private static void ddlAuto(final EntityInfo entityInfo) {
@@ -142,7 +166,7 @@ public class EntityHelper {
     // 先删除,再创建
     if (DdlAuto.CREATE.equals(ddlAuto)) {
       // Phase 1. delete
-      final JdbcTemplate jdbcTemplate = windContext.getJdbcTemplateExecutor().getJdbcTemplate();
+      final JdbcTemplate jdbcTemplate = windContext.getExecutor().getJdbcTemplate();
       final String dropSql = "drop table if exists " + entityInfo.getName();
       log.info("ddlAuto:drop table[{}]", dropSql);
       jdbcTemplate.execute(dropSql);
@@ -157,12 +181,10 @@ public class EntityHelper {
   /**
    * 判断一个Class是否映射到数据库表.true:是
    *
-   * <p>映射到数据库表需要实体包含注解中的一个: {@link Entity},{@link TableInfo}.
+   * <p>映射到数据库表需要实体包含注解: {@link TableInfo}.
    */
   public static boolean isMapToTable(final Class<?> clazz) {
-    return clazz != null
-        && (clazz.getAnnotation(Entity.class) != null
-            || clazz.getAnnotation(TableInfo.class) != null);
+    return clazz != null && clazz.getAnnotation(TableInfo.class) != null;
   }
 
   /**
@@ -171,7 +193,7 @@ public class EntityHelper {
    * @param args the input arguments
    */
   public static void main(String[] args) {
-    IFunction<AbstractEntityPoJo, Date> function = AbstractEntityPoJo::getCreateTime;
+    IFunction<TestLambda, String> function = TestLambda::getName;
     log.info("main:[{}]", getColumn(function));
   }
 }

@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.support;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import java.util.*;
 import javax.annotation.Nonnull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
@@ -35,12 +36,21 @@ public final class StringToEnumConverterFactory implements ConverterFactory<Stri
       this.enumType = enumType;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     public T convert(String source) {
       if (source.isEmpty()) {
         // It's an empty enum identifier: reset the enum value to null.
         return null;
+      }
+      // 支持枚举名称
+      Optional<T> optional =
+          Arrays.stream(enumType.getEnumConstants())
+              .filter(o -> Objects.equals(o.toString(), source))
+              .findFirst();
+      //noinspection OptionalIsPresent
+      if (optional.isPresent()) {
+        return optional.get();
       }
       return (T) InterEnum.of(source.trim(), this.enumType, () -> null);
     }

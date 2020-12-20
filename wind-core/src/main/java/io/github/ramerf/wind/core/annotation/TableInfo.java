@@ -18,10 +18,10 @@ public @interface TableInfo {
    *
    * @return the string
    */
-  String name();
+  String name() default "";
 
   /** 备注. */
   String comment() default "";
 
-  LogicDelete logicDelete() default @LogicDelete;
+  LogicDelete logicDelete() default @LogicDelete(fieldName = "");
 }

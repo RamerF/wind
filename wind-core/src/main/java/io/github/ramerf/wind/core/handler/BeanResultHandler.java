@@ -1,49 +1,87 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.util.*;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
+import io.github.ramerf.wind.core.mapping.EntityMapping;
+import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
+import io.github.ramerf.wind.core.support.EntityInfo;
+import io.github.ramerf.wind.core.util.BeanUtils;
+import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map.Entry;
 import javax.annotation.Nonnull;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
+import static io.github.ramerf.wind.core.util.EntityUtils.fieldToColumn;
+import static io.github.ramerf.wind.core.util.EntityUtils.getAllColumnFields;
+
 /**
+ * The type Bean result handler.
+ *
+ * @since 2019 /12/27
  * @author Tang Xiaofeng
- * @since 2019/12/27
+ * @param <P> PoJo
+ * @param <E> the type parameter
  */
 @Slf4j
-public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
-  /** 方法对应的字段. */
-  private static final Map<Method, WeakReference<Field>> METHODS_FIELD_MAP =
-      new ConcurrentHashMap<>();
+public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
+    extends AbstractResultHandler<P, Map<String, Object>, E> {
 
-  public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<?>> queryColumns) {
+  /** 列对应的字段. */
+  private static final Map<ClazzColumn, Field> CLAZZ_COLUMN_FIELD =
+      Collections.synchronizedMap(new WeakHashMap<>());
+
+  private Map<String, Field> columnFieldMap;
+
+  /**
+   * Instantiates a new Bean result handler.
+   *
+   * @param clazz the clazz
+   * @param queryColumns the query columns
+   */
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<P>> queryColumns) {
+    super(clazz, queryColumns);
+    if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {
+      final EntityInfo entityInfo = EntityHelper.getEntityInfo((Class<AbstractEntityPoJo>) clazz);
+      columnFieldMap = entityInfo.getColumnFieldMap();
+    } else {
+      columnFieldMap = new HashMap<>(20);
+      getAllColumnFields(clazz).forEach(field -> columnFieldMap.put(fieldToColumn(field), field));
+    }
+  }
+
+  /**
+   * Instantiates a new Bean result handler.
+   *
+   * @param clazz the clazz
+   * @param queryColumns the query columns
+   */
+  @SafeVarargs
+  public BeanResultHandler(@Nonnull final Class<E> clazz, final QueryColumn<P>... queryColumns) {
     super(clazz, queryColumns);
   }
 
   @Override
+  // @SuppressWarnings({"unchecked", "rawtypes"})
   public E handle(Map<String, Object> map) {
     // map = {alia:value}
     if (CollectionUtils.isEmpty(map)) {
       return null;
     }
     final E obj = BeanUtils.initial(clazz);
-
-    for (Method method : super.methods) {
-      final String fieldName = BeanUtils.methodToProperty(method.getName());
-      final String columnAlia = fieldAliaMap.get(fieldName);
-      Object value =
-          Optional.ofNullable(map.get(columnAlia))
-              .orElseGet(() -> map.get(StringUtils.camelToUnderline(fieldName)));
-      if (Objects.isNull(value)) {
+    for (Entry<String, Object> entry : map.entrySet()) {
+      final String column = entry.getKey();
+      Object value = entry.getValue();
+      if (value == null) {
         continue;
       }
       // 如果是数据库数组类型,获取对应的java数组
@@ -55,36 +93,83 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
           log.error(e.getMessage(), e);
         }
       }
-
-      // 判断数据类型,调用指定的转换器,获取到对应的Java值,如果没有就直接赋值.
-      final Class<?> parameterType = method.getParameterTypes()[0];
-      final Field field = getField(method, fieldName);
-      final Object finalValue =
-          TypeHandlerHelper.toJavaValue(
-              ValueType.of(value, method.getGenericParameterTypes()[0], field), parameterType);
-      BeanUtils.invoke(obj, method, finalValue)
-          .ifPresent(
-              exception ->
-                  log.warn(
-                      "handle:跳过类型不匹配的字段[fieldName:{},paramType:{},valueType:{}]",
-                      fieldName,
-                      parameterType.getSimpleName(),
-                      Optional.ofNullable(finalValue)
-                          .map(Object::getClass)
-                          .map(Class::getSimpleName)
-                          .orElse(null)));
+      final ClazzColumn clazzColumn = ClazzColumn.of(clazz, column);
+      final Field field =
+          Optional.ofNullable(CLAZZ_COLUMN_FIELD.get(clazzColumn))
+              .orElseGet(
+                  () -> {
+                    final Field f = columnFieldMap.get(column);
+                    CLAZZ_COLUMN_FIELD.put(clazzColumn, f);
+                    return f;
+                  });
+      if (field != null) {
+        final Object finalValue =
+            TypeHandlerHelper.toJavaValue(
+                ValueType.of(value, field.getGenericType(), field), field.getType());
+        BeanUtils.setValue(
+            obj,
+            field,
+            finalValue,
+            exception ->
+                log.warn(
+                    "handle:跳过类型不匹配的字段[fieldName:{},paramType:{},valueType:{}]",
+                    field.getName(),
+                    field.getType().getSimpleName(),
+                    Optional.ofNullable(finalValue)
+                        .map(Object::getClass)
+                        .map(Class::getSimpleName)
+                        .orElse(null)));
+      }
     }
+    // 保存关联字段值
+    /*TODO POST 关联查询暂不开启
+    if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {
+      final List<MappingInfo> mappingInfos = EntityMapping.get((Class<AbstractEntityPoJo>) clazz);
+      mappingInfos.forEach(
+          mappingInfo -> {
+            final Field field = mappingInfo.getField();
+            if (MappingInfo.isOneMapping(field)) {
+              initMappingObj(
+                  map,
+                  (AbstractEntityPoJo) obj,
+                  field,
+                  (Class<? extends AbstractEntityPoJo>) field.getType());
+              // TODO WARN 一对一
+            } else if (MappingInfo.isManyMapping(field)) {
+              // TODO WARN 一对多
+            }
+          });
+    }*/
     return obj;
   }
 
-  private Field getField(final Method method, final String fieldName) {
-    return Optional.ofNullable(METHODS_FIELD_MAP.get(method))
-        .map(Reference::get)
-        .orElseGet(
-            () -> {
-              final Field field = BeanUtils.getDeclaredField(clazz, fieldName);
-              METHODS_FIELD_MAP.put(method, new WeakReference<>(field));
-              return field;
-            });
+  /**
+   * @param map the map
+   * @param obj the obj
+   * @param field the field
+   * @param paramType 关联对象类型
+   */
+  @SuppressWarnings("rawtypes")
+  private <T extends AbstractEntityPoJo> void initMappingObj(
+      final Map<String, Object> map,
+      final T obj,
+      final Field field,
+      final Class<? extends AbstractEntityPoJo> paramType) {
+    final MappingInfo mappingInfo = EntityMapping.get(obj.getClass(), field).orElse(null);
+    if (mappingInfo == null) {
+      return;
+    }
+    final AbstractEntityPoJo mappingObj = BeanUtils.initial(paramType);
+    final Field referenceField = mappingInfo.getReferenceField();
+    referenceField.setAccessible(true);
+    BeanUtils.setValue(mappingObj, referenceField, map.get(mappingInfo.getColumn()), null);
+    BeanUtils.setValue(obj, field, mappingObj, null);
+  }
+
+  @EqualsAndHashCode
+  @AllArgsConstructor(staticName = "of")
+  private static class ClazzColumn {
+    private final Class<?> clazz;
+    private final String column;
   }
 }

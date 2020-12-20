@@ -22,10 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.*;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +38,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Slf4j
 @Configuration
+@ConditionalOnBean(DataSource.class)
 @EnableConfigurationProperties(WindConfiguration.class)
 @AutoConfigureAfter({CommonBean.class, PrototypeBean.class})
 public class WindAutoConfiguration implements ApplicationContextAware, InitializingBean {
@@ -48,14 +49,16 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   private final ObjectMapper objectMapper;
   private final Executor executor;
   private final IdGenerator idGenerator;
+  private final PrototypeBean prototypeBean;
 
   public WindAutoConfiguration(
       final WindConfiguration windConfiguration,
-      @Qualifier("dataSource") final DataSource dataSource,
+      final DataSource dataSource,
       final ApplicationEventPublisher publisher,
       final ObjectMapper objectMapper,
       final Executor jdbcTemplateExecutor,
-      final ObjectProvider<IdGenerator> idGenerator) {
+      final ObjectProvider<IdGenerator> idGenerator,
+      final PrototypeBean prototypeBean) {
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
     windContext.setWindConfiguration(windConfiguration);
 
@@ -64,6 +67,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     this.objectMapper = objectMapper;
     this.executor = jdbcTemplateExecutor;
     this.idGenerator = idGenerator.getIfAvailable();
+    this.prototypeBean = prototypeBean;
   }
 
   @Override
@@ -77,15 +81,20 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
   public void afterPropertiesSet() throws Exception {
     // 打印banner
     printBanner();
-    windContext.setJdbcTemplateExecutor(executor);
+    windContext.setExecutor(executor);
     AppContextInject.initital(applicationContext);
     // 初始化分布式主键
     SnowflakeIdWorker.initial(configuration.getSnowflakeProp());
     // 初始化Query/Update
-    Update.initial(executor, configuration, idGenerator, windContext.getDbMetaData().getDialect());
-    Query.initial(executor, configuration);
+    Update.initial(
+        executor,
+        configuration,
+        idGenerator,
+        windContext.getDbMetaData().getDialect(),
+        prototypeBean);
+    Query.initial(executor, configuration, prototypeBean);
     // 初始化EntityUtils
-    EntityUtils.initial(configuration);
+    EntityUtils.initial(windContext);
     // 初始化实体类
     final Class<?> bootClass =
         applicationContext.getBeansWithAnnotation(SpringBootApplication.class).values().stream()
@@ -119,6 +128,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
             AnsiStyle.FAINT));
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private void initEntityInfo(final Class<?> bootClass, final WindConfiguration configuration) {
     final SpringBootApplication application = bootClass.getAnnotation(SpringBootApplication.class);
     String scanBasePackages;
@@ -133,20 +143,21 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       entityPackage = bootClass.getPackage().getName();
     }
     log.info("initEntityInfo:package[{}]", entityPackage);
+    Set<Class<? extends AbstractEntityPoJo>> entities;
     try {
-      final Set<Class<? extends AbstractEntityPoJo>> entities =
-          BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);
+      entities = BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);
       if (entities.size() < 1) {
-        log.error(
-            String.format(
-                "no entity with @Entity annotation found in path: %s, correct your configuration:wind.entity-package",
-                entityPackage));
+        log.info(
+            "no entity with @TableInfo annotation found in path: [{}], correct your configuration:wind.entity-package",
+            entityPackage);
       }
-      // 下面这行确保查询指定公共列时lambda可以使用AbstractEntityPoJo指定.如: AbstractEntityPoJo::getId
-      entities.add(AbstractEntityPoJo.class);
-      entities.forEach(EntityHelper::initEntity);
     } catch (IOException e) {
+      entities = null;
       log.warn("initEntityInfo:fail to init entity info[{}]", e.getMessage());
+    }
+    if (entities != null) {
+      entities.forEach(EntityHelper::initEntity);
+      EntityHelper.initEntityMapping();
     }
   }
 

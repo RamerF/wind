@@ -76,5 +76,6 @@ public interface Cache {
    * @return the string
    * @see SqlParam
    */
-  String generateKey(@Nonnull final SqlParam sqlParam, @Nonnull final String methodName);
+  <T extends AbstractEntityPoJo<T, ?>> String generateKey(
+      @Nonnull final SqlParam<T> sqlParam, @Nonnull final String methodName);
 }

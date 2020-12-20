@@ -10,6 +10,7 @@ public class EnumValueSerializer implements ObjectSerializer {
       JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) {
     SerializeWriter serializeWriter = serializer.out;
     if (object instanceof InterEnum) {
+      @SuppressWarnings("rawtypes")
       InterEnum interEnum = (InterEnum) object;
       serializeWriter.write(String.valueOf(interEnum.value()));
     } else {

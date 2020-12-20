@@ -13,9 +13,9 @@ import lombok.Setter;
 @Setter
 @Getter
 public class SnowflakeProp {
-  /** 用于分布式主键生成{@link SnowflakeIdWorker#setWorkerId(long)}. */
+  /** 用于分布式主键生成{@link SnowflakeIdWorker#workerId}. */
   private Long workerId = 0L;
 
-  /** 用于分布式主键生成.{@link SnowflakeIdWorker#setDatacenterId(long)} */
+  /** 用于分布式主键生成.{@link SnowflakeIdWorker#datacenterId} */
   private Long dataCenterId = 0L;
 }

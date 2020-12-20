@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.util.BeanUtils;
-import io.github.ramerf.wind.core.util.EnumUtils;
+import io.github.ramerf.wind.core.util.InterEnumUtils;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -82,7 +82,7 @@ public class JacksonEnumDeserializer<T extends InterEnum> extends JsonDeserializ
       }
       jsonToken = parser.nextToken();
     }
-    return (T) EnumUtils.of(value, clazz);
+    return (T) InterEnumUtils.of(value, clazz);
   }
 
   @SuppressWarnings("unchecked")

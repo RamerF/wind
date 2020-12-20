@@ -69,7 +69,10 @@ public class TypeNames {
   public String get(Type type) throws MappingException {
     final String result = defaults.get(type);
     if (result == null) {
-      throw new MappingException("No Dialect mapping for JDBC type: " + type);
+      throw new MappingException(
+          "No Dialect mapping for JDBC type: "
+              + type
+              + ",manually specify by @TableColumn#columnDefinition");
     }
     return result;
   }

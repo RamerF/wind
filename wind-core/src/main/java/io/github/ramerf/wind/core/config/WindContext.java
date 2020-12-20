@@ -31,5 +31,5 @@ public class WindContext {
 
   private WindConfiguration windConfiguration;
 
-  private Executor jdbcTemplateExecutor;
+  private Executor executor;
 }

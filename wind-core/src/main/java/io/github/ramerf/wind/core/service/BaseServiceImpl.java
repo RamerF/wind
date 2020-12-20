@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.util.EntityUtils;
+import java.io.Serializable;
 
 /**
  * 该类用于service覆写方法后,调用原方法,service代码示例:
@@ -24,16 +25,17 @@ import io.github.ramerf.wind.core.util.EntityUtils;
  * @author Tang Xiaofeng
  * @since 2019/12/20
  */
-public class BaseServiceImpl<T extends AbstractEntityPoJo, R> implements BaseService<T> {
+public class BaseServiceImpl<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable, R>
+    implements BaseService<T, ID> {
   private final R repository;
-  private final BaseService<T> service;
+  private final BaseService<T, ID> service;
 
   @Override
   public Class<T> getPoJoClass() {
     return EntityUtils.getPoJoClass(service);
   }
 
-  public BaseServiceImpl(R repository, BaseService<T> service) {
+  public BaseServiceImpl(R repository, BaseService<T, ID> service) {
     this.repository = repository;
     this.service = service;
   }

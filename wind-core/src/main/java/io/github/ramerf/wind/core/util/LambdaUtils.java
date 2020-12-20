@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.*;
 import java.io.*;
@@ -112,8 +112,8 @@ public final class LambdaUtils {
    * @param args the input arguments
    */
   public static void main(String[] args) {
-    IFunction<AbstractEntityPoJo, Long> function = AbstractEntityPoJo::getId;
-    IConsumer<AbstractEntityPoJo, Long> consumer = AbstractEntityPoJo::setId;
+    IFunction<TestLambda, Long> function = TestLambda::getId;
+    IConsumer<TestLambda, Long> consumer = TestLambda::setId;
     log.info("main:getMethodName[{}]", getMethodName(function));
     log.info("main:getActualTypePath:[{}]" + getImplClassFullPath(consumer));
   }

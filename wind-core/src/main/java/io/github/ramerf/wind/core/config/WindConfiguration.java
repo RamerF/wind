@@ -1,10 +1,5 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.support.EntityInfo;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -43,11 +38,8 @@ public class WindConfiguration {
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 150;
 
-  /** 是否启用通用mvc配置. */
+  /** 是否启用默认mvc配置. */
   private boolean enableWebMvcConfigurer = true;
-
-  /** 禁用{@link AbstractEntityPoJo}中的公共字段. */
-  private List<CommonField> disableFields = new ArrayList<>();
 
   /** 自动更新表模式. */
   private DdlAuto ddlAuto;
@@ -55,35 +47,14 @@ public class WindConfiguration {
   /** 数据库方言全路径. */
   private String dialect;
 
+  /** 新增/更新时写入值为null的属性,默认写入所有字段. */
+  private boolean writeNullProp = true;
+
   /** 雪花分布式id. */
   @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
 
   /** 缓存配置. */
   @NestedConfigurationProperty private CacheConfig cache = new CacheConfig();
-
-  public void setLogicDeleteProp(final LogicDeleteProp logicDeleteProp) {
-    this.logicDeleteProp = logicDeleteProp;
-    // 如果逻辑删除字段已被禁用,给个提示
-    final String logicDeleteColumn = logicDeleteProp.getColumn();
-    if (disableFields.size() > 0
-        && logicDeleteColumn.equals(AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME)
-        && getDisableFields().stream()
-            .anyMatch(field -> field.getColumn().equals(logicDeleteColumn))) {
-      log.warn("逻辑删除字段[{}]已被禁用,将启用全局物理删除!", logicDeleteColumn);
-      logicDeleteProp.setEnable(false);
-    }
-  }
-
-  public void setDisableFields(final List<CommonField> disableFields) {
-    this.disableFields = disableFields;
-    // 如果逻辑删除字段已被禁用,给个提示
-    final String logicDeleteColumn = logicDeleteProp.getColumn();
-    if (logicDeleteColumn.equals(AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME)
-        && disableFields.stream().anyMatch(field -> field.getColumn().equals(logicDeleteColumn))) {
-      log.warn("逻辑删除字段[{}]已被禁用,将启用全局物理删除!", logicDeleteColumn);
-      logicDeleteProp.setEnable(false);
-    }
-  }
 
   /**
    * Redis 缓存配置.
@@ -95,17 +66,19 @@ public class WindConfiguration {
   @Getter
   public static class CacheConfig {
     /** 是否启用. */
-    private CacheType type = CacheType.MEMORY;
+    private CacheType type = CacheType.NONE;
 
     /** 缓存key前缀. */
     private String keyPrefix = "io.github.ramerf.wind";
   }
 
   public enum CacheType {
+    /** none cache. */
+    NONE,
     /** redis. */
     REDIS,
     /** memory. */
-    MEMORY
+    MEMORY,
   }
 
   /**
@@ -120,55 +93,5 @@ public class WindConfiguration {
     UPDATE,
     /** None ddl auto. */
     NONE
-  }
-
-  /**
-   * PoJo公共字段.
-   *
-   * @author Tang Xiaofeng
-   */
-  @Slf4j
-  @SuppressWarnings("JavadocReference")
-  public enum CommonField {
-    /** {@link AbstractEntityPoJo#deleted}. */
-    DELETED {
-      @Override
-      public Field getField() {
-        return EntityInfo.DEFAULT_LOGIC_DELETE_FIELD;
-      }
-
-      @Override
-      public String getColumn() {
-        return AbstractEntityPoJo.LOGIC_DELETE_COLUMN_NAME;
-      }
-    },
-    /** {@link AbstractEntityPoJo#createTime}. */
-    CREATE_TIME {
-      @Override
-      public Field getField() {
-        return EntityInfo.DEFAULT_CREATE_TIME_FIELD;
-      }
-
-      @Override
-      public String getColumn() {
-        return AbstractEntityPoJo.CREATE_TIME_COLUMN_NAME;
-      }
-    },
-    /** {@link AbstractEntityPoJo#updateTime}. */
-    UPDATE_TIME {
-      @Override
-      public Field getField() {
-        return EntityInfo.DEFAULT_UPDATE_TIME_FIELD;
-      }
-
-      @Override
-      public String getColumn() {
-        return AbstractEntityPoJo.UPDATE_TIME_COLUMN_NAME;
-      }
-    };
-
-    public abstract Field getField();
-
-    public abstract String getColumn();
   }
 }

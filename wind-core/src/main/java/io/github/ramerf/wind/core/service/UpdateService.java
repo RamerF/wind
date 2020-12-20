@@ -1,10 +1,13 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.condition.ICondition;
+import io.github.ramerf.wind.core.condition.LambdaCondition;
+import io.github.ramerf.wind.core.condition.QueryColumn;
+import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
@@ -14,50 +17,47 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 执行写数据.
  *
- * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
- *
  * @param <T> the type parameter
  * @author Tang Xiaofeng
  * @since 2020/1/5
+ * @see WindConfiguration#isWriteNullProp()
  */
-public interface UpdateService<T extends AbstractEntityPoJo> extends InterService<T> {
+public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
+    extends InterService<T, ID> {
 
   /**
    * 创建记录.
-   *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
    *
    * @param t the {@link AbstractEntityPoJo}
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  default long create(@Nonnull final T t) throws DataAccessException {
-    textFilter(t, t);
-    getUpdate().create(t);
-    return t.getId();
+  default T create(@Nonnull final T t) throws DataAccessException {
+    return create(t, null);
   }
 
   /**
    * 创建记录.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
    * @param t the {@link AbstractEntityPoJo}
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param fieldsConsumer the fields consumer
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  default long createWithNull(@Nonnull final T t, List<IFunction<T, ?>> includeNullProps)
+  @SuppressWarnings("unchecked")
+  default T create(@Nonnull final T t, final Consumer<Fields<T>> fieldsConsumer)
       throws DataAccessException {
     textFilter(t, t);
-    getUpdate().createWithNull(t, includeNullProps);
-    return t.getId();
+    Fields<T> fields = null;
+    if (fieldsConsumer != null) {
+      fields = Fields.with((Class<T>) t.getClass());
+      fieldsConsumer.accept(fields);
+    }
+    return getUpdate().create(t, fields);
   }
 
   /**
    * 批量创建.
-   *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
    *
    * @param ts the ts
    * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
@@ -72,86 +72,96 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
   /**
    * 批量创建.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
    * @param ts the ts
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param fieldsConsumer the fields consumer
    * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
   @Transactional(rollbackFor = Exception.class)
-  default Optional<Integer> createBatchWithNull(
-      final List<T> ts, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
-    return getUpdate().createBatchWithNull(ts, includeNullProps);
+  @SuppressWarnings({"unchecked", "DuplicatedCode"})
+  default Optional<Integer> createBatch(
+      @Nonnull final List<T> ts, final Consumer<Fields<T>> fieldsConsumer)
+      throws DataAccessException {
+    if (ts.isEmpty()) {
+      return Optional.empty();
+    }
+    Fields<T> fields = null;
+    if (fieldsConsumer != null) {
+      fields = Fields.with((Class<T>) ts.get(0).getClass());
+      fieldsConsumer.accept(fields);
+    }
+    return getUpdate().createBatch(ts, fields);
   }
 
   /**
    * 更新.
-   *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
    *
    * @param t the t
    * @return 实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
   default int update(final T t) throws DataAccessException {
-    return getUpdate().update(t);
-  }
-
-  /**
-   * 更新.
-   *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
-   * @param t the t
-   * @param includeNullProps 即使值为null也保存的属性
-   * @return 实际受影响的行数
-   * @throws DataAccessException 如果执行失败
-   */
-  default int updateWithNull(final T t, List<IFunction<T, ?>> includeNullProps)
-      throws DataAccessException {
-    return getUpdate().updateWithNull(t, includeNullProps);
+    return update(t, null, null);
   }
 
   /**
    * 条件更新.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
    * @param t the t
-   * @param consumer 更新条件
-   * @return 实际受影响的行数
+   * @param fieldsConsumer 更新字段
+   * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  default int update(@Nonnull final Consumer<ICondition<T>> consumer, final T t)
+  default int update(final T t, final Consumer<Fields<T>> fieldsConsumer)
       throws DataAccessException {
-    return getUpdate().where(consumer).update(t);
+    return update(t, fieldsConsumer, null);
   }
 
   /**
    * 条件更新.
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
    * @param t the t
    * @param consumer 更新条件
-   * @param includeNullProps 即使值为null也保存的属性
-   * @return 实际受影响的行数
+   * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  default int updateWithNull(
-      @Nonnull final Consumer<ICondition<T>> consumer,
+  default int updateByCondition(final T t, final Consumer<LambdaCondition<T>> consumer)
+      throws DataAccessException {
+    return update(t, null, consumer);
+  }
+
+  /**
+   * 条件更新.
+   *
+   * @param t the t
+   * @param conditionConsumer 更新条件
+   * @param fieldsConsumer 更新字段
+   * @return 实际受影响的行数 int
+   * @throws DataAccessException 如果执行失败
+   */
+  @SuppressWarnings("unchecked")
+  default int update(
       final T t,
-      List<IFunction<T, ?>> includeNullProps)
+      Consumer<Fields<T>> fieldsConsumer,
+      final Consumer<LambdaCondition<T>> conditionConsumer)
       throws DataAccessException {
-    return getUpdate().where(consumer).updateWithNull(t, includeNullProps);
+    Fields<T> fields = null;
+    if (fieldsConsumer != null) {
+      fields = Fields.with((Class<T>) t.getClass());
+      fieldsConsumer.accept(fields);
+    }
+    if (conditionConsumer == null) {
+      return getUpdate().update(t, fields);
+    }
+    final LambdaCondition<T> condition =
+        LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    conditionConsumer.accept(condition);
+    return getUpdate().where(condition).update(t, fields);
   }
 
   /**
    * 批量更新.<br>
-   *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
    *
    * @param ts 要更新的数据集
    * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
@@ -160,24 +170,31 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    */
   @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> updateBatch(final List<T> ts) throws DataAccessException {
-    return getUpdate().updateBatch(ts);
+    return updateBatch(ts, null);
   }
 
   /**
    * 批量更新.<br>
    *
-   * <h2><font color="yellow">默认不包含值为null的属性.</font></h2>
-   *
    * @param ts 要更新的数据集
-   * @param includeNullProps 即使值为null也保存的属性
+   * @param fieldsConsumer the fields consumer
    * @return 当受影响行数等于 {@code ts.size()}时,{@link Optional#isPresent()}为false.<br>
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
+  @SuppressWarnings({"unchecked", "DuplicatedCode"})
   @Transactional(rollbackFor = Exception.class)
-  default Optional<Integer> updateBatchWithNull(
-      final List<T> ts, List<IFunction<T, ?>> includeNullProps) throws DataAccessException {
-    return getUpdate().updateBatchWithNull(ts, includeNullProps);
+  default Optional<Integer> updateBatch(final List<T> ts, final Consumer<Fields<T>> fieldsConsumer)
+      throws DataAccessException {
+    if (ts.isEmpty()) {
+      return Optional.empty();
+    }
+    Fields<T> fields = null;
+    if (fieldsConsumer != null) {
+      fields = Fields.with((Class<T>) ts.get(0).getClass());
+      fieldsConsumer.accept(fields);
+    }
+    return getUpdate().updateBatch(ts, fields);
   }
 
   /**
@@ -189,8 +206,12 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @see DataAccessException
    * @see CommonException
    */
-  default int delete(final long id) throws DataAccessException {
-    return getUpdate().where(condition -> condition.eq(AbstractEntityPoJo::setId, id)).delete();
+  default int delete(final ID id) throws DataAccessException {
+    final LambdaCondition<T> condition =
+        LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    return getUpdate()
+        .where(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id))
+        .delete();
   }
 
   /**
@@ -202,8 +223,11 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
-  default int delete(Consumer<ICondition<T>> consumer) throws DataAccessException {
-    return getUpdate().where(consumer).delete();
+  default int delete(@Nonnull Consumer<LambdaCondition<T>> consumer) throws DataAccessException {
+    final LambdaCondition<T> condition =
+        LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    consumer.accept(condition);
+    return getUpdate().where(condition).delete();
   }
 
   /**
@@ -214,13 +238,14 @@ public interface UpdateService<T extends AbstractEntityPoJo> extends InterServic
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  @Transactional(rollbackFor = Exception.class)
-  default Optional<Integer> deleteByIds(final Collection<Long> ids) throws DataAccessException {
+  default Optional<Integer> deleteByIds(final Collection<ID> ids) throws DataAccessException {
     if (CollectionUtils.isEmpty(ids)) {
       return Optional.empty();
     }
-    final int affectRow =
-        getUpdate().where(condition -> condition.in(AbstractEntityPoJo::setId, ids)).delete();
+    final LambdaCondition<T> condition =
+        LambdaCondition.getInstance(QueryColumn.fromClass(getPoJoClass()));
+    condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids);
+    final int affectRow = getUpdate().where(condition).delete();
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);
   }
 }

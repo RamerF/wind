@@ -1,14 +1,17 @@
 package io.github.ramerf.wind.core.util;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.QueryEntity;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.function.*;
+import io.github.ramerf.wind.core.function.BeanFunction;
 import java.beans.FeatureDescriptor;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
@@ -16,10 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
-import javax.persistence.Column;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.*;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -39,7 +40,6 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
  * @since 2019 /12/26
  */
 @Slf4j
-@SuppressWarnings({"unused"})
 public final class BeanUtils {
   /** 对象所有(包含父类)私有字段. */
   private static final Map<Class<?>, WeakReference<List<Field>>> PRIVATE_FIELDS_MAP =
@@ -89,8 +89,8 @@ public final class BeanUtils {
   public static List<String> getNullProp(@Nonnull final Object obj) {
     final BeanWrapperImpl wrapper = new BeanWrapperImpl(obj);
     return Stream.of(wrapper.getPropertyDescriptors())
-        .filter(o -> Objects.isNull(wrapper.getPropertyValue(o.getName())))
         .map(FeatureDescriptor::getName)
+        .filter(propertyName -> Objects.isNull(wrapper.getPropertyValue(propertyName)))
         .collect(toList());
   }
 
@@ -126,16 +126,16 @@ public final class BeanUtils {
    * 获取所有(包含父类)private属性.
    *
    * @param clazz the clazz
-   * @param fields the fields
+   * @param container the container
    * @return the list
    */
   public static List<Field> retrievePrivateFields(
-      @Nonnull final Class<?> clazz, @Nonnull final List<Field> fields) {
+      @Nonnull final Class<?> clazz, @Nonnull final Supplier<List<Field>> container) {
     return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
         .map(Reference::get)
         .orElseGet(
             () -> {
-              final List<Field> list = getPrivateFields(clazz, fields);
+              final List<Field> list = getPrivateFields(clazz, container.get());
               PRIVATE_FIELDS_MAP.put(clazz, new WeakReference<>(list));
               return list;
             });
@@ -144,7 +144,12 @@ public final class BeanUtils {
   private static List<Field> getPrivateFields(
       @Nonnull Class<?> clazz, @Nonnull final List<Field> fields) {
     do {
-      fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+      for (final Field superField : clazz.getDeclaredFields()) {
+        // 同名覆盖只保留子类字段
+        if (fields.stream().noneMatch(o -> o.getName().equals(superField.getName()))) {
+          fields.add(superField);
+        }
+      }
     } while (Objects.nonNull(clazz = clazz.getSuperclass()));
     return fields;
   }
@@ -160,14 +165,11 @@ public final class BeanUtils {
         .map(Reference::get)
         .orElseGet(
             () -> {
+              final BeanWrapperImpl wrapper = new BeanWrapperImpl(clazz);
               final List<Method> methods =
-                  Arrays.stream(clazz.getMethods())
-                      .filter(method -> method.getParameterTypes().length > 0)
-                      .filter(
-                          method -> {
-                            final String name = method.getName();
-                            return name.startsWith("set") || name.startsWith("is");
-                          })
+                  Arrays.stream(wrapper.getPropertyDescriptors())
+                      .filter(o -> wrapper.isWritableProperty(o.getName()))
+                      .map(PropertyDescriptor::getWriteMethod)
                       .collect(toList());
               WRITE_METHOD_MAP.put(clazz, new WeakReference<>(methods));
               return methods;
@@ -198,10 +200,9 @@ public final class BeanUtils {
    * @param classPath the class path
    * @return the t
    */
-  @SuppressWarnings("unchecked")
   public static <T> T initial(final String classPath) {
     try {
-      return (T) initial(getClazz(classPath));
+      return initial(getClazz(classPath));
     } catch (Exception e) {
       log.warn("initial:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
@@ -361,7 +362,13 @@ public final class BeanUtils {
       }
       return field.get(obj);
     } catch (Exception e) {
-      return Optional.ofNullable(consumer).map(ex -> ex.apply(e)).orElse(null);
+      return Optional.ofNullable(consumer)
+          .map(ex -> ex.apply(e))
+          .orElseGet(
+              () -> {
+                log.info(e.getMessage(), e);
+                return null;
+              });
     }
   }
 
@@ -379,10 +386,7 @@ public final class BeanUtils {
    * @param consumer 异常时的处理,默认返回null
    */
   public static void setValue(
-      final Object obj,
-      final Field field,
-      final Object value,
-      Function<Exception, Object> consumer) {
+      final Object obj, final Field field, final Object value, Consumer<Exception> consumer) {
     try {
       if (!field.isAccessible()) {
         field.setAccessible(true);
@@ -390,7 +394,7 @@ public final class BeanUtils {
       field.set(obj, value);
     } catch (Exception e) {
       if (consumer != null) {
-        consumer.apply(e);
+        consumer.accept(e);
       } else {
         throw CommonException.of(e);
       }
@@ -415,6 +419,12 @@ public final class BeanUtils {
         || Class.class == clazz);
   }
 
+  /** Call {@link org.springframework.beans.BeanUtils#copyProperties(Object, Object, String...)} */
+  public static void copyProperties(Object source, Object target, String... ignoreProperties)
+      throws BeansException {
+    org.springframework.beans.BeanUtils.copyProperties(source, target, ignoreProperties);
+  }
+
   /**
    * The entry point of application.
    *
@@ -428,15 +438,14 @@ public final class BeanUtils {
     invoke(null, String.class.getMethods()[0], "string");
     invoke(null, String.class.getMethods()[0], "string")
         .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
-    log.info("main:[{}]", retrievePrivateFields(Ts.class, new ArrayList<>()));
+    log.info("main:[{}]", retrievePrivateFields(Ts.class, ArrayList::new));
     log.info("main:[{}]", getDeclaredField(Ts.class, "name"));
   }
 }
 
 /** The type Ts. */
-@SuppressWarnings("unused")
 class Ts extends AbstractEntityPoJo {
-  @Column(name = "alia")
+  @TableColumn(name = "alia")
   private String name;
 
   private Integer size;

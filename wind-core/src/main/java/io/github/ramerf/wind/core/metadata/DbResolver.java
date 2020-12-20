@@ -38,7 +38,8 @@ public final class DbResolver {
     } catch (SQLException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
-      throw new IllegalStateException(e);
+      // throw new IllegalStateException(e);
+      return null;
     }
   }
 
@@ -48,7 +49,8 @@ public final class DbResolver {
     } catch (SQLException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
-      throw new IllegalStateException(e);
+      // throw new IllegalStateException(e);
+      return null;
     }
   }
 
@@ -83,6 +85,7 @@ public final class DbResolver {
     }
   }
 
+  /** @see DatabaseMetaData#getTables(String, String, String, String[]) */
   private static NameTableInformation extractTablesResultSet(final ResultSet resultSet)
       throws SQLException {
     NameTableInformation nameTableInformation = new NameTableInformation();
@@ -96,6 +99,7 @@ public final class DbResolver {
     return nameTableInformation;
   }
 
+  /** @see DatabaseMetaData#getColumns(String, String, String, String) */
   private static void extractTableColumnsResultSet(
       final ResultSet resultSet, final NameTableInformation nameTableInformation)
       throws SQLException {
@@ -104,7 +108,11 @@ public final class DbResolver {
       final String tableName = resultSet.getString(3);
       final TableInformation tableInformation = nameTableInformation.getTableInformation(tableName);
       if (tableInformation != null) {
-        tableInformation.getColumns().add(TableColumnInformation.of(resultSet.getString(4)));
+        tableInformation
+            .getColumns()
+            .add(
+                TableColumnInformation.of(
+                    resultSet.getString(4), resultSet.getInt(5), resultSet.getString(6)));
       }
     }
   }

@@ -1,7 +1,5 @@
 package io.github.ramerf.wind.core.helper;
 
-import io.github.ramerf.wind.core.entity.constant.Constant;
-import java.time.LocalDateTime;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,8 +43,9 @@ public class SqlHelper {
       return QUOTE_FORMAT.format(val);
     }
     if (value instanceof Date) {
-      return QUOTE_FORMAT.format(
-          LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
+      // return QUOTE_FORMAT.format(
+      //     LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
+      return QUOTE_FORMAT.format(((Date) value).toInstant().toString());
     }
     if (List.class.isAssignableFrom(value.getClass())) {
       // 数组拼接为: '{name1,name2}' 或使用函数 string_to_array('name1,name2', ',')
@@ -98,9 +97,8 @@ public class SqlHelper {
    * @param clazz 返回类型
    * @return string string
    */
-  @SuppressWarnings("unused")
   public static <R> String optimizeQueryString(final String old, final Class<R> clazz) {
-    /// 目前项目代码使用了很多包含非pojo字段的 response返回,导致推断出来的字段不存在,所以暂时禁用
+    /// 根据返回对象推断查询字段,返回对象可能包含数据库不存在的字段,禁用
     //    if (log.isDebugEnabled()) {
     //      log.debug("optimizeQueryString:start optimize query string[{}]", old);
     //    }

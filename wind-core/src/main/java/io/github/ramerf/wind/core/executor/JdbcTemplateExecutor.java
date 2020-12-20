@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.executor;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.ramerf.wind.core.cache.Cache;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.*;
@@ -40,7 +41,15 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @Override
-  public <R> R fetchOne(@Nonnull final SqlParam sqlParam) throws DataAccessException {
+  public <T extends AbstractEntityPoJo<T, ?>, R> R fetchOne(@Nonnull final SqlParam<T> sqlParam)
+      throws DataAccessException {
+    return fetchOne(sqlParam, null);
+  }
+
+  @Override
+  public <T extends AbstractEntityPoJo<T, ?>, R> R fetchOne(
+      @Nonnull final SqlParam<T> sqlParam, ResultHandler<Map<String, Object>, R> resultHandler)
+      throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
         () -> {
@@ -60,18 +69,19 @@ public class JdbcTemplateExecutor implements Executor {
           }
           @SuppressWarnings("unchecked")
           final Class<R> clazz = (Class<R>) sqlParam.getClazz();
-          ResultHandler<Map<String, Object>, R> resultHandler =
-              BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-                  ? new PrimitiveResultHandler<>(clazz)
-                  : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
-          return resultHandler.handle(result.get(0));
+          return (resultHandler != null
+                  ? resultHandler
+                  : (BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
+                      ? new PrimitiveResultHandler<>(clazz)
+                      : new BeanResultHandler<>(clazz, sqlParam.queryColumns)))
+              .handle(result.get(0));
         },
         Thread.currentThread().getStackTrace()[1].getMethodName());
   }
 
   @Override
-  public <R> List<R> fetchAll(@Nonnull final SqlParam sqlParam, final Class<R> clazz)
-      throws DataAccessException {
+  public <T extends AbstractEntityPoJo<T, ?>, R> List<R> fetchAll(
+      @Nonnull final SqlParam<T> sqlParam, final Class<R> clazz) throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
         () -> {
@@ -97,7 +107,8 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <R> List<R> fetchAll(@Nonnull final SqlParam sqlParam) throws DataAccessException {
+  public <T extends AbstractEntityPoJo<T, ?>, R> List<R> fetchAll(
+      @Nonnull final SqlParam<T> sqlParam) throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
         () -> {
@@ -124,8 +135,8 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <R> Page<R> fetchPage(
-      @Nonnull final SqlParam sqlParam, final long total, final PageRequest pageable)
+  public <T extends AbstractEntityPoJo<T, ?>, R> Page<R> fetchPage(
+      @Nonnull final SqlParam<T> sqlParam, final long total, final PageRequest pageable)
       throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
@@ -162,7 +173,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   @SuppressWarnings("ConstantConditions")
-  public long fetchCount(@Nonnull final SqlParam sqlParam) {
+  public <T extends AbstractEntityPoJo<T, ?>> long fetchCount(@Nonnull final SqlParam<T> sqlParam) {
     return cacheIfAbsent(
         sqlParam,
         () ->
@@ -183,7 +194,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   public <T> T queryForObject(
-      @Nonnull final SqlParam sqlParam, final Object[] args, final Class<T> requiredType)
+      @Nonnull final SqlParam<?> sqlParam, final Object[] args, final Class<T> requiredType)
       throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
@@ -192,8 +203,17 @@ public class JdbcTemplateExecutor implements Executor {
   }
 
   @Override
+  public Map<String, Object> queryForMap(@Nonnull final SqlParam<?> sqlParam, final Object... args)
+      throws DataAccessException {
+    return cacheIfAbsent(
+        sqlParam,
+        () -> jdbcTemplate.queryForMap(sqlParam.sql, args),
+        Thread.currentThread().getStackTrace()[1].getMethodName());
+  }
+
+  @Override
   public List<Map<String, Object>> queryForList(
-      @Nonnull final SqlParam sqlParam, final Object... args) throws DataAccessException {
+      @Nonnull final SqlParam<?> sqlParam, final Object... args) throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
         () -> jdbcTemplate.queryForList(sqlParam.sql, args),
@@ -202,7 +222,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   public <T> T query(
-      @Nonnull final SqlParam sqlParam,
+      @Nonnull final SqlParam<?> sqlParam,
       final PreparedStatementSetter pss,
       final ResultSetExtractor<T> rse)
       throws DataAccessException {
@@ -211,7 +231,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @Override
   public <T> List<T> query(
-      @Nonnull final SqlParam sqlParam,
+      @Nonnull final SqlParam<?> sqlParam,
       final PreparedStatementSetter pss,
       final RowMapper<T> rowMapper)
       throws DataAccessException {
@@ -243,7 +263,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   @SuppressWarnings("unchecked")
   private <T> T cacheIfAbsent(
-      @Nonnull final SqlParam sqlParam, Supplier<T> supplier, final String methodName) {
+      @Nonnull final SqlParam<?> sqlParam, Supplier<T> supplier, final String methodName) {
     // 未开启缓存
     if (Objects.isNull(cache)) {
       return supplier.get();
@@ -272,7 +292,8 @@ public class JdbcTemplateExecutor implements Executor {
     if (log.isDebugEnabled()) {
       log.debug("cacheIfAbsent:Put cache[{}]", key);
     }
-    // 空数据缓存50ms,防止穿透数据库,这个数值可能应该允许让用户自定义
+    // 空数据缓存50ms,防止穿透数据库,
+    // TODO POST 这个数值可能应该允许让用户自定义
     if (Objects.isNull(t)) {
       cache.put(key, null, 50, TimeUnit.MILLISECONDS);
     } else {

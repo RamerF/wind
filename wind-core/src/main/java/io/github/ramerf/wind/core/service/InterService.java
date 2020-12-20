@@ -6,8 +6,16 @@ import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
-import io.github.ramerf.wind.core.factory.QueryColumnFactory;
+import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.util.EntityUtils;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.*;
+import javax.annotation.Nonnull;
+import lombok.Getter;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * The interface Inter service.
@@ -16,13 +24,12 @@ import io.github.ramerf.wind.core.util.EntityUtils;
  * @author Tang Xiaofeng
  * @since 2020 /1/5
  */
-@SuppressWarnings({"unused", "UnusedReturnValue"})
-public interface InterService<T extends AbstractEntityPoJo> {
+public interface InterService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable> {
 
   /**
    * 过滤某些属性可能包含的特殊字符.
    *
-   * @param trans 页面传递过来的对象
+   * @param trans 原始对象
    * @param filtered 过滤后的对象
    */
   default void textFilter(T trans, T filtered) {}
@@ -33,7 +40,7 @@ public interface InterService<T extends AbstractEntityPoJo> {
    * @return the query column
    */
   default QueryColumn<T> getQueryColumn() {
-    return QueryColumnFactory.fromClass(getPoJoClass());
+    return QueryColumn.fromClass(getPoJoClass());
   }
 
   /**
@@ -41,8 +48,8 @@ public interface InterService<T extends AbstractEntityPoJo> {
    *
    * @return the query
    */
-  default Query getQuery() {
-    return Query.getInstance();
+  default Query<T> getQuery() {
+    return Query.getInstance(getPoJoClass());
   }
 
   /**
@@ -50,19 +57,18 @@ public interface InterService<T extends AbstractEntityPoJo> {
    *
    * @return the update
    */
-  default Update getUpdate() {
-    return getUpdate(true);
+  default Update<T> getUpdate() {
+    return Update.getInstance(getPoJoClass());
   }
 
   /**
-   * Gets update for current.
+   * Gets update for clazz.
    *
-   * @param current 是否当前类的更新组件
+   * @param clazz 是否当前类的更新组件
    * @return the update
    */
-  default Update getUpdate(final boolean current) {
-    final Update instance = Update.getInstance();
-    return current ? instance.from(getPoJoClass()) : instance;
+  default <R extends AbstractEntityPoJo<R, ?>> Update<R> getUpdate(final Class<R> clazz) {
+    return Update.getInstance(clazz);
   }
 
   /**
@@ -83,5 +89,42 @@ public interface InterService<T extends AbstractEntityPoJo> {
    */
   default <U> U getRepository() throws RuntimeException {
     throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+  }
+
+  /** 可用于指定一个操作包含/不包含的字段. */
+  class Fields<T> {
+    @Getter private final List<IFunction<T, ?>> includes = new ArrayList<>();
+    @Getter private final List<IFunction<T, ?>> excludes = new ArrayList<>();
+
+    public static <T extends AbstractEntityPoJo<T, ?>> Fields<T> with(Class<T> clazz) {
+      return new Fields<>();
+    }
+
+    @SafeVarargs
+    public final Fields<T> include(final IFunction<T, ?>... includeFields) {
+      this.includes.addAll(Arrays.asList(includeFields));
+      return this;
+    }
+
+    @SafeVarargs
+    public final Fields<T> exclude(@Nonnull final IFunction<T, ?>... excludeFields) {
+      for (final IFunction<T, ?> function : excludeFields) {
+        this.includes.remove(function);
+      }
+      this.excludes.addAll(Arrays.asList(excludeFields));
+      return this;
+    }
+
+    public List<Field> getIncludeFields() {
+      return includes.isEmpty()
+          ? Collections.emptyList()
+          : includes.stream().map(BeanFunction::getField).collect(toList());
+    }
+
+    public List<Field> getExcludeFields() {
+      return excludes.isEmpty()
+          ? Collections.emptyList()
+          : excludes.stream().map(BeanFunction::getField).collect(toList());
+    }
   }
 }

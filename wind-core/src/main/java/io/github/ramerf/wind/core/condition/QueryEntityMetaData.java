@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import lombok.Setter;
  * @author Tang Xiaofeng
  * @since 2019 /12/28
  */
-public class QueryEntityMetaData<T extends AbstractEntity> extends EntityMetaData<T> {
+public class QueryEntityMetaData<T extends AbstractEntityPoJo<T, ?>> extends EntityMetaData<T> {
   /** 查询字段. */
   @Getter protected List<QueryAlia> queryAlias = new ArrayList<>();
 

@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.*;
 import javax.annotation.Nonnull;
-import lombok.*;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -19,12 +19,11 @@ import org.springframework.http.ResponseEntity;
 /**
  * 通用JSON响应.
  *
- * @param <T> the type parameter
+ * @since 2019.12.05
  * @author Tang Xiaofeng
+ * @param <T> the type parameter
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @ApiModel("通用响应")
 @SuppressWarnings("unused")
 public class Rs<T> implements Serializable {
@@ -63,10 +62,10 @@ public class Rs<T> implements Serializable {
    * @return the rs
    */
   public static <R> Rs<R> of(final boolean result) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setData(null);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setData(null);
+    return rs;
   }
 
   /**
@@ -79,9 +78,9 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final T data) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setData((R) data);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setData((R) data);
+    return rs;
   }
 
   /**
@@ -91,27 +90,11 @@ public class Rs<T> implements Serializable {
    * @param resultCode the result code
    * @return the rs
    */
-  // @SuppressWarnings("unchecked")
-  @SuppressWarnings("StatementWithEmptyBody")
-  public static <T> Rs<T> of(final ResultCode resultCode) {
-    Rs<T> commonResponse = new Rs<>();
-    // 如果数据为null,处理为空json.暂时不启用
-    if (Objects.isNull(resultCode)) {
-      // ServletRequestAttributes attributes =
-      //     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-      // if (Objects.nonNull(attributes)) {
-      //   final HttpServletRequest request = attributes.getRequest();
-      //   final String uri = request.getRequestURI();
-      //   // 仅前端请求转换null为空json
-      //   if (excludeUrl.stream().noneMatch(url -> url.contains(uri))) {
-      //     commonResponse.setData((T) json());
-      //   }
-      // }
-    } else {
-      commonResponse.setCode(resultCode.code());
-      commonResponse.setMsg(resultCode.desc());
-    }
-    return commonResponse;
+  public static <T> Rs<T> of(@Nonnull final ResultCode resultCode) {
+    Rs<T> rs = new Rs<>();
+    rs.setCode(resultCode.code());
+    rs.setMsg(resultCode.desc());
+    return rs;
   }
 
   /**
@@ -125,10 +108,10 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final boolean result, final T data) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setData((R) data);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setData((R) data);
+    return rs;
   }
 
   /**
@@ -142,10 +125,10 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final T data, final String msg) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setData((R) data);
-    commonResponse.setMsg(msg);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setData((R) data);
+    rs.setMsg(msg);
+    return rs;
   }
 
   /**
@@ -157,10 +140,10 @@ public class Rs<T> implements Serializable {
    * @return the rs
    */
   public static <R> Rs<R> of(final boolean result, final String msg) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setMsg(msg);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setMsg(msg);
+    return rs;
   }
 
   /**
@@ -175,11 +158,11 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final boolean result, final T data, final String msg) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setData((R) data);
-    commonResponse.setMsg(msg);
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setData((R) data);
+    rs.setMsg(msg);
+    return rs;
   }
 
   /**
@@ -194,12 +177,12 @@ public class Rs<T> implements Serializable {
    */
   @SuppressWarnings("unchecked")
   public static <T, R> Rs<R> of(final boolean result, final T data, final ResultCode resultCode) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setData((R) data);
-    commonResponse.setMsg(resultCode.desc());
-    commonResponse.setCode(resultCode.code());
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setData((R) data);
+    rs.setMsg(resultCode.desc());
+    rs.setCode(resultCode.code());
+    return rs;
   }
 
   /**
@@ -211,11 +194,11 @@ public class Rs<T> implements Serializable {
    * @return the rs
    */
   public static <R> Rs<R> of(final boolean result, final ResultCode resultCode) {
-    Rs<R> commonResponse = new Rs<>();
-    commonResponse.setResult(result);
-    commonResponse.setMsg(resultCode.desc());
-    commonResponse.setCode(resultCode.code());
-    return commonResponse;
+    Rs<R> rs = new Rs<>();
+    rs.setResult(result);
+    rs.setMsg(resultCode.desc());
+    rs.setCode(resultCode.code());
+    return rs;
   }
 
   /**
@@ -224,8 +207,8 @@ public class Rs<T> implements Serializable {
    * @param <R> the type parameter
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> ok() {
-    return ResponseEntity.ok(Rs.of(true));
+  public static <R> Rs<R> ok() {
+    return Rs.of(true);
   }
 
   /**
@@ -236,8 +219,8 @@ public class Rs<T> implements Serializable {
    * @param data the data
    * @return the response entity
    */
-  public static <T, R> ResponseEntity<Rs<R>> ok(final T data) {
-    return ResponseEntity.ok(Rs.of(data));
+  public static <T> Rs<T> ok(final T data) {
+    return Rs.of(data);
   }
 
   /**
@@ -247,8 +230,8 @@ public class Rs<T> implements Serializable {
    * @param data the data
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> ok(final ResultCode data) {
-    return ResponseEntity.ok(Rs.of(data));
+  public static <R> Rs<R> ok(final ResultCode data) {
+    return Rs.of(data);
   }
 
   /**
@@ -260,8 +243,8 @@ public class Rs<T> implements Serializable {
    * @param resultCode the result code
    * @return the response entity
    */
-  public static <T, R> ResponseEntity<Rs<R>> ok(final T data, final ResultCode resultCode) {
-    return ResponseEntity.ok(Rs.of(true, data, resultCode));
+  public static <T, R> Rs<R> ok(final T data, final ResultCode resultCode) {
+    return Rs.of(true, data, resultCode);
   }
 
   /**
@@ -273,8 +256,8 @@ public class Rs<T> implements Serializable {
    * @param msg the msg
    * @return the response entity
    */
-  public static <T, R> ResponseEntity<Rs<R>> ok(final T data, final String msg) {
-    return ResponseEntity.ok(Rs.of(data, msg));
+  public static <T, R> Rs<R> ok(final T data, final String msg) {
+    return Rs.of(data, msg);
   }
 
   /**
@@ -283,8 +266,8 @@ public class Rs<T> implements Serializable {
    * @param <R> the type parameter
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<PageImpl<R>>> emptyPage() {
-    return ResponseEntity.ok(Rs.of(new PageImpl<>(Collections.emptyList())));
+  public static <R> Rs<PageImpl<R>> emptyPage() {
+    return Rs.of(new PageImpl<>(Collections.emptyList()));
   }
 
   /**
@@ -293,8 +276,8 @@ public class Rs<T> implements Serializable {
    * @param <R> the type parameter
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<List<R>>> emptyList() {
-    return ResponseEntity.ok(Rs.of(Collections.emptyList()));
+  public static <R> Rs<List<R>> emptyList() {
+    return Rs.of(Collections.emptyList());
   }
 
   /**
@@ -303,8 +286,8 @@ public class Rs<T> implements Serializable {
    * @param <R> the type parameter
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> fail() {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.ERROR));
+  public static <R> Rs<R> fail() {
+    return Rs.of(false, ResultCode.ERROR);
   }
 
   /**
@@ -314,8 +297,8 @@ public class Rs<T> implements Serializable {
    * @param data the data
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> fail(final ResultCode data) {
-    return ResponseEntity.ok(Rs.of(false, data));
+  public static <R> Rs<R> fail(final ResultCode data) {
+    return Rs.of(false, data);
   }
 
   /**
@@ -325,8 +308,8 @@ public class Rs<T> implements Serializable {
    * @param msg the msg
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> fail(final String msg) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.of(ResultCode.ERROR.code(), msg)));
+  public static <R> Rs<R> fail(final String msg) {
+    return Rs.of(false, ResultCode.of(ResultCode.ERROR.code(), msg));
   }
 
   /**
@@ -337,8 +320,8 @@ public class Rs<T> implements Serializable {
    * @param data the data
    * @return the response entity
    */
-  public static <T> ResponseEntity<Rs<T>> fail(final String msg, final T data) {
-    return ResponseEntity.ok(Rs.of(false, data, msg));
+  public static <T> Rs<T> fail(final String msg, final T data) {
+    return Rs.of(false, data, msg);
   }
 
   /**
@@ -388,7 +371,8 @@ public class Rs<T> implements Serializable {
    * @return the response entity
    */
   public static ResponseEntity<Rs<Object>> notAllowed(final String msg) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_NOT_ALLOWED.desc(msg)));
+    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+        .body(Rs.of(false, ResultCode.API_NOT_ALLOWED.desc(msg)));
   }
 
   /**
@@ -398,8 +382,8 @@ public class Rs<T> implements Serializable {
    * @param field the field
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> wrongFormat(final String field) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_PARAM_WRONG_FORMAT.desc(field)));
+  public static <R> Rs<R> wrongFormat(final String field) {
+    return Rs.of(false, ResultCode.API_PARAM_WRONG_FORMAT.desc(field));
   }
 
   /**
@@ -409,8 +393,8 @@ public class Rs<T> implements Serializable {
    * @param field the field
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> wrongValue(final String field) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_PARAM_WRONG_VALUE.desc(field)));
+  public static <R> Rs<R> wrongValue(final String field) {
+    return Rs.of(false, ResultCode.API_PARAM_WRONG_VALUE.desc(field));
   }
 
   /**
@@ -420,8 +404,8 @@ public class Rs<T> implements Serializable {
    * @param field the field
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> canNotBlank(final String field) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_PARAM_CAN_NOT_BLANK.desc(field)));
+  public static <R> Rs<R> canNotBlank(final String field) {
+    return Rs.of(false, ResultCode.API_PARAM_CAN_NOT_BLANK.desc(field));
   }
 
   /**
@@ -431,8 +415,8 @@ public class Rs<T> implements Serializable {
    * @param field the field
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> notPresent(final String field) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_PARAM_NOT_PRESENT.desc(field)));
+  public static <R> Rs<R> notPresent(final String field) {
+    return Rs.of(false, ResultCode.API_PARAM_NOT_PRESENT.desc(field));
   }
 
   /**
@@ -452,9 +436,9 @@ public class Rs<T> implements Serializable {
    * @param contentType the content type
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> notSupportContentType(final String contentType) {
-    return ResponseEntity.ok(
-        Rs.of(false, ResultCode.API_CONTENT_TYPE_NOT_SUPPORT.desc(contentType)));
+  public static <R> ResponseEntity<Rs<R>> notSupportMediaType(final String contentType) {
+    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+        .body(Rs.of(false, ResultCode.API_CONTENT_TYPE_NOT_SUPPORT.desc(contentType)));
   }
 
   /**
@@ -464,8 +448,9 @@ public class Rs<T> implements Serializable {
    * @param method the method
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> notSupportMethod(final String method) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_METHOD_NOT_SUPPORT.desc(method)));
+  public static <R> ResponseEntity<Rs<R>> notSupportRequestMethod(final String method) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(Rs.of(false, ResultCode.API_METHOD_NOT_SUPPORT.desc(method)));
   }
 
   /**
@@ -475,8 +460,8 @@ public class Rs<T> implements Serializable {
    * @param method the method
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> tooManyResults(final String method) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_TOO_MANY_RESULTS.desc(method)));
+  public static <R> Rs<R> tooManyResults(final String method) {
+    return Rs.of(false, ResultCode.API_TOO_MANY_RESULTS.desc(method));
   }
 
   /**
@@ -486,8 +471,8 @@ public class Rs<T> implements Serializable {
    * @param field the field
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> invalid(final String field) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_PARAM_INVALID.desc(field)));
+  public static <R> Rs<R> invalid(final String field) {
+    return Rs.of(false, ResultCode.API_PARAM_INVALID.desc(field));
   }
 
   /**
@@ -497,8 +482,8 @@ public class Rs<T> implements Serializable {
    * @param data the data
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> exist(final String data) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_DATA_EXIST.desc(data)));
+  public static <R> Rs<R> exist(final String data) {
+    return Rs.of(false, ResultCode.API_DATA_EXIST.desc(data));
   }
 
   /**
@@ -508,19 +493,8 @@ public class Rs<T> implements Serializable {
    * @param data the data
    * @return the response entity
    */
-  public static <R> ResponseEntity<Rs<R>> notExist(final String data) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_DATA_NOT_EXIST.desc(data)));
-  }
-
-  /**
-   * 参数绑定有误.
-   *
-   * @param <R> the type parameter
-   * @param msg the msg
-   * @return the response entity
-   */
-  public static <R> ResponseEntity<Rs<R>> bindError(final String msg) {
-    return ResponseEntity.ok(Rs.of(false, ResultCode.API_PARAM_BIND_ERROR.desc(msg)));
+  public static <R> Rs<R> notExist(final String data) {
+    return Rs.of(false, ResultCode.API_DATA_NOT_EXIST.desc(data));
   }
 
   /**

@@ -13,9 +13,9 @@ package io.github.ramerf.wind.core.dialect.mysql;
  */
 public class MySQL5Dialect extends MySQLDialect {
   public MySQL5Dialect() {
-    registerColumnType(String.class, "longtext");
+    // registerColumnType(String.class, "longtext");
     //		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
-    registerColumnType(String.class, 65535, "varchar($l)");
+    // registerColumnType(String.class, 65535, "varchar($l)");
   }
 
   protected String getEngineKeyword() {

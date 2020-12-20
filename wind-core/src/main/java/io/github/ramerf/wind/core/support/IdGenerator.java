@@ -17,5 +17,5 @@ public interface IdGenerator {
    * @return the long
    * @see AbstractEntityPoJo
    */
-  Long nextId(final Object obj);
+  Object nextId(final Object obj);
 }

@@ -1,17 +1,19 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.annotation.TableColumn;
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.Objects;
 import javax.annotation.Nonnull;
-import javax.persistence.Column;
 import javax.persistence.Id;
 import lombok.*;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  * 实体列信息(字段,sqlType).
@@ -37,6 +39,7 @@ public class EntityColumn {
   /** 对应java类型. */
   private Type type;
 
+  /** sql类型名. */
   private String typeName;
 
   /** 长度. */
@@ -63,19 +66,149 @@ public class EntityColumn {
   /** 是否是主键. */
   private boolean primaryKey = false;
 
-  /** {@link Column#columnDefinition()}. */
+  /** {@link TableColumn#columnDefinition()}. */
   @Getter(AccessLevel.NONE)
   private String columnDefinition;
 
   /** 数据库是否支持列类型. 如果不支持,ddl时会跳过该字段. */
   private boolean supported = false;
 
-  public String getColumnDefinition(final Dialect dialect) {
+  public String getColumnDdl(final Dialect dialect) {
+    return name + " " + columnDefinition;
+  }
+
+  public String getComment(final String tableName, final Dialect dialect) {
+    return dialect.getCommentOnColumnString(tableName, name, comment);
+  }
+
+  /** 获取唯一定义sql. */
+  public String getUniqueDefinition() {
+    return unique ? String.format("create unique index %s_index on table(%s)", name, name) : null;
+  }
+
+  private static final String defaultRegex = "default[ ]+[']?[\\w\\u4e00-\\u9fa5]+[']?[ ]?";
+  private static final String commentRegex = "comment.*";
+
+  public static EntityColumn of(@Nonnull Field field, Dialect dialect) {
+    // 如果是一对多关联的情况,不记录列信息
+    if (MappingInfo.isManyMapping(field)) {
+      return null;
+    }
+    EntityColumn entityColumn = new EntityColumn();
+    entityColumn.field = field;
+    entityColumn.name = EntityUtils.fieldToColumn(field);
+
+    final boolean oneMapping = MappingInfo.isOneMapping(field);
+    final Field parseField = oneMapping ? getReferenceField(field) : field;
+    // OneToOne时,可能不会添加列
+    if (oneMapping) {
+      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+      if (oneToOne != null && !oneToOne.joinColumn()) {
+        entityColumn.supported = false;
+      }
+    }
+    entityColumn.type = parseField.getGenericType();
+    if (dialect.isSupportJavaType(entityColumn.type)
+        || (entityColumn.type instanceof Class
+            && InterEnum.class.isAssignableFrom((Class<?>) entityColumn.type))) {
+      entityColumn.supported = true;
+    }
+    if (field.isAnnotationPresent(Id.class)) {
+      entityColumn.primaryKey = true;
+    }
+    // 如果是基本类型,列定义不能为空
+    if (entityColumn.getType() instanceof Class
+        && ((Class<?>) entityColumn.getType()).isPrimitive()) {
+      entityColumn.nullable = false;
+    }
+
+    final TableColumn column = parseField.getAnnotation(TableColumn.class);
+    if (column == null) {
+      entityColumn.typeName =
+          entityColumn.supported
+              ? dialect.getTypeName(
+                  entityColumn.getType(field, entityColumn.type),
+                  entityColumn.length,
+                  entityColumn.precision,
+                  entityColumn.scale)
+              : null;
+
+    } else {
+      entityColumn.comment = column.comment();
+      if (!column.defaultValue().isEmpty()) {
+        entityColumn.defaultValue = column.defaultValue();
+      } else if (column.defaultBlankValue()) {
+        entityColumn.defaultValue = "''";
+      }
+      // StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
+      StringUtils.doIfNonEmpty(
+          column.columnDefinition(),
+          columnDefinition -> {
+            columnDefinition = columnDefinition.toLowerCase();
+            entityColumn.columnDefinition = columnDefinition;
+            String defaultValue = entityColumn.defaultValue;
+            if (StringUtils.nonEmpty(defaultValue)) {
+              String replacement =
+                  " default '" + (defaultValue.equals("''") ? "" : defaultValue) + "'";
+              entityColumn.columnDefinition =
+                  columnDefinition.replaceAll(defaultRegex, replacement);
+              if (!entityColumn.columnDefinition.contains("default")) {
+                entityColumn.columnDefinition += replacement;
+              }
+            }
+            String comment = entityColumn.comment;
+            if (StringUtils.nonEmpty(comment)) {
+              String replacement = " comment '" + comment + "'";
+              entityColumn.columnDefinition =
+                  columnDefinition.replaceAll(commentRegex, replacement);
+              if (!dialect.isSupportCommentOn()
+                  && !entityColumn.columnDefinition.contains("comment")) {
+                entityColumn.columnDefinition += replacement;
+              }
+            }
+          });
+
+      entityColumn.length = column.length();
+      // 使用默认值而不是0
+      NumberUtils.doIfGreaterThanZero(column.precision(), o -> entityColumn.precision = o);
+      NumberUtils.doIfGreaterThanZero(column.scale(), o -> entityColumn.scale = o);
+
+      entityColumn.nullable = entityColumn.nullable && column.nullable();
+      entityColumn.unique = column.unique();
+
+      if (entityColumn.columnDefinition == null) {
+        entityColumn.typeName =
+            entityColumn.supported
+                ? dialect.getTypeName(
+                    entityColumn.getType(field, entityColumn.type),
+                    entityColumn.length,
+                    entityColumn.precision,
+                    entityColumn.scale)
+                : null;
+      }
+    }
+    entityColumn.columnDefinition = entityColumn.getColumnDefinition(dialect);
+    // 默认主键定义
+    if (entityColumn.isPrimaryKey()) {
+      entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn);
+    }
+    return entityColumn;
+  }
+
+  private Type getType(Field field, Type type) {
+    if (this.type instanceof Class && InterEnum.class.isAssignableFrom((Class<?>) this.type)) {
+      return ((ParameterizedTypeImpl) field.getType().getGenericInterfaces()[0])
+          .getActualTypeArguments()[0];
+    }
+    return this.type;
+  }
+
+  private String getColumnDefinition(final Dialect dialect) {
     if (columnDefinition != null) {
-      return name + " " + columnDefinition;
+      return columnDefinition;
     }
     StringBuilder definition = new StringBuilder();
-    definition.append(name).append(" ").append(typeName);
+    definition.append(typeName);
     if (!nullable) {
       definition.append(" not null");
     }
@@ -88,119 +221,32 @@ public class EntityColumn {
     return definition.toString();
   }
 
-  public String getComment(final String tableName, final Dialect dialect) {
-    return dialect.getCommentOnColumnString(tableName, name, comment);
-  }
-
-  /** 获取唯一定义sql. */
-  public String getUniqueDefinition() {
-    return unique ? String.format("create unique index %s_index on table(%s)", name, name) : null;
-  }
-
-  public static EntityColumn of(@Nonnull Field field, Dialect dialect) {
-    EntityColumn entityColumn = new EntityColumn();
-    entityColumn.field = field;
-    entityColumn.name = EntityUtils.fieldToColumn(field);
-    entityColumn.type = field.getGenericType();
-    if (dialect.isSupportJavaType(entityColumn.type)
-        || (entityColumn.type instanceof Class
-            && InterEnum.class.isAssignableFrom((Class<?>) entityColumn.type))) {
-      entityColumn.supported = true;
+  @Nonnull
+  private static Field getReferenceField(final @Nonnull Field field) {
+    final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+    if (manyToOne != null) {
+      final String referenceField = manyToOne.referenceField();
+      return Objects.requireNonNull(
+          BeanUtils.getDeclaredField(field.getType(), referenceField),
+          "Not exist field " + referenceField + " in " + field.getType());
+    } else {
+      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+      final String referenceField = oneToOne.referenceField();
+      return Objects.requireNonNull(
+          BeanUtils.getDeclaredField(field.getType(), referenceField),
+          "Not exist field " + referenceField + " in " + field.getType());
     }
-    if (field.isAnnotationPresent(Id.class)) {
-      entityColumn.primaryKey = true;
-    }
-
-    final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
-    if (tableColumn != null) {
-      entityColumn.comment = tableColumn.comment();
-      if (StringUtils.nonEmpty(tableColumn.defaultValue())) {
-        entityColumn.defaultValue = tableColumn.defaultValue();
-      } else if (tableColumn.defaultBlankValue()) {
-        entityColumn.defaultValue = "''";
-      }
-    }
-
-    // 如果是基本类型,列定义不能为空
-    if (entityColumn.getType() instanceof Class
-        && ((Class<?>) entityColumn.getType()).isPrimitive()) {
-      entityColumn.nullable = false;
-    }
-
-    final Column column = field.getAnnotation(Column.class);
-    if (column == null) {
-      entityColumn.typeName =
-          entityColumn.supported
-              ? dialect.getTypeName(
-                  entityColumn.type,
-                  entityColumn.length,
-                  entityColumn.precision,
-                  entityColumn.scale)
-              : null;
-
-      // 默认主键定义
-      if (entityColumn.isPrimaryKey()) {
-        entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn);
-      }
-      return entityColumn;
-    }
-
-    StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
-    StringUtils.doIfNonEmpty(
-        column.columnDefinition(),
-        columnDefinition -> {
-          final String defaultRegex = "default[ ]+\\w+[ ]?";
-          final String commentRegex = "comment.*";
-          final String lowerCaseDefinition = columnDefinition.toLowerCase();
-          if (tableColumn == null) {
-            entityColumn.columnDefinition = columnDefinition;
-            return;
-          }
-          // TableColumn#defaultValue优先级高于Column#columnDefinition中的default值
-          String defaultValue = entityColumn.defaultValue;
-          if (StringUtils.nonEmpty(defaultValue)) {
-            String replacement = " default '" + defaultValue + "'";
-            entityColumn.columnDefinition = columnDefinition.replaceAll(defaultRegex, replacement);
-            if (!entityColumn.columnDefinition.contains("default")) {
-              entityColumn.columnDefinition += replacement;
-            }
-          }
-          String comment = entityColumn.comment;
-          if (StringUtils.nonEmpty(comment)) {
-            String replacement = " comment '" + comment + "'";
-            entityColumn.columnDefinition = columnDefinition.replaceAll(commentRegex, replacement);
-            if (!dialect.isSupportCommentOn()
-                && !entityColumn.columnDefinition.contains("comment")) {
-              entityColumn.columnDefinition += replacement;
-            }
-          }
-        });
-
-    entityColumn.length = column.length();
-    // 使用默认值而不是0
-    NumberUtils.doIfGreaterThanZero(column.precision(), o -> entityColumn.precision = o);
-    NumberUtils.doIfGreaterThanZero(column.scale(), o -> entityColumn.scale = o);
-
-    entityColumn.nullable = entityColumn.nullable && column.nullable();
-    entityColumn.unique = column.unique();
-
-    if (entityColumn.columnDefinition == null) {
-      entityColumn.typeName =
-          entityColumn.supported
-              ? dialect.getTypeName(
-                  entityColumn.type,
-                  entityColumn.length,
-                  entityColumn.precision,
-                  entityColumn.scale)
-              : null;
-    }
-    return entityColumn;
   }
 
   private static String getPrimaryKeyDefinition(
       final Dialect dialect, final EntityColumn entityColumn) {
+    final Type type = entityColumn.type;
+    // 只有主键类型是整型时,才可能自增
+    if (type instanceof Class && !Number.class.isAssignableFrom((Class<?>) type)) {
+      return entityColumn.columnDefinition;
+    }
     final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
-    Long id = 1L;
+    Object id = 1L;
     try {
       id = idGenerator.nextId(null);
     } catch (Exception ignore) {
@@ -210,11 +256,24 @@ public class EntityColumn {
     final IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
     return id == null
         ? identityColumnSupport.containDataTypeInIdentityColumn()
-            ? identityColumnSupport.getIdentityColumnString(entityColumn.type)
+            ? identityColumnSupport.getIdentityColumnString(type)
             : dialect
-                .getTypeName(entityColumn.type)
+                .getTypeName(type)
                 .concat(" ")
-                .concat(identityColumnSupport.getIdentityColumnString(entityColumn.type))
+                .concat(identityColumnSupport.getIdentityColumnString(type))
         : entityColumn.columnDefinition;
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    final EntityColumn column = (EntityColumn) o;
+    return Objects.equals(name, column.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
   }
 }
