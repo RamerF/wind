@@ -126,6 +126,7 @@ public class FooUpdateController {
     final Query<Product> update = prototypeBean.query(Product.class);
     final List<Product> affectRow =
         update.select(queryColumn).where(condition).fetchAll(Product.class);
+    log.info("query2:[{}]", affectRow);
     final LambdaCondition<Product> condition1 = LambdaCondition.getInstance(queryColumn);
     final List<Product> affectRow2 =
         update
@@ -135,7 +136,7 @@ public class FooUpdateController {
                         "(case title when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) title,id"))
             .where(condition1.and("id<>'1'"))
             .fetchAll(Product.class);
-    return Rs.ok(affectRow2);
+    return Rs.ok(affectRow);
   }
 
   @GetMapping(value = "/query", params = "type=3")

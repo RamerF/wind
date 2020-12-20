@@ -53,6 +53,9 @@ public final class EntityInfo {
   /** 字段与列名映射 {field:column}. */
   private Map<String, String> fieldColumnMap;
 
+  /** 列名与字段映射 {column:field}. */
+  private Map<String, Field> columnFieldMap;
+
   /** 列信息. */
   private List<EntityColumn> entityColumns;
 
@@ -64,7 +67,7 @@ public final class EntityInfo {
 
   /** TODO WARN 保存字段的写入方法，更新时可以避免使用反射. */
   private Map<Field, IConsumer<?, ?>> writeMethods =
-      Collections.synchronizedSortedMap(new TreeMap<>((o1, o2) -> o1.equals(o2) ? 0 : 1));
+      Collections.synchronizedMap(new TreeMap<>((o1, o2) -> o1.equals(o2) ? 0 : 1));
 
   private Dialect dialect;
 
@@ -95,7 +98,8 @@ public final class EntityInfo {
             .orElse(null));
 
     final List<Field> columnFields = EntityUtils.getAllColumnFields(clazz);
-    Map<String, String> fieldColumnMap = new HashMap<>(10);
+    Map<String, String> fieldColumnMap = new HashMap<>(20);
+    Map<String, Field> columnFieldMap = new HashMap<>(20);
     // 0:创建时间 1:更新时间
     final Field[] timeField = new Field[2];
 
@@ -116,6 +120,7 @@ public final class EntityInfo {
         continue;
       }
       fieldColumnMap.put(field.getName(), entityColumn.getName());
+      columnFieldMap.put(entityColumn.getName(), field);
       if (entityColumn.isPrimaryKey()) {
         primaryKeys.add(entityColumn);
       }
@@ -139,6 +144,7 @@ public final class EntityInfo {
     entityInfo.setCreateTimeField(timeField[0]);
     entityInfo.setUpdateTimeField(timeField[1]);
     entityInfo.setFieldColumnMap(fieldColumnMap);
+    entityInfo.setColumnFieldMap(columnFieldMap);
     return entityInfo;
   }
 }
