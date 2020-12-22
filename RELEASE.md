@@ -19,8 +19,8 @@
 - 更新：默认关闭逻辑删除
 - 更新：默认写入所有(包括null值)属性，通过`wind.write-null-prop=true/false`开关
 - 更新：InterEnum枚举值由整型改为泛型。controller枚举支持接收名称和value值
-- 更新：@Column替换为@TableColumn
-- 更新：弃用@Entity，使用@TableInfo
+- 更新：`@Column`替换为`@TableColumn`
+- 更新：弃用`@Entity`，使用`@TableInfo`
 - 更新：其他易用性更新
 - 优化：缓存清除时改为使用scan指令
 - 修复：字段为boolean时，lambda无法获取到field
