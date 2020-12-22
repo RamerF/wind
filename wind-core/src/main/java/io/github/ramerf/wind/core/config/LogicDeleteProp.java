@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
+import io.github.ramerf.wind.core.annotation.LogicDelete;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.io.Serializable;
@@ -43,14 +44,16 @@ public class LogicDeleteProp {
 
   public static LogicDeleteProp of(
       final TableInfo tableInfo, @Nonnull final WindConfiguration configuration) {
-    if (tableInfo == null) {
+    LogicDelete logicDelete;
+    // 如果fieldName为空,说明未指定该属性,使用全局配置
+    if (tableInfo == null || (logicDelete = tableInfo.logicDelete()).fieldName().equals("")) {
       return of(configuration);
     }
     LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
-    logicDeleteProp.setEnable(tableInfo.logicDelete().enable());
-    logicDeleteProp.setFieldName(tableInfo.logicDelete().fieldName());
-    logicDeleteProp.setDeleted(tableInfo.logicDelete().deleted());
-    logicDeleteProp.setNotDelete(tableInfo.logicDelete().notDelete());
+    logicDeleteProp.setEnable(logicDelete.enable());
+    logicDeleteProp.setFieldName(logicDelete.fieldName());
+    logicDeleteProp.setDeleted(logicDelete.deleted());
+    logicDeleteProp.setNotDelete(logicDelete.notDelete());
     return logicDeleteProp;
   }
 

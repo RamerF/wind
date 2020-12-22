@@ -39,7 +39,13 @@ public interface ITypeHandler<T, V> {
   Object convertToJdbc(final T t, final Field field, @Nonnull final PreparedStatement ps);
 
   /**
-   * 数据库值转换为Java对象值
+   * 数据库值转换为Java对象值<br>
+   *
+   * <pre>
+   * TODO POST 如果有必要的话,这里可以加个参数 [集合初始值],允许用户自定义集合类型.<br>
+   *  比如用户定义字段: {@code private Set<Long> ids = new TreeSet<>();},
+   *  那么查询数据返回的类型就会是TreeSet,现在如果查询数据不为空默认是HashSet,不够通用
+   * </pre>
    *
    * @param value 数据库值
    * @param clazz Java对象类型

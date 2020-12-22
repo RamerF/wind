@@ -7,11 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 全局通用异常.
  *
+ * @since 2020.12.22
  * @author Tang Xiaofeng
- * @since 2019/11/13
  */
 @Slf4j
-@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CommonException extends RuntimeException {
   private ResultCode resultCode;
 
@@ -19,20 +18,28 @@ public class CommonException extends RuntimeException {
     return resultCode;
   }
 
+  public static CommonException of() {
+    return new CommonException();
+  }
+
   public static CommonException of(final String message) {
     return new CommonException(message);
   }
 
-  public static CommonException of(final String code, final String message) {
+  public static CommonException of(final int code, final String message) {
     return new CommonException(ResultCode.of(code, message));
+  }
+
+  public static CommonException of(final int code, final String message, final Throwable cause) {
+    return new CommonException(ResultCode.of(code, message), cause);
   }
 
   public static CommonException of(@Nonnull final ResultCode resultCode) {
     return new CommonException(resultCode);
   }
 
-  public static CommonException of() {
-    return new CommonException();
+  public static CommonException of(@Nonnull final ResultCode resultCode, final Throwable cause) {
+    return new CommonException(resultCode, cause);
   }
 
   public static CommonException of(final String message, final Throwable cause) {
@@ -43,18 +50,25 @@ public class CommonException extends RuntimeException {
     return new CommonException(cause);
   }
 
-  public static <T> T requireNonNull(T obj, String message) {
+  /** 如果对象为空,抛出异常. */
+  public static Object requireNonNull(Object obj, String message) {
     if (obj == null) {
       throw CommonException.of(message);
     }
     return obj;
   }
 
-  public static <T> T requireNonNull(T obj, final ResultCode resultcode) {
+  /** 如果对象为空,抛出异常. */
+  public static Object requireNonNull(Object obj, final ResultCode resultcode) {
     if (obj == null) {
       throw CommonException.of(resultcode);
     }
     return obj;
+  }
+
+  private CommonException() {
+    super(ResultCode.ERROR.desc());
+    this.resultCode = ResultCode.ERROR;
   }
 
   private CommonException(final String message) {
@@ -66,24 +80,16 @@ public class CommonException extends RuntimeException {
     this.resultCode = resultCode;
   }
 
-  private CommonException() {
-    super(ResultCode.ERROR.desc());
-    this.resultCode = ResultCode.ERROR;
-  }
-
   private CommonException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  private CommonException(final Throwable cause) {
-    super(cause);
+  private CommonException(@Nonnull final ResultCode resultCode, final Throwable cause) {
+    super(resultCode.desc(), cause);
+    this.resultCode = resultCode;
   }
 
-  protected CommonException(
-      final String message,
-      final Throwable cause,
-      final boolean enableSuppression,
-      final boolean writableStackTrace) {
-    super(message, cause, enableSuppression, writableStackTrace);
+  private CommonException(final Throwable cause) {
+    super(cause);
   }
 }

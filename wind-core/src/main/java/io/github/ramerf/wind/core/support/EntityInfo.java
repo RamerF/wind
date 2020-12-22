@@ -66,8 +66,7 @@ public final class EntityInfo {
   private List<MappingInfo> mappingInfos = new ArrayList<>();
 
   /** TODO WARN 保存字段的写入方法，更新时可以避免使用反射. */
-  private Map<Field, IConsumer<?, ?>> writeMethods =
-      Collections.synchronizedMap(new TreeMap<>((o1, o2) -> o1.equals(o2) ? 0 : 1));
+  private Map<Field, IConsumer<?, ?>> writeMethods;
 
   private Dialect dialect;
 
