@@ -2,7 +2,7 @@
 
 ---
 
-#### 4.0.2-RELEASE
+#### 4.0.3
 
 - 新增：更新指定字段
 - 新增：查询支持
@@ -12,9 +12,9 @@
 - 新增：`GenericService`支持操作任意表
 - 新增：支持内存缓存。通过`wind.cache.type=memory`开启
 - 新增：实体现在自带保存/更新方法 `product.create();`
-- 新增：枚举校验注解
 - 新增：校验器工具类
 - 新增：全局异常处理
+- 新增：Postgresql支持Set字段
 - 更新：默认关闭缓存
 - 更新：默认关闭逻辑删除
 - 更新：默认写入所有(包括null值)属性，通过`wind.write-null-prop=true/false`开关

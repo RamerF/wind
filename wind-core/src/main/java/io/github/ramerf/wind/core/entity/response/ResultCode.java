@@ -3,77 +3,75 @@ package io.github.ramerf.wind.core.entity.response;
 import lombok.ToString;
 
 /**
- * 返回结果码,名称前缀为模块简拼.
+ * 返回结果码.
  *
+ * @since 2020.12.22
  * @author Tang Xiaofeng
- * @since 2019/12/5
  */
 @ToString
-@SuppressWarnings("all")
 public class ResultCode {
   // 凭证
-  public static final ResultCode API_WRONG_PARAM = of("E0100", "参数错误");
-  public static final ResultCode API_CERT_NOT_EXIST = of("E0101", "未知凭证");
-  public static final ResultCode API_CERT_WRONG_FORMAT = of("E0102", "参数签名有误");
-  public static final ResultCode API_CERT_SECRET_EXPIRE = of("E0103", "凭证已过期");
-  public static final ResultCode API_CERT_SECRET_EMPTY = of("E0104", "凭证不能为空");
-  public static final ResultCode API_CERT_DISABLED = of("E0105", "凭证已被禁用");
-  public static final ResultCode API_CERT_UNKNOWN_ERROR = of("E0106", "其他原因");
+  public static final ResultCode API_WRONG_PARAM = of(100, "参数错误");
+  public static final ResultCode API_CERT_NOT_EXIST = of(101, "未知凭证");
+  public static final ResultCode API_CERT_WRONG_FORMAT = of(102, "参数签名有误");
+  public static final ResultCode API_CERT_SECRET_EXPIRE = of(103, "凭证已过期");
+  public static final ResultCode API_CERT_SECRET_EMPTY = of(104, "凭证不能为空");
+  public static final ResultCode API_CERT_DISABLED = of(105, "凭证已被禁用");
+  public static final ResultCode API_CERT_UNKNOWN_ERROR = of(106, "其他原因");
   // 公共信息
-  public static final ResultCode SUCCESS = of("E0000", "操作成功");
-  public static final ResultCode ERROR = of("E0001", "系统繁忙,请稍后再试 !");
-  public static final ResultCode API_UNAUTHORIZED = of("E0002", "未认证");
-  public static final ResultCode API_FORBIDDEN = of("E0003", "无访问权限");
-  public static final ResultCode API_NOT_IMPLEMENT = of("E0004", "方法未实现");
-  public static final ResultCode API_SERVICE_NOT_AVAILABLE = of("E0005", "服务不可用");
-  public static final ResultCode API_NOT_FOUND = of("E0006", "资源不可用");
-  public static final ResultCode ERROR_DATA_ACCESS = of("E0007", "%s");
+  public static final ResultCode SUCCESS = of(0, "操作成功");
+  public static final ResultCode ERROR = of(1, "系统繁忙,请稍后再试 !");
+  public static final ResultCode API_UNAUTHORIZED = of(2, "未认证");
+  public static final ResultCode API_FORBIDDEN = of(3, "无访问权限");
+  public static final ResultCode API_NOT_IMPLEMENT = of(4, "方法未实现");
+  public static final ResultCode API_SERVICE_NOT_AVAILABLE = of(5, "服务不可用");
+  public static final ResultCode API_NOT_FOUND = of(6, "资源不可用");
+  public static final ResultCode ERROR_DATA_ACCESS = of(7, "%s");
   // 操作成功提示
-  public static final ResultCode API_SUCCESS_EXEC_CREATE = of("E1100", "添加成功");
-  public static final ResultCode API_SUCCESS_EXEC_UPDATE = of("E1101", "更新成功");
-  public static final ResultCode API_SUCCESS_EXEC_DELETE = of("E1102", "删除成功");
+  public static final ResultCode API_SUCCESS_EXEC_CREATE = of(1100, "添加成功");
+  public static final ResultCode API_SUCCESS_EXEC_UPDATE = of(1101, "更新成功");
+  public static final ResultCode API_SUCCESS_EXEC_DELETE = of(1102, "删除成功");
   // 操作失败提示
-  public static final ResultCode API_FAIL_EXEC = of("E1201", "操作失败,数据格式有误");
-  public static final ResultCode API_FAIL_EXEC_CREATE = of("E1201", "添加失败,数据格式有误");
-  public static final ResultCode API_FAIL_EXEC_CREATE_EXIST = of("E1202", "添加失败,数据已存在");
-  public static final ResultCode API_FAIL_EXEC_UPDATE = of("E1203", "更新失败,数据格式有误");
-  public static final ResultCode API_FAIL_EXEC_UPDATE_NOT_EXIST = of("E1204", "更新失败,记录不存在");
-  public static final ResultCode API_FAIL_EXEC_DELETE = of("E1205", "删除失败");
-  public static final ResultCode API_FAIL_EXEC_DELETE_BATCH = of("E1206", "批量删除失败,可能数据已被删除");
-  public static final ResultCode API_FAIL_DELETE_NO_CONDITION = of("E1207", "删除失败,条件不能为空");
+  public static final ResultCode API_FAIL_EXEC = of(1201, "操作失败,数据格式有误");
+  public static final ResultCode API_FAIL_EXEC_CREATE = of(1201, "添加失败,数据格式有误");
+  public static final ResultCode API_FAIL_EXEC_CREATE_EXIST = of(1202, "添加失败,数据已存在");
+  public static final ResultCode API_FAIL_EXEC_UPDATE = of(1203, "更新失败,数据格式有误");
+  public static final ResultCode API_FAIL_EXEC_UPDATE_NOT_EXIST = of(1204, "更新失败,记录不存在");
+  public static final ResultCode API_FAIL_EXEC_DELETE = of(1205, "删除失败");
+  public static final ResultCode API_FAIL_EXEC_DELETE_BATCH = of(1206, "批量删除失败,可能数据已被删除");
+  public static final ResultCode API_FAIL_DELETE_NO_CONDITION = of(1207, "删除失败,条件不能为空");
   /// 参数
-  public static final ResultCode API_NOT_ALLOWED = of("E1301", "操作不允许:[%s]");
-  public static final ResultCode API_PARAM_WRONG_FORMAT = of("E1302", "参数格式不正确:[%s]");
-  public static final ResultCode API_PARAM_WRONG_VALUE = of("E1303", "参数值不正确:[%s]");
-  public static final ResultCode API_PARAM_CAN_NOT_BLANK = of("E1304", "参数值不能为空:[%s]");
-  public static final ResultCode API_PARAM_NOT_PRESENT = of("E1305", "参数未传递:[%s]");
-  public static final ResultCode API_PARAM_INVALID = of("E1306", "参数值无效:[%s]");
-  public static final ResultCode API_PARAM_BIND_ERROR = of("E1307", "参数值有误: \n");
-  public static final ResultCode API_DATA_EXIST = of("E1308", "数据已存在:[%s]");
-  public static final ResultCode API_DATA_NOT_EXIST = of("E1309", "数据不存在:[%s]");
-  public static final ResultCode API_CONTENT_TYPE_NOT_SUPPORT =
-      of("E1310", "请求ContentType不支持:[%s]");
-  public static final ResultCode API_METHOD_NOT_SUPPORT = of("E1311", "请求方式不支持:[%s]");
-  public static final ResultCode API_TOO_MANY_RESULTS = of("E1312", "返回结果过多");
-  public static final ResultCode API_UPDATE_ID_NOT_EMPTY = of("E1313", "id 不能为空");
+  public static final ResultCode API_NOT_ALLOWED = of(1301, "操作不允许:[%s]");
+  public static final ResultCode API_PARAM_WRONG_FORMAT = of(1302, "参数格式不正确:[%s]");
+  public static final ResultCode API_PARAM_WRONG_VALUE = of(1303, "参数值不正确:[%s]");
+  public static final ResultCode API_PARAM_CAN_NOT_BLANK = of(1304, "参数值不能为空:[%s]");
+  public static final ResultCode API_PARAM_NOT_PRESENT = of(1305, "参数未传递:[%s]");
+  public static final ResultCode API_PARAM_INVALID = of(1306, "参数值无效:[%s]");
+  public static final ResultCode API_PARAM_BIND_ERROR = of(1307, "参数值有误: \n");
+  public static final ResultCode API_DATA_EXIST = of(1308, "数据已存在:[%s]");
+  public static final ResultCode API_DATA_NOT_EXIST = of(1309, "数据不存在:[%s]");
+  public static final ResultCode API_CONTENT_TYPE_NOT_SUPPORT = of(1310, "请求ContentType不支持:[%s]");
+  public static final ResultCode API_METHOD_NOT_SUPPORT = of(1311, "请求方式不支持:[%s]");
+  public static final ResultCode API_TOO_MANY_RESULTS = of(1312, "返回结果过多");
+  public static final ResultCode API_UPDATE_ID_NOT_EMPTY = of(1313, "id 不能为空");
 
-  protected String code;
+  protected int code;
   protected String desc;
 
   public boolean isSuccess() {
-    return code.equals(SUCCESS.code);
+    return code == SUCCESS.code;
   }
 
-  protected ResultCode(final String code, final String desc) {
+  protected ResultCode(final int code, final String desc) {
     this.code = code;
     this.desc = desc;
   }
 
-  public static ResultCode of(final String code, final String desc) {
+  public static ResultCode of(final int code, final String desc) {
     return new ResultCode(code, desc);
   }
 
-  public String code() {
+  public int code() {
     return code;
   }
 

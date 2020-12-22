@@ -37,7 +37,7 @@
     <dependency>
         <groupId>io.github.ramerf</groupId>
         <artifactId>wind-core</artifactId>
-        <version>4.0.2-RELEASE</version>
+        <version>4.0.3</version>
     </dependency>
     ```
     
@@ -858,11 +858,11 @@ wind:
   logic-delete-prop:
       # 是否启用逻辑删除,可以在类上使用@TableInfo(logicDelete = @LogicDelete(enable = true))属性覆盖
       enable: false
-      # 逻辑删除字段名,@TableInfo会覆盖该配置
+      # 逻辑删除字段名
       field-name: deleted
-      # 逻辑未删除值(默认为 false),@TableInfo会覆盖该配置
+      # 逻辑未删除值(默认为 false)
       not-delete: false
-      # 逻辑已删除值(默认为 true),@TableInfo会覆盖该配置
+      # 逻辑已删除值(默认为 true)
       deleted: true
   # entity所在包路径,多个以,分割
   entity-package: io.github.ramerf.wind.demo.entity.pojo

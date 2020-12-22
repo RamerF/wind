@@ -83,7 +83,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }
 
   /**
-   * 获取单个PoJo对象.
+   * 获取单个对象.
    *
    * @param consumer 查询条件
    * @return the ones
@@ -106,7 +106,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }
 
   /**
-   * 获取单个PoJo对象.
+   * 获取单个对象.
    *
    * @param query 查询字段
    * @param condition 查询条件
@@ -176,7 +176,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }*/
 
   /**
-   * 通过id集合查询PoJo列表.
+   * 通过id集合查询列表.
    *
    * @param ids the ids
    * @return the list
@@ -199,7 +199,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }
 
   /**
-   * 查询PoJo列表.
+   * 查询列表.
    *
    * @param consumer the consumer
    * @return the list
@@ -222,7 +222,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }
 
   /**
-   * 查询指定字段,返回PoJo列表.
+   * 查询指定字段.
    *
    * @param queryConsumer 查询列
    * @param conditionConsumer 查询条件
@@ -252,12 +252,12 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }
 
   /**
-   * 获取某页列表数据,返回PoJo对象.
+   * 获取某页列表数据.
    *
    * @param conditionConsumer 查询条件
    * @param page 当前页码,从1开始
    * @param size 每页大小
-   * @return PoJo对象列表 list
+   * @return 对象列表 list
    */
   default List<T> list(
       final Consumer<LambdaCondition<T>> conditionConsumer, final int page, final int size) {
@@ -265,12 +265,12 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }
 
   /**
-   * 获取某页列表数据,返回PoJo对象.
+   * 获取某页列表数据.
    *
    * @param conditionConsumer 查询条件
    * @param page 当前页码,从1开始
    * @param size 每页大小
-   * @return PoJo对象列表 list
+   * @return 对象列表 list
    */
   default List<T> list(
       final Consumer<LambdaCondition<T>> conditionConsumer,
@@ -310,8 +310,13 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
         .fetchAll(clazz, pageable);
   }
 
+  /** 查询列表. */
+  default List<T> listAll() {
+    return listAll(null, getPoJoClass());
+  }
+
   /**
-   * 查询PoJo列表.
+   * 查询列表.
    *
    * @param queryConsumer 查询列
    * @return the list
@@ -350,7 +355,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param conditionConsumer 查询条件
    * @param page 当前页码,从1开始
    * @param size 每页大小
-   * @return PoJo分页数据 page
+   * @return 分页数据 page
    */
   default Page<T> page(
       final Consumer<LambdaCondition<T>> conditionConsumer, final int page, final int size) {
@@ -364,7 +369,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
    * @param page 当前页码,从1开始
    * @param size 每页大小
    * @param sortColumn 排序规则
-   * @return PoJo分页数据 page
+   * @return 分页数据 page
    */
   default Page<T> page(
       final Consumer<LambdaCondition<T>> conditionConsumer,
@@ -395,7 +400,7 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
   }
 
   /**
-   * 查询分页,返回PoJo对象.
+   * 查询分页.
    *
    * @param queryConsumer 查询列
    * @param conditionConsumer 查询条件

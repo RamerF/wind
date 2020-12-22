@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
     log.error(request.getRequestURL().toString());
     handleError(request, exception);
     final ResultCode resultCode = ((CommonException) exception).getResultCode();
-    return Objects.isNull(resultCode) ? Rs.fail(exception.getMessage()) : Rs.fail(resultCode);
+    return resultCode == null ? Rs.fail(exception.getMessage()) : Rs.fail(resultCode);
   }
 
   /**
@@ -197,7 +197,7 @@ public class GlobalExceptionHandler {
   public Rs<Object> handleDataAccessException(HttpServletRequest request, Exception exception) {
     if (exception instanceof IncorrectResultSizeDataAccessException) {
       handleError(request, exception);
-      return Rs.fail(ResultCode.API_TOO_MANY_RESULTS);
+      return Rs.tooManyResults();
     }
     final Throwable cause = exception.getCause();
     if (cause instanceof SQLException) {

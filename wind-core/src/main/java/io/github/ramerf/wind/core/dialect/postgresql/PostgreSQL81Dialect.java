@@ -38,16 +38,24 @@ public class PostgreSQL81Dialect extends Dialect {
 
     registerColumnType(Date.class, "timestamp");
     // array
+    registerColumnType(short[].class, "int[]");
+    registerColumnType(Short[].class, "int[]");
+    registerColumnType(JavaType.LIST_SHORT, "int[]");
+    registerColumnType(JavaType.SET_SHORT, "int[]");
+
     registerColumnType(int[].class, "int[]");
     registerColumnType(Integer[].class, "int[]");
     registerColumnType(JavaType.LIST_INTEGER, "int[]");
+    registerColumnType(JavaType.SET_INTEGER, "int[]");
 
     registerColumnType(long[].class, "bigint[]");
     registerColumnType(Long[].class, "bigint[]");
     registerColumnType(JavaType.LIST_LONG, "bigint[]");
+    registerColumnType(JavaType.SET_LONG, "bigint[]");
 
     registerColumnType(String[].class, "text[]");
     registerColumnType(JavaType.LIST_STRING, "text[]");
+    registerColumnType(JavaType.SET_STRING, "text[]");
   }
 
   @Override
@@ -77,6 +85,13 @@ public class PostgreSQL81Dialect extends Dialect {
     addSupportedJavaType(JavaType.LIST_FLOAT);
     addSupportedJavaType(JavaType.LIST_DOUBLE);
     addSupportedJavaType(JavaType.LIST_BIGDECIMAL);
+
+    addSupportedJavaType(JavaType.SET_SHORT);
+    addSupportedJavaType(JavaType.SET_INTEGER);
+    addSupportedJavaType(JavaType.SET_LONG);
+    addSupportedJavaType(JavaType.SET_FLOAT);
+    addSupportedJavaType(JavaType.SET_DOUBLE);
+    addSupportedJavaType(JavaType.SET_BIGDECIMAL);
 
     addSupportedJavaType(JavaType.LIST_STRING);
 
