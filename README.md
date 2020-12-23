@@ -793,15 +793,12 @@ public class QueryUpdateController {
 
 ```java
 @Bean
-public ITypeHandler customTypeHandler() {
-```
-
-}
+public ITypeHandler customTypeHandler() {}
 ```
 
 #### 自动建表
 
-​```yml
+```yml
 wind:
   # 自动建表,扫描entity-package下包含@TableInfo的类.可选值:none,create,update.默认:none
   ddl-auto: update
