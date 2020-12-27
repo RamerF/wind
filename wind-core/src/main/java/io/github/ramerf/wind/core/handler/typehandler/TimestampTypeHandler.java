@@ -21,7 +21,8 @@ public class TimestampTypeHandler implements ITypeHandler<Date, Timestamp> {
   }
 
   @Override
-  public Date covertFromJdbc(final Timestamp jdbcVal, final Class<? extends Date> clazz) {
+  public Date convertFromJdbc(
+      final Timestamp jdbcVal, final Object defaultValue, final Field field) {
     return Objects.nonNull(jdbcVal) ? new Date(jdbcVal.getTime()) : null;
   }
 

@@ -21,8 +21,8 @@ public class LocalDateTimeToIntegerTypeHandler implements ITypeHandler<LocalDate
   }
 
   @Override
-  public LocalDateTime covertFromJdbc(
-      final Integer jdbcVal, final Class<? extends LocalDateTime> clazz) {
+  public LocalDateTime convertFromJdbc(
+      final Integer jdbcVal, final Object defaultValue, final Field field) {
     return Objects.nonNull(jdbcVal)
         ? LocalDateTime.ofInstant(Instant.ofEpochSecond(jdbcVal), TimeZone.getDefault().toZoneId())
         : null;

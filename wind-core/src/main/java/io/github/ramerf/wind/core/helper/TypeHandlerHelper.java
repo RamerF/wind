@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.function.BeanFunction;
-import io.github.ramerf.wind.core.handler.TypeHandlerRegistryFactory;
+import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
@@ -27,7 +27,8 @@ public class TypeHandlerHelper {
     TypeHandlerHelper.typeHandlerRegistryFactory = typeHandlerRegistryFactory;
   }
 
-  public static Object toJavaValue(final ValueType valueType, final Class<?> parameterType) {
+  public static Object toJavaValue(
+      final ValueType valueType, final Object defaultValue, final Field field) {
     @SuppressWarnings("rawtypes")
     final ITypeHandler typeHandler = typeHandlerRegistryFactory.getToJavaTypeHandler(valueType);
     if (log.isTraceEnabled()) {
@@ -38,7 +39,7 @@ public class TypeHandlerHelper {
     }
     return typeHandler == null
         ? valueType.originVal
-        : typeHandler.covertFromJdbc(valueType.originVal, parameterType);
+        : typeHandler.convertFromJdbc(valueType.originVal, defaultValue, field);
   }
 
   public static Object toJdbcValue(final ValueType valueType, final PreparedStatement ps) {

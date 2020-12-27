@@ -37,7 +37,7 @@
     <dependency>
         <groupId>io.github.ramerf</groupId>
         <artifactId>wind-core</artifactId>
-        <version>4.0.3</version>
+        <version>4.0.4</version>
     </dependency>
     ```
     
@@ -103,6 +103,8 @@ public class BaseServiceTest {
             .isNull(false)
             .string(true)
             .nonNull(true)
+            .typeJson(Type.SPORT)
+            .typesJson(Arrays.asList(Type.PHONE, Type.SPORT))
             .build();
   }
 
@@ -352,12 +354,13 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testCreate3() {
     foo.setId(null);
-    final Consumer<Fields<Foo>> consumer =
-        fields ->
-            fields
-                .include(Foo::getName, Foo::getAge, Foo::isString, Foo::isNumber)
-                .exclude(Foo::getBigText);
-    assertNotNull(foo.create(consumer));
+    assertNotNull(
+        foo.create(
+            fields ->
+                fields
+                    // 根据条件动态更新字段
+                    .include(StringUtils.nonEmpty(foo.getName()), Foo::getName)
+                    .include(Foo::getAge, Foo::isString, Foo::isNumber)));
   }
 
   @Test

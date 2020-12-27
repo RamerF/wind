@@ -1,7 +1,8 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
 import java.lang.reflect.Field;
-import java.sql.*;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.time.*;
 import java.util.TimeZone;
 import javax.annotation.Nonnull;
@@ -22,7 +23,8 @@ public class LocalDateToDateTypeHandler implements ITypeHandler<LocalDate, Date>
   }
 
   @Override
-  public LocalDate covertFromJdbc(final Date jdbcVal, final Class<? extends LocalDate> clazz) {
+  public LocalDate convertFromJdbc(
+      final Date jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal != null
         ? LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(jdbcVal.getTime()), TimeZone.getDefault().toZoneId())

@@ -28,7 +28,8 @@ public class LongArrayTypeHandler implements ITypeHandler<Long[], Long[]> {
   }
 
   @Override
-  public Long[] covertFromJdbc(final Long[] jdbcVal, final Class<? extends Long[]> clazz) {
+  public Long[] convertFromJdbc(
+      final Long[] jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal;
   }
 

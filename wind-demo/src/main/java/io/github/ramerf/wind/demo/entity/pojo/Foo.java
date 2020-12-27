@@ -4,17 +4,12 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.TypeHandler;
-import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
-import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.handler.typehandler.ObjectCollectionToJsonTypeHandler;
+import io.github.ramerf.wind.core.handler.typehandler.ObjectToJsonTypeHandler;
 import io.github.ramerf.wind.core.service.InterService.Fields;
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.sql.*;
-import java.util.Date;
 import java.util.*;
-import javax.annotation.Nonnull;
 import javax.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -110,9 +105,16 @@ public class Foo extends AbstractEntityPoJo<Foo, Long> {
   private Boolean isNull;
   private Boolean nonNull;
 
-  /** 自定义类型转换器. */
-  @TypeHandler(SetTypeHandler.class)
-  private Set<Long> noDuplicateIds = new HashSet<>();
+  /** 支持Set,可指定集合类型. */
+  private Set<Long> noDuplicateIds = new TreeSet<>();
+
+  @TableColumn(columnDefinition = "text", comment = "对象数组转存json,可指定集合类型")
+  @TypeHandler(ObjectCollectionToJsonTypeHandler.class)
+  private List<Type> typesJson = new LinkedList<>();
+
+  @TableColumn(columnDefinition = "text", comment = "对象转存json")
+  @TypeHandler(ObjectToJsonTypeHandler.class)
+  private Type typeJson;
 
   public enum Type implements InterEnum<String> {
     /** Type. */
@@ -159,37 +161,6 @@ public class Foo extends AbstractEntityPoJo<Foo, Long> {
     @Override
     public String desc() {
       return this.desc;
-    }
-  }
-
-  public static class SetTypeHandler implements ITypeHandler<Set<Long>, Long[]> {
-    @Override
-    public Object convertToJdbc(
-        Set<Long> javaVal, final Field field, @Nonnull final PreparedStatement ps) {
-      if (javaVal == null) {
-        return null;
-      }
-      try {
-        final Connection connection = ps.getConnection();
-        return connection.createArrayOf(getJdbcType(field), javaVal.toArray(new Long[0]));
-      } catch (SQLException e) {
-        throw CommonException.of(e);
-      }
-    }
-
-    @Override
-    public Set<Long> covertFromJdbc(final Long[] jdbcVal, final Class<? extends Set<Long>> clazz) {
-      if (jdbcVal == null) {
-        return new HashSet<>();
-      }
-      Set<Long> set = new HashSet<>();
-      Collections.addAll(set, jdbcVal);
-      return set;
-    }
-
-    @Override
-    public String getJdbcType(@Nonnull final Field field) {
-      return EntityHelper.getJdbcTypeName(field, "bigint");
     }
   }
 }

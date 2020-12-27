@@ -4,10 +4,10 @@ import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.handler.TypeHandler;
-import io.github.ramerf.wind.core.handler.typehandler.BitSetBlobTypeHandler;
+import io.github.ramerf.wind.core.handler.typehandler.*;
 import io.github.ramerf.wind.core.service.InterService.Fields;
 import java.math.BigDecimal;
-import java.util.BitSet;
+import java.util.*;
 import javax.persistence.Id;
 import lombok.*;
 
@@ -64,6 +64,14 @@ public class Foo extends AbstractEntityPoJo<Foo, Long> {
   private boolean string;
   private Boolean isNull;
   private Boolean nonNull;
+
+  @TableColumn(columnDefinition = "text", comment = "对象集合转存json,可指定集合类型")
+  @TypeHandler(ObjectCollectionToJsonTypeHandler.class)
+  private List<Type> typesJson = new LinkedList<>();
+
+  @TableColumn(columnDefinition = "text", comment = "对象转存json")
+  @TypeHandler(ObjectToJsonTypeHandler.class)
+  private Type typeJson;
 
   public enum Type implements InterEnum<Integer> {
     /** 类别 */

@@ -19,7 +19,8 @@ public class DateTypeHandler implements ITypeHandler<Date, java.sql.Date> {
   }
 
   @Override
-  public Date covertFromJdbc(final java.sql.Date jdbcVal, final Class<? extends Date> clazz) {
+  public Date convertFromJdbc(
+      final java.sql.Date jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal != null ? new Date(jdbcVal.getTime()) : null;
   }
 

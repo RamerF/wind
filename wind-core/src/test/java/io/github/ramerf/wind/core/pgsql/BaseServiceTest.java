@@ -5,11 +5,10 @@ import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.pgsql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
-import io.github.ramerf.wind.core.service.InterService.Fields;
+import io.github.ramerf.wind.core.util.StringUtils;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.LongStream;
 import lombok.Getter;
 import lombok.Setter;
@@ -62,6 +61,8 @@ public class BaseServiceTest {
             .stringArr(new String[] {"2", "a", "b"})
             .column("non_match_column")
             .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
+            .typeJson(Type.SPORT)
+            .typesJson(Arrays.asList(Type.PHONE, Type.SPORT))
             .build();
   }
 
@@ -313,12 +314,13 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testCreate3() {
     foo.setId(null);
-    final Consumer<Fields<Foo>> consumer =
-        fields ->
-            fields
-                .include(Foo::getName, Foo::getAge, Foo::isString, Foo::isNumber)
-                .exclude(Foo::getBigText);
-    assertNotNull(foo.create(consumer));
+    assertNotNull(
+        foo.create(
+            fields ->
+                fields
+                    // 根据条件动态更新字段
+                    .include(StringUtils.nonEmpty(foo.getName()), Foo::getName)
+                    .include(Foo::getAge, Foo::isString, Foo::isNumber)));
   }
 
   @Test

@@ -13,12 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 数据库与Java Bean相互转换.暂时只支持单类双向,如果双向转换不存在一个类中,可以在字段上添加{@link TypeHandler}指定使用的类型转换器.
+ * 数据库与Java类型之间转换.可以在字段上添加{@link TypeHandler}指定使用的类型转换器.
  *
  * @param <T> Java对象类型
  * @param <V> 数据库值类型
- * @author Tang Xiaofeng
  * @since 2020 /3/4
+ * @author Tang Xiaofeng
  */
 @SuppressWarnings({"rawtypes", "unused"})
 public interface ITypeHandler<T, V> {
@@ -41,17 +41,12 @@ public interface ITypeHandler<T, V> {
   /**
    * 数据库值转换为Java对象值<br>
    *
-   * <pre>
-   * TODO POST 如果有必要的话,这里可以加个参数 [集合初始值],允许用户自定义集合类型.<br>
-   *  比如用户定义字段: {@code private Set<Long> ids = new TreeSet<>();},
-   *  那么查询数据返回的类型就会是TreeSet,现在如果查询数据不为空默认是HashSet,不够通用
-   * </pre>
-   *
-   * @param value 数据库值
-   * @param clazz Java对象类型
+   * @param jdbcVal 数据库值
+   * @param defaultValue java实例该字段的默认值
+   * @param field 字段
    * @return Java对象值 t
    */
-  T covertFromJdbc(final V value, final Class<? extends T> clazz);
+  T convertFromJdbc(final V jdbcVal, final Object defaultValue, final Field field);
 
   /**
    * 是否处理null值,默认处理.<br>

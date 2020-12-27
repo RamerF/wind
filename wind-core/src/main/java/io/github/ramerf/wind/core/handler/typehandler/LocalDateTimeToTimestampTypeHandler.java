@@ -21,8 +21,8 @@ public class LocalDateTimeToTimestampTypeHandler implements ITypeHandler<LocalDa
   }
 
   @Override
-  public LocalDateTime covertFromJdbc(
-      final Timestamp jdbcVal, final Class<? extends LocalDateTime> clazz) {
+  public LocalDateTime convertFromJdbc(
+      final Timestamp jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal != null
         ? LocalDateTime.ofInstant(
             Instant.ofEpochMilli(jdbcVal.getTime()), TimeZone.getDefault().toZoneId())

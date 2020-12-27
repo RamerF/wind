@@ -21,8 +21,8 @@ public class LocalDateTimeToLongTypeHandler implements ITypeHandler<LocalDateTim
   }
 
   @Override
-  public LocalDateTime covertFromJdbc(
-      final Long jdbcVal, final Class<? extends LocalDateTime> clazz) {
+  public LocalDateTime convertFromJdbc(
+      final Long jdbcVal, final Object defaultValue, final Field field) {
     return Objects.nonNull(jdbcVal)
         ? LocalDateTime.ofInstant(Instant.ofEpochMilli(jdbcVal), TimeZone.getDefault().toZoneId())
         : null;

@@ -106,12 +106,28 @@ public interface InterService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
       return this;
     }
 
+    public final Fields<T> include(final boolean include, final IFunction<T, ?> includeField) {
+      if (include) {
+        this.includes.add(includeField);
+      }
+      return this;
+    }
+
     @SafeVarargs
     public final Fields<T> exclude(@Nonnull final IFunction<T, ?>... excludeFields) {
       for (final IFunction<T, ?> function : excludeFields) {
         this.includes.remove(function);
       }
       this.excludes.addAll(Arrays.asList(excludeFields));
+      return this;
+    }
+
+    public final Fields<T> exclude(
+        final boolean exclude, @Nonnull final IFunction<T, ?> excludeField) {
+      if (exclude) {
+        this.includes.remove(excludeField);
+        this.excludes.add(excludeField);
+      }
       return this;
     }
 

@@ -1,7 +1,7 @@
-package io.github.ramerf.wind.core.handler;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.handler.typehandler.*;
+import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -38,8 +38,8 @@ public class TypeHandlerRegistryFactory {
           .stream()
           .peek(clazz -> log.info("registerDefaultTypeHandlers:[{}]", clazz.getName()))
           .filter(clazz -> !clazz.equals(ITypeHandler.class))
-          // 过滤掉特殊的类型处理器
-          .filter(clazz -> !clazz.equals(LongTimestampTypeHandler.class))
+          // 跳过类型处理器
+          .filter(clazz -> !clazz.isAnnotationPresent(Skip.class))
           .map(BeanUtils::initial)
           .forEach(
               typeHandler -> {
@@ -143,10 +143,23 @@ public class TypeHandlerRegistryFactory {
                       eqJavaClass = javaClazz.isAssignableFrom(paramClazz);
                     } else {
                       try {
-                        eqJavaClass =
-                            Class.forName(javaClass.getTypeName())
-                                .isAssignableFrom(
-                                    Class.forName(genericParameterType.getTypeName()));
+                        if (javaClass instanceof ParameterizedType
+                            && genericParameterType instanceof ParameterizedType) {
+                          final ParameterizedType javaClassType = (ParameterizedType) javaClass;
+                          final ParameterizedType parameterType =
+                              (ParameterizedType) genericParameterType;
+                          eqJavaClass =
+                              Class.forName(javaClassType.getRawType().getTypeName())
+                                      .isAssignableFrom(
+                                          Class.forName(parameterType.getRawType().getTypeName()))
+                                  && javaClassType.getActualTypeArguments()[0].equals(
+                                      parameterType.getActualTypeArguments()[0]);
+                        } else {
+                          eqJavaClass =
+                              Class.forName(javaClass.getTypeName())
+                                  .isAssignableFrom(
+                                      Class.forName(genericParameterType.getTypeName()));
+                        }
                       } catch (ClassNotFoundException ignored) {
                       }
                     }
@@ -197,20 +210,20 @@ public class TypeHandlerRegistryFactory {
     if (Date.class.isAssignableFrom(type)) {
       return typeHandlerMap.get(DateTypeHandler.class);
     }
-    if (List.class.isAssignableFrom(type)) {
+    if (Collection.class.isAssignableFrom(type)) {
       ParameterizedType parameterizedType =
           (ParameterizedType) valueType.getField().getGenericType();
       final Type[] arguments = parameterizedType.getActualTypeArguments();
       if (arguments.length > 0) {
         final Class<?> argument = (Class<?>) arguments[0];
         if (Integer.class.isAssignableFrom(argument)) {
-          return typeHandlerMap.get(ListIntegerArrayTypeHandler.class);
+          return typeHandlerMap.get(CollectionIntegerArrayTypeHandler.class);
         }
         if (Long.class.isAssignableFrom(argument)) {
-          return typeHandlerMap.get(ListLongArrayTypeHandler.class);
+          return typeHandlerMap.get(CollectionLongArrayTypeHandler.class);
         }
         if (String.class.isAssignableFrom(argument)) {
-          return typeHandlerMap.get(ListStringArrayTypeHandler.class);
+          return typeHandlerMap.get(CollectionStringArrayTypeHandler.class);
         }
       }
     }

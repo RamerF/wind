@@ -7,13 +7,11 @@ import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.persistence.Id;
 import lombok.*;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  * 实体列信息(字段,sqlType).
@@ -108,9 +106,12 @@ public class EntityColumn {
       }
     }
     entityColumn.type = parseField.getGenericType();
+
+    final TableColumn tableColumn = parseField.getAnnotation(TableColumn.class);
     if (dialect.isSupportJavaType(entityColumn.type)
         || (entityColumn.type instanceof Class
-            && InterEnum.class.isAssignableFrom((Class<?>) entityColumn.type))) {
+            && InterEnum.class.isAssignableFrom((Class<?>) entityColumn.type))
+        || tableColumn != null) {
       entityColumn.supported = true;
     }
     if (field.isAnnotationPresent(Id.class)) {
@@ -121,9 +122,7 @@ public class EntityColumn {
         && ((Class<?>) entityColumn.getType()).isPrimitive()) {
       entityColumn.nullable = false;
     }
-
-    final TableColumn column = parseField.getAnnotation(TableColumn.class);
-    if (column == null) {
+    if (tableColumn == null) {
       entityColumn.typeName =
           entityColumn.supported
               ? dialect.getTypeName(
@@ -134,15 +133,15 @@ public class EntityColumn {
               : null;
 
     } else {
-      entityColumn.comment = column.comment();
-      if (!column.defaultValue().isEmpty()) {
-        entityColumn.defaultValue = column.defaultValue();
-      } else if (column.defaultBlankValue()) {
+      entityColumn.comment = tableColumn.comment();
+      if (!tableColumn.defaultValue().isEmpty()) {
+        entityColumn.defaultValue = tableColumn.defaultValue();
+      } else if (tableColumn.defaultBlankValue()) {
         entityColumn.defaultValue = "''";
       }
-      // StringUtils.doIfNonEmpty(column.name(), name -> entityColumn.name = name);
+      // StringUtils.doIfNonEmpty(tableColumn.name(), name -> entityColumn.name = name);
       StringUtils.doIfNonEmpty(
-          column.columnDefinition(),
+          tableColumn.columnDefinition(),
           columnDefinition -> {
             columnDefinition = columnDefinition.toLowerCase();
             entityColumn.columnDefinition = columnDefinition;
@@ -168,13 +167,13 @@ public class EntityColumn {
             }
           });
 
-      entityColumn.length = column.length();
+      entityColumn.length = tableColumn.length();
       // 使用默认值而不是0
-      NumberUtils.doIfGreaterThanZero(column.precision(), o -> entityColumn.precision = o);
-      NumberUtils.doIfGreaterThanZero(column.scale(), o -> entityColumn.scale = o);
+      NumberUtils.doIfGreaterThanZero(tableColumn.precision(), o -> entityColumn.precision = o);
+      NumberUtils.doIfGreaterThanZero(tableColumn.scale(), o -> entityColumn.scale = o);
 
-      entityColumn.nullable = entityColumn.nullable && column.nullable();
-      entityColumn.unique = column.unique();
+      entityColumn.nullable = entityColumn.nullable && tableColumn.nullable();
+      entityColumn.unique = tableColumn.unique();
 
       if (entityColumn.columnDefinition == null) {
         entityColumn.typeName =
@@ -197,7 +196,7 @@ public class EntityColumn {
 
   private Type getType(Field field, Type type) {
     if (this.type instanceof Class && InterEnum.class.isAssignableFrom((Class<?>) this.type)) {
-      return ((ParameterizedTypeImpl) field.getType().getGenericInterfaces()[0])
+      return ((ParameterizedType) field.getType().getGenericInterfaces()[0])
           .getActualTypeArguments()[0];
     }
     return this.type;

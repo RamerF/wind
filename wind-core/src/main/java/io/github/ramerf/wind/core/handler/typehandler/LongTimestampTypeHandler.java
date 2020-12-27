@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
+@Skip
 public class LongTimestampTypeHandler implements ITypeHandler<Long, Timestamp> {
   @Override
   public Object convertToJdbc(
@@ -20,7 +21,8 @@ public class LongTimestampTypeHandler implements ITypeHandler<Long, Timestamp> {
   }
 
   @Override
-  public Long covertFromJdbc(final Timestamp jdbcVal, final Class<? extends Long> clazz) {
+  public Long convertFromJdbc(
+      final Timestamp jdbcVal, final Object defaultValue, final Field field) {
     return Objects.nonNull(jdbcVal) ? jdbcVal.getTime() : null;
   }
 

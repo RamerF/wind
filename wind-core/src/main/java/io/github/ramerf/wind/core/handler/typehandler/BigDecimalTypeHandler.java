@@ -20,7 +20,8 @@ public class BigDecimalTypeHandler implements ITypeHandler<BigDecimal, Double> {
   }
 
   @Override
-  public BigDecimal covertFromJdbc(final Double val, final Class<? extends BigDecimal> clazz) {
+  public BigDecimal convertFromJdbc(
+      final Double val, final Object defaultValue, final Field field) {
     return Objects.nonNull(val) ? BigDecimal.valueOf(val) : null;
   }
 
