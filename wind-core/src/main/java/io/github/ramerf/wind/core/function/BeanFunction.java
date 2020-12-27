@@ -6,13 +6,11 @@ import io.github.ramerf.wind.core.util.*;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  * 用于bean方法(set/get) 函数式接口
@@ -95,7 +93,7 @@ public interface BeanFunction extends Serializable {
    * @return the type [ ]
    */
   default Type[] getGenericTypeArgumentTypes() {
-    return ((ParameterizedTypeImpl) getGenericType()).getActualTypeArguments();
+    return ((ParameterizedType) getGenericType()).getActualTypeArguments();
   }
 
   /**

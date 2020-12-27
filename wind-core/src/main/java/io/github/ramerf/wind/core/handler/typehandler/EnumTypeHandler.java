@@ -22,8 +22,11 @@ public class EnumTypeHandler implements ITypeHandler<InterEnum, Object> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public InterEnum covertFromJdbc(final Object value, final Class<? extends InterEnum> clazz) {
-    return Objects.nonNull(value) ? InterEnum.ofNullable(value, clazz) : null;
+  public InterEnum convertFromJdbc(
+      final Object value, final Object defaultValue, final Field field) {
+    return Objects.nonNull(value)
+        ? InterEnum.ofNullable(value, (Class<InterEnum>) field.getType())
+        : null;
   }
 
   @Override

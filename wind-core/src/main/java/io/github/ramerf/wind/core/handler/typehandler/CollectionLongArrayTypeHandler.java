@@ -13,10 +13,10 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020/3/4
  */
-public class ListLongArrayTypeHandler implements ITypeHandler<List<Long>, Long[]> {
+public class CollectionLongArrayTypeHandler implements ITypeHandler<Collection<Long>, Long[]> {
   @Override
   public Object convertToJdbc(
-      List<Long> javaVal, final Field field, @Nonnull final PreparedStatement ps) {
+      Collection<Long> javaVal, final Field field, @Nonnull final PreparedStatement ps) {
     if (javaVal == null) {
       return null;
     }
@@ -29,8 +29,19 @@ public class ListLongArrayTypeHandler implements ITypeHandler<List<Long>, Long[]
   }
 
   @Override
-  public List<Long> covertFromJdbc(final Long[] jdbcVal, final Class<? extends List<Long>> clazz) {
-    return Objects.nonNull(jdbcVal) ? Arrays.asList(jdbcVal) : new ArrayList<>();
+  @SuppressWarnings("DuplicatedCode")
+  public Collection<Long> convertFromJdbc(
+      final Long[] jdbcVal, final Object defaultValue, final Field field) {
+    if (defaultValue == null) {
+      return List.class.isAssignableFrom(field.getType())
+          ? (jdbcVal == null ? new ArrayList<>() : Arrays.asList(jdbcVal))
+          : (jdbcVal == null ? new HashSet<>() : new HashSet<>(Arrays.asList(jdbcVal)));
+    }
+    @SuppressWarnings("unchecked")
+    final Collection<Long> initial = (Collection<Long>) defaultValue;
+    initial.clear();
+    initial.addAll(Arrays.asList(jdbcVal));
+    return initial;
   }
 
   @Override

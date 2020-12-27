@@ -2,6 +2,24 @@
 
 ---
 
+#### 4.0.4
+
+- 新增：添加对象到JSON转换器，现在对象/集合对象 可以直接保存为JSON字符串了
+
+  ```java
+  @TableColumn(columnDefinition = "text", comment = "对象集合转存json,可指定集合类型")
+  @TypeHandler(ObjectCollectionToJsonTypeHandler.class)
+  private List<Type> typesJson = new LinkedList<>();
+  
+  @TableColumn(columnDefinition = "text", comment = "对象转存json")
+  @TypeHandler(ObjectToJsonTypeHandler.class)
+  private Type typeJson;
+  ```
+
+- 新增：现在集合支持指定类型了`private Set<Long> fooIds = new TreeSet<>();`
+- 新增：Fields 新增方法支持动态写入字段，用法foo.update(fields -> fields.include(StringUtils.nonEmpty(foo.getName()), Foo::getName));`
+- 更新：集合类型处理器改为使用Collection，不仅仅支持List和Set
+
 #### 4.0.3
 
 - 新增：更新指定字段

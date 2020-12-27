@@ -28,7 +28,8 @@ public class StringArrayTypeHandler implements ITypeHandler<String[], String[]> 
   }
 
   @Override
-  public String[] covertFromJdbc(final String[] jdbcVal, final Class<? extends String[]> clazz) {
+  public String[] convertFromJdbc(
+      final String[] jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal;
   }
 

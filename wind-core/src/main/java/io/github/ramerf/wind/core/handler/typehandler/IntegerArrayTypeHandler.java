@@ -28,7 +28,8 @@ public class IntegerArrayTypeHandler implements ITypeHandler<Integer[], Integer[
   }
 
   @Override
-  public Integer[] covertFromJdbc(final Integer[] jdbcVal, final Class<? extends Integer[]> clazz) {
+  public Integer[] convertFromJdbc(
+      final Integer[] jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal;
   }
 

@@ -78,7 +78,8 @@ public final class EntityUtils {
         && !Modifier.isTransient(modifiers)
         && (isPrimitiveType(field.getType())
             || MappingInfo.isValidMapping(field)
-            || dialect.isSupportJavaType(field.getGenericType()));
+            || dialect.isSupportJavaType(field.getGenericType())
+            || field.isAnnotationPresent(TableColumn.class));
   }
 
   /**
@@ -232,8 +233,8 @@ public final class EntityUtils {
    */
   public static String fieldToColumn(@Nonnull final Field field) {
     final Class<?> fieldType = field.getType();
-    // 普通字段
-    if (!AbstractEntityPoJo.class.isAssignableFrom(fieldType)) {
+    // 1. 普通字段 2.非关联字段,类型为 AbstractEntityPoJo,一定存在TableColumn注解
+    if (!AbstractEntityPoJo.class.isAssignableFrom(fieldType) || !MappingInfo.isValidMapping(field)) {
       final TableColumn column = field.getAnnotation(TableColumn.class);
       return column != null && StringUtils.nonEmpty(column.name())
           ? column.name()

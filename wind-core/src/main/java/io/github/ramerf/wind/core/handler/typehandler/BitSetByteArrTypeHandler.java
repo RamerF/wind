@@ -20,7 +20,8 @@ public class BitSetByteArrTypeHandler implements ITypeHandler<BitSet, byte[]> {
   }
 
   @Override
-  public BitSet covertFromJdbc(final byte[] jdbcVal, final Class<? extends BitSet> clazz) {
+  public BitSet convertFromJdbc(
+      final byte[] jdbcVal, final Object defaultValue, final Field field) {
     return Objects.nonNull(jdbcVal) ? BitSet.valueOf(jdbcVal) : null;
   }
 

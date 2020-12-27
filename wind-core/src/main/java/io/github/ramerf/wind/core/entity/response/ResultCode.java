@@ -27,10 +27,6 @@ public class ResultCode {
   public static final ResultCode API_SERVICE_NOT_AVAILABLE = of(5, "服务不可用");
   public static final ResultCode API_NOT_FOUND = of(6, "资源不可用");
   public static final ResultCode ERROR_DATA_ACCESS = of(7, "%s");
-  // 操作成功提示
-  public static final ResultCode API_SUCCESS_EXEC_CREATE = of(1100, "添加成功");
-  public static final ResultCode API_SUCCESS_EXEC_UPDATE = of(1101, "更新成功");
-  public static final ResultCode API_SUCCESS_EXEC_DELETE = of(1102, "删除成功");
   // 操作失败提示
   public static final ResultCode API_FAIL_EXEC = of(1201, "操作失败,数据格式有误");
   public static final ResultCode API_FAIL_EXEC_CREATE = of(1201, "添加失败,数据格式有误");

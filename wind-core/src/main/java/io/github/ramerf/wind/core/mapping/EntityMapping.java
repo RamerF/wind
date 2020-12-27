@@ -7,13 +7,11 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.EntityUtils;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.Data;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static java.util.stream.Collectors.toList;
@@ -162,8 +160,7 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
       mappingInfo.setMappingType(MappingType.of(field));
       mappingInfo.setColumn(EntityUtils.fieldToColumn(field));
       if (isManyMapping(field)) {
-        final Type type =
-            ((ParameterizedTypeImpl) field.getGenericType()).getActualTypeArguments()[0];
+        final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
         mappingInfo.setReferenceClazz((Class<E>) type);
         return mappingInfo;
       }
@@ -193,8 +190,7 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
       if ((List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type))
           && (field.getAnnotation(OneToMany.class) != null)) {
         return AbstractEntityPoJo.class.isAssignableFrom(
-            (Class<?>)
-                ((ParameterizedTypeImpl) field.getGenericType()).getActualTypeArguments()[0]);
+            (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
       }
       return false;
     }

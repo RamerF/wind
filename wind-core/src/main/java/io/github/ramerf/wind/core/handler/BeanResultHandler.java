@@ -105,7 +105,9 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
       if (field != null) {
         final Object finalValue =
             TypeHandlerHelper.toJavaValue(
-                ValueType.of(value, field.getGenericType(), field), field.getType());
+                ValueType.of(value, field.getGenericType(), field),
+                BeanUtils.getValue(obj, field, null),
+                field);
         BeanUtils.setValue(
             obj,
             field,
