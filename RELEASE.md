@@ -17,7 +17,7 @@
   ```
 
 - 新增：现在集合支持指定类型了`private Set<Long> fooIds = new TreeSet<>();`
-- 新增：Fields 新增方法支持动态写入字段，用法foo.update(fields -> fields.include(StringUtils.nonEmpty(foo.getName()), Foo::getName));`
+- 新增：Fields 新增方法支持动态写入字段，用法`foo.update(fields -> fields.include(StringUtils.nonEmpty(foo.getName()), Foo::getName));`
 - 更新：集合类型处理器改为使用Collection，不仅仅支持List和Set
 
 #### 4.0.3
