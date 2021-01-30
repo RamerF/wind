@@ -48,7 +48,6 @@
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>2.0.1</findgugs.annotations.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <wind.version>4.0.4</wind.version>
     </properties>
     <dependencies>
         <dependency>
@@ -141,11 +140,6 @@
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>${javax.inject.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.ramerf</groupId>
-                <artifactId>wind-annotation</artifactId>
-                <version>${wind.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.swagger</groupId>
