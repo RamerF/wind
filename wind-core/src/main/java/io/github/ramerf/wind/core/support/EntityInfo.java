@@ -3,8 +3,6 @@ package io.github.ramerf.wind.core.support;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
@@ -45,6 +43,7 @@ public final class EntityInfo {
   /** 更新时间字段,{@link UpdateTimestamp} */
   private Field updateTimeField;
 
+  /** 创建时间字段,{@link CreateTimestamp} */
   private Field createTimeField;
 
   /** 是否映射到数据库. */
@@ -132,9 +131,8 @@ public final class EntityInfo {
       }
       entityColumns.add(entityColumn);
     }
-    if (entityInfo.getIdColumn() == null
-        && !entityInfo.getClazz().equals(AbstractEntityPoJo.class)) {
-      throw CommonException.of(
+    if (entityInfo.getIdColumn() == null) {
+      throw new IllegalStateException(
           "Not found Identity for " + entityInfo.getName() + ".Define the @Id field.");
     }
     entityInfo.setPrimaryKeys(primaryKeys);

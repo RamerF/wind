@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -14,7 +13,7 @@ import static java.util.stream.Collectors.toCollection;
 /**
  * The type Page utils.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/26
  */
 @SuppressWarnings("unused")
@@ -28,7 +27,7 @@ public class PageUtils {
    * @param mapFunction the map function
    * @return the page
    */
-  public static <T extends AbstractEntity, R> Page<R> toPage(
+  public static <T, R> Page<R> toPage(
       final Page<T> page, @Nonnull final Function<T, R> mapFunction) {
     return toPage(page, mapFunction, null);
   }
@@ -41,8 +40,7 @@ public class PageUtils {
    * @param page the page
    * @return the page
    */
-  public static <T extends AbstractEntity> Page<T> toPage(
-      @Nonnull final Predicate<T> filterFunction, final Page<T> page) {
+  public static <T> Page<T> toPage(@Nonnull final Predicate<T> filterFunction, final Page<T> page) {
     return toPage(page, null, filterFunction);
   }
 
@@ -57,7 +55,7 @@ public class PageUtils {
    * @return the page
    */
   @SuppressWarnings("unchecked")
-  public static <T extends AbstractEntity, R> Page<R> toPage(
+  public static <T, R> Page<R> toPage(
       final Page<T> page, final Function<T, R> mapFunction, final Predicate<R> filterFunction) {
     if (Objects.isNull(page)) {
       return new PageImpl<>(Collections.emptyList());
@@ -83,7 +81,7 @@ public class PageUtils {
    * @param list the list
    * @return the page
    */
-  public static <T extends AbstractEntity> Page<T> toPage(final List<T> list) {
+  public static <T> Page<T> toPage(final List<T> list) {
     return new PageImpl<>(list);
   }
 
@@ -95,7 +93,7 @@ public class PageUtils {
    * @param total 总数
    * @return the page
    */
-  public static <T extends AbstractEntity> Page<T> toPage(final List<T> list, final long total) {
+  public static <T> Page<T> toPage(final List<T> list, final long total) {
     return new PageImpl<>(list, PageRequest.of(0, list.size()), total);
   }
 

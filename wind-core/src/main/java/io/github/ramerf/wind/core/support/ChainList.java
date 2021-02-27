@@ -7,7 +7,7 @@ import java.util.stream.Stream;
  * 支持链式调用的List.
  *
  * @param <E> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /1/14
  */
 @SuppressWarnings("unused")

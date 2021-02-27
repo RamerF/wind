@@ -19,7 +19,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 /**
  * 通用bean定义.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/6
  */
 @Slf4j
@@ -77,7 +77,7 @@ public class CommonBean {
         .description("项目描述")
         .contact(
             new Contact(
-                "Tang Xiaofeng", "https://github.com/ramerf/spring-web.git", "1390635973@qq.com"))
+                "ramer", "https://github.com/ramerf/spring-web.git", "1390635973@qq.com"))
         .version("1.0.0")
         .build();
   }

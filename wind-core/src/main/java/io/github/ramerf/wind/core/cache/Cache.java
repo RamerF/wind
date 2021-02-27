@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.cache;
 
 import io.github.ramerf.wind.core.config.WindConfiguration;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
@@ -11,7 +10,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 用于查询redis缓存.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /5/26
  */
 public interface Cache {
@@ -76,6 +75,5 @@ public interface Cache {
    * @return the string
    * @see SqlParam
    */
-  <T extends AbstractEntityPoJo<T, ?>> String generateKey(
-      @Nonnull final SqlParam<T> sqlParam, @Nonnull final String methodName);
+  <T> String generateKey(@Nonnull final SqlParam<T> sqlParam, @Nonnull final String methodName);
 }

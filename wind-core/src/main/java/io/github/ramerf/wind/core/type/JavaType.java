@@ -10,7 +10,7 @@ import static io.github.ramerf.wind.core.util.TypeUtils.getType;
 /**
  * Java类型.用于与sql类型对应.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.08.21
  */
 public interface JavaType {

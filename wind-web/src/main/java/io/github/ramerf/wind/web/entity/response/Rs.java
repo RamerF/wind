@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.entity.response;
+package io.github.ramerf.wind.web.entity.response;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.*;
@@ -20,7 +20,7 @@ import org.springframework.http.ResponseEntity;
  *
  * @param <T> the type parameter
  * @since 2020.12.22
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Data
 @ApiModel("通用响应")

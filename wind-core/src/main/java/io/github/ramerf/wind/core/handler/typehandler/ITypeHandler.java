@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * @param <T> Java对象类型
  * @param <V> 数据库值类型
  * @since 2020 /3/4
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @SuppressWarnings({"rawtypes", "unused"})
 public interface ITypeHandler<T, V> {

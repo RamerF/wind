@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.entity.response;
+package io.github.ramerf.wind.web.entity.response;
 
 import lombok.ToString;
 
@@ -6,7 +6,7 @@ import lombok.ToString;
  * 返回结果码.
  *
  * @since 2020.12.22
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @ToString
 public class ResultCode {

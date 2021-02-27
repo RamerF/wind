@@ -5,7 +5,7 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
 /**
  * sql function.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /4/29
  */
 public interface SqlFunction {

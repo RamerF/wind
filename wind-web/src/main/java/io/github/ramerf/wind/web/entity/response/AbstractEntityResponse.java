@@ -1,13 +1,13 @@
-package io.github.ramerf.wind.core.entity.response;
+package io.github.ramerf.wind.web.entity.response;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
+import io.github.ramerf.wind.web.entity.AbstractEntity;
 import java.util.Date;
 import lombok.*;
 
 /**
  * 请求响应抽象类.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/6
  */
 @Data

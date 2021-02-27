@@ -10,7 +10,7 @@ import org.springframework.util.Assert;
 /**
  * 字符串转枚举.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/28
  */
 public final class StringToEnumConverterFactory implements ConverterFactory<String, InterEnum<?>> {

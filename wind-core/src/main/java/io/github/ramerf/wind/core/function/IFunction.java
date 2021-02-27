@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.function;
 import java.util.function.Function;
 
 /**
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/26
  */
 @FunctionalInterface

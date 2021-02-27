@@ -10,7 +10,7 @@ import org.springframework.util.CollectionUtils;
  * 批量执行工具.
  *
  * @since 2020.08.25
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Slf4j
 public class BatchExecUtil {

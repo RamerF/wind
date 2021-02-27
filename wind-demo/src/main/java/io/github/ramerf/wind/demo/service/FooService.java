@@ -6,7 +6,7 @@ import io.github.ramerf.wind.demo.entity.pojo.Foo;
 /**
  * The interface Demo product service.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/17
  */
 @SuppressWarnings("unused")

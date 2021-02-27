@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 /**
  * java:{@literal java:BitSet <=> jdbc:byte[]}.适用于支持Blob的数据库如:Mysql
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/4
  */
 public class BitSetBlobTypeHandler implements ITypeHandler<BitSet, byte[]> {

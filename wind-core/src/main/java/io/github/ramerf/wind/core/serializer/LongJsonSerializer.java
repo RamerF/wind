@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * 向前端返回时将Long转成字符串.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/1/17
  */
 public class LongJsonSerializer extends JsonSerializer<Long> {

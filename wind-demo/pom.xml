@@ -23,7 +23,7 @@
     <dependencies>
         <dependency>
             <groupId>io.github.ramerf</groupId>
-            <artifactId>wind-core</artifactId>
+            <artifactId>wind-web</artifactId>
             <version>${wind.version}</version>
         </dependency>
         <dependency>

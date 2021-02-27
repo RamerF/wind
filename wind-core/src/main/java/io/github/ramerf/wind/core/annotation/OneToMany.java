@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import javax.persistence.Id;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -14,13 +15,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * 如果没有指定field,默认新增列[下划线分割(类型名)_id],如果没有指定referenceField,默认关联id
  *
  * @since 2020.10.28
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface OneToMany {
-  /** 当前对象属性名.默认id */
-  String field() default "id";
+  /** 当前对象属性名.默认主键{@link Id} */
+  String field() default "";
 
   /** 关联对象属性名.默认[当前类Id],如:fooId */
   String referenceField() default "";

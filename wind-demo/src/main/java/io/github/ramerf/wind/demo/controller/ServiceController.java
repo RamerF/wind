@@ -2,19 +2,18 @@ package io.github.ramerf.wind.demo.controller;
 
 import io.github.ramerf.wind.core.condition.SortColumn;
 import io.github.ramerf.wind.core.condition.SortColumn.Order;
-import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.pojo.Foo.Type;
-import io.github.ramerf.wind.demo.entity.response.FooThinResponse;
 import io.github.ramerf.wind.demo.service.FooService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.github.ramerf.wind.web.entity.response.Rs;
+import io.swagger.annotations.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.LongStream;
 import javax.annotation.Resource;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +23,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * service层方法使用示例.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/4/28
  */
 @SuppressWarnings("DuplicatedCode")
@@ -438,5 +437,16 @@ public class ServiceController {
         // 只有当ids不为空且删除记录数和ids的大小不同时,才会执行下方的代码,入参为实际受影响的行数
         .ifPresent(affectRow -> log.info("deleteByIds:[{}]", affectRow));
     return Rs.ok();
+  }
+
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @ToString(callSuper = true)
+  @ApiModel(value = "Foo只包含部分属性")
+  public static class FooThinResponse {
+
+    @ApiModelProperty(value = "String", example = "示例值")
+    private String name;
   }
 }

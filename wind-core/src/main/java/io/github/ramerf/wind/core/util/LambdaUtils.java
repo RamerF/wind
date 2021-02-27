@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * The type Lambda utils.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/26
  */
 @Slf4j

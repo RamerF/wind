@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.handler.PrimitiveResultHandler.EmptyPoJo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.math.BigDecimal;
@@ -15,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * 基本类型结果转换,注意该类使用valueOf转换值,如果没有该方法将会报错.
  *
  * @param <E> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/27
  */
 @Slf4j
@@ -94,5 +93,5 @@ public class PrimitiveResultHandler<E>
     return null;
   }
 
-  public static class EmptyPoJo extends AbstractEntityPoJo<EmptyPoJo, Long> {}
+  public static class EmptyPoJo {}
 }

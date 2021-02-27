@@ -20,14 +20,7 @@ import io.github.ramerf.wind.core.entity.enums.InterEnum;
 public interface InterEnumSerializer {
 
   /**
-   * 序列化json,默认值为:
-   *
-   * <pre>
-   *   {
-   *     value: xxx
-   *     desc: xxx
-   *   }
-   * </pre>
+   * 序列化json,默认值为:{@link InterEnum#value()}
    *
    * @param interEnum the {@link InterEnum}
    * @return json

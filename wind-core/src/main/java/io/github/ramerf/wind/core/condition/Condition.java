@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.util.Collection;
@@ -16,9 +15,9 @@ import javax.annotation.Nonnull;
  *
  * @param <T> the type parameter
  * @since 2020.01.06
- * @author Tang Xiaofeng
+ * @author ramer
  */
-public interface Condition<T extends AbstractEntityPoJo<T, ?>> extends Predicate<T> {
+public interface Condition<T> extends Predicate<T> {
 
   // TODO WARN 使用ConditionGroup实现and/or后,删除<br>
   /**

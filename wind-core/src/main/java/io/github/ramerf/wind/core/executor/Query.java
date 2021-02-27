@@ -5,7 +5,6 @@ import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.PrototypeBean;
 import io.github.ramerf.wind.core.config.WindConfiguration;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
@@ -55,11 +54,11 @@ import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
  *
  * <p>TODO POST 完整的连表查询需要{@link Condition}支持
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/28
  */
 @Slf4j
-public class Query<T extends AbstractEntityPoJo<T, ?>> {
+public class Query<T > {
   /**
    *
    *
@@ -104,7 +103,7 @@ public class Query<T extends AbstractEntityPoJo<T, ?>> {
    *
    * @return the instance
    */
-  public static <T extends AbstractEntityPoJo<T, ?>> Query<T> getInstance(final Class<T> clazz) {
+  public static <T  > Query<T> getInstance(final Class<T> clazz) {
     return prototypeBean.query(clazz);
   }
 

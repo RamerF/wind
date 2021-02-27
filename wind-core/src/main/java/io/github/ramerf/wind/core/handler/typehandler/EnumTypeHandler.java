@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 /**
  * {@literal java:InterEnum <=> jdbc:Integer}.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/4
  */
 @SuppressWarnings("rawtypes")

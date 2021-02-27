@@ -10,7 +10,7 @@ import lombok.Getter;
  * The type Parameterized type.
  *
  * @since 2020.08.23
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Getter
 public class ParameterizedTypeImpl implements ParameterizedType {

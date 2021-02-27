@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.handler;
 
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.condition.QueryColumn;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
@@ -27,13 +27,12 @@ import static io.github.ramerf.wind.core.util.EntityUtils.getAllColumnFields;
  * The type Bean result handler.
  *
  * @since 2019 /12/27
- * @author Tang Xiaofeng
+ * @author ramer
  * @param <P> PoJo
  * @param <E> the type parameter
  */
 @Slf4j
-public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
-    extends AbstractResultHandler<P, Map<String, Object>, E> {
+public class BeanResultHandler<P, E> extends AbstractResultHandler<P, Map<String, Object>, E> {
 
   /** 列对应的字段. */
   private static final Map<ClazzColumn, Field> CLAZZ_COLUMN_FIELD =
@@ -47,11 +46,10 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
    * @param clazz the clazz
    * @param queryColumns the query columns
    */
-  @SuppressWarnings({"unchecked", "rawtypes"})
   public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<P>> queryColumns) {
     super(clazz, queryColumns);
-    if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {
-      final EntityInfo entityInfo = EntityHelper.getEntityInfo((Class<AbstractEntityPoJo>) clazz);
+    if (clazz.isAnnotationPresent(TableInfo.class)) {
+      final EntityInfo entityInfo = EntityHelper.getEntityInfo((Class<?>) clazz);
       columnFieldMap = entityInfo.getColumnFieldMap();
     } else {
       columnFieldMap = new HashMap<>(20);
@@ -135,7 +133,7 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
                   map,
                   (AbstractEntityPoJo) obj,
                   field,
-                  (Class<? extends AbstractEntityPoJo>) field.getType());
+                  (Class<? >) field.getType());
               // TODO WARN 一对一
             } else if (MappingInfo.isManyMapping(field)) {
               // TODO WARN 一对多
@@ -151,17 +149,16 @@ public class BeanResultHandler<P extends AbstractEntityPoJo<P, ?>, E>
    * @param field the field
    * @param paramType 关联对象类型
    */
-  @SuppressWarnings("rawtypes")
-  private <T extends AbstractEntityPoJo> void initMappingObj(
+  private void initMappingObj(
       final Map<String, Object> map,
-      final T obj,
+      final Object obj,
       final Field field,
-      final Class<? extends AbstractEntityPoJo> paramType) {
+      final Class<?> paramType) {
     final MappingInfo mappingInfo = EntityMapping.get(obj.getClass(), field).orElse(null);
     if (mappingInfo == null) {
       return;
     }
-    final AbstractEntityPoJo mappingObj = BeanUtils.initial(paramType);
+    final Object mappingObj = BeanUtils.initial(paramType);
     final Field referenceField = mappingInfo.getReferenceField();
     referenceField.setAccessible(true);
     BeanUtils.setValue(mappingObj, referenceField, map.get(mappingInfo.getColumn()), null);

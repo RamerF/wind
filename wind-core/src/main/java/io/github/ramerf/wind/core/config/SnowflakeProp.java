@@ -7,7 +7,7 @@ import lombok.Setter;
 /**
  * 雪花分布式id生成器属性.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/5/16
  */
 @Setter

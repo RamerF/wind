@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 /**
  * The type Type handler helper.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/5/12
  */
 @SuppressWarnings("unchecked")

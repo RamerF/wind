@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 该类主要是简化数据库操作相关的try-catch.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.08.20
  */
 @Slf4j

@@ -8,7 +8,7 @@ import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
 /**
  * The type Sql helper.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /1/13
  */
 @Slf4j

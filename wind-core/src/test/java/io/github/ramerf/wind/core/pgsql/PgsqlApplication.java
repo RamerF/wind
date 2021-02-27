@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 /**
  * The type Test application.
  *
- * @author Tang xiaofeng
+ * @author ramer
  */
 @SpringBootApplication
 public class PgsqlApplication {

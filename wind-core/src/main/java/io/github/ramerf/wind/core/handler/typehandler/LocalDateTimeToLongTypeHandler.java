@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  * {@literal java:LocalDateTime <=> jdbc:Long}.
  *
  * @since 2020.11.17
- * @author Tang Xiaofeng
+ * @author ramer
  */
 public class LocalDateTimeToLongTypeHandler implements ITypeHandler<LocalDateTime, Long> {
   @Override

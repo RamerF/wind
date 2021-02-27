@@ -1,8 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
@@ -23,12 +21,12 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
  * Lambda条件构造.
  *
  * @since 2019/12/26
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Slf4j
 @ToString
 @SuppressWarnings("UnusedReturnValue")
-public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
+public class LambdaCondition<T> extends AbstractCondition<T> {
 
   protected LambdaCondition() {
     super();
@@ -46,13 +44,11 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     super(clazz, tableName, tableAlia);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> LambdaCondition<T> getInstance(
-      final Class<T> clazz) {
+  public static <T> LambdaCondition<T> getInstance(final Class<T> clazz) {
     return new LambdaCondition<>(clazz);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> LambdaCondition<T> getInstance(
-      final QueryColumn<T> queryColumn) {
+  public static <T> LambdaCondition<T> getInstance(final QueryColumn<T> queryColumn) {
     return new LambdaCondition<>(queryColumn);
   }
 
@@ -345,14 +341,14 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>> LambdaCondition<T> eq(
+  public <R, Q> LambdaCondition<T> eq(
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final QueryColumn<Q> queryColumn,
       @Nonnull final IFunction<R, ?> field2) {
     return eq(true, field, queryColumn, field2);
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>> LambdaCondition<T> eq(
+  public <R, Q> LambdaCondition<T> eq(
       final boolean condition,
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final AbstractQueryEntity<Q> queryColumn,
@@ -683,14 +679,14 @@ public class LambdaCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     return this;
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>> LambdaCondition<T> orEq(
+  public <R, Q> LambdaCondition<T> orEq(
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final QueryColumn<Q> queryColumn,
       @Nonnull final IFunction<R, ?> field2) {
     return orEq(true, field, queryColumn, field2);
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>> LambdaCondition<T> orEq(
+  public <R, Q> LambdaCondition<T> orEq(
       final boolean condition,
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final AbstractQueryEntity<Q> queryColumn,

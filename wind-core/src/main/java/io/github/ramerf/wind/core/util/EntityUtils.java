@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
@@ -23,19 +22,20 @@ import org.springframework.aop.support.AopUtils;
 
 import static io.github.ramerf.wind.core.util.BeanUtils.isPrimitiveType;
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 /**
  * The type Bean utils.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/26
  */
 @Slf4j
 public final class EntityUtils {
   private static WindConfiguration configuration;
   private static Dialect dialect;
-  /** {@link BaseService} 泛型{@link AbstractEntityPoJo} */
+  /** {@link BaseService} */
   private static final Map<Class<?>, WeakReference<Class<?>>> SERVICE_POJO_MAP =
       new ConcurrentHashMap<>();
 
@@ -89,8 +89,7 @@ public final class EntityUtils {
    * @param t the t
    * @return the non null Field
    */
-  public static <T extends AbstractEntityPoJo<T, ?>> List<Field> getNonNullColumnFields(
-      @Nonnull final T t) {
+  public static <T> List<Field> getNonNullColumnFields(@Nonnull final T t) {
     @SuppressWarnings("unchecked")
     final List<Field> fields =
         // BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
@@ -147,11 +146,10 @@ public final class EntityUtils {
   /**
    * 获取对象映射到数据库且值为null的属性.
    *
-   * @param <T> the type parameter
    * @param t the t
    * @return the non null field
    */
-  public static <T> List<Field> getNullColumnFields(@Nonnull final T t) {
+  public static List<Field> getNullColumnFields(@Nonnull final Object t) {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
             .filter(EntityUtils::filterColumnField)
@@ -184,15 +182,13 @@ public final class EntityUtils {
    * 默认值为{@link TableColumn#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
-   * @param <T> the type parameter
    * @param t the t
    * @return string non null columns
    * @see TableColumn#name() Column#name()
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
-  public static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-      List<String> getNonNullColumns(@Nonnull final T t) {
+  public static <ID extends Serializable> List<String> getNonNullColumns(@Nonnull final Object t) {
     final List<String> columns =
         getNonNullColumnFields(t).stream().map(EntityUtils::fieldToColumn).collect(toList());
     log.debug("getNonNullColumns:[{}]", columns);
@@ -204,16 +200,14 @@ public final class EntityUtils {
    * 默认值为{@link TableColumn#name()};如果前者为空,值为对象属性名的下划线表示<br>
    * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
    *
-   * @param <T> the type parameter
    * @param t the t
    * @return string non null column
    * @see TableColumn#name() Column#name()
    * @see StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
-   * @see #getNonNullColumns(AbstractEntityPoJo)
+   * @see #getNonNullColumns(Object)
    */
-  public static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-      String getNonNullColumn(@Nonnull final T t) {
+  public static <ID extends Serializable> String getNonNullColumn(@Nonnull final Object t) {
     final String nonNullColumn = String.join(",", getNonNullColumns(t));
     log.debug("getNonNullColumn:[{}]", nonNullColumn);
     return nonNullColumn;
@@ -233,8 +227,8 @@ public final class EntityUtils {
    */
   public static String fieldToColumn(@Nonnull final Field field) {
     final Class<?> fieldType = field.getType();
-    // 1. 普通字段 2.非关联字段,类型为 AbstractEntityPoJo,一定存在TableColumn注解
-    if (!AbstractEntityPoJo.class.isAssignableFrom(fieldType) || !MappingInfo.isValidMapping(field)) {
+    // 普通字段判断TableColumn注解
+    if (!BeanUtils.isPrimitiveType(fieldType) || !MappingInfo.isValidMapping(field)) {
       final TableColumn column = field.getAnnotation(TableColumn.class);
       return column != null && StringUtils.nonEmpty(column.name())
           ? column.name()
@@ -255,14 +249,17 @@ public final class EntityUtils {
     // 手动指定关联列名
     if (!"".equals(joinColumnName)) {
       return joinColumnName;
-    } else
-    // 关联id
-    if ("id".equals(reference)) {
-      return camelToUnderline(fieldType.getSimpleName().concat("_").concat(reference));
+    }
+    // 关联主键
+    if ("".equals(reference)) {
+      final String primaryKeys =
+          EntityHelper.getEntityInfo(fieldType).getPrimaryKeys().stream()
+              .map(EntityColumn::getName)
+              .collect(joining("_"));
+      return camelToUnderline(fieldType.getSimpleName().concat("_").concat(primaryKeys));
     }
     final Field referenceField = BeanUtils.getDeclaredField(fieldType, reference);
-    if (referenceField == null
-        || AbstractEntityPoJo.class.isAssignableFrom(referenceField.getType())) {
+    if (referenceField == null) {
       throw CommonException.of("Invalid mapping field " + reference);
     }
     return camelToUnderline(
@@ -272,11 +269,10 @@ public final class EntityUtils {
   /**
    * 表名: {@link TableInfo#name()} &gt; 类名(驼封转下划线)
    *
-   * @param <T> the type t
    * @param clazz the clazz
    * @return the table name
    */
-  public static <T> String getTableName(final Class<T> clazz) {
+  public static String getTableName(final Class<?> clazz) {
     final TableInfo tableInfo = clazz.getAnnotation(TableInfo.class);
     if (tableInfo != null && StringUtils.nonEmpty(tableInfo.name())) {
       return tableInfo.name();
@@ -293,11 +289,8 @@ public final class EntityUtils {
    * @return the poJo class
    */
   @SuppressWarnings("unchecked")
-  public static <
-          T extends AbstractEntityPoJo<T, ID>,
-          S extends InterService<T, ID>,
-          ID extends Serializable>
-      Class<T> getPoJoClass(S service) {
+  public static <T, S extends InterService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
+      S service) {
     Class<S> serviceClazz = (Class<S>) getProxyTarget(service).getClass();
     Class<T> classes =
         (Class<T>)

@@ -2,11 +2,8 @@ package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.EntityColumn;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.support.EntityInfo;
-import io.github.ramerf.wind.core.util.BeanUtils;
-import io.github.ramerf.wind.core.util.EntityUtils;
+import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,26 +20,20 @@ import static java.util.stream.Collectors.toList;
  * @since 19/09/2020
  */
 @Data
-public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
+public class EntityMapping {
   /** {@link Collections#singletonList(Object)}. */
   private static Map<Class<?>, List<MappingInfo>> ENTITY_MAPPING = new ConcurrentHashMap<>();
 
-  public static <T extends AbstractEntityPoJo<T, ?>> List<MappingInfo> get(
-      @Nonnull Class<T> clazz) {
+  public static List<MappingInfo> get(@Nonnull Class<?> clazz) {
     return ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  public static Optional<MappingInfo> get(
-      @Nonnull Class<? extends AbstractEntityPoJo> clazz, final Field field) {
+  public static Optional<MappingInfo> get(@Nonnull Class<?> clazz, final Field field) {
     final List<MappingInfo> infos = ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
     return infos.stream().filter(o -> o.field.equals(field)).findFirst();
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  public static Optional<MappingInfo> get(
-      @Nonnull Class<? extends AbstractEntityPoJo> clazz,
-      final Class<? extends AbstractEntityPoJo> referenceClazz) {
+  public static Optional<MappingInfo> get(@Nonnull Class<?> clazz, final Class<?> referenceClazz) {
     final List<MappingInfo> infos = ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
     return infos.stream().filter(o -> o.referenceClazz.equals(referenceClazz)).findFirst();
   }
@@ -61,20 +52,18 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
     ENTITY_MAPPING.put(clazz, mappingInfos);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> void initial(final EntityInfo entityInfo) {
-    @SuppressWarnings("unchecked")
-    final Class<T> clazz = (Class<T>) entityInfo.getClazz();
+  public static void initial(final EntityInfo entityInfo) {
+    final Class<?> clazz = entityInfo.getClazz();
     final List<MappingInfo> mappingInfos =
         BeanUtils.retrievePrivateFields(clazz, ArrayList::new).stream()
-            .filter(field -> MappingInfo.isOneMapping(field) || MappingInfo.isManyMapping(field))
+            .filter(MappingInfo::isValidMapping)
             .map(MappingInfo::of)
             .collect(toList());
     put(clazz, mappingInfos);
     entityInfo.setMappingInfos(mappingInfos);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>, E extends AbstractEntityPoJo<E, ?>> void valid(
-      @Nonnull final Map<Class<?>, EntityInfo> map) {
+  public static void valid(@Nonnull final Map<Class<?>, EntityInfo> map) {
     if (map.size() == 0) {
       return;
     }
@@ -88,12 +77,10 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
                           if (mappingInfo.referenceColumn == null) {
                             return;
                           }
-                          @SuppressWarnings("unchecked")
-                          final Class<E> referenceClazz =
-                              (Class<E>) mappingInfo.getReferenceClazz();
+                          final Class<?> referenceClazz = mappingInfo.getReferenceClazz();
                           final EntityInfo referenceEntityInfo = map.get(referenceClazz);
                           if (referenceEntityInfo == null) {
-                            throw CommonException.of(
+                            throw new IllegalStateException(
                                 String.format(
                                     "The %s reference object %s is not a managed entity.",
                                     entityInfo.getClazz().getName(), referenceClazz.getName()));
@@ -112,9 +99,9 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
                                           column.getName().equals(mappingInfo.getReferenceColumn()))
                                   .findFirst();
                           if (!optional.isPresent()) {
-                            throw CommonException.of(
+                            throw new IllegalStateException(
                                 String.format(
-                                    "The %s reference column %s, but not found in %s",
+                                    "The %s reference column [%s], but not found in %s",
                                     entityInfo.getClazz().getName(),
                                     mappingInfo.getReferenceColumn(),
                                     referenceClazz.getName()));
@@ -126,8 +113,7 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
 
   @Data
   public static class MappingInfo {
-    @SuppressWarnings("rawtypes")
-    private Class<? extends AbstractEntityPoJo> clazz;
+    private Class<?> clazz;
     /** 当前对象的列. */
     private Field field;
 
@@ -141,8 +127,7 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
     private Field referenceField;
 
     /** 关联对象. */
-    @SuppressWarnings("rawtypes")
-    private Class<? extends AbstractEntityPoJo> referenceClazz;
+    private Class<?> referenceClazz;
 
     /** 引用定义.预留字段. */
     private String referenceDdlDefinition;
@@ -152,10 +137,9 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
     private MappingInfo() {}
 
     @SuppressWarnings("unchecked")
-    private static <T extends AbstractEntityPoJo<T, ?>, E extends AbstractEntityPoJo<E, ?>>
-        MappingInfo of(final Field field) {
+    private static <T, E> MappingInfo of(final Field field) {
       final MappingInfo mappingInfo = new MappingInfo();
-      mappingInfo.setClazz((Class<T>) field.getDeclaringClass());
+      mappingInfo.setClazz(field.getDeclaringClass());
       mappingInfo.setField(field);
       mappingInfo.setMappingType(MappingType.of(field));
       mappingInfo.setColumn(EntityUtils.fieldToColumn(field));
@@ -165,7 +149,7 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
         return mappingInfo;
       }
 
-      mappingInfo.setReferenceClazz((Class<E>) field.getType());
+      mappingInfo.setReferenceClazz(field.getType());
       final String joinColumnName;
       final String reference;
       final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
@@ -189,15 +173,15 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
       final Class<?> type = field.getType();
       if ((List.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type))
           && (field.getAnnotation(OneToMany.class) != null)) {
-        return AbstractEntityPoJo.class.isAssignableFrom(
-            (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+        return ((Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0])
+            .isAnnotationPresent(TableInfo.class);
       }
       return false;
     }
 
     /** 是否是N对1映射.true:是 */
     public static boolean isOneMapping(final Field field) {
-      return AbstractEntityPoJo.class.isAssignableFrom(field.getType())
+      return field.getType().isAnnotationPresent(TableInfo.class)
           && (field.getAnnotation(OneToOne.class) != null
               || field.getAnnotation(ManyToOne.class) != null);
     }
@@ -206,11 +190,16 @@ public class EntityMapping<T extends AbstractEntityPoJo<T, ?>> {
     public static boolean isValidMapping(final Field field) {
       return isOneMapping(field) || isManyMapping(field);
     }
+
+    /** 获取默认关联的主键. */
+    private static String getMappingPrimaryKey(final Field field) {
+
+      return StringUtils.camelToUnderline(field.getName());
+    }
   }
 
   /** 获取CGLIB代理目标对象,截取(0,$$)之间的字符. */
-  public static <T extends AbstractEntityPoJo<T, ?>> Class<T> getCglibProxyTarget(
-      final Class<T> clazz) {
+  public static Class<?> getCglibProxyTarget(final Class<?> clazz) {
     String name = clazz.getName();
     final int index = name.indexOf("$$");
     return BeanUtils.getClazz(index != -1 ? name.substring(0, index) : name);

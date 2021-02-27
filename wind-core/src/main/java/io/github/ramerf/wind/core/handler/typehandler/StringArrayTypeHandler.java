@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
 /**
  * {@literal java:String[] <=> jdbc:String[]}.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/4
  */
 public class StringArrayTypeHandler implements ITypeHandler<String[], String[]> {

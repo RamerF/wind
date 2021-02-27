@@ -15,49 +15,61 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <postgresql.version>42.2.18</postgresql.version>
+        <mysql.version>5.1.47</mysql.version>
         <druid.version>1.1.22</druid.version>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-aspects</artifactId>
             <scope>compile</scope>
+            <version>5.0.12.RELEASE</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-web</artifactId>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
             <scope>compile</scope>
+            <version>2.0.8.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
             <scope>compile</scope>
+            <version>2.0.8.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+            <version>2.0.8.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
+            <version>2.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>2.0.8.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>2.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.0.14.Final</version>
         </dependency>
         <!-- postgresql 驱动 -->
         <dependency>
@@ -70,6 +82,7 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <scope>test</scope>
+            <version>${mysql.version}</version>
         </dependency>
         <!-- druid 官方 starter -->
         <dependency>

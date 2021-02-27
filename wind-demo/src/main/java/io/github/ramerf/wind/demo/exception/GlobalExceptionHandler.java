@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.demo.exception;
 
-import io.github.ramerf.wind.core.entity.response.Rs;
+import io.github.ramerf.wind.web.entity.response.Rs;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 自定义异常处理.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/5
- * @see io.github.ramerf.wind.core.exception.GlobalExceptionHandler
+ * @see io.github.ramerf.wind.web.exception.GlobalExceptionHandler
  */
 @Slf4j
 @ControllerAdvice

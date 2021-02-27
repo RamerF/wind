@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 /**
  * 指定数据库表映射.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/29
  */
 @Documented

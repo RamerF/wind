@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.config.PrototypeBean.QueryUpdateRegister;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import javax.annotation.Nonnull;
@@ -21,7 +20,7 @@ import org.springframework.core.type.AnnotationMetadata;
 /**
  * 该类用于管理prototype类型的bean,由于违背Ioc,不建议使用{@link AppContextInject}获取bean.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/29
  */
 @Slf4j
@@ -31,12 +30,12 @@ import org.springframework.core.type.AnnotationMetadata;
 @ConditionalOnMissingBean({Query.class, Update.class})
 public class PrototypeBean {
   @Lookup
-  public <T extends AbstractEntityPoJo<T, ?>> Query<T> query(Class<T> clazz) {
+  public <T> Query<T> query(Class<T> clazz) {
     return null;
   }
 
   @Lookup
-  public <T extends AbstractEntityPoJo<T, ?>> Update<T> update(Class<T> clazz) {
+  public <T> Update<T> update(Class<T> clazz) {
     return null;
   }
 

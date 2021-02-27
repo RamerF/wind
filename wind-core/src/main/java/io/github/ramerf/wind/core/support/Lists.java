@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.support;
 
 /**
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/1/14
  */
 public class Lists {

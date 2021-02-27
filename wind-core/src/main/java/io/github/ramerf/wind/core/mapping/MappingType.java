@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.mapping;
 import io.github.ramerf.wind.core.annotation.OneToOne;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.StringCondition;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import java.lang.reflect.Field;
@@ -26,7 +25,7 @@ import javax.annotation.Nonnull;
  *  }
  * }
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.09.19
  */
 @SuppressWarnings({"unchecked", "DuplicatedCode"})
@@ -34,7 +33,7 @@ public enum MappingType {
   /** The One to one. */
   ONE_TO_ONE {
     @Override
-    public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+    public <T, E> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getReferenceClazz();
       final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
@@ -51,7 +50,7 @@ public enum MappingType {
   /** The One to many. */
   ONE_TO_MANY {
     @Override
-    public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+    public <T, E> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getClazz();
       final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
@@ -68,7 +67,7 @@ public enum MappingType {
   /** The Many to one. */
   MANY_TO_ONE {
     @Override
-    public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+    public <T, E> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       final Class<?> type = mappingInfo.getReferenceClazz();
       final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
@@ -95,7 +94,7 @@ public enum MappingType {
   /** The None. */
   NONE {
     @Override
-    public <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+    public <T, E> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
       return null;
     }
@@ -111,7 +110,7 @@ public enum MappingType {
    * @param relationValue the relation value
    * @return the t
    */
-  public abstract <T, E extends AbstractEntityPoJo<E, ?>> T fetchMapping(
+  public abstract <T, E> T fetchMapping(
       final E poJo, final MappingInfo mappingInfo, final Object relationValue);
 
   /**

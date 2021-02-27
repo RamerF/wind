@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 /**
  * 启动类.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/4/28
  */
 @EnableTransactionManagement

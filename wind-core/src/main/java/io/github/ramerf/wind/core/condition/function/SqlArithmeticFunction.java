@@ -10,7 +10,7 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  * <code>mod</code>,<code>power</code>,<code>sqrt</code>
  * </pre>
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/4/29
  */
 public enum SqlArithmeticFunction implements SqlFunction {

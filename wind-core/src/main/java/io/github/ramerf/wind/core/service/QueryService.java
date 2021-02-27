@@ -1,8 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.entity.constant.Constant;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
@@ -24,11 +22,10 @@ import org.springframework.data.domain.Sort.Order;
  * </pre>
  *
  * @param <T> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /1/5
  */
-public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-    extends InterService<T, ID> {
+public interface QueryService<T, ID extends Serializable> extends InterService<T, ID> {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(QueryService.class);
 
@@ -488,10 +485,10 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
     }
     return page == -1
         ? PageRequest.of(0, Integer.MAX_VALUE, sort)
-        : PageRequest.of(page - 1, size > 0 ? size : Constant.DEFAULT_PAGE_SIZE, sort);
+        : PageRequest.of(page - 1, size > 0 ? size : 10, sort);
   }
 
-  class QueryBound<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable> {
+  class QueryBound<T, ID extends Serializable> {
     protected Consumer<QueryColumn<T>> queryConsumer;
     protected Consumer<LambdaCondition<T>> conditionConsumer;
     protected QueryColumn<T> queryColumn;
@@ -507,11 +504,10 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
      * @param <T> the type parameter
      * @return {@code QueryBound}
      */
-    public static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-        QueryBound<T, ID> consume(
-            final Consumer<QueryColumn<T>> queryConsumer,
-            final Consumer<LambdaCondition<T>> conditionConsumer,
-            final InterService<T, ID> service) {
+    public static <T, ID extends Serializable> QueryBound<T, ID> consume(
+        final Consumer<QueryColumn<T>> queryConsumer,
+        final Consumer<LambdaCondition<T>> conditionConsumer,
+        final InterService<T, ID> service) {
       QueryBound<T, ID> queryBound = new QueryBound<>();
       queryBound.queryConsumer = queryConsumer;
       queryBound.conditionConsumer = conditionConsumer;

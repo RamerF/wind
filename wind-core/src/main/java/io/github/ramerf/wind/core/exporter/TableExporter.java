@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 自动建表.
  *
  * @since 2020.10.28
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Slf4j
 public class TableExporter {

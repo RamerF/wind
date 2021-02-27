@@ -14,7 +14,7 @@ import static io.github.ramerf.wind.core.metadata.DbResolver.getMetaData;
 /**
  * 数据库元数据.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.08.20
  */
 @Slf4j

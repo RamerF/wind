@@ -3,7 +3,7 @@ package io.github.ramerf.wind.demo.entity.pojo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.pojo.Domain;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.ObjectCollectionToJsonTypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.ObjectToJsonTypeHandler;
@@ -15,7 +15,7 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 /**
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/16
  */
 @TableInfo(name = "foo", comment = "the foo.")
@@ -25,7 +25,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Foo extends AbstractEntityPoJo<Foo, Long> {
+public class Foo extends Domain<Foo, Long> {
 
   // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
   @Id

@@ -5,7 +5,6 @@ import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.TestLambda;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
@@ -24,7 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /**
  * The type Entity helper.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /5/12
  */
 @Slf4j
@@ -44,7 +43,7 @@ public class EntityHelper {
    * @param <T> the type parameter
    * @param clazz the clazz
    */
-  public static <T extends AbstractEntityPoJo<T, ?>> void initEntity(final Class<T> clazz) {
+  public static <T> void initEntity(final Class<T> clazz) {
     final EntityInfo entityInfo =
         EntityInfo.of(
             clazz, windContext.getWindConfiguration(), windContext.getDbMetaData().getDialect());
@@ -56,8 +55,7 @@ public class EntityHelper {
   /** 初始化关系映射. */
   public static void initEntityMapping() {
     CLAZZ_ENTITY_MAP.values().stream()
-        .filter(o -> !o.getClazz().equals(AbstractEntityPoJo.class))
-        .filter(o -> AbstractEntityPoJo.class.isAssignableFrom(o.getClazz()))
+        .filter(o -> o.getClazz().isAnnotationPresent(TableInfo.class))
         .forEach(EntityMapping::initial);
     EntityMapping.valid(CLAZZ_ENTITY_MAP);
   }
@@ -115,8 +113,7 @@ public class EntityHelper {
    * @param clazz the clazz
    * @return the entity info
    */
-  public static <T extends AbstractEntityPoJo<T, ?>> EntityInfo getEntityInfo(
-      @Nonnull final Class<T> clazz) {
+  public static <T> EntityInfo getEntityInfo(@Nonnull final Class<T> clazz) {
     return initEntityIfNeeded(clazz);
   }
 
@@ -127,13 +124,11 @@ public class EntityHelper {
    * @param clazz the clazz
    * @return the entity id field
    */
-  public static <T extends AbstractEntityPoJo<T, ?>> Field getEntityIdField(
-      @Nonnull final Class<T> clazz) {
+  public static <T> Field getEntityIdField(@Nonnull final Class<T> clazz) {
     return getEntityInfo(clazz).getIdColumn().getField();
   }
 
-  private static <T extends AbstractEntityPoJo<T, ?>> EntityInfo initEntityIfNeeded(
-      @Nonnull final Class<T> clazz) {
+  private static <T> EntityInfo initEntityIfNeeded(@Nonnull final Class<T> clazz) {
     final String fullPath = clazz.getTypeName();
     synchronized (EntityHelper.class) {
       final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(clazz);
@@ -145,7 +140,7 @@ public class EntityHelper {
   }
 
   private static EntityInfo initEntityIfNeeded(final String fullPath) {
-    final Class<AbstractEntityPoJo> clazz = BeanUtils.getClazz(fullPath);
+    final Class<?> clazz = BeanUtils.getClazz(fullPath);
     synchronized (EntityHelper.class) {
       final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(clazz);
       if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {

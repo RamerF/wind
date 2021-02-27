@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -223,18 +224,25 @@ public class EntityColumn {
   @Nonnull
   private static Field getReferenceField(final @Nonnull Field field) {
     final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+    final Class<?> fieldType = field.getType();
     if (manyToOne != null) {
       final String referenceField = manyToOne.referenceField();
-      return Objects.requireNonNull(
-          BeanUtils.getDeclaredField(field.getType(), referenceField),
-          "Not exist field " + referenceField + " in " + field.getType());
+      if (!referenceField.equals("")) {
+        return Objects.requireNonNull(
+            BeanUtils.getDeclaredField(fieldType, referenceField),
+            "Not exist field [" + referenceField + "] in " + fieldType);
+      }
     } else {
       final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
       final String referenceField = oneToOne.referenceField();
-      return Objects.requireNonNull(
-          BeanUtils.getDeclaredField(field.getType(), referenceField),
-          "Not exist field " + referenceField + " in " + field.getType());
+      if (!referenceField.equals("")) {
+        return Objects.requireNonNull(
+            BeanUtils.getDeclaredField(fieldType, referenceField),
+            "Not exist field [" + referenceField + "] in " + fieldType);
+      }
     }
+    // 关联主键
+    return EntityHelper.getEntityInfo(fieldType).getPrimaryKeys().get(0).getField();
   }
 
   private static String getPrimaryKeyDefinition(

@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.config.*;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.*;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
@@ -20,7 +19,6 @@ import javax.annotation.Nonnull;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.BeanUtils;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
@@ -31,17 +29,22 @@ import static java.util.stream.Collectors.toCollection;
  * 条件构造.
  *
  * @since 2020.09.16
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Slf4j
 @ToString
-public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
-    extends AbstractQueryEntity<T> implements Condition<T> {
+public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implements Condition<T> {
   /** where后的字符串,参数占位符为 ?. */
   protected final List<String> conditionSql = new LinkedList<>();
 
   /** 占位符对应的值. */
   @Getter protected final List<ValueType> valueTypes = new LinkedList<>();
+
+  private static final char[] alphabets =
+      new char[] {
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+        's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+      };
 
   protected AbstractCondition() {}
 
@@ -110,11 +113,19 @@ public abstract class AbstractCondition<T extends AbstractEntityPoJo<T, ?>>
     setQueryEntityMetaData(metaData);
     if (genAlia) {
       // 我们需要为子查询设置表别名
-      final String alia = RandomString.make(5);
+      final String alia = randomString(5);
       metaData.setFromTable(metaData.getTableName() + " " + alia);
       metaData.setTableAlia(alia);
     }
     return this;
+  }
+
+  private String randomString(int count) {
+    final Random random = new Random();
+    char[] chars = new char[count];
+    int i = 0;
+    while (i < count) chars[i++] = alphabets[random.nextInt(26)];
+    return String.valueOf(chars);
   }
 
   public String getString() {

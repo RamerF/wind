@@ -2,12 +2,12 @@ package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.QueryEntity;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import java.beans.FeatureDescriptor;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -36,7 +36,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 /**
  * The type Bean utils.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/26
  */
 @Slf4j
@@ -316,6 +316,44 @@ public final class BeanUtils {
   }
 
   /**
+   * 获取指定包下,指定接口/类的子类.
+   *
+   * @param <T> the type parameter
+   * @param packagePatterns 支持多个包名分隔符: ",; \t\n"
+   * @param annotation 父接口/类
+   * @return 所有子类 set
+   * @throws IOException the IOException
+   */
+  public static <T> Set<Class<? extends T>> scanClassesWithAnnotation(
+      String packagePatterns, Class<? extends Annotation> annotation) throws IOException {
+    Set<Class<? extends T>> classes = new HashSet<>();
+    String[] packagePatternArray =
+        tokenizeToStringArray(
+            packagePatterns, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
+    for (String packagePattern : packagePatternArray) {
+      Resource[] resources =
+          new PathMatchingResourcePatternResolver()
+              .getResources(
+                  ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
+                      .concat(ClassUtils.convertClassNameToResourcePath(packagePattern))
+                      .concat("/**/*.class"));
+      for (Resource resource : resources) {
+        try {
+          ClassMetadata classMetadata =
+              new CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
+          Class<T> clazz = BeanUtils.getClazz(classMetadata.getClassName());
+          if (annotation == null || clazz.isAnnotationPresent(annotation)) {
+            classes.add(clazz);
+          }
+        } catch (Throwable e) {
+          log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", resource, e.toString());
+        }
+      }
+    }
+    return classes;
+  }
+
+  /**
    * 对于 {@link Method#invoke(Object, Object...)}<br>
    * 用法:
    *
@@ -444,7 +482,7 @@ public final class BeanUtils {
 }
 
 /** The type Ts. */
-class Ts extends AbstractEntityPoJo {
+class Ts {
   @TableColumn(name = "alia")
   private String name;
 

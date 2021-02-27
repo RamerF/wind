@@ -1,17 +1,16 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import lombok.Data;
 
 /**
  * .
  *
  * @param <T> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /4/11
  */
 @Data
-public class EntityMetaData<T extends AbstractEntityPoJo<T, ?>> {
+public class EntityMetaData<T> {
   /** 表名. */
   protected String tableName;
 

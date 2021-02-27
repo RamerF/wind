@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.io.Serializable;
 
@@ -22,11 +21,10 @@ import java.io.Serializable;
  *   baseService.create(foo);
  * </pre>
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/20
  */
-public class BaseServiceImpl<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable, R>
-    implements BaseService<T, ID> {
+public class BaseServiceImpl<T, ID extends Serializable, R> implements BaseService<T, ID> {
   private final R repository;
   private final BaseService<T, ID> service;
 

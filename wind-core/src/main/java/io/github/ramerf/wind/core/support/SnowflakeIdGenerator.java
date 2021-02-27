@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.support;
 /**
  * id生成策略.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /5/20
  */
 public class SnowflakeIdGenerator implements IdGenerator {

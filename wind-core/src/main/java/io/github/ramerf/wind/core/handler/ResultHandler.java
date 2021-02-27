@@ -14,7 +14,7 @@ import lombok.Data;
  *
  * @param <T> the type parameter
  * @param <E> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/27
  * @see AbstractResultHandler
  */

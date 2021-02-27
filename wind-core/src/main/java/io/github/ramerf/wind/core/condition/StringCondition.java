@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
@@ -16,12 +15,12 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 /**
  * 条件构造.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/26
  */
 @Slf4j
 @ToString
-public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
+public class StringCondition<T> extends AbstractCondition<T> {
 
   public StringCondition(final QueryColumn<T> queryColumn) {
     super(queryColumn);
@@ -31,8 +30,7 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
     super(clazz, tableName, tableAlia);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> StringCondition<T> getInstance(
-      final QueryColumn<T> queryColumn) {
+  public static <T> StringCondition<T> getInstance(final QueryColumn<T> queryColumn) {
     return new StringCondition<>(queryColumn);
   }
 

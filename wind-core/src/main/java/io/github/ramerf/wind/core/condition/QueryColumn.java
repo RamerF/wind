@@ -3,8 +3,6 @@ package io.github.ramerf.wind.core.condition;
 import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.*;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -26,40 +24,38 @@ import static java.util.stream.Collectors.joining;
  * wind-test: DemoProductPoJo#getColumn
  *
  * @param <T> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/26
  */
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @SuppressWarnings("UnusedReturnValue")
-public class QueryColumn<T extends AbstractEntityPoJo<T, ?>> extends AbstractQueryEntity<T> {
+public class QueryColumn<T> extends AbstractQueryEntity<T> {
   /** 预留嵌套语句. */
   //  private List<QueryColumn<T>> children = new ArrayList<>();
 
-  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromClass(
-      final Class<T> clazz) {
+  public static <T> QueryColumn<T> fromClass(final Class<T> clazz) {
     return getInstance(clazz, null, null);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromClassAndTableAlia(
+  public static <T> QueryColumn<T> fromClassAndTableAlia(
       final Class<T> clazz, final String tableAlia) {
     return getInstance(clazz, null, tableAlia);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromTableName(
-      final String tableName) {
+  public static <T> QueryColumn<T> fromTableName(final String tableName) {
     return getInstance(null, tableName, null);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> fromTableNameAndAlia(
+  public static <T> QueryColumn<T> fromTableNameAndAlia(
       final String tableName, final String tableAlia) {
     return getInstance(null, tableName, tableAlia);
   }
 
-  private static <T extends AbstractEntityPoJo<T, ?>> QueryColumn<T> getInstance(
+  private static <T> QueryColumn<T> getInstance(
       final Class<T> clazz, String tableName, String tableAlia) {
     if (clazz == null && tableName == null && tableAlia == null) {
-      throw CommonException.of("[clazz,tableName,tableAlia]不能同时为空");
+      throw new IllegalArgumentException("[clazz,tableName,tableAlia]不能同时为空");
     }
     final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
     final QueryColumn<T> queryColumn = new QueryColumn<>(EntityInfo.of(configuration));

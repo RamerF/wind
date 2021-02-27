@@ -1,14 +1,14 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.*;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.pojo.Domain;
 import javax.persistence.Id;
 import lombok.*;
 
 /**
  * .
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.09.30
  */
 @TableInfo
@@ -18,7 +18,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ProductSpuCode extends AbstractEntityPoJo<ProductSpuCode, Long> {
+public class ProductSpuCode extends Domain<ProductSpuCode, Long> {
   @Id private String id;
 
   @TableColumn(defaultValue = "0")

@@ -6,7 +6,7 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  * sql aggregate function.<br>
  * <code>Count</code>,<code>Sum</code>,<code>Avg</code>,<code>Max</code>, <code>Min</code>
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/4/29
  */
 @SuppressWarnings({"unused"})

@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.dialect;
 
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupportImpl;
-import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.lang.reflect.Type;
@@ -268,12 +267,12 @@ public abstract class Dialect {
 
   public String getCommonOnTableString(
       String category, String schema, String table, String comment) {
-    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+    throw CommonException.of("Not implemented");
   }
 
   public String getCommentOnColumnString(
       final String table, final String column, final String comment) {
-    throw CommonException.of(ResultCode.API_NOT_IMPLEMENT);
+    throw new RuntimeException("Not implemented");
   }
 
   public boolean isSupportCommentOn() {

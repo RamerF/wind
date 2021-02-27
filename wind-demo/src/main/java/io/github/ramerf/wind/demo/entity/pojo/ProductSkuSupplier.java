@@ -2,7 +2,7 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.ManyToOne;
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.pojo.Domain;
 import javax.persistence.Id;
 import lombok.*;
 
@@ -16,7 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ProductSkuSupplier extends AbstractEntityPoJo<ProductSkuSupplier, String> {
+public class ProductSkuSupplier extends Domain<ProductSkuSupplier, String> {
   @Id private String id;
   private String name;
 

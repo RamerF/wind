@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
 /**
  * {@literal java:List<Long> <=> jdbc:Long[]}.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/4
  */
 public class CollectionLongArrayTypeHandler implements ITypeHandler<Collection<Long>, Long[]> {

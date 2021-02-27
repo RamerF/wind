@@ -7,7 +7,7 @@ import lombok.Data;
 /**
  * 数据库表映射信息,包含列名.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.08.20
  */
 @Data

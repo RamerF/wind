@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.pgsql;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.pojo.LambdaDomain;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.*;
 import io.github.ramerf.wind.core.service.InterService.Fields;
@@ -12,7 +12,7 @@ import javax.persistence.Id;
 import lombok.*;
 
 /**
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/16
  */
 @TableInfo(name = "foo", comment = "测试表", logicDelete = @LogicDelete(fieldName = "hasDeleted"))
@@ -22,7 +22,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Foo extends AbstractEntityPoJo<Foo, Long> {
+public class Foo extends LambdaDomain<Foo, Long> {
   @Id private Long id;
   private String name;
 

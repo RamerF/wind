@@ -7,7 +7,7 @@ import lombok.ToString;
 /**
  * 支持链式调用的List.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/1/14
  */
 @ToString

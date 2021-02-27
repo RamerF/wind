@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 /**
  * java:{@literal java:BitSet <=> jdbc:byte[]}.适用于支持byte[]/bytea的数据库如:Pgsql.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/4
  */
 public class BitSetByteArrTypeHandler implements ITypeHandler<BitSet, byte[]> {

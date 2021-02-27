@@ -10,7 +10,7 @@ import java.util.Date;
  * <p>仅支持{@link LocalDate},{@link LocalTime},{@link LocalDateTime},{@link Date},{@link Long
  *
  * @since 2020.11.23
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
