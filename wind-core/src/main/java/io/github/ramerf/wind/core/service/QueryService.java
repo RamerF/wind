@@ -1,9 +1,16 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
+import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.mapping.EntityMapping;
+import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
+import io.github.ramerf.wind.core.mapping.MappingType;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
@@ -140,27 +147,27 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
     return getQuery().fetchOneBySql(sql, respClazz, args);
   }
 
-  /* 关联查询暂不开启
-    default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> field) {
-    final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
+  // 关联查询暂不开启
+  default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> function) {
+    final Field field = function.getField();
+    final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field);
     if (optional.isPresent()) {
       final MappingInfo mappingInfo = optional.get();
       final MappingType mappingType = mappingInfo.getMappingType();
       if (mappingType.equals(MappingType.ONE_TO_MANY)) {
-        @SuppressWarnings("rawtypes")
-        final Class<? extends AbstractEntityPoJo> manyClazz = mappingInfo.getReferenceClazz();
+        final Class<?> referenceClazz = mappingInfo.getReferenceClazz();
         // 如果是一对多,查询多的一方的关联关系
-        final Optional<MappingInfo> infactOpt = EntityMapping.get(manyClazz, t.getClass());
+        final Optional<MappingInfo> infactOpt = EntityMapping.get(referenceClazz, t.getClass());
         if (!infactOpt.isPresent()) {
           throw CommonException.of(
-              "No mapping object [" + manyClazz + "] found in " + t.getClass());
+              "No mapping object [" + referenceClazz + "] found in " + t.getClass());
         }
         final MappingInfo infactMapping = infactOpt.get();
-        final Object relationValue = BeanUtils.getValue(t, infactMapping.getReferenceField(), null);
+        final Object relationValue = BeanUtils.getValue(t, mappingInfo.getField(), null);
         return mappingType.fetchMapping(t, infactMapping, relationValue);
       } else {
         // TODO WARN 这里有问题，可能没有保存对面的字段
-        final R mappingObj = field.apply(t);
+        final R mappingObj = function.apply(t);
         if (mappingObj == null) {
           return null;
         }
@@ -170,7 +177,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
       }
     }
     return null;
-  }*/
+  }
 
   /**
    * 通过id集合查询列表.
