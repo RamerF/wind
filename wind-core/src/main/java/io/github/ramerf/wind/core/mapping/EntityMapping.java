@@ -113,20 +113,22 @@ public class EntityMapping {
 
   @Data
   public static class MappingInfo {
+    /* 示例 One 一对多关联 Many.Many表中添加one_id字段关联One表id列,One的关联关系. */
+    /** 当前对象.如:One.class */
     private Class<?> clazz;
-    /** 当前对象的列. */
+    /** 当前对象关联对方的字段.如:<code>private List&lt;Many&gt; many;</code> */
     private Field field;
 
-    /** 当前对象的列. */
+    /** 当前对象的列.如:id */
     private String column;
 
-    /** 关联对象的列. */
+    /** 关联对象的列.如:one_id */
     private String referenceColumn;
 
-    /** 关联对象的字段. */
+    /** 关联对象的字段.如:<code>private One one;</code> */
     private Field referenceField;
 
-    /** 关联对象. */
+    /** 关联对象.如:Many.class */
     private Class<?> referenceClazz;
 
     /** 引用定义.预留字段. */
