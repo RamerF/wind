@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
@@ -147,34 +146,26 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
     return getQuery().fetchOneBySql(sql, respClazz, args);
   }
 
-  // 关联查询暂不开启
+  // 关联查询暂不开启,使用IConsumer入参
   default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> function) {
     final Field field = function.getField();
     final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field);
     if (optional.isPresent()) {
+      function.apply(t);
       final MappingInfo mappingInfo = optional.get();
       final MappingType mappingType = mappingInfo.getMappingType();
       if (mappingType.equals(MappingType.ONE_TO_MANY)) {
-        final Class<?> referenceClazz = mappingInfo.getReferenceClazz();
-        // 如果是一对多,查询多的一方的关联关系
-        final Optional<MappingInfo> infactOpt = EntityMapping.get(referenceClazz, t.getClass());
-        if (!infactOpt.isPresent()) {
-          throw CommonException.of(
-              "No mapping object [" + referenceClazz + "] found in " + t.getClass());
-        }
-        final MappingInfo infactMapping = infactOpt.get();
         final Object relationValue = BeanUtils.getValue(t, mappingInfo.getField(), null);
-        return mappingType.fetchMapping(t, infactMapping, relationValue);
-      } else {
-        // TODO WARN 这里有问题，可能没有保存对面的字段
-        final R mappingObj = function.apply(t);
-        if (mappingObj == null) {
-          return null;
-        }
-        final Object relationValue =
-            BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
         return mappingType.fetchMapping(t, mappingInfo, relationValue);
       }
+      // TODO WARN 这里有问题，可能没有保存对面的字段
+      final R mappingObj = function.apply(t);
+      if (mappingObj == null) {
+        return null;
+      }
+      final Object relationValue =
+          BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
+      return mappingType.fetchMapping(t, mappingInfo, relationValue);
     }
     return null;
   }

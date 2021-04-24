@@ -35,16 +35,13 @@ public enum MappingType {
     @Override
     public <T, E> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
-      final Class<?> type = mappingInfo.getReferenceClazz();
-      final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
-      final StringCondition<E> stringCondition = StringCondition.getInstance(queryColumn);
-      @SuppressWarnings("unchecked")
-      final Object mapping =
-          Query.getInstance((Class<E>) poJo.getClass())
-              .select(queryColumn)
-              .where(stringCondition.eq(mappingInfo, relationValue))
-              .fetchOne(type);
-      return (T) mapping;
+      final Class<T> fetchClazz = (Class<T>) mappingInfo.getReferenceClazz();
+      final QueryColumn<T> queryColumn = QueryColumn.fromClass(fetchClazz);
+      final StringCondition<T> stringCondition = StringCondition.getInstance(queryColumn);
+      return Query.getInstance(fetchClazz)
+          .select(queryColumn)
+          .where(stringCondition.eq(mappingInfo, relationValue))
+          .fetchOne(fetchClazz);
     }
   },
   /** The One to many. */
@@ -52,16 +49,27 @@ public enum MappingType {
     @Override
     public <T, E> T fetchMapping(
         final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
-      final Class<?> type = mappingInfo.getClazz();
-      final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
-      final StringCondition<E> stringCondition = StringCondition.getInstance(queryColumn);
-      @SuppressWarnings("unchecked")
-      final Object mapping =
-          Query.getInstance((Class<E>) poJo.getClass())
-              .select(queryColumn)
-              .where(stringCondition.eq(mappingInfo.getField(), relationValue))
-              .fetchAll(type);
-      return (T) mapping;
+      //
+      // final Class<?> referenceClazz = mappingInfo.getReferenceClazz();
+      // // 如果是一对多,查询多的一方的关联关系
+      // final Optional<MappingInfo> infactOpt = EntityMapping.get(referenceClazz, t.getClass());
+      // if (!infactOpt.isPresent()) {
+      //   throw CommonException.of(
+      //       "No mapping object [" + referenceClazz + "] found in " + t.getClass());
+      // }
+      // final MappingInfo infactMapping = infactOpt.get();
+      //
+      // final Class<?> type = mappingInfo.getClazz();
+      // final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
+      // final StringCondition<E> condition = StringCondition.getInstance(queryColumn);
+      // @SuppressWarnings("unchecked")
+      // final Object mapping =
+      //     Query.getInstance((Class<E>) poJo.getClass())
+      //         .select(queryColumn)
+      //         .where(condition.eq(mappingInfo.getField(), relationValue))
+      //         .fetchAll(type);
+      // return (T) mapping;
+      return null;
     }
   },
   /** The Many to one. */

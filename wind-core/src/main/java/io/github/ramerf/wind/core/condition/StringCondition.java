@@ -26,6 +26,10 @@ public class StringCondition<T> extends AbstractCondition<T> {
     super(queryColumn);
   }
 
+  public StringCondition(final Class<T> clazz) {
+    super(clazz);
+  }
+
   public StringCondition(final Class<T> clazz, final String tableName, final String tableAlia) {
     super(clazz, tableName, tableAlia);
   }

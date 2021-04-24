@@ -58,7 +58,7 @@ import static io.github.ramerf.wind.core.util.StringUtils.doIfNonEmpty;
  * @since 2019/12/28
  */
 @Slf4j
-public class Query<T > {
+public class Query<T> {
   /**
    *
    *
@@ -103,7 +103,7 @@ public class Query<T > {
    *
    * @return the instance
    */
-  public static <T  > Query<T> getInstance(final Class<T> clazz) {
+  public static <T> Query<T> getInstance(final Class<T> clazz) {
     return prototypeBean.query(clazz);
   }
 
