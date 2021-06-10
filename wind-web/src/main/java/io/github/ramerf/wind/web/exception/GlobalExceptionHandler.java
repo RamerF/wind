@@ -221,7 +221,7 @@ public class GlobalExceptionHandler {
   @ResponseStatus
   @ExceptionHandler(value = Exception.class)
   public Rs<Object> handleException(HttpServletRequest request, Exception exception) {
-    log.error(request.getRequestURL().toString());
+    log.error(request.getRequestURL().toString(), exception);
     handleError(request, exception);
     return Rs.fail();
   }
@@ -231,7 +231,5 @@ public class GlobalExceptionHandler {
       return;
     }
     log.error(exception.getMessage(), exception);
-    /// 模板引擎用
-    // request.setAttribute("error", exception.getMessage());
   }
 }

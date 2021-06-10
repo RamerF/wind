@@ -159,7 +159,7 @@ public class BeanResultHandler<P, E> extends AbstractResultHandler<P, Map<String
       return;
     }
     final Object mappingObj = BeanUtils.initial(paramType);
-    final Field referenceField = mappingInfo.getReferenceField();
+    final Field referenceField = mappingInfo.getTargetField();
     referenceField.setAccessible(true);
     BeanUtils.setValue(mappingObj, referenceField, map.get(mappingInfo.getColumn()), null);
     BeanUtils.setValue(obj, field, mappingObj, null);

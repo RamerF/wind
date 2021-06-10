@@ -25,12 +25,12 @@ public @interface OneToOne {
   /** 当前对象属性名.默认[属性类型 + 主键{@link Id}],如:fooId */
   String field() default "";
 
-  /** 关联对象属性名.默认关联主键 TODO WARN 关联对象的属性可能不存在，因为可能是自己维护关系 */
-  String referenceField() default "";
+  /** 关联对象属性名(非列名).默认关联主键 TODO WARN 关联对象的属性可能不存在，因为可能是自己维护关系 */
+  String targetField() default "";
 
   /** 是否新增列. */
   boolean joinColumn() default true;
 
-  /** 当{@code joinColumn == true}时添加的列名,默认:下划线[类型_{@link #referenceField()}]. */
+  /** 当{@code joinColumn == true}时添加的列名,默认:下划线[类型_{@link #targetField()}]. */
   String joinColumnName() default "";
 }

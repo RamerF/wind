@@ -150,24 +150,29 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> function) {
     final Field field = function.getField();
     final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field);
-    if (optional.isPresent()) {
-      function.apply(t);
-      final MappingInfo mappingInfo = optional.get();
-      final MappingType mappingType = mappingInfo.getMappingType();
-      if (mappingType.equals(MappingType.ONE_TO_MANY)) {
-        final Object relationValue = BeanUtils.getValue(t, mappingInfo.getField(), null);
-        return mappingType.fetchMapping(t, mappingInfo, relationValue);
-      }
-      // TODO WARN 这里有问题，可能没有保存对面的字段
-      final R mappingObj = function.apply(t);
-      if (mappingObj == null) {
-        return null;
-      }
-      final Object relationValue =
-          BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
-      return mappingType.fetchMapping(t, mappingInfo, relationValue);
+    if (!optional.isPresent()) {
+      return null;
     }
-    return null;
+    final MappingInfo mappingInfo = optional.get();
+    if (mappingInfo.getMappingType().equals(MappingType.ONE_TO_MANY)) {
+      final Class<?> referenceClazz = mappingInfo.getTargetClazz();
+      final List<MappingInfo> referMappingInfo = EntityMapping.get(referenceClazz);
+
+      final Object relationValue = BeanUtils.getValue(t, mappingInfo.getField(), null);
+      return mappingInfo.getMappingObject(t, relationValue);
+    }
+    if (mappingInfo.getMappingType().equals(MappingType.MANY_TO_ONE)) {
+      final Object relationValue = BeanUtils.getValue(t, mappingInfo.getField(), null);
+      return mappingInfo.getMappingObject(t, relationValue);
+    }
+    // TODO WARN 这里有问题，可能没有保存对面的字段
+    final R mappingObj = function.apply(t);
+    if (mappingObj == null) {
+      return null;
+    }
+    final Object relationValue =
+        BeanUtils.getValue(mappingObj, mappingInfo.getTargetField(), null);
+    return mappingInfo.getMappingObject(t, relationValue);
   }
 
   /**

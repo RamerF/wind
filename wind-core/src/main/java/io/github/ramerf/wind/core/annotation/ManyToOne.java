@@ -24,10 +24,10 @@ public @interface ManyToOne {
   String field() default "";
 
   /** 关联对象属性名.默认关联主键{@link Id} */
-  String referenceField() default "";
+  String targetField() default "";
 
-  /** 添加列名,默认:下划线[类型_{@link #referenceField()}]. */
-  String joinColumnName() default "";
+  /** 添加列名,默认:下划线[类型_{@link #targetField()}]. */
+  String joinColumn() default "";
 
   // TODO WARN 关联表,可以不存在实体
   // String table() default "";

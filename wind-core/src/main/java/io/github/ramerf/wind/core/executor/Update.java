@@ -466,7 +466,7 @@ public final class Update<T> {
               entityInfo.getName(),
               entityInfo.getLogicDeletePropColumn().getName(),
               entityInfo.getLogicDeleteProp().isDeleted(),
-              entityInfo.getFieldColumnMap().get(updateTimeField.getName()),
+              entityInfo.getFieldColumnMap().get(updateTimeField),
               condition.getString());
       return executor.update(
           clazz,

@@ -518,10 +518,10 @@ public class StringCondition<T> extends AbstractCondition<T> {
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(getQueryEntityMetaData().getTableAlia())
               .concat(DOT.operator)
-              .concat(mappingInfo.getReferenceColumn())
+              .concat(mappingInfo.getTargetColumn())
               .concat(EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, mappingInfo.getReferenceField()));
+      valueTypes.add(ValueType.of(value, mappingInfo.getTargetField()));
     }
     return this;
   }

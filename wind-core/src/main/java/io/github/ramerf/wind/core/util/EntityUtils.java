@@ -4,10 +4,12 @@ import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.InterService;
+import io.github.ramerf.wind.core.support.EntityInfo;
 import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -90,10 +92,7 @@ public final class EntityUtils {
    * @return the non null Field
    */
   public static <T> List<Field> getNonNullColumnFields(@Nonnull final T t) {
-    @SuppressWarnings("unchecked")
     final List<Field> fields =
-        // BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
-        //     .filter(EntityUtils::filterColumnField)
         EntityHelper.getEntityInfo(t.getClass()).getEntityColumns().stream()
             .map(EntityColumn::getField)
             .filter(field -> Objects.nonNull(BeanUtils.getValue(t, field, null)))
@@ -188,7 +187,7 @@ public final class EntityUtils {
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
-  public static <ID extends Serializable> List<String> getNonNullColumns(@Nonnull final Object t) {
+  public static List<String> getNonNullColumns(@Nonnull final Object t) {
     final List<String> columns =
         getNonNullColumnFields(t).stream().map(EntityUtils::fieldToColumn).collect(toList());
     log.debug("getNonNullColumns:[{}]", columns);
@@ -207,10 +206,15 @@ public final class EntityUtils {
    * @see Field#getName() Field#getName()
    * @see #getNonNullColumns(Object)
    */
-  public static <ID extends Serializable> String getNonNullColumn(@Nonnull final Object t) {
+  public static String getNonNullColumn(@Nonnull final Object t) {
     final String nonNullColumn = String.join(",", getNonNullColumns(t));
     log.debug("getNonNullColumn:[{}]", nonNullColumn);
     return nonNullColumn;
+  }
+
+  /** {@link #fieldToColumn(Field, boolean)} */
+  public static String fieldToColumn(@Nonnull final Field field) {
+    return fieldToColumn(field, false);
   }
 
   /**
@@ -220,15 +224,16 @@ public final class EntityUtils {
    * <li>N对1关联字段:
    *
    * @param field the field
+   * @param depth 是否解析关联对象
    * @return string string
    * @see TableColumn#name() TableColumn#name()
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
-  public static String fieldToColumn(@Nonnull final Field field) {
+  public static String fieldToColumn(@Nonnull final Field field, final boolean depth) {
     final Class<?> fieldType = field.getType();
     // 普通字段判断TableColumn注解
-    if (!BeanUtils.isPrimitiveType(fieldType) || !MappingInfo.isValidMapping(field)) {
+    if (!depth || BeanUtils.isPrimitiveType(fieldType) || !MappingInfo.isValidMapping(field)) {
       final TableColumn column = field.getAnnotation(TableColumn.class);
       return column != null && StringUtils.nonEmpty(column.name())
           ? column.name()
@@ -236,34 +241,43 @@ public final class EntityUtils {
     }
     // 关联字段
     final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-    final String joinColumnName;
-    final String reference;
+    final String joinColumn;
+    final String targetField;
     if (oneToOne != null) {
-      joinColumnName = oneToOne.joinColumnName();
-      reference = oneToOne.referenceField();
+      joinColumn = oneToOne.joinColumnName();
+      targetField = oneToOne.targetField();
     } else {
       final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-      joinColumnName = manyToOne.joinColumnName();
-      reference = manyToOne.referenceField();
+      if (manyToOne != null) {
+        joinColumn = manyToOne.joinColumn();
+        targetField = manyToOne.targetField();
+      } else {
+        return null;
+      }
     }
     // 手动指定关联列名
-    if (!"".equals(joinColumnName)) {
-      return joinColumnName;
+    if (!"".equals(joinColumn)) {
+      return joinColumn;
     }
     // 关联主键
-    if ("".equals(reference)) {
+    final EntityInfo entityInfo = EntityHelper.getEntityInfo(fieldType);
+    if ("".equals(targetField)) {
       final String primaryKeys =
-          EntityHelper.getEntityInfo(fieldType).getPrimaryKeys().stream()
-              .map(EntityColumn::getName)
-              .collect(joining("_"));
-      return camelToUnderline(fieldType.getSimpleName().concat("_").concat(primaryKeys));
+          entityInfo.getPrimaryKeys().stream().map(EntityColumn::getName).collect(joining("_"));
+      return camelToUnderline(entityInfo.getName().concat("_").concat(primaryKeys));
     }
-    final Field referenceField = BeanUtils.getDeclaredField(fieldType, reference);
-    if (referenceField == null) {
-      throw CommonException.of("Invalid mapping field " + reference);
+    final Field referField =
+        entityInfo.getFieldColumnMap().keySet().stream()
+            .filter(f -> f.getName().equals(targetField))
+            .findFirst()
+            .orElse(null);
+    if (referField == null) {
+      throw SimpleException.of("Invalid mapping field " + targetField);
     }
-    return camelToUnderline(
-        fieldType.getSimpleName().concat("_").concat(fieldToColumn(referenceField)));
+    final String column = fieldToColumn(referField, true);
+    return column == null
+        ? null
+        : camelToUnderline(entityInfo.getName().concat("_").concat(column));
   }
 
   /**

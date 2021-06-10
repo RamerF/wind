@@ -226,7 +226,7 @@ public class EntityColumn {
     final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
     final Class<?> fieldType = field.getType();
     if (manyToOne != null) {
-      final String referenceField = manyToOne.referenceField();
+      final String referenceField = manyToOne.targetField();
       if (!referenceField.equals("")) {
         return Objects.requireNonNull(
             BeanUtils.getDeclaredField(fieldType, referenceField),
@@ -234,7 +234,7 @@ public class EntityColumn {
       }
     } else {
       final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      final String referenceField = oneToOne.referenceField();
+      final String referenceField = oneToOne.targetField();
       if (!referenceField.equals("")) {
         return Objects.requireNonNull(
             BeanUtils.getDeclaredField(fieldType, referenceField),

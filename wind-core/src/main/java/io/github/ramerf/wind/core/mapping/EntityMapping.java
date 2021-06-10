@@ -3,14 +3,15 @@ package io.github.ramerf.wind.core.mapping;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.support.EntityInfo;
-import io.github.ramerf.wind.core.util.*;
-import java.lang.reflect.*;
+import io.github.ramerf.wind.core.util.BeanUtils;
+import io.github.ramerf.wind.core.util.StringUtils;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.Data;
 
-import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -33,11 +34,6 @@ public class EntityMapping {
     return infos.stream().filter(o -> o.field.equals(field)).findFirst();
   }
 
-  public static Optional<MappingInfo> get(@Nonnull Class<?> clazz, final Class<?> referenceClazz) {
-    final List<MappingInfo> infos = ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
-    return infos.stream().filter(o -> o.referenceClazz.equals(referenceClazz)).findFirst();
-  }
-
   public static void put(@Nonnull Class<?> clazz, @Nonnull final MappingInfo mappingInfo) {
     ENTITY_MAPPING.merge(
         clazz,
@@ -57,7 +53,7 @@ public class EntityMapping {
     final List<MappingInfo> mappingInfos =
         BeanUtils.retrievePrivateFields(clazz, ArrayList::new).stream()
             .filter(MappingInfo::isValidMapping)
-            .map(MappingInfo::of)
+            .map(MappingType::getMappingInfo)
             .collect(toList());
     put(clazz, mappingInfos);
     entityInfo.setMappingInfos(mappingInfos);
@@ -74,10 +70,10 @@ public class EntityMapping {
                     .getMappingInfos()
                     .forEach(
                         mappingInfo -> {
-                          if (mappingInfo.referenceColumn == null) {
+                          if (mappingInfo.targetColumn == null) {
                             return;
                           }
-                          final Class<?> referenceClazz = mappingInfo.getReferenceClazz();
+                          final Class<?> referenceClazz = mappingInfo.getTargetClazz();
                           final EntityInfo referenceEntityInfo = map.get(referenceClazz);
                           if (referenceEntityInfo == null) {
                             throw new IllegalStateException(
@@ -96,78 +92,46 @@ public class EntityMapping {
                               referenceEntityInfo.getEntityColumns().stream()
                                   .filter(
                                       column ->
-                                          column.getName().equals(mappingInfo.getReferenceColumn()))
+                                          column.getName().equals(mappingInfo.getTargetColumn()))
                                   .findFirst();
-                          if (!optional.isPresent()) {
-                            throw new IllegalStateException(
-                                String.format(
-                                    "The %s reference column [%s], but not found in %s",
-                                    entityInfo.getClazz().getName(),
-                                    mappingInfo.getReferenceColumn(),
-                                    referenceClazz.getName()));
-                          }
+                          // throw new IllegalStateException(
+                          //     String.format(
+                          //         "The %s reference column [%s], but not found in %s",
+                          //         entityInfo.getClazz().getName(),
+                          //         mappingInfo.getReferenceColumn(),
+                          //         referenceClazz.getName()));
                           // 更新关联关系
-                          mappingInfo.setReferenceField(optional.get().getField());
+                          optional.ifPresent(
+                              column -> mappingInfo.setTargetField(column.getField()));
                         }));
   }
 
   @Data
   public static class MappingInfo {
-    /* 示例 One 一对多关联 Many.Many表中添加one_id字段关联One表id列,One的关联关系. */
-    /** 当前对象.如:One.class */
+    /* 示例 Many多对一关联 One.Many表中添加one_id字段关联One表id列,One的关联关系. */
+    /** 当前对象.如:Many.class */
     private Class<?> clazz;
-    /** 当前对象关联对方的字段.如:<code>private List&lt;Many&gt; many;</code> */
+    /** 当前对象关联对方的字段.如:<code>private One one;</code> */
     private Field field;
 
-    /** 当前对象的列.如:id */
+    /** 当前对象的列.如:one_id */
     private String column;
 
-    /** 关联对象的列.如:one_id */
-    private String referenceColumn;
+    /** 关联对象的列,n对多时为空.如:id */
+    private String targetColumn;
 
-    /** 关联对象的字段.如:<code>private One one;</code> */
-    private Field referenceField;
+    /** 关联对象的字段,n对多时为空.如:<code>private Long id;</code> */
+    private Field targetField;
 
-    /** 关联对象.如:Many.class */
-    private Class<?> referenceClazz;
+    /** 关联对象.如:One.class */
+    private Class<?> targetClazz;
 
     /** 引用定义.预留字段. */
-    private String referenceDdlDefinition;
+    private String targetDdlDefinition;
 
     private MappingType mappingType;
 
-    private MappingInfo() {}
-
-    @SuppressWarnings("unchecked")
-    private static <T, E> MappingInfo of(final Field field) {
-      final MappingInfo mappingInfo = new MappingInfo();
-      mappingInfo.setClazz(field.getDeclaringClass());
-      mappingInfo.setField(field);
-      mappingInfo.setMappingType(MappingType.of(field));
-      mappingInfo.setColumn(EntityUtils.fieldToColumn(field));
-      if (isManyMapping(field)) {
-        final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-        mappingInfo.setReferenceClazz((Class<E>) type);
-        return mappingInfo;
-      }
-
-      mappingInfo.setReferenceClazz(field.getType());
-      final String joinColumnName;
-      final String reference;
-      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      if (oneToOne != null) {
-        joinColumnName = oneToOne.joinColumnName();
-        reference = oneToOne.referenceField();
-      } else {
-        final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-        joinColumnName = manyToOne.joinColumnName();
-        reference = manyToOne.referenceField();
-      }
-      // 手动指定关联列名
-      if (!"".equals(joinColumnName)) mappingInfo.setReferenceColumn(joinColumnName);
-      else mappingInfo.setReferenceColumn(camelToUnderline(reference));
-      return mappingInfo;
-    }
+    protected MappingInfo() {}
 
     /** 是否是1对N/N对N映射.true:是 */
     public static boolean isManyMapping(final Field field) {
@@ -195,8 +159,11 @@ public class EntityMapping {
 
     /** 获取默认关联的主键. */
     private static String getMappingPrimaryKey(final Field field) {
-
       return StringUtils.camelToUnderline(field.getName());
+    }
+
+    public <T> T getMappingObject(final Object object, final Object mappingValue) {
+      return this.mappingType.fetchMapping(object, this, mappingValue);
     }
   }
 

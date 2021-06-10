@@ -27,19 +27,19 @@ public class CommonException extends RuntimeException {
     return new CommonException(cause);
   }
 
-  private CommonException() {
+  protected CommonException() {
     super();
   }
 
-  private CommonException(final String message) {
+  protected CommonException(final String message) {
     super(message);
   }
 
-  private CommonException(final String message, final Throwable cause) {
+  protected CommonException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  private CommonException(final Throwable cause) {
+  protected CommonException(final Throwable cause) {
     super(cause);
   }
 }

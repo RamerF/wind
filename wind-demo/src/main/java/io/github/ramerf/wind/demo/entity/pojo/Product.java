@@ -34,7 +34,7 @@ public class Product extends Domain<Product, String> {
 
   @TableColumn(defaultValue = "false")
   private boolean deleted;
-  /** 双向. */
+
   @OneToMany private List<ProductSku> skuses;
 
   public enum Type implements InterEnum<Integer> {
