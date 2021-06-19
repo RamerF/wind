@@ -15,7 +15,10 @@ import lombok.*;
  * @author ramer
  * @since 2019/12/16
  */
-@TableInfo(name = "foo", comment = "测试表", logicDelete = @LogicDelete(fieldName = "hasDeleted"))
+@TableInfo(
+    name = "foo",
+    comment = "测试表",
+    logicDelete = @LogicDelete(enable = true, fieldName = "hasDeleted"))
 @Data
 @Builder
 @NoArgsConstructor

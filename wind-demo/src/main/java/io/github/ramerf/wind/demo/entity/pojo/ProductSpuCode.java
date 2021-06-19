@@ -11,7 +11,7 @@ import lombok.*;
  * @author ramer
  * @since 2020.09.30
  */
-@TableInfo
+@TableInfo(logicDelete = @LogicDelete(enable = false))
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,7 +24,7 @@ public class ProductSpuCode extends Domain<ProductSpuCode, Long> {
   @TableColumn(defaultValue = "0")
   private long code;
 
-  @OneToOne(field = "code", shouldJoinColumn = false)
+  @OneToOne(targetField = "productSpuCode", shouldJoinColumn = false)
   private ProductSpu productSpu;
 
   @OneToOne private Product product;

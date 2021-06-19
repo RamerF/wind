@@ -4,12 +4,8 @@ import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
-import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
-import io.github.ramerf.wind.core.mapping.MappingType;
-import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
@@ -146,33 +142,11 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
     return getQuery().fetchOneBySql(sql, respClazz, args);
   }
 
-  // 关联查询暂不开启,使用IConsumer入参
+  /** 关联查询暂不开启,使用IConsumer入参 */
   default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> function) {
-    final Field field = function.getField();
-    final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field);
-    if (!optional.isPresent()) {
-      return null;
-    }
-    final MappingInfo mappingInfo = optional.get();
-    if (mappingInfo.getMappingType().equals(MappingType.ONE_TO_MANY)) {
-      final Class<?> referenceClazz = mappingInfo.getTargetClazz();
-      final List<MappingInfo> referMappingInfo = EntityMapping.get(referenceClazz);
-
-      final Object relationValue = BeanUtils.getValue(t, mappingInfo.getField(), null);
-      return mappingInfo.getMappingObject(t, relationValue);
-    }
-    if (mappingInfo.getMappingType().equals(MappingType.MANY_TO_ONE)) {
-      final Object relationValue = BeanUtils.getValue(t, mappingInfo.getField(), null);
-      return mappingInfo.getMappingObject(t, relationValue);
-    }
-    // TODO WARN 这里有问题，可能没有保存对面的字段
-    final R mappingObj = function.apply(t);
-    if (mappingObj == null) {
-      return null;
-    }
-    final Object relationValue =
-        BeanUtils.getValue(mappingObj, mappingInfo.getTargetField(), null);
-    return mappingInfo.getMappingObject(t, relationValue);
+    return EntityMapping.get(t.getClass(), function.getField())
+        .<R>map(mappingInfo -> mappingInfo.getMappingObject(t))
+        .orElse(null);
   }
 
   /**

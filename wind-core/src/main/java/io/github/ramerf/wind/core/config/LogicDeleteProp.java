@@ -42,7 +42,7 @@ public class LogicDeleteProp {
   public static LogicDeleteProp of(
       final TableInfo tableInfo, @Nonnull final WindConfiguration configuration) {
     LogicDelete logicDelete;
-    // 如果fieldName为空,说明未指定该属性,使用全局配置
+    // 如果fieldName为默认值XX_FIELD_NAME_XX,说明未指定该属性,使用全局配置
     if (tableInfo == null || (logicDelete = tableInfo.logicDelete()).fieldName().equals("")) {
       return of(configuration);
     }

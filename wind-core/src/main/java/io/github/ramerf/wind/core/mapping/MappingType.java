@@ -39,8 +39,9 @@ public enum MappingType {
   /** The One to one. */
   ONE_TO_ONE {
     @Override
-    public <T, E> T fetchMapping(
-        final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
+    public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
+      // TODO WARN 解析匹配值
+
       final Class<T> fetchClazz = (Class<T>) mappingInfo.getTargetClazz();
       final QueryColumn<T> queryColumn = QueryColumn.fromClass(fetchClazz);
       final StringCondition<T> stringCondition = StringCondition.getInstance(queryColumn);
@@ -79,7 +80,7 @@ public enum MappingType {
         return mappingInfo;
       }
       final OneToOne targetOneToOne = targetField.getAnnotation(OneToOne.class);
-      if (!targetOneToOne.shouldJoinColumn()) {
+      if (targetOneToOne == null || !targetOneToOne.shouldJoinColumn()) {
         throw new IllegalStateException(
             String.format(
                 "%s %s should one and only one field with shouldJoinColumn specified",
@@ -100,8 +101,7 @@ public enum MappingType {
   /** 一对多,多的一方必须关联一的一方. */
   ONE_TO_MANY {
     @Override
-    public <T, E> T fetchMapping(
-        final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
+    public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
       final Class<?> referenceClazz = mappingInfo.getTargetClazz();
       // 必须关联一的一方
       final Optional<MappingInfo> infactOpt =
@@ -149,8 +149,7 @@ public enum MappingType {
   /** The Many to one. */
   MANY_TO_ONE {
     @Override
-    public <T, E> T fetchMapping(
-        final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
+    public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
       final Class<?> type = mappingInfo.getTargetClazz();
       final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
       final StringCondition<E> stringCondition = StringCondition.getInstance(queryColumn);
@@ -180,34 +179,19 @@ public enum MappingType {
       final Field targetField;
       final Field idField = EntityHelper.getEntityIdField(targetClazz);
       if (idField == null) {
-        throw new IllegalStateException(String.format("no id defined in %s", targetClazz));
+        throw new IllegalStateException(String.format("no primary key defined in %s", targetClazz));
       }
       if (!"".equals(targetFieldStr)) {
         targetField = BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), targetFieldStr);
       } else {
         targetField = idField;
       }
-      Objects.requireNonNull(targetField, "target field could not null");
+      Objects.requireNonNull(
+          targetField,
+          String.format(
+              "%s %s's target field could not null",
+              field.getDeclaringClass().getName(), field.getName()));
       mappingInfo.setTargetField(targetField);
-      if (mappingInfo.isShouldJoinColumn()) {
-        return mappingInfo;
-      }
-      final OneToOne targetOneToOne = targetField.getAnnotation(OneToOne.class);
-      if (!targetOneToOne.shouldJoinColumn()) {
-        throw new IllegalStateException(
-            String.format(
-                "%s %s should one and only one field with shouldJoinColumn specified",
-                field.getDeclaringClass().getName(), field.getName()));
-      }
-      String targetJoinColumn = targetOneToOne.joinColumn();
-      if (!"".equals(targetJoinColumn)) {
-        mappingInfo.setTargetColumn(targetJoinColumn);
-      } else if (idField.equals(targetField)) {
-        mappingInfo.setTargetColumn(
-            EntityUtils.getTableName(targetClazz) + "_" + EntityUtils.fieldToColumn(idField, true));
-      } else {
-        mappingInfo.setTargetColumn(EntityUtils.fieldToColumn(targetField, true));
-      }
       return mappingInfo;
     }
   },
@@ -224,8 +208,7 @@ public enum MappingType {
   /** The None. */
   NONE {
     @Override
-    public <T, E> T fetchMapping(
-        final E poJo, final MappingInfo mappingInfo, final Object relationValue) {
+    public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
       return null;
     }
 
@@ -245,8 +228,7 @@ public enum MappingType {
    * @param relationValue the relation value
    * @return the t
    */
-  public abstract <T, E> T fetchMapping(
-      final E poJo, final MappingInfo mappingInfo, final Object relationValue);
+  public abstract <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo);
 
   abstract MappingInfo populateMappingInfo(final Field field);
 

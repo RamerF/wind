@@ -23,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface OneToOne {
   /** 当前对象属性名.默认[属性类型 + 主键{@link Id}],如:fooId */
-  String field() default "";
+  // String field() default "";
 
   /** 关联对象属性名.默认关联主键 TODO WARN 关联对象的属性可能不存在，因为可能是自己维护关系 */
   String targetField() default "";

@@ -165,8 +165,8 @@ public class EntityMapping {
       return StringUtils.camelToUnderline(field.getName());
     }
 
-    public <T> T getMappingObject(final Object object, final Object mappingValue) {
-      return this.mappingType.fetchMapping(object, this, mappingValue);
+    public <T> T getMappingObject(final Object object) {
+      return this.mappingType.fetchMapping(object, this);
     }
   }
 

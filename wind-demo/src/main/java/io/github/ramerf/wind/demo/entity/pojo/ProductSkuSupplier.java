@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
-import io.github.ramerf.wind.core.annotation.ManyToOne;
-import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.pojo.Domain;
 import javax.persistence.Id;
 import lombok.*;
@@ -10,7 +9,7 @@ import lombok.*;
  * @author ramer
  * @since 12/09/2020
  */
-@TableInfo
+@TableInfo(logicDelete = @LogicDelete(enable = false))
 @Data
 @Builder
 @NoArgsConstructor

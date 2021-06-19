@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -502,26 +501,6 @@ public class StringCondition<T> extends AbstractCondition<T> {
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
       values.forEach(value -> valueTypes.add(ValueType.of(value)));
-    }
-    return this;
-  }
-
-  /** 用于关联对象. */
-  public StringCondition<T> eq(@Nonnull final MappingInfo mappingInfo, final Object value) {
-    return eq(true, mappingInfo, value);
-  }
-
-  public StringCondition<T> eq(
-      final boolean condition, @Nonnull final MappingInfo mappingInfo, final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(mappingInfo.getTargetColumn())
-              .concat(EQUAL.operator)
-              .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, mappingInfo.getTargetField()));
     }
     return this;
   }

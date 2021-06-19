@@ -14,11 +14,11 @@ import java.lang.annotation.*;
 public @interface LogicDelete {
 
   /**
-   * 是否支持逻辑删除,默认启用(true),设置为false时将不支持逻辑删除功能.
+   * 是否支持逻辑删除,默认禁用(false),设置为true时支持逻辑删除功能.
    *
    * @return the boolean
    */
-  boolean enable() default false;
+  boolean enable();
 
   /**
    * 逻辑删除java字段名,最终以下划线形式对应数据库列,糟了😥,这里有问题,如果数据库列名不是下划线形式就洗白了,哈哈.
@@ -27,7 +27,7 @@ public @interface LogicDelete {
    *
    * @return the string
    */
-  String fieldName();
+  String fieldName() default "XX_FIELD_NAME_XX";
 
   /**
    * 逻辑已删除值.

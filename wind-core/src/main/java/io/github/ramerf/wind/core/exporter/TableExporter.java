@@ -94,7 +94,6 @@ public class TableExporter {
 
     final String columnDefinition =
         updateColumns.stream()
-            .filter(EntityColumn::isSupported)
             .map(column -> " add column " + column.getColumnDdl(dialect))
             .collect(Collectors.joining(",\n\t"));
     sql.append(columnDefinition);
@@ -108,7 +107,7 @@ public class TableExporter {
               .collect(Collectors.joining(";\n\t"));
       sql.append(";\n\t").append(columnComment);
     }
-    log.info("updateTable:[\n{}\n]", sql.toString());
+    log.info("updateTable:[\n{}\n]", sql);
     windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
@@ -121,6 +120,7 @@ public class TableExporter {
             column ->
                 existColumns.stream()
                     .noneMatch(existColumn -> existColumn.getName().equals(column.getName())))
+        .filter(EntityColumn::isSupported)
         .collect(Collectors.toList());
   }
 }

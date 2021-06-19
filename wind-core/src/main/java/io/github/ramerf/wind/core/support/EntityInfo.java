@@ -103,7 +103,8 @@ public final class EntityInfo {
 
     List<EntityColumn> primaryKeys = new ArrayList<>();
     Set<EntityColumn> entityColumns = new HashSet<>();
-    final String logicDeletePropName = entityInfo.getLogicDeleteProp().getFieldName();
+    final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
+    final String logicDeletePropName = logicDeleteProp.getFieldName();
     for (Field field : columnFields) {
       // 创建/更新时间
       if (field.getAnnotation(CreateTimestamp.class) != null) {
@@ -134,6 +135,12 @@ public final class EntityInfo {
     if (entityInfo.getIdColumn() == null) {
       throw new IllegalStateException(
           "Not found Identity for " + entityInfo.getName() + ".Define the @Id field.");
+    }
+    if (logicDeleteProp.isEnable() && entityInfo.getLogicDeletePropColumn() == null) {
+      throw new IllegalStateException(
+          String.format(
+              "Not found logic delete prop [%s] for %s",
+              logicDeleteProp.getFieldName(), entityInfo.getName()));
     }
     entityInfo.setPrimaryKeys(primaryKeys);
     entityInfo.setEntityColumns(new ArrayList<>(entityColumns));
