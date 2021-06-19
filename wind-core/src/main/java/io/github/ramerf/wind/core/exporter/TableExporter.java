@@ -74,7 +74,7 @@ public class TableExporter {
         sql.append(";\n\t").append(tableComment);
       }
     }
-    log.info("createTable:[\n{}\n]", sql.toString());
+    log.info("createTable:[\n{}\n]", sql);
     windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 

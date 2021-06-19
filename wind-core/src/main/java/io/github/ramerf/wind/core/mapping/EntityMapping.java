@@ -129,6 +129,9 @@ public class EntityMapping {
     /** 引用定义.预留字段. */
     private String targetDdlDefinition;
 
+    /** 是否添加列. */
+    private boolean shouldJoinColumn;
+
     private MappingType mappingType;
 
     protected MappingInfo() {}

@@ -108,6 +108,7 @@ public class EntityColumn {
     }
     entityColumn.type = parseField.getGenericType();
 
+    // TODO WARN 关联列需要处理
     final TableColumn tableColumn = parseField.getAnnotation(TableColumn.class);
     if (dialect.isSupportJavaType(entityColumn.type)
         || (entityColumn.type instanceof Class

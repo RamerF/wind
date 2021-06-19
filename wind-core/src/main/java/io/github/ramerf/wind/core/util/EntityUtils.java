@@ -235,7 +235,7 @@ public final class EntityUtils {
     // 普通字段判断TableColumn注解
     if (!depth || BeanUtils.isPrimitiveType(fieldType) || !MappingInfo.isValidMapping(field)) {
       final TableColumn column = field.getAnnotation(TableColumn.class);
-      return column != null && StringUtils.nonEmpty(column.name())
+      return column != null && !"".equals(column.name())
           ? column.name()
           : camelToUnderline(field.getName());
     }

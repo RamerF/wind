@@ -9,7 +9,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * 指定一对一映射.可选添加关联列{@link #shouldJoinColumn()}.
+ * 指定一对一映射.可选添加关联列{@link #shouldJoinColumn()},shouldJoinColumn必须有且仅有一个为true.
  *
  * <p><b>新增列定义和关联属性保持一致,所以使用{@link TableColumn}指定列定义将不会生效</b>.
  *
@@ -25,12 +25,12 @@ public @interface OneToOne {
   /** 当前对象属性名.默认[属性类型 + 主键{@link Id}],如:fooId */
   String field() default "";
 
-  /** 关联对象属性名(非列名).默认关联主键 TODO WARN 关联对象的属性可能不存在，因为可能是自己维护关系 */
+  /** 关联对象属性名.默认关联主键 TODO WARN 关联对象的属性可能不存在，因为可能是自己维护关系 */
   String targetField() default "";
 
   /** 是否新增列. */
   boolean shouldJoinColumn() default true;
 
-  /** 当{@link #shouldJoinColumn()}为true时添加的列名,默认:下划线[类型_{@link #targetField()}]. */
+  /** 当{@link #shouldJoinColumn()}为true时当前表添加的列名,默认:下划线[类型_{@link #targetField()}]. */
   String joinColumn() default "";
 }

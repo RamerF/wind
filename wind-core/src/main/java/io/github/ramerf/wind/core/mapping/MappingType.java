@@ -7,7 +7,8 @@ import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
-import io.github.ramerf.wind.core.util.*;
+import io.github.ramerf.wind.core.util.BeanUtils;
+import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.*;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,47 +52,49 @@ public enum MappingType {
 
     @Override
     MappingInfo populateMappingInfo(final Field field) {
-      // TODO WARN 从这里开始
       final MappingInfo mappingInfo = new MappingInfo();
       mappingInfo.setMappingType(this);
       mappingInfo.setClazz(field.getDeclaringClass());
       mappingInfo.setField(field);
       mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
-
-      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      String joinColumn = oneToOne.joinColumn();
-      if (StringUtils.nonEmpty(joinColumn)) {
-        mappingInfo.setTargetColumn(joinColumn);
-      }
-      final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-      final Class<?> targetClazz = (Class<?>) type;
+      final Class<?> targetClazz = field.getType();
       mappingInfo.setTargetClazz(targetClazz);
 
-      final Class<?> referenceClazz = field.getType();
-      mappingInfo.setTargetClazz(referenceClazz);
-      final String joinColumnName;
-      final String referenceField;
-      if (oneToOne != null) {
-        joinColumnName = oneToOne.joinColumn();
-        referenceField = oneToOne.targetField();
-      } else {
-        final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-        joinColumnName = manyToOne.joinColumn();
-        referenceField = manyToOne.targetField();
+      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+      mappingInfo.setShouldJoinColumn(oneToOne.shouldJoinColumn());
+      final String targetFieldStr = oneToOne.targetField();
+      final Field targetField;
+      final Field idField = EntityHelper.getEntityIdField(targetClazz);
+      if (idField == null) {
+        throw new IllegalStateException(String.format("no id defined in %s", targetClazz));
       }
-      if (!"".equals(joinColumnName)) mappingInfo.setTargetColumn(joinColumnName);
-      else if (!"".equals(referenceField)) {
+      if (!"".equals(targetFieldStr)) {
+        targetField = BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), targetFieldStr);
+      } else {
+        targetField = idField;
+      }
+      Objects.requireNonNull(targetField, "target field could not null");
+      mappingInfo.setTargetField(targetField);
+      if (mappingInfo.isShouldJoinColumn()) {
+        return mappingInfo;
+      }
+      final OneToOne targetOneToOne = targetField.getAnnotation(OneToOne.class);
+      if (!targetOneToOne.shouldJoinColumn()) {
+        throw new IllegalStateException(
+            String.format(
+                "%s %s should one and only one field with shouldJoinColumn specified",
+                field.getDeclaringClass().getName(), field.getName()));
+      }
+      String targetJoinColumn = targetOneToOne.joinColumn();
+      if (!"".equals(targetJoinColumn)) {
+        mappingInfo.setTargetColumn(targetJoinColumn);
+      } else if (idField.equals(targetField)) {
         mappingInfo.setTargetColumn(
-            EntityUtils.fieldToColumn(
-                Objects.requireNonNull(
-                    BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), referenceField)),
-                true));
-      } else
-        mappingInfo.setTargetColumn(
-            EntityUtils.getTableName(targetClazz)
-                + "_"
-                + EntityUtils.fieldToColumn(EntityHelper.getEntityIdField(targetClazz), true));
-      return null;
+            EntityUtils.getTableName(targetClazz) + "_" + EntityUtils.fieldToColumn(idField, true));
+      } else {
+        mappingInfo.setTargetColumn(EntityUtils.fieldToColumn(targetField, true));
+      }
+      return mappingInfo;
     }
   },
   /** 一对多,多的一方必须关联一的一方. */
@@ -125,22 +128,21 @@ public enum MappingType {
       mappingInfo.setClazz(field.getDeclaringClass());
       mappingInfo.setField(field);
       mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
-
-      final OneToMany oneToMany = field.getAnnotation(OneToMany.class);
-      String joinColumn = oneToMany.joinColumn();
-      if (StringUtils.nonEmpty(joinColumn)) {
-        mappingInfo.setTargetColumn(joinColumn);
-      }
       final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
       final Class<?> targetClazz = (Class<?>) type;
       mappingInfo.setTargetClazz(targetClazz);
+
+      final OneToMany oneToMany = field.getAnnotation(OneToMany.class);
+      String joinColumn = oneToMany.joinColumn();
       // 手动指定关联列名
-      if (!"".equals(joinColumn)) mappingInfo.setTargetColumn(joinColumn);
-      else
+      if (!"".equals(joinColumn)) {
+        mappingInfo.setTargetColumn(joinColumn);
+      } else {
         mappingInfo.setTargetColumn(
             EntityUtils.getTableName(targetClazz)
                 + "_"
                 + EntityUtils.fieldToColumn(EntityHelper.getEntityIdField(targetClazz), true));
+      }
       return mappingInfo;
     }
   },
@@ -163,7 +165,50 @@ public enum MappingType {
 
     @Override
     MappingInfo populateMappingInfo(final Field field) {
-      return null;
+      // TODO WARN 从这里开始
+      final MappingInfo mappingInfo = new MappingInfo();
+      mappingInfo.setMappingType(this);
+      mappingInfo.setClazz(field.getDeclaringClass());
+      mappingInfo.setField(field);
+      mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
+      final Class<?> targetClazz = field.getType();
+      mappingInfo.setTargetClazz(targetClazz);
+      mappingInfo.setShouldJoinColumn(true);
+
+      final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+      final String targetFieldStr = manyToOne.targetField();
+      final Field targetField;
+      final Field idField = EntityHelper.getEntityIdField(targetClazz);
+      if (idField == null) {
+        throw new IllegalStateException(String.format("no id defined in %s", targetClazz));
+      }
+      if (!"".equals(targetFieldStr)) {
+        targetField = BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), targetFieldStr);
+      } else {
+        targetField = idField;
+      }
+      Objects.requireNonNull(targetField, "target field could not null");
+      mappingInfo.setTargetField(targetField);
+      if (mappingInfo.isShouldJoinColumn()) {
+        return mappingInfo;
+      }
+      final OneToOne targetOneToOne = targetField.getAnnotation(OneToOne.class);
+      if (!targetOneToOne.shouldJoinColumn()) {
+        throw new IllegalStateException(
+            String.format(
+                "%s %s should one and only one field with shouldJoinColumn specified",
+                field.getDeclaringClass().getName(), field.getName()));
+      }
+      String targetJoinColumn = targetOneToOne.joinColumn();
+      if (!"".equals(targetJoinColumn)) {
+        mappingInfo.setTargetColumn(targetJoinColumn);
+      } else if (idField.equals(targetField)) {
+        mappingInfo.setTargetColumn(
+            EntityUtils.getTableName(targetClazz) + "_" + EntityUtils.fieldToColumn(idField, true));
+      } else {
+        mappingInfo.setTargetColumn(EntityUtils.fieldToColumn(targetField, true));
+      }
+      return mappingInfo;
     }
   },
 
@@ -186,46 +231,6 @@ public enum MappingType {
 
     @Override
     MappingInfo populateMappingInfo(final Field field) {
-      // final MappingInfo mappingInfo = new MappingInfo();
-      // mappingInfo.setMappingType(this);
-      // mappingInfo.setClazz(field.getDeclaringClass());
-      // mappingInfo.setField(field);
-      // mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
-      //
-      // final OneToMany oneToMany = field.getAnnotation(OneToMany.class);
-      // String joinColumn = oneToMany.joinColumn();
-      // if (StringUtils.nonEmpty(joinColumn)) {
-      //   mappingInfo.setTargetColumn(joinColumn);
-      // }
-      // final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-      // final Class<?> targetClazz = (Class<?>) type;
-      // mappingInfo.setTargetClazz(targetClazz);
-      //
-      // final Class<?> referenceClazz = field.getType();
-      // mappingInfo.setTargetClazz(referenceClazz);
-      // final String joinColumnName;
-      // final String referenceField;
-      // final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      // if (oneToOne != null) {
-      //   joinColumnName = oneToOne.joinColumnName();
-      //   referenceField = oneToOne.targetField();
-      // } else {
-      //   final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-      //   joinColumnName = manyToOne.joinColumn();
-      //   referenceField = manyToOne.targetField();
-      // }
-      // if (!"".equals(joinColumnName)) mappingInfo.setTargetColumn(joinColumnName);
-      // else if (!"".equals(referenceField)) {
-      //   mappingInfo.setTargetColumn(
-      //       EntityUtils.fieldToColumn(
-      //           Objects.requireNonNull(
-      //               BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), referenceField)),
-      //           true));
-      // } else
-      //   mappingInfo.setTargetColumn(
-      //       EntityUtils.getTableName(targetClazz)
-      //           + "_"
-      //           + EntityUtils.fieldToColumn(EntityHelper.getEntityIdField(targetClazz), true));
       return null;
     }
   },
@@ -265,10 +270,11 @@ public enum MappingType {
     if (field.isAnnotationPresent(ManyToOne.class)) {
       return MANY_TO_ONE;
     }
-    // if (field.isAnnotationPresent(ManyToMany.class)) {
-    //   throw CommonException.of("方法不支持");
-    // return MANY_TO_MANY;
-    // }
+    /* 后续可能会支持
+    if (field.isAnnotationPresent(ManyToMany.class)) {
+      throw CommonException.of("方法不支持");
+      return MANY_TO_MANY;
+    }*/
     return NONE;
   }
 }
