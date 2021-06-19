@@ -51,6 +51,46 @@ public enum MappingType {
 
     @Override
     MappingInfo populateMappingInfo(final Field field) {
+      // TODO WARN 从这里开始
+      final MappingInfo mappingInfo = new MappingInfo();
+      mappingInfo.setMappingType(this);
+      mappingInfo.setClazz(field.getDeclaringClass());
+      mappingInfo.setField(field);
+      mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
+
+      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+      String joinColumn = oneToOne.joinColumn();
+      if (StringUtils.nonEmpty(joinColumn)) {
+        mappingInfo.setTargetColumn(joinColumn);
+      }
+      final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+      final Class<?> targetClazz = (Class<?>) type;
+      mappingInfo.setTargetClazz(targetClazz);
+
+      final Class<?> referenceClazz = field.getType();
+      mappingInfo.setTargetClazz(referenceClazz);
+      final String joinColumnName;
+      final String referenceField;
+      if (oneToOne != null) {
+        joinColumnName = oneToOne.joinColumn();
+        referenceField = oneToOne.targetField();
+      } else {
+        final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+        joinColumnName = manyToOne.joinColumn();
+        referenceField = manyToOne.targetField();
+      }
+      if (!"".equals(joinColumnName)) mappingInfo.setTargetColumn(joinColumnName);
+      else if (!"".equals(referenceField)) {
+        mappingInfo.setTargetColumn(
+            EntityUtils.fieldToColumn(
+                Objects.requireNonNull(
+                    BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), referenceField)),
+                true));
+      } else
+        mappingInfo.setTargetColumn(
+            EntityUtils.getTableName(targetClazz)
+                + "_"
+                + EntityUtils.fieldToColumn(EntityHelper.getEntityIdField(targetClazz), true));
       return null;
     }
   },
@@ -91,36 +131,16 @@ public enum MappingType {
       if (StringUtils.nonEmpty(joinColumn)) {
         mappingInfo.setTargetColumn(joinColumn);
       }
-      // TODO WARN 从这里开始
       final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-      mappingInfo.setTargetClazz((Class<?>) type);
-
-      final Class<?> referenceClazz = field.getType();
-      mappingInfo.setTargetClazz(referenceClazz);
-      final String joinColumnName;
-      final String referenceField;
-      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      if (oneToOne != null) {
-        joinColumnName = oneToOne.joinColumnName();
-        referenceField = oneToOne.targetField();
-      } else {
-        final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-        joinColumnName = manyToOne.joinColumn();
-        referenceField = manyToOne.targetField();
-      }
+      final Class<?> targetClazz = (Class<?>) type;
+      mappingInfo.setTargetClazz(targetClazz);
       // 手动指定关联列名
-      if (!"".equals(joinColumnName)) mappingInfo.setTargetColumn(joinColumnName);
-      else if (!"".equals(referenceField)) {
+      if (!"".equals(joinColumn)) mappingInfo.setTargetColumn(joinColumn);
+      else
         mappingInfo.setTargetColumn(
-            EntityUtils.fieldToColumn(
-                Objects.requireNonNull(
-                    BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), referenceField)),
-                true));
-      } else
-        mappingInfo.setTargetColumn(
-            EntityUtils.getTableName(referenceClazz)
+            EntityUtils.getTableName(targetClazz)
                 + "_"
-                + EntityUtils.fieldToColumn(EntityHelper.getEntityIdField(referenceClazz), true));
+                + EntityUtils.fieldToColumn(EntityHelper.getEntityIdField(targetClazz), true));
       return mappingInfo;
     }
   },
@@ -166,6 +186,46 @@ public enum MappingType {
 
     @Override
     MappingInfo populateMappingInfo(final Field field) {
+      // final MappingInfo mappingInfo = new MappingInfo();
+      // mappingInfo.setMappingType(this);
+      // mappingInfo.setClazz(field.getDeclaringClass());
+      // mappingInfo.setField(field);
+      // mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
+      //
+      // final OneToMany oneToMany = field.getAnnotation(OneToMany.class);
+      // String joinColumn = oneToMany.joinColumn();
+      // if (StringUtils.nonEmpty(joinColumn)) {
+      //   mappingInfo.setTargetColumn(joinColumn);
+      // }
+      // final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+      // final Class<?> targetClazz = (Class<?>) type;
+      // mappingInfo.setTargetClazz(targetClazz);
+      //
+      // final Class<?> referenceClazz = field.getType();
+      // mappingInfo.setTargetClazz(referenceClazz);
+      // final String joinColumnName;
+      // final String referenceField;
+      // final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+      // if (oneToOne != null) {
+      //   joinColumnName = oneToOne.joinColumnName();
+      //   referenceField = oneToOne.targetField();
+      // } else {
+      //   final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+      //   joinColumnName = manyToOne.joinColumn();
+      //   referenceField = manyToOne.targetField();
+      // }
+      // if (!"".equals(joinColumnName)) mappingInfo.setTargetColumn(joinColumnName);
+      // else if (!"".equals(referenceField)) {
+      //   mappingInfo.setTargetColumn(
+      //       EntityUtils.fieldToColumn(
+      //           Objects.requireNonNull(
+      //               BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), referenceField)),
+      //           true));
+      // } else
+      //   mappingInfo.setTargetColumn(
+      //       EntityUtils.getTableName(targetClazz)
+      //           + "_"
+      //           + EntityUtils.fieldToColumn(EntityHelper.getEntityIdField(targetClazz), true));
       return null;
     }
   },

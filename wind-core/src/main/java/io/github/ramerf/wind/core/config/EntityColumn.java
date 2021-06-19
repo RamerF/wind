@@ -102,7 +102,7 @@ public class EntityColumn {
     // OneToOne时,可能不会添加列
     if (oneMapping) {
       final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      if (oneToOne != null && !oneToOne.joinColumn()) {
+      if (oneToOne != null && !oneToOne.shouldJoinColumn()) {
         entityColumn.supported = false;
       }
     }

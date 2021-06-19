@@ -244,7 +244,7 @@ public final class EntityUtils {
     final String joinColumn;
     final String targetField;
     if (oneToOne != null) {
-      joinColumn = oneToOne.joinColumnName();
+      joinColumn = oneToOne.joinColumn();
       targetField = oneToOne.targetField();
     } else {
       final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
