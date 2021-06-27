@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import javax.persistence.Id;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -22,15 +21,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface OneToOne {
-  /** 当前对象属性名.默认[属性类型 + 主键{@link Id}],如:fooId */
-  // String field() default "";
 
-  /** 关联对象属性名.默认关联主键 TODO WARN 关联对象的属性可能不存在，因为可能是自己维护关系 */
+  /** 关联对象字段名.默认关联主键 */
   String targetField() default "";
 
-  /** 是否新增列. */
-  boolean shouldJoinColumn() default true;
-
-  /** 当{@link #shouldJoinColumn()}为true时当前表添加的列名,默认:下划线[类型_{@link #targetField()}]. */
-  String joinColumn() default "";
+  /** 当前对象的字段,使用该字段关联对方{@link #targetField()},默认:下划线[类型{@link #targetField()}]. */
+  String joinField() default "";
 }

@@ -21,4 +21,6 @@ public class ProductSkuSupplier extends Domain<ProductSkuSupplier, String> {
 
   /** 单向{@link ManyToOne}. */
   @ManyToOne private ProductSku productSku;
+
+  private Long productSkuId;
 }

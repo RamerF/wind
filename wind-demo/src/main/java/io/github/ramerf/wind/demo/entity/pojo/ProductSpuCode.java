@@ -24,8 +24,9 @@ public class ProductSpuCode extends Domain<ProductSpuCode, Long> {
   @TableColumn(defaultValue = "0")
   private long code;
 
-  @OneToOne(targetField = "productSpuCode", shouldJoinColumn = false)
+  @OneToOne(targetField = "spuCode", joinField = "code")
   private ProductSpu productSpu;
 
   @OneToOne private Product product;
+  private String productId;
 }

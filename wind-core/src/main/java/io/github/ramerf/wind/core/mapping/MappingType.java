@@ -3,16 +3,15 @@ package io.github.ramerf.wind.core.mapping;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.StringCondition;
-import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.BeanUtils;
-import io.github.ramerf.wind.core.util.EntityUtils;
+import io.github.ramerf.wind.core.util.StringUtils;
 import java.lang.reflect.*;
-import java.util.Objects;
-import java.util.Optional;
 import javax.annotation.Nonnull;
+
+import static io.github.ramerf.wind.core.util.EntityUtils.fieldToColumn;
 
 /**
  * The enum Mapping type.
@@ -36,88 +35,80 @@ import javax.annotation.Nonnull;
  */
 @SuppressWarnings({"unchecked", "DuplicatedCode"})
 public enum MappingType {
-  /** The One to one. */
   ONE_TO_ONE {
     @Override
     public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
-      // TODO WARN 解析匹配值
-
-      final Class<T> fetchClazz = (Class<T>) mappingInfo.getTargetClazz();
-      final QueryColumn<T> queryColumn = QueryColumn.fromClass(fetchClazz);
+      final Field joinField = mappingInfo.getJoinField();
+      final Class<T> targetClazz = mappingInfo.getTargetClazz();
+      final Object relationValue = BeanUtils.getValue(poJo, joinField, null);
+      final QueryColumn<T> queryColumn = QueryColumn.fromClass(targetClazz);
       final StringCondition<T> stringCondition = StringCondition.getInstance(queryColumn);
-      return Query.getInstance(fetchClazz)
+      return Query.getInstance(targetClazz)
           .select(queryColumn)
-          .where(stringCondition.eq(mappingInfo, relationValue))
-          .fetchOne(fetchClazz);
+          .where(stringCondition.eq(mappingInfo.getTargetColumn(), relationValue))
+          .fetchOne(targetClazz);
     }
 
     @Override
     MappingInfo populateMappingInfo(final Field field) {
       final MappingInfo mappingInfo = new MappingInfo();
       mappingInfo.setMappingType(this);
-      mappingInfo.setClazz(field.getDeclaringClass());
+      final Class<?> clazz = field.getDeclaringClass();
+      mappingInfo.setClazz(clazz);
       mappingInfo.setField(field);
-      mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
       final Class<?> targetClazz = field.getType();
       mappingInfo.setTargetClazz(targetClazz);
 
       final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      mappingInfo.setShouldJoinColumn(oneToOne.shouldJoinColumn());
       final String targetFieldStr = oneToOne.targetField();
       final Field targetField;
       final Field idField = EntityHelper.getEntityIdField(targetClazz);
       if (idField == null) {
-        throw new IllegalStateException(String.format("no id defined in %s", targetClazz));
+        throw new IllegalStateException(String.format("No id defined in %s", targetClazz));
       }
       if (!"".equals(targetFieldStr)) {
         targetField = BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), targetFieldStr);
       } else {
         targetField = idField;
       }
-      Objects.requireNonNull(targetField, "target field could not null");
+      if (targetField == null) {
+        throw new IllegalArgumentException(
+            String.format("%s %s's target field could not null", clazz.getName(), field.getName()));
+      }
       mappingInfo.setTargetField(targetField);
-      if (mappingInfo.isShouldJoinColumn()) {
-        return mappingInfo;
-      }
-      final OneToOne targetOneToOne = targetField.getAnnotation(OneToOne.class);
-      if (targetOneToOne == null || !targetOneToOne.shouldJoinColumn()) {
-        throw new IllegalStateException(
+      mappingInfo.setTargetColumn(fieldToColumn(targetField, false));
+      final String joinFieldStr =
+          !"".equals(oneToOne.joinField())
+              ? oneToOne.joinField()
+              : (StringUtils.firstLowercase(targetClazz.getSimpleName())
+                  + StringUtils.firstUppercase(targetField.getName()));
+      final Field joinField = BeanUtils.getDeclaredField(clazz, joinFieldStr);
+      mappingInfo.setJoinField(joinField);
+      if (joinField == null) {
+        throw new IllegalArgumentException(
             String.format(
-                "%s %s should one and only one field with shouldJoinColumn specified",
-                field.getDeclaringClass().getName(), field.getName()));
+                "Error to parse %s,could not found join field %s in %s",
+                field, joinFieldStr, clazz));
       }
-      String targetJoinColumn = targetOneToOne.joinColumn();
-      if (!"".equals(targetJoinColumn)) {
-        mappingInfo.setTargetColumn(targetJoinColumn);
-      } else if (idField.equals(targetField)) {
-        mappingInfo.setTargetColumn(
-            EntityUtils.getTableName(targetClazz) + "_" + EntityUtils.fieldToColumn(idField, true));
-      } else {
-        mappingInfo.setTargetColumn(EntityUtils.fieldToColumn(targetField, true));
-      }
+      mappingInfo.setJoinColumn(
+          EntityHelper.getEntityIdField(targetClazz).getName()
+              + "_"
+              + mappingInfo.getTargetColumn());
       return mappingInfo;
     }
   },
-  /** 一对多,多的一方必须关联一的一方. */
   ONE_TO_MANY {
     @Override
     public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
-      final Class<?> referenceClazz = mappingInfo.getTargetClazz();
-      // 必须关联一的一方
-      final Optional<MappingInfo> infactOpt =
-          EntityMapping.get(referenceClazz, mappingInfo.getTargetField());
-      if (!infactOpt.isPresent()) {
-        throw SimpleException.of(
-            "No mapping object [" + referenceClazz + "] found in " + poJo.getClass());
-      }
-      final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) referenceClazz);
+      final Class<E> targetClazz = mappingInfo.getTargetClazz();
+      final Object relationValue = BeanUtils.getValue(poJo, mappingInfo.getJoinField(), null);
+      final QueryColumn<E> queryColumn = QueryColumn.fromClass(targetClazz);
       final StringCondition<E> condition = StringCondition.getInstance(queryColumn);
-      @SuppressWarnings("unchecked")
       final Object mapping =
-          Query.getInstance((Class<E>) poJo.getClass())
+          Query.getInstance(targetClazz)
               .select(queryColumn)
               .where(condition.eq(mappingInfo.getTargetColumn(), relationValue))
-              .fetchAll(referenceClazz);
+              .fetchAll(targetClazz);
       return (T) mapping;
     }
 
@@ -125,23 +116,63 @@ public enum MappingType {
     MappingInfo populateMappingInfo(final Field field) {
       final MappingInfo mappingInfo = new MappingInfo();
       mappingInfo.setMappingType(this);
-      mappingInfo.setClazz(field.getDeclaringClass());
+      final Class<?> clazz = field.getDeclaringClass();
+      mappingInfo.setClazz(clazz);
       mappingInfo.setField(field);
-      mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
       final Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-      final Class<?> targetClazz = (Class<?>) type;
-      mappingInfo.setTargetClazz(targetClazz);
+      final Class<?> manyClazz = (Class<?>) type;
+      mappingInfo.setTargetClazz(manyClazz);
 
       final OneToMany oneToMany = field.getAnnotation(OneToMany.class);
-      String joinColumn = oneToMany.joinColumn();
-      // 手动指定关联列名
-      if (!"".equals(joinColumn)) {
-        mappingInfo.setTargetColumn(joinColumn);
+      String manyFieldStr = oneToMany.targetField();
+      final Field manyIdField = EntityHelper.getEntityIdField(manyClazz);
+      if (manyIdField == null) {
+        throw new IllegalStateException(String.format("No id defined in %s", manyClazz));
+      }
+      Field manyField = BeanUtils.getDeclaredField(manyClazz, manyFieldStr);
+      if ("".equals(manyFieldStr) || manyField == null) {
+        throw new IllegalArgumentException(
+            String.format("%s %s's target field could not null", clazz.getName(), field.getName()));
+      }
+      // 可能是private long oneId,private One one;
+      final ManyToOne manyToOne = manyField.getAnnotation(ManyToOne.class);
+      // 当前类被关联字段
+      {
+        Field joinField =
+            manyToOne == null || "".equals(manyToOne.targetField())
+                ? EntityHelper.getEntityIdField(clazz)
+                : BeanUtils.getDeclaredField(clazz, manyToOne.targetField());
+        if (joinField == null) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Target field not found %s in %s", manyField.getName(), manyClazz.getName()));
+        }
+        mappingInfo.setJoinField(joinField);
+        mappingInfo.setJoinColumn(fieldToColumn(joinField, false));
+      }
+      // 解析目标字段,分为基本类型和引用类型两种情况
+      if (BeanUtils.isPrimitiveType(manyField.getType())) {
+        mappingInfo.setTargetField(manyField);
+        mappingInfo.setTargetColumn(fieldToColumn(manyField, false));
       } else {
-        mappingInfo.setTargetColumn(
-            EntityUtils.getTableName(targetClazz)
-                + "_"
-                + EntityUtils.fieldToColumn(EntityHelper.getEntityIdField(targetClazz), true));
+        if (manyToOne == null) {
+          throw new IllegalArgumentException(
+              String.format("%s should annotated with ManyToOne", manyIdField.getName()));
+        }
+        final String joinFieldStr =
+            !"".equals(manyToOne.joinField())
+                ? manyToOne.joinField()
+                : StringUtils.firstLowercase(clazz.getSimpleName())
+                    + StringUtils.firstUppercase(mappingInfo.getJoinField().getName());
+        final Field joinField = BeanUtils.getDeclaredField(manyClazz, joinFieldStr);
+        if (joinField == null) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Error to parse %s,could not found field %s in %s",
+                  field, joinFieldStr, manyClazz));
+        }
+        mappingInfo.setTargetField(joinField);
+        mappingInfo.setTargetColumn(fieldToColumn(joinField, false));
       }
       return mappingInfo;
     }
@@ -150,48 +181,62 @@ public enum MappingType {
   MANY_TO_ONE {
     @Override
     public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
-      final Class<?> type = mappingInfo.getTargetClazz();
-      final QueryColumn<E> queryColumn = QueryColumn.fromClass((Class<E>) type);
-      final StringCondition<E> stringCondition = StringCondition.getInstance(queryColumn);
-      @SuppressWarnings("unchecked")
-      final Object mapping =
-          Query.getInstance((Class<E>) poJo.getClass())
-              .select(queryColumn)
-              .where(stringCondition.eq(mappingInfo, relationValue))
-              .fetchOne(type);
-      return (T) mapping;
+      final Field joinField = mappingInfo.getJoinField();
+      final Class<T> targetClazz = mappingInfo.getTargetClazz();
+      final Object relationValue = BeanUtils.getValue(poJo, joinField, null);
+      final QueryColumn<T> queryColumn = QueryColumn.fromClass(targetClazz);
+      final StringCondition<T> stringCondition = StringCondition.getInstance(queryColumn);
+      return Query.getInstance(targetClazz)
+          .select(queryColumn)
+          .where(stringCondition.eq(mappingInfo.getTargetField(), relationValue))
+          .fetchOne(targetClazz);
     }
 
     @Override
     MappingInfo populateMappingInfo(final Field field) {
-      // TODO WARN 从这里开始
       final MappingInfo mappingInfo = new MappingInfo();
       mappingInfo.setMappingType(this);
-      mappingInfo.setClazz(field.getDeclaringClass());
+      final Class<?> clazz = field.getDeclaringClass();
+      mappingInfo.setClazz(clazz);
       mappingInfo.setField(field);
-      mappingInfo.setColumn(EntityUtils.fieldToColumn(field, true));
       final Class<?> targetClazz = field.getType();
       mappingInfo.setTargetClazz(targetClazz);
-      mappingInfo.setShouldJoinColumn(true);
 
       final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
       final String targetFieldStr = manyToOne.targetField();
       final Field targetField;
       final Field idField = EntityHelper.getEntityIdField(targetClazz);
       if (idField == null) {
-        throw new IllegalStateException(String.format("no primary key defined in %s", targetClazz));
+        throw new IllegalArgumentException(
+            String.format("no primary key defined in %s", targetClazz));
       }
       if (!"".equals(targetFieldStr)) {
         targetField = BeanUtils.getDeclaredField(mappingInfo.getTargetClazz(), targetFieldStr);
       } else {
         targetField = idField;
       }
-      Objects.requireNonNull(
-          targetField,
-          String.format(
-              "%s %s's target field could not null",
-              field.getDeclaringClass().getName(), field.getName()));
+      if (targetField == null) {
+        throw new IllegalArgumentException(
+            String.format("%s %s's target field could not null", clazz.getName(), field.getName()));
+      }
       mappingInfo.setTargetField(targetField);
+      mappingInfo.setTargetColumn(fieldToColumn(targetField, false));
+      final String joinFieldStr =
+          !"".equals(manyToOne.joinField())
+              ? manyToOne.joinField()
+              : StringUtils.firstLowercase(targetClazz.getSimpleName())
+                  + StringUtils.firstUppercase(targetField.getName());
+      final Field joinField = BeanUtils.getDeclaredField(clazz, joinFieldStr);
+      if (joinField == null) {
+        throw new IllegalArgumentException(
+            String.format(
+                "Error to parse %s,could not found field %s in %s", field, joinFieldStr, clazz));
+      }
+      mappingInfo.setJoinField(joinField);
+      mappingInfo.setJoinColumn(
+          EntityHelper.getEntityIdField(targetClazz).getName()
+              + "_"
+              + mappingInfo.getTargetColumn());
       return mappingInfo;
     }
   },
@@ -219,15 +264,6 @@ public enum MappingType {
   },
   ;
 
-  /**
-   * Fetch mapping t.
-   *
-   * @param <T> the type parameter
-   * @param poJo the po jo
-   * @param mappingInfo the mapping info
-   * @param relationValue the relation value
-   * @return the t
-   */
   public abstract <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo);
 
   abstract MappingInfo populateMappingInfo(final Field field);
@@ -236,12 +272,6 @@ public enum MappingType {
     return MappingType.of(field).populateMappingInfo(field);
   }
 
-  /**
-   * Of mapping type.
-   *
-   * @param field the field
-   * @return the mapping type
-   */
   public static @Nonnull MappingType of(final Field field) {
     if (field.isAnnotationPresent(OneToOne.class)) {
       return ONE_TO_ONE;

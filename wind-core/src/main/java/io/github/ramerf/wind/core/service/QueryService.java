@@ -142,7 +142,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
     return getQuery().fetchOneBySql(sql, respClazz, args);
   }
 
-  /** 关联查询暂不开启,使用IConsumer入参 */
+  /** 关联查询 */
   default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> function) {
     return EntityMapping.get(t.getClass(), function.getField())
         .<R>map(mappingInfo -> mappingInfo.getMappingObject(t))

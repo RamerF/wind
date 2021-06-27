@@ -35,7 +35,8 @@ public class Product extends Domain<Product, String> {
   @TableColumn(defaultValue = "false")
   private boolean deleted;
 
-  @OneToMany private List<ProductSku> skuses;
+  @OneToMany(targetField = "productId")
+  private List<ProductSku> skuses;
 
   public enum Type implements InterEnum<Integer> {
     VIRTUAL(1, "VIRTUAL"),

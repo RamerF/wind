@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.Getter;
@@ -144,14 +143,12 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
     return valueTypes.stream()
         .map(
             valueType ->
-                (Function<PreparedStatement, Object>)
-                    ps -> TypeHandlerHelper.toJdbcValue(valueType, ps))
-        .map(
-            function ->
                 (Consumer<PreparedStatement>)
                     ps -> {
                       try {
-                        ps.setObject(startIndex.getAndIncrement(), function.apply(ps));
+                        ps.setObject(
+                            startIndex.getAndIncrement(),
+                            TypeHandlerHelper.toJdbcValue(valueType, ps));
                       } catch (SQLException e) {
                         throw CommonException.of(e);
                       }

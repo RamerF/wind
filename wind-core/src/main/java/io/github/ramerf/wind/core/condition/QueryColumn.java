@@ -237,7 +237,9 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
   public String getString(final boolean containAlia) {
     final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
     if (CollectionUtils.isEmpty(metaData.queryAlias)) {
-      EntityHelper.getEntityInfo(metaData.clazz).getEntityColumns().forEach(this::add);
+      EntityHelper.getEntityInfo(metaData.clazz).getEntityColumns().stream()
+          .filter(EntityColumn::isSupported)
+          .forEach(this::add);
     }
     return metaData.queryAlias.stream()
         .map(o -> toColumnWithAlia(o, containAlia))

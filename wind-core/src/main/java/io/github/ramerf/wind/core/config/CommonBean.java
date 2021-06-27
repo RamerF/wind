@@ -80,6 +80,7 @@ public class CommonBean {
    * @return the executor
    */
   @Bean
+  @ConditionalOnMissingBean
   public Executor jdbcTemplateExecutor(ObjectProvider<Cache> cacheObjectProvider) {
     return new JdbcTemplateExecutor(cacheObjectProvider.getIfAvailable());
   }

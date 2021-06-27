@@ -26,6 +26,8 @@ public class ProductSpu extends Domain<ProductSpu, String> {
   private String productId;
 
   /** 双向{@link OneToOne}关联,自定义关联字段. */
-  @OneToOne(targetField = "code")
+  @OneToOne(targetField = "code", joinField = "spuCode")
   private ProductSpuCode productSpuCode;
+
+  private long spuCode;
 }

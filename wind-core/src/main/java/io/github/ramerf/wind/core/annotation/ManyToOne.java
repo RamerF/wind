@@ -20,15 +20,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface ManyToOne {
-  /** 当前对象属性名.默认[属性类型Id],如:fooId */
-  String field() default "";
 
   /** 关联对象属性名.默认关联主键{@link Id} */
   String targetField() default "";
 
-  /** 添加列名,默认:下划线[类型_{@link #targetField()}]. */
-  String joinColumn() default "";
-
-  // TODO WARN 关联表,可以不存在实体
-  // String table() default "";
+  /** 当前对象字段,默认:驼峰[目标类型名{@link #targetField()}]. */
+  String joinField() default "";
 }

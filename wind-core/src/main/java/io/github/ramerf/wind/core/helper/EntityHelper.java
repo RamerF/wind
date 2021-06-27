@@ -44,11 +44,9 @@ public class EntityHelper {
    * @param clazz the clazz
    */
   public static <T> void initEntity(final Class<T> clazz) {
-    log.debug("initEntity:start[{}]", clazz.getName());
     final EntityInfo entityInfo =
         EntityInfo.of(
             clazz, windContext.getWindConfiguration(), windContext.getDbMetaData().getDialect());
-    log.debug("initEntity:end[{}]", entityInfo.getName());
     CLAZZ_ENTITY_MAP.put(clazz, entityInfo);
     // 这里进行表定义更新
     ddlAuto(entityInfo);

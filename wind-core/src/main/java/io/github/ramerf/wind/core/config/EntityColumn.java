@@ -1,10 +1,9 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.annotation.*;
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -96,20 +95,9 @@ public class EntityColumn {
     EntityColumn entityColumn = new EntityColumn();
     entityColumn.field = field;
     entityColumn.name = EntityUtils.fieldToColumn(field);
+    entityColumn.type = field.getGenericType();
 
-    final boolean oneMapping = MappingInfo.isOneMapping(field);
-    final Field parseField = oneMapping ? getReferenceField(field) : field;
-    // OneToOne时,可能不会添加列
-    if (oneMapping) {
-      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      if (oneToOne != null && !oneToOne.shouldJoinColumn()) {
-        entityColumn.supported = false;
-      }
-    }
-    entityColumn.type = parseField.getGenericType();
-
-    // TODO WARN 关联列需要处理
-    final TableColumn tableColumn = parseField.getAnnotation(TableColumn.class);
+    final TableColumn tableColumn = field.getAnnotation(TableColumn.class);
     if (dialect.isSupportJavaType(entityColumn.type)
         || (entityColumn.type instanceof Class
             && InterEnum.class.isAssignableFrom((Class<?>) entityColumn.type))
@@ -222,30 +210,6 @@ public class EntityColumn {
     return definition.toString();
   }
 
-  @Nonnull
-  private static Field getReferenceField(final @Nonnull Field field) {
-    final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-    final Class<?> fieldType = field.getType();
-    if (manyToOne != null) {
-      final String referenceField = manyToOne.targetField();
-      if (!referenceField.equals("")) {
-        return Objects.requireNonNull(
-            BeanUtils.getDeclaredField(fieldType, referenceField),
-            "Not exist field [" + referenceField + "] in " + fieldType);
-      }
-    } else {
-      final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-      final String referenceField = oneToOne.targetField();
-      if (!referenceField.equals("")) {
-        return Objects.requireNonNull(
-            BeanUtils.getDeclaredField(fieldType, referenceField),
-            "Not exist field [" + referenceField + "] in " + fieldType);
-      }
-    }
-    // 关联主键
-    return EntityHelper.getEntityInfo(fieldType).getPrimaryKeys().get(0).getField();
-  }
-
   private static String getPrimaryKeyDefinition(
       final Dialect dialect, final EntityColumn entityColumn) {
     final Type type = entityColumn.type;
@@ -277,11 +241,11 @@ public class EntityColumn {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     final EntityColumn column = (EntityColumn) o;
-    return Objects.equals(name, column.name);
+    return Objects.equals(name, column.name) && Objects.equals(type, column.type);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name);
+    return Objects.hash(name, type);
   }
 }

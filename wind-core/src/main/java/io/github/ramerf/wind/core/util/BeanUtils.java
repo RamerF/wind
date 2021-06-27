@@ -404,7 +404,7 @@ public final class BeanUtils {
           .map(ex -> ex.apply(e))
           .orElseGet(
               () -> {
-                log.info(e.getMessage(), e);
+                log.warn(e.getMessage(), e);
                 return null;
               });
     }

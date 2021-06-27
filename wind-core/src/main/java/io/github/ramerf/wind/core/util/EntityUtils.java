@@ -4,7 +4,6 @@ import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.service.BaseService;
@@ -241,40 +240,47 @@ public final class EntityUtils {
     }
     // 关联字段
     final OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-    final String joinColumn;
-    final String targetField;
+    final String joinFieldStr;
+    final String targetFieldStr;
     if (oneToOne != null) {
-      joinColumn = oneToOne.joinColumn();
-      targetField = oneToOne.targetField();
+      joinFieldStr = oneToOne.joinField();
+      targetFieldStr = oneToOne.targetField();
     } else {
       final ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
       if (manyToOne != null) {
-        joinColumn = manyToOne.joinColumn();
-        targetField = manyToOne.targetField();
+        joinFieldStr = manyToOne.joinField();
+        targetFieldStr = manyToOne.targetField();
       } else {
         return null;
       }
     }
     // 手动指定关联列名
-    if (!"".equals(joinColumn)) {
-      return joinColumn;
+    if (!"".equals(joinFieldStr)) {
+      final Field joinField = BeanUtils.getDeclaredField(fieldType, joinFieldStr);
+      if (joinField == null) {
+        throw new IllegalArgumentException(
+            String.format(
+                "%s %s's join field could not null", fieldType.getName(), field.getName()));
+      }
+      return fieldToColumn(joinField, false);
     }
     // 关联主键
     final EntityInfo entityInfo = EntityHelper.getEntityInfo(fieldType);
-    if ("".equals(targetField)) {
+    if ("".equals(targetFieldStr)) {
       final String primaryKeys =
           entityInfo.getPrimaryKeys().stream().map(EntityColumn::getName).collect(joining("_"));
       return camelToUnderline(entityInfo.getName().concat("_").concat(primaryKeys));
     }
-    final Field referField =
+    final Field targetField =
         entityInfo.getFieldColumnMap().keySet().stream()
-            .filter(f -> f.getName().equals(targetField))
+            .filter(f -> f.getName().equals(targetFieldStr))
             .findFirst()
             .orElse(null);
-    if (referField == null) {
-      throw SimpleException.of("Invalid mapping field " + targetField);
+    if (targetField == null) {
+      throw new IllegalArgumentException(
+          String.format("Invalid target field %s for %s", targetFieldStr, fieldType));
     }
-    final String column = fieldToColumn(referField, true);
+    final String column = fieldToColumn(targetField, false);
     return column == null
         ? null
         : camelToUnderline(entityInfo.getName().concat("_").concat(column));

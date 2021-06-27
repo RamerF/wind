@@ -56,7 +56,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       final DataSource dataSource,
       final ApplicationEventPublisher publisher,
       final ObjectMapper objectMapper,
-      final Executor jdbcTemplateExecutor,
+      final Executor executor,
       final ObjectProvider<IdGenerator> idGenerator,
       final PrototypeBean prototypeBean) {
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
@@ -65,7 +65,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     this.configuration = windConfiguration;
     this.publisher = publisher;
     this.objectMapper = objectMapper;
-    this.executor = jdbcTemplateExecutor;
+    this.executor = executor;
     this.idGenerator = idGenerator.getIfAvailable();
     this.prototypeBean = prototypeBean;
   }
