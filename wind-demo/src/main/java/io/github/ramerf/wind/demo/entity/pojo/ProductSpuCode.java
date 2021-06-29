@@ -19,7 +19,7 @@ import lombok.*;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ProductSpuCode extends Domain<ProductSpuCode, Long> {
-  @Id private String id;
+  @Id private Long id;
 
   @TableColumn(defaultValue = "0")
   private long code;
