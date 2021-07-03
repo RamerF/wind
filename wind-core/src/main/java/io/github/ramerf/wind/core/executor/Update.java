@@ -445,7 +445,7 @@ public final class Update<T> {
   public int delete() throws DataAccessException {
     // 不包含删除条件,抛异常
     if (condition.isEmpty()) {
-      throw new NotAllowedDataAccessException("Must contain delete contion");
+      throw new NotAllowedDataAccessException("Must contain delete condition");
     }
     this.condition.appendLogicNotDelete();
     // 如果不支持逻辑删除
