@@ -12,28 +12,44 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * <pre>
  *
- *    Example 1: 双向一对多
+ *    示例一: 双向一对多
  *
- *    // In Customer class:
+ *    // Customer 类:
  *    private long id;
- *
- *    &#064;OneToMany(targetField = "customer") // 双向关联时,目标属性是对象
+ *    // 这里targetField默认为customer,可不指定
+ *    &#064;OneToMany(targetField = "customer")
  *    private List&#060;Order&#062; orders;
  *
- *    // In Order class:
+ *    // Order 类:
  *
- *    &#064;ManyToOne(joinField = "customerId", targetField = "id")// joinField默认为customerId
+ *    &#064;ManyToOne
  *    private Customer customer;
+ *    private Long customerId;
  *
- *    private Long customerId; // 无论单向还是双向都必须添加关联属性
  *
+ *    示例二: 单向一对多
  *
- *    Example 2: 单向一对多
+ *    // Customer 类:
  *
- *    // In Customer class:
- *
- *    &#064;OneToMany(targetField = "customerId")  // 单向时,目标属性是基本属性
+ *    &#064;OneToMany
  *    private List&#060;Order&#062; orders;
+ *
+ *    // Order 类
+ *    private Long customerId;
+ *
+ *
+ *    示例三: 单向一对多,指定关联属性
+ *
+ *    // Customer 类:
+ *    private String uid;
+ *
+ *    &#064;OneToMany(targetField = "customerUid")
+ *    private List&#060;Order&#062; orders;
+ *
+ *    // Order 类
+ *    &#064;ManyToOne&#060;(targetField = "uid")&#062;
+ *    private String customerUid;
+ *
  * </pre>
  *
  * @since 2020.10.28
@@ -42,6 +58,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface OneToMany {
-  /** 多关联一的属性.双向关联时字段类型为对象,单向关联时为普通字段. */
+  /** 多的一方添加的属性,用来关联一的一方. */
   String targetField();
 }
