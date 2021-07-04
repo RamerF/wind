@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * The type String utils.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/27
  */
 @Slf4j

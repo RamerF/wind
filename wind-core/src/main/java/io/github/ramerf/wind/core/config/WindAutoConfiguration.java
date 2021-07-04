@@ -3,8 +3,8 @@ package io.github.ramerf.wind.core.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.ramerf.wind.core.WindVersion;
+import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.event.InitFinishEvent;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * 初始化配置.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.3.28
  */
 @Slf4j
@@ -56,7 +56,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       final DataSource dataSource,
       final ApplicationEventPublisher publisher,
       final ObjectMapper objectMapper,
-      final Executor jdbcTemplateExecutor,
+      final Executor executor,
       final ObjectProvider<IdGenerator> idGenerator,
       final PrototypeBean prototypeBean) {
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, windConfiguration.getDialect()));
@@ -65,7 +65,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     this.configuration = windConfiguration;
     this.publisher = publisher;
     this.objectMapper = objectMapper;
-    this.executor = jdbcTemplateExecutor;
+    this.executor = executor;
     this.idGenerator = idGenerator.getIfAvailable();
     this.prototypeBean = prototypeBean;
   }
@@ -128,7 +128,6 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
             AnsiStyle.FAINT));
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private void initEntityInfo(final Class<?> bootClass, final WindConfiguration configuration) {
     final SpringBootApplication application = bootClass.getAnnotation(SpringBootApplication.class);
     String scanBasePackages;
@@ -143,9 +142,9 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
       entityPackage = bootClass.getPackage().getName();
     }
     log.info("initEntityInfo:package[{}]", entityPackage);
-    Set<Class<? extends AbstractEntityPoJo>> entities;
+    Set<Class<?>> entities;
     try {
-      entities = BeanUtils.scanClasses(entityPackage, AbstractEntityPoJo.class);
+      entities = BeanUtils.scanClassesWithAnnotation(entityPackage, TableInfo.class);
       if (entities.size() < 1) {
         log.info(
             "no entity with @TableInfo annotation found in path: [{}], correct your configuration:wind.entity-package",

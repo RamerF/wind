@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.function;
 
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.*;
 import java.io.Serializable;
@@ -15,7 +14,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 用于bean方法(set/get) 函数式接口
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /5/5
  */
 public interface BeanFunction extends Serializable {
@@ -71,7 +70,7 @@ public interface BeanFunction extends Serializable {
                       e.getMessage(),
                       e.getMessage());
                   log.error(e.getMessage(), e);
-                  throw CommonException.of(e.getMessage(), e);
+                  throw new IllegalArgumentException(e.getMessage(), e);
                 }
               }
               return field;

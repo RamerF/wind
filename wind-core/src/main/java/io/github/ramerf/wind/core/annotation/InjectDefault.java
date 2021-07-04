@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 /**
  * 注入默认实现.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/2
  */
 @Documented

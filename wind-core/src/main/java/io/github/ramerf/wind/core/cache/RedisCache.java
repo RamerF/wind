@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.cache;
 
 import io.github.ramerf.wind.core.config.WindConfiguration;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.IOException;
 import java.util.*;
@@ -15,7 +14,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 /**
  * 用于查询redis缓存.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /5/26
  */
 @Slf4j
@@ -57,7 +56,7 @@ public class RedisCache extends AbstractCache {
     return redisTemplate.opsForValue();
   }
 
-  private List<String> scan(String pattern) throws CommonException {
+  private List<String> scan(String pattern) {
     ScanOptions options = ScanOptions.scanOptions().match(pattern).count(Integer.MAX_VALUE).build();
     @SuppressWarnings("unchecked")
     RedisSerializer<String> keySerializer =
@@ -75,7 +74,7 @@ public class RedisCache extends AbstractCache {
       }
       return keys;
     } catch (IOException e) {
-      throw CommonException.of(e);
+      throw new RuntimeException(e);
     }
   }
 }

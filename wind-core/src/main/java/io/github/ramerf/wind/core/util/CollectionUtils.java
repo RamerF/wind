@@ -9,7 +9,7 @@ import org.springframework.lang.Nullable;
 /**
  * The type Collection utils.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/26
  */
 @SuppressWarnings("unused")

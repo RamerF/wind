@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  * {@literal java:LocalDate <=> jdbc:java.sql.Date}.
  *
  * @since 2020.11.17
- * @author Tang Xiaofeng
+ * @author ramer
  */
 public class LocalDateToDateTypeHandler implements ITypeHandler<LocalDate, Date> {
   @Override

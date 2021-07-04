@@ -2,8 +2,6 @@ package io.github.ramerf.wind.demo.controller;
 
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.PrototypeBean;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.function.IConsumer;
@@ -12,7 +10,7 @@ import io.github.ramerf.wind.core.service.InterService.Fields;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.pojo.Product;
 import io.github.ramerf.wind.demo.entity.pojo.Product.Type;
-import io.github.ramerf.wind.demo.entity.response.IdNameResponse;
+import io.github.ramerf.wind.web.entity.response.Rs;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.math.BigDecimal;
@@ -22,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
-import lombok.Data;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +30,7 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 /**
  * Query/Update使用示例.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/4/28
  */
 @Slf4j
@@ -72,7 +70,7 @@ public class QueryUpdateController {
     final LambdaCondition<Product> condition = LambdaCondition.getInstance(queryColumn);
     // 指定更新字段:title,name
     final Fields<Product> fields =
-        Fields.with(Product.class).include(Product::getTitle, Product::getName);
+        Fields.of(Product.class).include(Product::getTitle, Product::getName);
     // 获取Update实例
     final Update<Product> update = prototypeBean.update(Product.class);
     final int affectRow =
@@ -219,8 +217,7 @@ public class QueryUpdateController {
   }
 
   /** 示例:扩展条件{@link Condition}. */
-  public static class CustomCondition<T extends AbstractEntityPoJo<T, ?>>
-      extends AbstractCondition<T> {
+  public static class CustomCondition<T> extends AbstractCondition<T> {
     public CustomCondition(final QueryColumn<T> queryColumn) {
       super(queryColumn);
     }
@@ -229,8 +226,7 @@ public class QueryUpdateController {
       super(clazz, tableName, tableAlia);
     }
 
-    public static <T extends AbstractEntityPoJo<T, ?>> CustomCondition<T> getInstance(
-        final QueryColumn<T> queryColumn) {
+    public static <T> CustomCondition<T> getInstance(final QueryColumn<T> queryColumn) {
       return new CustomCondition<>(queryColumn);
     }
 
@@ -260,6 +256,13 @@ public class QueryUpdateController {
   @Data
   public static class GroupBySum {
     private BigDecimal bigDecimal;
+    private String name;
+  }
+
+  @Getter
+  @Setter
+  public static class IdNameResponse {
+    private Long id;
     private String name;
   }
 }

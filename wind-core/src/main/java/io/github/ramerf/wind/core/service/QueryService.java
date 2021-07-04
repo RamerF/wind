@@ -1,9 +1,9 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.entity.constant.Constant;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
 import java.util.*;
@@ -24,11 +24,10 @@ import org.springframework.data.domain.Sort.Order;
  * </pre>
  *
  * @param <T> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /1/5
  */
-public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-    extends InterService<T, ID> {
+public interface QueryService<T, ID extends Serializable> extends InterService<T, ID> {
   /** The constant log. */
   Logger log = LoggerFactory.getLogger(QueryService.class);
 
@@ -143,37 +142,12 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
     return getQuery().fetchOneBySql(sql, respClazz, args);
   }
 
-  /* 关联查询暂不开启
-    default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> field) {
-    final Optional<MappingInfo> optional = EntityMapping.get(t.getClass(), field.getField());
-    if (optional.isPresent()) {
-      final MappingInfo mappingInfo = optional.get();
-      final MappingType mappingType = mappingInfo.getMappingType();
-      if (mappingType.equals(MappingType.ONE_TO_MANY)) {
-        @SuppressWarnings("rawtypes")
-        final Class<? extends AbstractEntityPoJo> manyClazz = mappingInfo.getReferenceClazz();
-        // 如果是一对多,查询多的一方的关联关系
-        final Optional<MappingInfo> infactOpt = EntityMapping.get(manyClazz, t.getClass());
-        if (!infactOpt.isPresent()) {
-          throw CommonException.of(
-              "No mapping object [" + manyClazz + "] found in " + t.getClass());
-        }
-        final MappingInfo infactMapping = infactOpt.get();
-        final Object relationValue = BeanUtils.getValue(t, infactMapping.getReferenceField(), null);
-        return mappingType.fetchMapping(t, infactMapping, relationValue);
-      } else {
-        // TODO WARN 这里有问题，可能没有保存对面的字段
-        final R mappingObj = field.apply(t);
-        if (mappingObj == null) {
-          return null;
-        }
-        final Object relationValue =
-            BeanUtils.getValue(mappingObj, mappingInfo.getReferenceField(), null);
-        return mappingType.fetchMapping(t, mappingInfo, relationValue);
-      }
-    }
-    return null;
-  }*/
+  /** 关联查询 */
+  default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> function) {
+    return EntityMapping.get(t.getClass(), function.getField())
+        .<R>map(mappingInfo -> mappingInfo.getMappingObject(t))
+        .orElse(null);
+  }
 
   /**
    * 通过id集合查询列表.
@@ -488,10 +462,10 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
     }
     return page == -1
         ? PageRequest.of(0, Integer.MAX_VALUE, sort)
-        : PageRequest.of(page - 1, size > 0 ? size : Constant.DEFAULT_PAGE_SIZE, sort);
+        : PageRequest.of(page - 1, size > 0 ? size : 10, sort);
   }
 
-  class QueryBound<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable> {
+  class QueryBound<T, ID extends Serializable> {
     protected Consumer<QueryColumn<T>> queryConsumer;
     protected Consumer<LambdaCondition<T>> conditionConsumer;
     protected QueryColumn<T> queryColumn;
@@ -507,11 +481,10 @@ public interface QueryService<T extends AbstractEntityPoJo<T, ID>, ID extends Se
      * @param <T> the type parameter
      * @return {@code QueryBound}
      */
-    public static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-        QueryBound<T, ID> consume(
-            final Consumer<QueryColumn<T>> queryConsumer,
-            final Consumer<LambdaCondition<T>> conditionConsumer,
-            final InterService<T, ID> service) {
+    public static <T, ID extends Serializable> QueryBound<T, ID> consume(
+        final Consumer<QueryColumn<T>> queryConsumer,
+        final Consumer<LambdaCondition<T>> conditionConsumer,
+        final InterService<T, ID> service) {
       QueryBound<T, ID> queryBound = new QueryBound<>();
       queryBound.queryConsumer = queryConsumer;
       queryBound.conditionConsumer = conditionConsumer;

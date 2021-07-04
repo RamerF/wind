@@ -22,7 +22,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext.Seria
 /**
  * 自定义Spring redis cache.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/03/24
  * @see Cacheable
  * @see CacheEvict

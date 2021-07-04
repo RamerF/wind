@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 /**
  * {@literal java:Integer[] <=> jdbc:Integer[]}.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/4
  */
 public class IntegerArrayTypeHandler implements ITypeHandler<Integer[], Integer[]> {

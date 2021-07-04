@@ -3,19 +3,19 @@ package io.github.ramerf.wind.demo.entity.pojo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.pojo.Domain;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.ObjectCollectionToJsonTypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.ObjectToJsonTypeHandler;
 import io.github.ramerf.wind.core.service.InterService.Fields;
 import java.math.BigDecimal;
 import java.util.*;
-import javax.persistence.*;
+import javax.persistence.Id;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 /**
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/16
  */
 @TableInfo(name = "foo", comment = "the foo.")
@@ -25,12 +25,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Foo extends AbstractEntityPoJo<Foo, Long> {
+public class Foo extends Domain<Foo, Long> {
 
   // 解决字段过长前端显示错误: @JsonSerialize(using = LongJsonSerializer.class)
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @Id private Long id;
 
   /** 是否逻辑删除,false:未删除,所有的查询默认只会查询未删除的数据. */
   @Builder.Default

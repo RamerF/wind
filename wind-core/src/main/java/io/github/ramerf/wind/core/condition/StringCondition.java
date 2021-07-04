@@ -1,9 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -16,23 +14,26 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 /**
  * 条件构造.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/26
  */
 @Slf4j
 @ToString
-public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends AbstractCondition<T> {
+public class StringCondition<T> extends AbstractCondition<T> {
 
   public StringCondition(final QueryColumn<T> queryColumn) {
     super(queryColumn);
+  }
+
+  public StringCondition(final Class<T> clazz) {
+    super(clazz);
   }
 
   public StringCondition(final Class<T> clazz, final String tableName, final String tableAlia) {
     super(clazz, tableName, tableAlia);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> StringCondition<T> getInstance(
-      final QueryColumn<T> queryColumn) {
+  public static <T> StringCondition<T> getInstance(final QueryColumn<T> queryColumn) {
     return new StringCondition<>(queryColumn);
   }
 
@@ -500,26 +501,6 @@ public class StringCondition<T extends AbstractEntityPoJo<T, ?>> extends Abstrac
                           .map(SqlHelper::toPreFormatSqlVal)
                           .collect(Collectors.joining(SEMICOLON.operator)))));
       values.forEach(value -> valueTypes.add(ValueType.of(value)));
-    }
-    return this;
-  }
-
-  /** 用于关联对象. */
-  public StringCondition<T> eq(@Nonnull final MappingInfo mappingInfo, final Object value) {
-    return eq(true, mappingInfo, value);
-  }
-
-  public StringCondition<T> eq(
-      final boolean condition, @Nonnull final MappingInfo mappingInfo, final Object value) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(mappingInfo.getReferenceColumn())
-              .concat(EQUAL.operator)
-              .concat(toPreFormatSqlVal(value)));
-      valueTypes.add(ValueType.of(value, mappingInfo.getReferenceField()));
     }
     return this;
   }

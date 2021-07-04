@@ -2,10 +2,7 @@ package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.LogicDelete;
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import javax.annotation.Nonnull;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 逻辑删除配置.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/7/26
  */
 @Slf4j
@@ -45,7 +42,7 @@ public class LogicDeleteProp {
   public static LogicDeleteProp of(
       final TableInfo tableInfo, @Nonnull final WindConfiguration configuration) {
     LogicDelete logicDelete;
-    // 如果fieldName为空,说明未指定该属性,使用全局配置
+    // 如果fieldName为默认值XX_FIELD_NAME_XX,说明未指定该属性,使用全局配置
     if (tableInfo == null || (logicDelete = tableInfo.logicDelete()).fieldName().equals("")) {
       return of(configuration);
     }
@@ -57,23 +54,7 @@ public class LogicDeleteProp {
     return logicDeleteProp;
   }
 
-  @SuppressWarnings("rawtypes")
-  public <ID extends Serializable> ID getIdClass(final Class<? extends AbstractEntityPoJo> clazz) {
-    Type superClass = clazz.getGenericSuperclass();
-    for (; ; ) {
-      if (!(superClass instanceof ParameterizedType)) {
-        continue;
-      }
-      ParameterizedType parameterizedType = (ParameterizedType) superClass;
-      final Type[] arguments = parameterizedType.getActualTypeArguments();
-      if (arguments.length == 2 && arguments[0] instanceof AbstractEntityPoJo) {
-        @SuppressWarnings("unchecked")
-        final ID id = (ID) arguments[1];
-        return id;
-      }
-      if (superClass.equals(AbstractEntityPoJo.class)) {
-        return null;
-      }
-    }
+  public <ID extends Serializable> ID getIdClass(final Class<?> clazz) {
+    throw new RuntimeException("Not implemented");
   }
 }

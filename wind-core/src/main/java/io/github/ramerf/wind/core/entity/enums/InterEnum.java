@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.entity.enums;
 
-import io.github.ramerf.wind.core.entity.response.ResultCode;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.InvalidEnumException;
 import io.github.ramerf.wind.core.util.InterEnumUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.Serializable;
@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  * The interface inter enum.
  *
  * @param <V> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /3/28
  */
 public interface InterEnum<V> extends Serializable {
@@ -61,8 +61,9 @@ public interface InterEnum<V> extends Serializable {
       throws CommonException {
     E e = InterEnumUtils.of(value, clazz);
     if (e == null) {
-      throw CommonException.of(
-          ResultCode.API_PARAM_INVALID.desc(
+      throw new InvalidEnumException(
+          String.format(
+              "枚举值无效:[%s]",
               message != null && message.get() != null
                   ? message.get()
                   : StringUtils.firstLowercase(clazz.getSimpleName())));

@@ -1,13 +1,13 @@
 package io.github.ramerf.wind.demo.entity.response;
 
-import io.github.ramerf.wind.core.entity.response.ResultCode;
+import io.github.ramerf.wind.web.entity.response.ResultCode;
 import lombok.ToString;
 
 /**
  * 响应码.
  *
  * @since 2020.12.22
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @ToString
 public class ResCode extends ResultCode {

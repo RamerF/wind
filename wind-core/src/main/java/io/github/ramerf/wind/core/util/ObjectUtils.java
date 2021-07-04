@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.util;
 /**
  * The type Object utils.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/4/6
  */
 @SuppressWarnings("unused")

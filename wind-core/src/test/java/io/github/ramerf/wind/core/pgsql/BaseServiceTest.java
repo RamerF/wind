@@ -1,8 +1,6 @@
 package io.github.ramerf.wind.core.pgsql;
 
 import io.github.ramerf.wind.core.condition.SortColumn;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.pgsql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -29,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Service层测试.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.8.29
  */
 @Slf4j
@@ -230,8 +228,8 @@ public class BaseServiceTest {
   @Test
   @DisplayName("查询列表:自定义sql")
   @Transactional(rollbackFor = Exception.class)
-  public Rs<List<Foo>> testListAll3() {
-    return Rs.ok(service.listAll("select * from foo", Foo.class));
+  public List<Foo> testListAll3() {
+    return service.listAll("select * from foo", Foo.class);
   }
 
   @Test
@@ -502,12 +500,12 @@ public class BaseServiceTest {
   }
 
   /**
-   * @author Tang Xiaofeng
+   * @author ramer
    * @since 2020/8/5
    */
   @Getter
   @Setter
-  public static class IdNameResponse implements AbstractEntity {
+  public static class IdNameResponse {
     private Long id;
     private String name;
   }

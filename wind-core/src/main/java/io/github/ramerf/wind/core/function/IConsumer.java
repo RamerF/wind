@@ -7,7 +7,7 @@ import java.util.Comparator;
  *
  * @param <T> the type parameter
  * @param <U> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/5/5
  */
 @FunctionalInterface

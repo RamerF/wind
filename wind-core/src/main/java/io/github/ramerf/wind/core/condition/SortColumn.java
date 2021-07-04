@@ -1,7 +1,5 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.IFunction;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +9,7 @@ import org.springframework.data.domain.Sort;
 /**
  * 排序规则.示例: <code>SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)</code>
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /1/5
  */
 public class SortColumn {
@@ -19,7 +17,7 @@ public class SortColumn {
   /** The Orders. */
   List<Sort.Order> orders = new LinkedList<>();
 
-  public static <T extends AbstractEntityPoJo<T, ?>> SortColumn by(
+  public static <T  > SortColumn by(
       @Nonnull final IFunction<T, ?> function, Order order) {
     SortColumn sortColumn = new SortColumn();
     if (order.equals(Order.ASC)) {
@@ -46,7 +44,7 @@ public class SortColumn {
    * @param function the function
    * @return the sort column
    */
-  public <T extends AbstractEntity> SortColumn asc(final IFunction<T, ?> function) {
+  public <T  > SortColumn asc(final IFunction<T, ?> function) {
     return asc(function.getColumn());
   }
 
@@ -68,7 +66,7 @@ public class SortColumn {
    * @param function the function
    * @return the sort column
    */
-  public <T extends AbstractEntity> SortColumn desc(final IFunction<T, ?> function) {
+  public <T > SortColumn desc(final IFunction<T, ?> function) {
     return desc(function.getColumn());
   }
 

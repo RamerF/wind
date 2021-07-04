@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  * {@literal java:LocalDateTime <=> jdbc:java.sql.Timestamp}.
  *
  * @since 2020.11.17
- * @author Tang Xiaofeng
+ * @author ramer
  */
 public class LocalDateTimeToTimestampTypeHandler implements ITypeHandler<LocalDateTime, Timestamp> {
   @Override

@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 /**
  * 集合对象转JSON数组字符串. {@literal java:List<?> <=> jdbc:json arr string}.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.12.27
  */
 @Skip

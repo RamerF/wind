@@ -2,7 +2,7 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.entity.pojo.Domain;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -22,7 +22,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Product extends AbstractEntityPoJo<Product, String> {
+public class Product extends Domain<Product, String> {
   @Id private String id;
   private String name;
   private String title;
@@ -34,8 +34,9 @@ public class Product extends AbstractEntityPoJo<Product, String> {
 
   @TableColumn(defaultValue = "false")
   private boolean deleted;
-  /** 双向. */
-  @OneToMany private List<ProductSku> skuses;
+
+  @OneToMany(targetField = "productId")
+  private List<ProductSku> skuses;
 
   public enum Type implements InterEnum<Integer> {
     VIRTUAL(1, "VIRTUAL"),

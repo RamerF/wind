@@ -77,7 +77,7 @@ logging:
     jdbc.sqltiming: info
 wind:
   logic-delete-prop:
-    # 是否启用逻辑删除,可以在类上使用@TableInfo的enableLogicDelete属性覆盖
+    # 是否启用逻辑删除,可以在类上使用@TableInfo的logicDelete属性覆盖
     enable: true
     # 逻辑删除字段名
     field-name: deleted

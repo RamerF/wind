@@ -1,12 +1,10 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-
 /**
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/1/5
  */
-public interface Predicate<T extends AbstractEntityPoJo<T, ?>> extends QueryEntity<T> {
+public interface Predicate<T> extends QueryEntity<T> {
   /**
    * 获取条件sql.
    *

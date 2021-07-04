@@ -1,10 +1,9 @@
 package io.github.ramerf.wind.core.entity.pojo;
 
 import io.github.ramerf.wind.core.condition.LambdaCondition;
-import io.github.ramerf.wind.core.entity.AbstractEntity;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
-import io.github.ramerf.wind.core.service.GenericService;
+import io.github.ramerf.wind.core.service.GenericLambdaService;
 import io.github.ramerf.wind.core.service.InterService.Fields;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.io.Serializable;
@@ -14,14 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 
 /**
- * PoJo实体.
+ * 实体域.
  *
- * @since 2019 /12/6
- * @author Tang Xiaofeng
+ * @since 2021.02.06
+ * @author ramer
  */
 @Slf4j
-public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-    implements AbstractEntity {
+public class Domain<T, ID extends Serializable> {
   /**
    * 创建记录.
    *
@@ -34,12 +32,12 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends 
   /**
    * 创建记录.
    *
-   * @param fieldsConsumer the fields consumer
-   * @return {@code id}
+   * @param fields 保存指定列
+   * @return 包含主键
    * @throws DataAccessException 如果执行失败
    */
-  public final T create(final Consumer<Fields<T>> fieldsConsumer) throws DataAccessException {
-    return genericService().create(instance(), fieldsConsumer);
+  public final T create(final Fields<T> fields) throws DataAccessException {
+    return genericService().create(instance(), fields);
   }
 
   /**
@@ -53,14 +51,14 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends 
   }
 
   /**
-   * 更新.
+   * 更新指定字段.
    *
-   * @param fieldsConsumer the fields consumer
+   * @param fields the fields consumer
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  public final int update(final Consumer<Fields<T>> fieldsConsumer) throws DataAccessException {
-    return genericService().update(instance(), fieldsConsumer, null);
+  public final int update(final Fields<T> fields) throws DataAccessException {
+    return genericService().update(instance(), fields, null);
   }
 
   /**
@@ -70,7 +68,7 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends 
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  public final int updateByCondition(final Consumer<LambdaCondition<T>> conditionConsumer)
+  public final int updateByCondition(final LambdaCondition<T> conditionConsumer)
       throws DataAccessException {
     return genericService().update(instance(), null, conditionConsumer);
   }
@@ -113,8 +111,8 @@ public class AbstractEntityPoJo<T extends AbstractEntityPoJo<T, ID>, ID extends 
   }
 
   @SuppressWarnings("unchecked")
-  private GenericService<T, ID> genericService() {
-    return GenericService.with(
+  private GenericLambdaService<T, ID> genericService() {
+    return GenericLambdaService.with(
         (Class<T>) instance().getClass(),
         (Class<ID>) EntityHelper.getEntityIdField(instance().getClass()).getType());
   }

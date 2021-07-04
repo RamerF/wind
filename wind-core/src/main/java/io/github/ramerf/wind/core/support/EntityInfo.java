@@ -3,8 +3,6 @@ package io.github.ramerf.wind.core.support;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
@@ -45,13 +43,14 @@ public final class EntityInfo {
   /** 更新时间字段,{@link UpdateTimestamp} */
   private Field updateTimeField;
 
+  /** 创建时间字段,{@link CreateTimestamp} */
   private Field createTimeField;
 
   /** 是否映射到数据库. */
   private boolean mapToTable = true;
 
   /** 字段与列名映射 {field:column}. */
-  private Map<String, String> fieldColumnMap;
+  private Map<Field, String> fieldColumnMap;
 
   /** 列名与字段映射 {column:field}. */
   private Map<String, Field> columnFieldMap;
@@ -97,14 +96,15 @@ public final class EntityInfo {
             .orElse(null));
 
     final List<Field> columnFields = EntityUtils.getAllColumnFields(clazz);
-    Map<String, String> fieldColumnMap = new HashMap<>(20);
+    Map<Field, String> fieldColumnMap = new HashMap<>(20);
     Map<String, Field> columnFieldMap = new HashMap<>(20);
     // 0:创建时间 1:更新时间
     final Field[] timeField = new Field[2];
 
     List<EntityColumn> primaryKeys = new ArrayList<>();
     Set<EntityColumn> entityColumns = new HashSet<>();
-    final String logicDeletePropName = entityInfo.getLogicDeleteProp().getFieldName();
+    final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
+    final String logicDeletePropName = logicDeleteProp.getFieldName();
     for (Field field : columnFields) {
       // 创建/更新时间
       if (field.getAnnotation(CreateTimestamp.class) != null) {
@@ -118,7 +118,7 @@ public final class EntityInfo {
       if (entityColumn == null) {
         continue;
       }
-      fieldColumnMap.put(field.getName(), entityColumn.getName());
+      fieldColumnMap.put(field, entityColumn.getName());
       columnFieldMap.put(entityColumn.getName(), field);
       if (entityColumn.isPrimaryKey()) {
         primaryKeys.add(entityColumn);
@@ -132,10 +132,15 @@ public final class EntityInfo {
       }
       entityColumns.add(entityColumn);
     }
-    if (entityInfo.getIdColumn() == null
-        && !entityInfo.getClazz().equals(AbstractEntityPoJo.class)) {
-      throw CommonException.of(
+    if (entityInfo.getIdColumn() == null) {
+      throw new IllegalStateException(
           "Not found Identity for " + entityInfo.getName() + ".Define the @Id field.");
+    }
+    if (logicDeleteProp.isEnable() && entityInfo.getLogicDeletePropColumn() == null) {
+      throw new IllegalStateException(
+          String.format(
+              "Not found logic delete prop [%s] for %s",
+              logicDeleteProp.getFieldName(), entityInfo.getName()));
     }
     entityInfo.setPrimaryKeys(primaryKeys);
     entityInfo.setEntityColumns(new ArrayList<>(entityColumns));

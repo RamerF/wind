@@ -3,9 +3,7 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
-import io.github.ramerf.wind.core.entity.response.ResultCode;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
@@ -48,12 +46,12 @@ import static java.util.stream.Collectors.toList;
  * {@code @Resource private PrototypeBean prototypeBean;}<br>
  * final Update<PoJo> update = prototypeBean.update(PoJo.class);
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/1/13
  */
 @Slf4j
 @SuppressWarnings("unused")
-public final class Update<T extends AbstractEntityPoJo<T, ?>> {
+public final class Update<T> {
 
   private final Class<T> clazz;
   private Condition<T> condition;
@@ -74,7 +72,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    *
    * @param clazz the clazz
    * @since 2020.11.13
-   * @author Tang Xiaofeng
+   * @author ramer
    */
   public Update(@Nonnull final Class<T> clazz) {
     this.clazz = clazz;
@@ -118,7 +116,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
    * @param clazz the clazz
    * @return the instance
    */
-  public static <T extends AbstractEntityPoJo<T, ?>> Update<T> getInstance(final Class<T> clazz) {
+  public static <T> Update<T> getInstance(final Class<T> clazz) {
     return prototypeBean.update(clazz);
   }
 
@@ -196,7 +194,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
         Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey()),
         null);
     if (update != 1 || BeanUtils.getValue(t, idField, null) == null) {
-      throw CommonException.of(ResultCode.API_FAIL_EXEC_CREATE);
+      throw new CreateNoIdDataAccessException("No identity return");
     }
     return t;
   }
@@ -447,7 +445,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
   public int delete() throws DataAccessException {
     // 不包含删除条件,抛异常
     if (condition.isEmpty()) {
-      throw CommonException.of(ResultCode.API_FAIL_DELETE_NO_CONDITION);
+      throw new NotAllowedDataAccessException("Must contain delete condition");
     }
     this.condition.appendLogicNotDelete();
     // 如果不支持逻辑删除
@@ -468,7 +466,7 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
               entityInfo.getName(),
               entityInfo.getLogicDeletePropColumn().getName(),
               entityInfo.getLogicDeleteProp().isDeleted(),
-              entityInfo.getFieldColumnMap().get(updateTimeField.getName()),
+              entityInfo.getFieldColumnMap().get(updateTimeField),
               condition.getString());
       return executor.update(
           clazz,
@@ -505,8 +503,8 @@ public final class Update<T extends AbstractEntityPoJo<T, ?>> {
               ? EntityUtils.getAllColumnFields(t.getClass())
               : EntityUtils.getNonNullColumnFields(t);
     } else {
-      final List<Field> includeFields = fields.getIncludeFields();
-      final List<Field> excludeFields = fields.getExcludeFields();
+      final Set<Field> includeFields = fields.getIncludeFields();
+      final Set<Field> excludeFields = fields.getExcludeFields();
       if (includeFields.isEmpty()) {
         savingFields =
             (configuration.isWriteNullProp()

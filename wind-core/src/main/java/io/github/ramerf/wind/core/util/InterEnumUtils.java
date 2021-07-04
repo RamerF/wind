@@ -11,7 +11,7 @@ import static java.util.stream.Collectors.toMap;
 /**
  * InterEnum 枚举工具类.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019 /12/11
  */
 @Slf4j

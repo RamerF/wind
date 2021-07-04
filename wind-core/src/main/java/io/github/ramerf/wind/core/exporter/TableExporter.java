@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 自动建表.
  *
  * @since 2020.10.28
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Slf4j
 public class TableExporter {
@@ -74,7 +74,7 @@ public class TableExporter {
         sql.append(";\n\t").append(tableComment);
       }
     }
-    log.info("createTable:[\n{}\n]", sql.toString());
+    log.info("createTable:[\n{}\n]", sql);
     windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
@@ -94,7 +94,6 @@ public class TableExporter {
 
     final String columnDefinition =
         updateColumns.stream()
-            .filter(EntityColumn::isSupported)
             .map(column -> " add column " + column.getColumnDdl(dialect))
             .collect(Collectors.joining(",\n\t"));
     sql.append(columnDefinition);
@@ -108,7 +107,7 @@ public class TableExporter {
               .collect(Collectors.joining(";\n\t"));
       sql.append(";\n\t").append(columnComment);
     }
-    log.info("updateTable:[\n{}\n]", sql.toString());
+    log.info("updateTable:[\n{}\n]", sql);
     windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
@@ -121,6 +120,7 @@ public class TableExporter {
             column ->
                 existColumns.stream()
                     .noneMatch(existColumn -> existColumn.getName().equals(column.getName())))
+        .filter(EntityColumn::isSupported)
         .collect(Collectors.toList());
   }
 }

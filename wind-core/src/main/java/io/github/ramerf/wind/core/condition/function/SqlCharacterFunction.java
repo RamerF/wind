@@ -7,7 +7,7 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  * <code>lower</code>,<code>upper</code>,<code>trim</code>,<code>translate
  * </code>
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/4/29
  */
 public enum SqlCharacterFunction implements SqlFunction {

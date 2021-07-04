@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
 /**
  * {@literal java:Date <=> jdbc:Timestamp}.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/4
  */
 public class TimestampTypeHandler implements ITypeHandler<Date, Timestamp> {

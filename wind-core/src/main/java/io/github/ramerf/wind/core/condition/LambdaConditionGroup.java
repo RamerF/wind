@@ -1,7 +1,5 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.entity.AbstractEntity;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import java.util.Collection;
@@ -13,11 +11,10 @@ import lombok.Getter;
  * @author ramer
  * @since 24/11/2020
  */
-public class LambdaConditionGroup<T extends AbstractEntityPoJo<T, ?>> {
+public class LambdaConditionGroup<T> {
   @Getter private LambdaCondition<T> condition;
 
-  public static <T extends AbstractEntityPoJo<T, ?>> LambdaConditionGroup<T> getInstance(
-      final LambdaCondition<T> lambdaCondition) {
+  public static <T> LambdaConditionGroup<T> getInstance(final LambdaCondition<T> lambdaCondition) {
     final LambdaConditionGroup<T> group = new LambdaConditionGroup<>();
     final LambdaCondition<T> condition = new LambdaCondition<>();
     condition.setEntityInfo(lambdaCondition.getEntityInfo());
@@ -26,18 +23,16 @@ public class LambdaConditionGroup<T extends AbstractEntityPoJo<T, ?>> {
     return group;
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> LambdaConditionGroup<T> getInstance(
-      final Class<T> clazz) {
+  public static <T> LambdaConditionGroup<T> getInstance(final Class<T> clazz) {
     return new LambdaConditionGroup<>(clazz);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> LambdaConditionGroup<T> getInstance(
-      final QueryColumn<T> queryColumn) {
+  public static <T> LambdaConditionGroup<T> getInstance(final QueryColumn<T> queryColumn) {
     LambdaConditionGroup<T> conditionGroup = new LambdaConditionGroup<>();
     return new LambdaConditionGroup<>(queryColumn);
   }
 
-  public static <T extends AbstractEntityPoJo<T, ?>> LambdaConditionGroup<T> getInstance(
+  public static <T> LambdaConditionGroup<T> getInstance(
       final Class<T> clazz, String tableName, String tableAlia) {
     return new LambdaConditionGroup<>(clazz, tableName, tableAlia);
   }
@@ -226,21 +221,19 @@ public class LambdaConditionGroup<T extends AbstractEntityPoJo<T, ?>> {
     return this;
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>>
-      LambdaConditionGroup<T> andEq(
-          @Nonnull final IFunction<T, ?> field,
-          @Nonnull final QueryColumn<Q> queryColumn,
-          @Nonnull final IFunction<R, ?> field2) {
+  public <R  , Q> LambdaConditionGroup<T> andEq(
+      @Nonnull final IFunction<T, ?> field,
+      @Nonnull final QueryColumn<Q> queryColumn,
+      @Nonnull final IFunction<R, ?> field2) {
     this.condition.eq(true, field, queryColumn, field2);
     return this;
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>>
-      LambdaConditionGroup<T> andEq(
-          final boolean condition,
-          @Nonnull final IFunction<T, ?> field,
-          @Nonnull final AbstractQueryEntity<Q> queryColumn,
-          @Nonnull final IFunction<R, ?> field2) {
+  public <R  , Q> LambdaConditionGroup<T> andEq(
+      final boolean condition,
+      @Nonnull final IFunction<T, ?> field,
+      @Nonnull final AbstractQueryEntity<Q> queryColumn,
+      @Nonnull final IFunction<R, ?> field2) {
     this.condition.eq(condition, field, queryColumn, field2);
     return this;
   }
@@ -426,21 +419,19 @@ public class LambdaConditionGroup<T extends AbstractEntityPoJo<T, ?>> {
     return this;
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>>
-      LambdaConditionGroup<T> orEq(
-          @Nonnull final IFunction<T, ?> field,
-          @Nonnull final QueryColumn<Q> queryColumn,
-          @Nonnull final IFunction<R, ?> field2) {
+  public <R , Q> LambdaConditionGroup<T> orEq(
+      @Nonnull final IFunction<T, ?> field,
+      @Nonnull final QueryColumn<Q> queryColumn,
+      @Nonnull final IFunction<R, ?> field2) {
     this.condition.orEq(true, field, queryColumn, field2);
     return this;
   }
 
-  public <R extends AbstractEntity, Q extends AbstractEntityPoJo<Q, ?>>
-      LambdaConditionGroup<T> orEq(
-          final boolean condition,
-          @Nonnull final IFunction<T, ?> field,
-          @Nonnull final AbstractQueryEntity<Q> queryColumn,
-          @Nonnull final IFunction<R, ?> field2) {
+  public <R  , Q> LambdaConditionGroup<T> orEq(
+      final boolean condition,
+      @Nonnull final IFunction<T, ?> field,
+      @Nonnull final AbstractQueryEntity<Q> queryColumn,
+      @Nonnull final IFunction<R, ?> field2) {
     this.condition.orEq(condition, field, queryColumn, field2);
     return this;
   }

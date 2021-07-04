@@ -23,5 +23,5 @@ public @interface TableInfo {
   /** 备注. */
   String comment() default "";
 
-  LogicDelete logicDelete() default @LogicDelete(fieldName = "");
+  LogicDelete logicDelete() default @LogicDelete(enable = false, fieldName = "");
 }

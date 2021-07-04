@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.condition.QueryColumn;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -12,14 +11,13 @@ import lombok.extern.slf4j.Slf4j;
  * The type Abstract result handler.
  *
  * @since 2020 /4/6
- * @author Tang Xiaofeng
+ * @author ramer
  * @param <P> 数据库对应 poJo
  * @param <T> 数据库返回对象
  * @param <E> 实际返回对象
  */
 @Slf4j
-public abstract class AbstractResultHandler<P extends AbstractEntityPoJo<P, ?>, T, E>
-    implements ResultHandler<T, E> {
+public abstract class AbstractResultHandler<P, T, E> implements ResultHandler<T, E> {
   /** The Methods. */
   List<Method> methods;
 

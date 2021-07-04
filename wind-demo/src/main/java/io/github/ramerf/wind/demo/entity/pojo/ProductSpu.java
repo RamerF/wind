@@ -1,8 +1,7 @@
 package io.github.ramerf.wind.demo.entity.pojo;
 
-import io.github.ramerf.wind.core.annotation.OneToOne;
-import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
+import io.github.ramerf.wind.core.annotation.*;
+import io.github.ramerf.wind.core.entity.pojo.Domain;
 import javax.persistence.Id;
 import lombok.*;
 
@@ -10,14 +9,14 @@ import lombok.*;
  * @author ramer
  * @since 12/09/2020
  */
-@TableInfo
+@TableInfo(logicDelete = @LogicDelete(enable = false))
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true, exclude = "product")
 @EqualsAndHashCode(callSuper = true)
-public class ProductSpu extends AbstractEntityPoJo<ProductSpu, String> {
+public class ProductSpu extends Domain<ProductSpu, String> {
   @Id private String id;
   private String address;
 
@@ -27,6 +26,8 @@ public class ProductSpu extends AbstractEntityPoJo<ProductSpu, String> {
   private String productId;
 
   /** 双向{@link OneToOne}关联,自定义关联字段. */
-  @OneToOne(referenceField = "code")
+  @OneToOne(targetField = "code", joinField = "spuCode")
   private ProductSpuCode productSpuCode;
+
+  private long spuCode;
 }

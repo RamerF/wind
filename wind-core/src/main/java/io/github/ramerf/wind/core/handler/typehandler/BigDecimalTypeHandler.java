@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 /**
  * {@literal java:BigDecimal <=> jdbc:Double}.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/3/4
  */
 public class BigDecimalTypeHandler implements ITypeHandler<BigDecimal, Double> {

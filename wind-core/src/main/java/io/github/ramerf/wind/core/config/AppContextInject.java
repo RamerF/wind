@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationContext;
  *
  * <p>使用方式参考: {@link Query#getInstance(Class)}
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/1/14
  */
 @Slf4j

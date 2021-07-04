@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.LambdaCondition;
 import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.config.WindConfiguration;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -18,39 +17,50 @@ import org.springframework.transaction.annotation.Transactional;
  * 执行写数据.
  *
  * @param <T> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/1/5
  * @see WindConfiguration#isWriteNullProp()
  */
-public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-    extends InterService<T, ID> {
+public interface UpdateService<T, ID extends Serializable> extends InterService<T, ID> {
 
   /**
    * 创建记录.
    *
-   * @param t the {@link AbstractEntityPoJo}
+   * @param t the t
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
   default T create(@Nonnull final T t) throws DataAccessException {
-    return create(t, null);
+    return create(t, (Fields<T>) null);
   }
 
   /**
    * 创建记录.
    *
-   * @param t the {@link AbstractEntityPoJo}
+   * @param t the t
+   * @param fields the fields
+   * @return {@code id}
+   * @throws DataAccessException 如果执行失败
+   */
+  default T create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
+    textFilter(t, t);
+    return getUpdate().create(t, fields);
+  }
+
+  /**
+   * 创建记录.
+   *
+   * @param t the t
    * @param fieldsConsumer the fields consumer
    * @return {@code id}
    * @throws DataAccessException 如果执行失败
    */
-  @SuppressWarnings("unchecked")
   default T create(@Nonnull final T t, final Consumer<Fields<T>> fieldsConsumer)
       throws DataAccessException {
     textFilter(t, t);
     Fields<T> fields = null;
     if (fieldsConsumer != null) {
-      fields = Fields.with((Class<T>) t.getClass());
+      fields = Fields.of();
       fieldsConsumer.accept(fields);
     }
     return getUpdate().create(t, fields);
@@ -88,7 +98,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
     }
     Fields<T> fields = null;
     if (fieldsConsumer != null) {
-      fields = Fields.with((Class<T>) ts.get(0).getClass());
+      fields = Fields.of((Class<T>) ts.get(0).getClass());
       fieldsConsumer.accept(fields);
     }
     return getUpdate().createBatch(ts, fields);
@@ -102,7 +112,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * @throws DataAccessException 如果执行失败
    */
   default int update(final T t) throws DataAccessException {
-    return update(t, null, null);
+    return update(t, (Fields<T>) null, null);
   }
 
   /**
@@ -135,6 +145,23 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
    * 条件更新.
    *
    * @param t the t
+   * @param fields 更新字段
+   * @param condition 更新条件
+   * @return 实际受影响的行数 int
+   * @throws DataAccessException 如果执行失败
+   */
+  default int update(final T t, Fields<T> fields, final LambdaCondition<T> condition)
+      throws DataAccessException {
+    if (condition == null) {
+      return getUpdate().update(t, fields);
+    }
+    return getUpdate().where(condition).update(t, fields);
+  }
+
+  /**
+   * 条件更新.
+   *
+   * @param t the t
    * @param conditionConsumer 更新条件
    * @param fieldsConsumer 更新字段
    * @return 实际受影响的行数 int
@@ -148,7 +175,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
       throws DataAccessException {
     Fields<T> fields = null;
     if (fieldsConsumer != null) {
-      fields = Fields.with((Class<T>) t.getClass());
+      fields = Fields.of((Class<T>) t.getClass());
       fieldsConsumer.accept(fields);
     }
     if (conditionConsumer == null) {
@@ -191,7 +218,7 @@ public interface UpdateService<T extends AbstractEntityPoJo<T, ID>, ID extends S
     }
     Fields<T> fields = null;
     if (fieldsConsumer != null) {
-      fields = Fields.with((Class<T>) ts.get(0).getClass());
+      fields = Fields.of((Class<T>) ts.get(0).getClass());
       fieldsConsumer.accept(fields);
     }
     return getUpdate().updateBatch(ts, fields);

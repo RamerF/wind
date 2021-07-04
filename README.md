@@ -21,7 +21,7 @@
 
 #### 迭代计划
 
- - [ ] 支持关系映射
+ - [x] 支持关系映射
  - [ ] 支持指定表的索引@TableIndexes(@TableIndex(name= "", fields = {""}, unique = false ))
 
 #### 测试项
@@ -544,7 +544,7 @@ public class BaseServiceTest {
   }
 
   /**
-   * @author Tang Xiaofeng
+   * @author ramer
    * @since 2020/8/5
    */
   @Getter
@@ -825,12 +825,13 @@ wind:
     }
     ```
 
-#### 自定义ID生成策略
+#### 自定义主键生成策略
+
 默认使用雪花算法
 ```java
 @Bean
 public IdGenerator autoIncrementGenerator() {
-    // 自定义id生成策略,下方为数据库自增写法
+    // 自定义id生成策略,下方为数据库自增写法,需要主键为包装类型
     return o -> null;
 }
 ```

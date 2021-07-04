@@ -1,9 +1,9 @@
-package io.github.ramerf.wind.core.entity;
+package io.github.ramerf.wind.web.entity;
 
 import java.io.Serializable;
 
 /**
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/12/25
  */
 public interface AbstractEntity extends Serializable {}

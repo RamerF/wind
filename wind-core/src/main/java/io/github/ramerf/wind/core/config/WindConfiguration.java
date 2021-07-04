@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * The type Wind configuration.
  *
  * @since 2020 /1/14
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Data
 @Slf4j
@@ -60,7 +60,7 @@ public class WindConfiguration {
    * Redis 缓存配置.
    *
    * @since 2020.08.23
-   * @author Tang Xiaofeng
+   * @author ramer
    */
   @Setter
   @Getter
@@ -84,7 +84,7 @@ public class WindConfiguration {
   /**
    * The enum Ddl auto.
    *
-   * @author Tang Xiaofeng
+   * @author ramer
    */
   public enum DdlAuto {
     /** Create ddl auto. */

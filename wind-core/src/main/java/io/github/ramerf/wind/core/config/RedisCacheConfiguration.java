@@ -19,7 +19,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 /**
  * 用于查询redis缓存.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020/03/24
  */
 @Slf4j

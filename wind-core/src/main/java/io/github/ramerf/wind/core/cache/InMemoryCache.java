@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 用于查询redis缓存.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020 /5/26
  */
 @Slf4j

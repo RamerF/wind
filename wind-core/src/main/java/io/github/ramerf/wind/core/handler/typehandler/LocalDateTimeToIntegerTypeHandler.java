@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  * {@literal java:LocalDateTime <=> jdbc:Integer}.
  *
  * @since 2020.11.17
- * @author Tang Xiaofeng
+ * @author ramer
  */
 public class LocalDateTimeToIntegerTypeHandler implements ITypeHandler<LocalDateTime, Integer> {
   @Override

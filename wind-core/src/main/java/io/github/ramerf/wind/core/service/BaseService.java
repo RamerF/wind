@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.LambdaCondition;
-import io.github.ramerf.wind.core.entity.pojo.AbstractEntityPoJo;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.BeanUtils;
@@ -14,22 +13,22 @@ import org.springframework.dao.DataAccessException;
  * 通用业务方法.
  *
  * @param <T> the type parameter
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2019/11/13
  */
-public interface BaseService<T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
+public interface BaseService<T, ID extends Serializable>
     extends QueryService<T, ID>, UpdateService<T, ID> {
   /**
    * 创建记录,返回创建成功的对象.
    *
-   * @param t the {@link AbstractEntityPoJo}
+   * @param t the t
    * @return the T
    * @throws RuntimeException 创建失败时,抛异常
    * @throws DataAccessException 如果执行失败
    * @throws CommonException 创建记录条数不等于1
    */
   default T createAndGet(@Nonnull final T t) throws RuntimeException {
-    create(t, null);
+    create(t, (Fields<T>) null);
     @SuppressWarnings("unchecked")
     final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
     return getById(id);
@@ -38,7 +37,7 @@ public interface BaseService<T extends AbstractEntityPoJo<T, ID>, ID extends Ser
   /**
    * 创建记录,返回创建成功的对象.
    *
-   * @param t the {@link AbstractEntityPoJo}
+   * @param t the t
    * @param fieldsConsumer the fields consumer
    * @return the T
    * @throws RuntimeException 创建失败时,抛异常

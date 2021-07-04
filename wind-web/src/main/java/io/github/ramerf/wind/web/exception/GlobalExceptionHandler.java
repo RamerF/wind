@@ -1,11 +1,11 @@
-package io.github.ramerf.wind.core.exception;
+package io.github.ramerf.wind.web.exception;
 
 import com.alibaba.fastjson.JSONException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import io.github.ramerf.wind.core.entity.response.ResultCode;
-import io.github.ramerf.wind.core.entity.response.Rs;
 import io.github.ramerf.wind.core.util.StringUtils;
+import io.github.ramerf.wind.web.entity.response.ResultCode;
+import io.github.ramerf.wind.web.entity.response.Rs;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,11 +38,11 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
  * <p>会覆盖该类中的所有异常处理.</b>
  *
  * @since 2020.09.04
- * @author Tang Xiaofeng
+ * @author ramer
  */
 @Slf4j
 @ControllerAdvice
-@Component("wind_global_exception_handler")
+@Component("wind-web-global-exception-handler")
 public class GlobalExceptionHandler {
   /**
    * 通用异常.
@@ -221,7 +221,7 @@ public class GlobalExceptionHandler {
   @ResponseStatus
   @ExceptionHandler(value = Exception.class)
   public Rs<Object> handleException(HttpServletRequest request, Exception exception) {
-    log.error(request.getRequestURL().toString());
+    log.error(request.getRequestURL().toString(), exception);
     handleError(request, exception);
     return Rs.fail();
   }
@@ -231,7 +231,5 @@ public class GlobalExceptionHandler {
       return;
     }
     log.error(exception.getMessage(), exception);
-    /// 模板引擎用
-    // request.setAttribute("error", exception.getMessage());
   }
 }

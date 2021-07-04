@@ -6,7 +6,7 @@ import java.lang.reflect.Type;
 /**
  * The type Type utils.
  *
- * @author Tang Xiaofeng
+ * @author ramer
  * @since 2020.08.21
  */
 public class TypeUtils {
