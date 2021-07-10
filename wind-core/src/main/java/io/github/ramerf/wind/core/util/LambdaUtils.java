@@ -4,7 +4,10 @@ import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.*;
 import java.io.*;
+import java.lang.invoke.SerializedLambda;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,21 +75,17 @@ public final class LambdaUtils {
   }
 
   private static SerializedLambda getSerializedLambda(final BeanFunction beanFunction) {
-    try (ObjectInputStream objectInputStream =
-        new ObjectInputStream(new ByteArrayInputStream(serialize(beanFunction))) {
-          @Override
-          protected Class<?> resolveClass(ObjectStreamClass objectStreamClass)
-              throws IOException, ClassNotFoundException {
-            Class<?> clazz = super.resolveClass(objectStreamClass);
-            return clazz == java.lang.invoke.SerializedLambda.class
-                ? SerializedLambda.class
-                : clazz;
-          }
-        }) {
-      final SerializedLambda serializedLambda = (SerializedLambda) objectInputStream.readObject();
-      LAMBDA_MAP.put(beanFunction.getClass(), new WeakReference<>(serializedLambda));
+    try {
+      final Class<? extends BeanFunction> clazz = beanFunction.getClass();
+      final Method writeReplace = clazz.getDeclaredMethod("writeReplace");
+      if (!writeReplace.isAccessible()) {
+        writeReplace.setAccessible(true);
+      }
+      final SerializedLambda serializedLambda =
+          (SerializedLambda) writeReplace.invoke(beanFunction);
+      LAMBDA_MAP.put(clazz, new WeakReference<>(serializedLambda));
       return serializedLambda;
-    } catch (ClassNotFoundException | IOException e) {
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
       throw CommonException.of(e);
     }
   }

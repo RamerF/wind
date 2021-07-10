@@ -2,8 +2,8 @@ package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.function.BeanFunction;
-import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
+import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
 import java.util.Objects;

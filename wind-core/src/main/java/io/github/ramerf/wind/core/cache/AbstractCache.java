@@ -44,7 +44,7 @@ public abstract class AbstractCache implements Cache {
   }
 
   @Override
-  public <T > String generateKey(
+  public <T> String generateKey(
       @Nonnull final SqlParam<T> sqlParam, @Nonnull final String methodName) {
     return getFixedKeyPrefix(sqlParam.getEntityClazz())
         + ":"

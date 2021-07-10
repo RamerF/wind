@@ -1,7 +1,5 @@
 package io.github.ramerf.wind.core.function;
 
-import java.util.Comparator;
-
 /**
  * The interface Consumer.
  *
@@ -12,7 +10,6 @@ import java.util.Comparator;
  */
 @FunctionalInterface
 public interface IConsumer<T, U> extends BeanFunction {
-  Comparator<IConsumer> COMPARATOR = (o1, o2) -> o1.getField().equals(o2.getField()) ? 0 : 1;
   /**
    * Accept.
    *

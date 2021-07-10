@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -142,11 +142,14 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
     return getQuery().fetchOneBySql(sql, respClazz, args);
   }
 
-  /** 关联查询 */
-  default <R> R fetchMapping(@Nonnull T t, IFunction<T, R> function) {
-    return EntityMapping.get(t.getClass(), function.getField())
-        .<R>map(mappingInfo -> mappingInfo.getMappingObject(t))
-        .orElse(null);
+  /** 查询关联对象. */
+  default <R> T queryMapping(@Nonnull T t, IConsumer<T, R> setField) {
+    setField.accept(
+        t,
+        EntityMapping.get(t.getClass(), setField.getField())
+            .<R>map(mappingInfo -> mappingInfo.getMappingObject(t))
+            .orElse(null));
+    return t;
   }
 
   /**

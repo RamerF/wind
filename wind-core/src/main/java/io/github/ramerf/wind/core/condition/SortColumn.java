@@ -17,8 +17,7 @@ public class SortColumn {
   /** The Orders. */
   List<Sort.Order> orders = new LinkedList<>();
 
-  public static <T  > SortColumn by(
-      @Nonnull final IFunction<T, ?> function, Order order) {
+  public static <T> SortColumn by(@Nonnull final IFunction<T, ?> function, Order order) {
     SortColumn sortColumn = new SortColumn();
     if (order.equals(Order.ASC)) {
       sortColumn.asc(function);
@@ -44,7 +43,7 @@ public class SortColumn {
    * @param function the function
    * @return the sort column
    */
-  public <T  > SortColumn asc(final IFunction<T, ?> function) {
+  public <T> SortColumn asc(final IFunction<T, ?> function) {
     return asc(function.getColumn());
   }
 
@@ -66,7 +65,7 @@ public class SortColumn {
    * @param function the function
    * @return the sort column
    */
-  public <T > SortColumn desc(final IFunction<T, ?> function) {
+  public <T> SortColumn desc(final IFunction<T, ?> function) {
     return desc(function.getColumn());
   }
 

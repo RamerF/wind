@@ -14,7 +14,7 @@ import lombok.Setter;
  * @author ramer
  * @since 2020/4/29
  */
-public class GroupByClause<T  > {
+public class GroupByClause<T> {
   @Setter @Getter private String tableAlia;
   @Getter private final List<String> cols = new LinkedList<>();
 

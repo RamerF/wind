@@ -221,7 +221,7 @@ public class LambdaConditionGroup<T> {
     return this;
   }
 
-  public <R  , Q> LambdaConditionGroup<T> andEq(
+  public <R, Q> LambdaConditionGroup<T> andEq(
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final QueryColumn<Q> queryColumn,
       @Nonnull final IFunction<R, ?> field2) {
@@ -229,7 +229,7 @@ public class LambdaConditionGroup<T> {
     return this;
   }
 
-  public <R  , Q> LambdaConditionGroup<T> andEq(
+  public <R, Q> LambdaConditionGroup<T> andEq(
       final boolean condition,
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final AbstractQueryEntity<Q> queryColumn,
@@ -419,7 +419,7 @@ public class LambdaConditionGroup<T> {
     return this;
   }
 
-  public <R , Q> LambdaConditionGroup<T> orEq(
+  public <R, Q> LambdaConditionGroup<T> orEq(
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final QueryColumn<Q> queryColumn,
       @Nonnull final IFunction<R, ?> field2) {
@@ -427,7 +427,7 @@ public class LambdaConditionGroup<T> {
     return this;
   }
 
-  public <R  , Q> LambdaConditionGroup<T> orEq(
+  public <R, Q> LambdaConditionGroup<T> orEq(
       final boolean condition,
       @Nonnull final IFunction<T, ?> field,
       @Nonnull final AbstractQueryEntity<Q> queryColumn,

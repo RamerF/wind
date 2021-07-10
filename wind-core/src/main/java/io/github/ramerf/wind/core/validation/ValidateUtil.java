@@ -23,16 +23,16 @@ import org.springframework.validation.*;
  * 用法一: 手动校验<br>
  * ViolationResult violationResult = ValidateUtil.validate(list);
  *  if (violationResult.hasErrors()) {
- *    return Result.error(ValidateUtil.collect(violationResult));
+ *    return Rs.fail(ValidateUtil.collect(violationResult));
  * }
  *
  * 用法二: @Valid自动校验<br>
  * {@code @PostMapping}
  * public Rs foo(@Valid Foo foo, BindingResult bindingResult) {
  *  if (bindingResult.hasErrors()) {
- *    return Result.error(ValidateUtil.collectFirst(bindingResult));
+ *    return Rs.fail(ValidateUtil.collectFirst(bindingResult));
  *  }
- *  return Result.success();
+ *  return Rs.ok();
  * }
  *
  * </pre>

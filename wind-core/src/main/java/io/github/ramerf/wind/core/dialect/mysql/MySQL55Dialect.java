@@ -13,8 +13,8 @@ package io.github.ramerf.wind.core.dialect.mysql;
  */
 public class MySQL55Dialect extends MySQL5Dialect {
 
-	@Override
-	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return InnoDBStorageEngine.INSTANCE;
-	}
+  @Override
+  protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
+    return InnoDBStorageEngine.INSTANCE;
+  }
 }

@@ -3,10 +3,12 @@ package io.github.ramerf.wind.core.function;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.*;
 import java.io.Serializable;
+import java.lang.invoke.SerializedLambda;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +21,6 @@ import org.slf4j.LoggerFactory;
  */
 public interface BeanFunction extends Serializable {
   Logger log = LoggerFactory.getLogger(BeanFunction.class);
-  Comparator<BeanFunction> COMPARATOR = (o1, o2) -> o1.getField().equals(o2.getField()) ? 0 : 1;
   Map<BeanFunction, WeakReference<Field>> LAMBDA_FIELD_MAP = new ConcurrentHashMap<>();
 
   /**

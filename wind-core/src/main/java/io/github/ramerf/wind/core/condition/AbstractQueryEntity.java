@@ -10,8 +10,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public abstract class AbstractQueryEntity<T  >
-    implements QueryEntity<T> {
+public abstract class AbstractQueryEntity<T> implements QueryEntity<T> {
   private QueryEntityMetaData<T> queryEntityMetaData = new QueryEntityMetaData<>();
   private EntityInfo entityInfo;
 }

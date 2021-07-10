@@ -8,30 +8,30 @@ package io.github.ramerf.wind.core.dialect.mysql;
 
 /**
  * Represents the MyISAM storage engine.
- * 
+ *
  * @author Vlad Mihalcea
  */
-public class MyISAMStorageEngine implements MySQLStorageEngine{
+public class MyISAMStorageEngine implements MySQLStorageEngine {
 
-	public static final MySQLStorageEngine INSTANCE = new MyISAMStorageEngine();
+  public static final MySQLStorageEngine INSTANCE = new MyISAMStorageEngine();
 
-	@Override
-	public boolean supportsCascadeDelete() {
-		return false;
-	}
+  @Override
+  public boolean supportsCascadeDelete() {
+    return false;
+  }
 
-	@Override
-	public String getTableTypeString(String engineKeyword) {
-		return String.format( " %s=MyISAM", engineKeyword );
-	}
+  @Override
+  public String getTableTypeString(String engineKeyword) {
+    return String.format(" %s=MyISAM", engineKeyword);
+  }
 
-	@Override
-	public boolean hasSelfReferentialForeignKeyBug() {
-		return false;
-	}
+  @Override
+  public boolean hasSelfReferentialForeignKeyBug() {
+    return false;
+  }
 
-	@Override
-	public boolean dropConstraints() {
-		return false;
-	}
+  @Override
+  public boolean dropConstraints() {
+    return false;
+  }
 }
