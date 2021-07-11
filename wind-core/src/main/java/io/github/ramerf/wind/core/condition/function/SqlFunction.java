@@ -1,7 +1,5 @@
 package io.github.ramerf.wind.core.condition.function;
 
-import io.github.ramerf.wind.core.support.VarArgsFunction;
-
 /**
  * sql function.
  *
@@ -11,20 +9,10 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
 public interface SqlFunction {
 
   /**
-   * Always <br>
-   * <code>return this.exec;</code>
+   * 获取sql.
    *
-   * @return the var args function
+   * @param str 通常情况下该值为空.具体由函数决定,可能为列名
+   * @return sql
    */
-  VarArgsFunction<String, String> init();
-
-  /**
-   * String string.
-   *
-   * @param str the str
-   * @return the string
-   */
-  default String string(final String... str) {
-    return init().apply(str);
-  }
+  String string(final String... str);
 }

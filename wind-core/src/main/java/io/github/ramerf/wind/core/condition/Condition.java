@@ -77,7 +77,7 @@ public interface Condition<T> extends Predicate<T> {
   enum MatchPattern {
     /** = */
     EQUAL("="),
-    /** != */
+    /** &lt;&gt; */
     NOT_EQUAL("<>"),
     /** &gt; */
     GREATER(">"),

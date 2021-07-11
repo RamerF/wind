@@ -5,7 +5,6 @@ import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
@@ -18,7 +17,6 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
  * @since 2019/12/26
  */
 @Slf4j
-@ToString
 public class StringCondition<T> extends AbstractCondition<T> {
 
   public StringCondition(final QueryColumn<T> queryColumn) {

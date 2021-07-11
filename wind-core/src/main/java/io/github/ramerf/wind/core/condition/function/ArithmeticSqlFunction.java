@@ -13,19 +13,19 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  * @author ramer
  * @since 2020/4/29
  */
-public enum SqlArithmeticFunction implements SqlFunction {
+public enum ArithmeticSqlFunction implements SqlFunction {
   /** 取绝对值. */
   ABS(str -> " abs(" + String.join("", str) + ") "),
   ;
 
   private final VarArgsFunction<String, String> exec;
 
-  SqlArithmeticFunction(final VarArgsFunction<String, String> exec) {
+  ArithmeticSqlFunction(final VarArgsFunction<String, String> exec) {
     this.exec = exec;
   }
 
   @Override
-  public VarArgsFunction<String, String> init() {
-    return this.exec;
+  public String string(final String... str) {
+    return exec.apply(str);
   }
 }

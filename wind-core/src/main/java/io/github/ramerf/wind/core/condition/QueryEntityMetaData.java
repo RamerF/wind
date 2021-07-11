@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
+import io.github.ramerf.wind.core.condition.QueryColumn.QueryAlia;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;

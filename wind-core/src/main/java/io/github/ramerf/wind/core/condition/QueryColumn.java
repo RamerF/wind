@@ -1,15 +1,18 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
-import io.github.ramerf.wind.core.condition.function.SqlFunction;
+import io.github.ramerf.wind.core.condition.function.*;
 import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
-import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
-import io.github.ramerf.wind.core.util.CollectionUtils;
+import io.github.ramerf.wind.core.util.*;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
+import java.util.*;
 import javax.annotation.Nonnull;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,10 +21,9 @@ import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.DOT;
 import static java.util.stream.Collectors.joining;
 
 /**
- * sql查询列定义.即 select 后跟的字段.<br>
+ * sql查询列定义.即 select... from之间的字符串.<br>
  * 注意:当查询所有字段(未指定查询列)时,如果属性的下划线格式与对应数据库列不匹配,返回对象的该属性值将始终为零值.<br>
  * 可以指定查询列或者确保返回对象的属性下划线格式与数据库列对应,详情见<br>
- * wind-test: DemoProductPoJo#getColumn
  *
  * @param <T> the type parameter
  * @author ramer
@@ -88,30 +90,40 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
   }
 
   /**
-   * 新增查询列.
+   * 查询列.
    *
    * @param function the function
    * @return the query column
    */
   public QueryColumn<T> col(final IFunction<T, ?> function) {
-    return col(function, null);
+    return col(function, (String) null);
   }
 
   /**
-   * 新增查询列.
+   * 查询列.
    *
    * @param function the function
    * @param alia the alia
    * @return the query column
    */
   public QueryColumn<T> col(final IFunction<T, ?> function, final String alia) {
-    return add(function, alia, null);
+    return col(function, alia, null);
   }
 
   /**
-   * 新增自定义查询列.
+   * sql函数.
    *
-   * <p>示例:col("id,case sex when 1 then '男' when 2 then '女' else '未知' end alia")
+   * @see BaseSqlFunction
+   * @see CaseWhenSqlFunction
+   */
+  public QueryColumn<T> col(final SqlFunction sqlFunction) {
+    return col(sqlFunction.string());
+  }
+
+  /**
+   * 自定义查询表达式.
+   *
+   * <p>示例:col("id,case sex when 1 then '男' when 2 then '女' else '未知' end")
    *
    * @param sql 查询列表达式
    * @return the query column
@@ -125,7 +137,7 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
   }
 
   /**
-   * Count query column.
+   * 对指定字段做统计.
    *
    * @param function the function
    * @return the query column
@@ -135,18 +147,18 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
   }
 
   /**
-   * Count query column.
+   * 对指定字段做统计.
    *
    * @param function the function
    * @param alia the alia
    * @return the query column
    */
   public QueryColumn<T> count(final IFunction<T, ?> function, final String alia) {
-    return add(function, alia, SqlAggregateFunction.COUNT);
+    return col(function, alia, AggregateSqlFunction.COUNT);
   }
 
   /**
-   * Sum query column.<br>
+   * 对指定字段求和.
    *
    * @param function the function
    * @return the query column
@@ -157,8 +169,7 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
   }
 
   /**
-   * Sum query column.<br>
-   * 不清楚返回类型的情况下使用{@link BigDecimal}
+   * 对指定字段求和. 不清楚返回类型的情况下使用{@link BigDecimal}
    *
    * <pre>
    * <b>注意:该列的返回类型与数据库对应关系</b>
@@ -173,11 +184,16 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
    * @return the query column
    */
   public QueryColumn<T> sum(final IFunction<T, ?> function, final String alia) {
-    return add(function, alia, SqlAggregateFunction.SUM);
+    return col(function, alia, AggregateSqlFunction.SUM);
+  }
+
+  /** 对指定表达式求和,比如sum(case when...) */
+  public QueryColumn<T> sum(final SqlFunction sqlFunction) {
+    return col(AggregateSqlFunction.SUM.string(sqlFunction.string()));
   }
 
   /**
-   * Max query column.
+   * 对指定字段求最大值.
    *
    * @param function the function
    * @return the query column
@@ -187,18 +203,18 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
   }
 
   /**
-   * Max query column.
+   * 对指定字段求最大值.
    *
    * @param function the function
    * @param alia the alia
    * @return the query column
    */
   public QueryColumn<T> max(final IFunction<T, ?> function, final String alia) {
-    return add(function, alia, SqlAggregateFunction.MAX);
+    return col(function, alia, AggregateSqlFunction.MAX);
   }
 
   /**
-   * Min query column.
+   * 对指定字段求最小值.
    *
    * @param function the function
    * @return the query column
@@ -208,18 +224,23 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
   }
 
   /**
-   * Min query column.
+   * 对指定字段求最小值.
    *
    * @param function the function
    * @param alia the alia
    * @return the query column
    */
   public QueryColumn<T> min(final IFunction<T, ?> function, final String alia) {
-    return add(function, alia, SqlAggregateFunction.MIN);
+    return col(function, alia, AggregateSqlFunction.MIN);
   }
 
   /** 添加查询对象(列/聚合函数). */
-  private QueryColumn<T> add(
+  public QueryColumn<T> col(final IFunction<T, ?> function, final SqlFunction sqlFunction) {
+    return col(function, null, sqlFunction);
+  }
+
+  /** 添加查询对象(列/聚合函数). */
+  public QueryColumn<T> col(
       final IFunction<T, ?> function, final String alia, final SqlFunction sqlFunction) {
     final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
     metaData.queryAlias.add(
@@ -239,7 +260,7 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
     if (CollectionUtils.isEmpty(metaData.queryAlias)) {
       EntityHelper.getEntityInfo(metaData.clazz).getEntityColumns().stream()
           .filter(EntityColumn::isSupported)
-          .forEach(this::add);
+          .forEach(this::col);
     }
     return metaData.queryAlias.stream()
         .map(o -> toColumnWithAlia(o, containAlia))
@@ -247,7 +268,7 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
   }
 
   /** 添加查询对象(列/聚合函数). */
-  private QueryColumn<T> add(final EntityColumn entityColumn) {
+  private QueryColumn<T> col(final EntityColumn entityColumn) {
     getQueryEntityMetaData()
         .queryAlias
         .add(
@@ -277,5 +298,134 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
             ? sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name))
             : tableAlias.concat(DOT.operator()).concat(name);
     return containAlia ? queryName.concat(AS.operator()).concat(alia) : queryName;
+  }
+
+  @Data
+  public static class QueryAlia {
+    /** 字段名. */
+    private String fieldName;
+    /** 列名(字段名下划线分割). */
+    private String columnName;
+    /** 列别名. */
+    private String columnAlia;
+    /** 表名: @TableInfo#name &gt; 类名(驼封转下划线). */
+    private String tableName;
+    /** 表别名. */
+    private String tableAlia;
+    /** sql函数. */
+    private SqlFunction sqlFunction;
+
+    /** 自定义sql,用于扩展支持. */
+    private String customSql;
+
+    private QueryAlia() {}
+
+    /** {@link BeanFunction#getImplClassFullPath()} :tableName */
+    private static Map<String, WeakReference<String>> TABLE_NAME_MAP = new HashMap<>();
+
+    public static QueryAlia of(BeanFunction function, final String columnAlia, String tableAlia) {
+      return of(function, columnAlia, null, tableAlia, null);
+    }
+
+    public static QueryAlia of(
+        BeanFunction function,
+        final String columnAlia,
+        final String tableName,
+        final String tableAlia) {
+      return of(function, columnAlia, tableName, tableAlia, null);
+    }
+
+    public static QueryAlia of(@Nonnull final String customSql) {
+      final QueryAlia queryAlia = new QueryAlia();
+      queryAlia.setCustomSql(customSql);
+      return queryAlia;
+    }
+
+    public static QueryAlia of(
+        @Nonnull final String fieldName,
+        @Nonnull final String columnName,
+        final String columnAlia,
+        @Nonnull String tableName,
+        @Nonnull final String tableAlia) {
+      final QueryAlia queryAlia = new QueryAlia();
+      queryAlia.setFieldName(fieldName);
+      queryAlia.setColumnName(columnName);
+      queryAlia.setColumnAlia(columnAlia);
+      if (StringUtils.isEmpty(columnAlia)) {
+        queryAlia.setColumnAlia(columnName);
+      }
+      queryAlia.setTableName(tableName);
+      queryAlia.setTableAlia(tableAlia);
+      return queryAlia;
+    }
+
+    public static QueryAlia of(
+        BeanFunction function,
+        final String columnAlia,
+        String tableName,
+        final String tableAlia,
+        final SqlFunction sqlFunction) {
+      final QueryAlia queryAlia = new QueryAlia();
+
+      final String fieldName = function.getField().getName();
+      queryAlia.setFieldName(fieldName);
+
+      final String columnName = function.getColumn();
+      queryAlia.setColumnName(columnName);
+      /*
+       别名逻辑:
+       1. 别名
+       2. 别名为空时,如果用户定义的列名(@TableColumn.name)和下划线格式的字段名不相等,使用字段对应的下划线表示(解决字段名和列名不对应时,查询字段为空)
+      */
+      final String underlineField = StringUtils.camelToUnderline(fieldName);
+      queryAlia.setColumnAlia(
+          StringUtils.nonEmpty(columnAlia)
+              ? columnAlia
+              : columnName.equals(fieldName) ? columnName : underlineField);
+
+      final String classFullPath = function.getImplClassFullPath();
+      final String className = function.getImplClassName();
+      if (StringUtils.isEmpty(tableName)) {
+        tableName =
+            Optional.ofNullable(TABLE_NAME_MAP.get(classFullPath))
+                .map(Reference::get)
+                .orElseGet(
+                    () -> {
+                      final String name =
+                          EntityUtils.getTableName(BeanUtils.getClazz(classFullPath));
+                      TABLE_NAME_MAP.put(classFullPath, new WeakReference<>(name));
+                      return name;
+                    });
+      }
+      queryAlia.setTableName(tableName);
+      queryAlia.setTableAlia(StringUtils.isEmpty(tableAlia) ? tableName : tableAlia);
+      queryAlia.setSqlFunction(sqlFunction);
+      return queryAlia;
+    }
+
+    public static QueryAlia of(
+        final String fieldName, final String tableAlia, final String tableName) {
+      final QueryAlia columnAlia = new QueryAlia();
+      columnAlia.setFieldName(fieldName);
+      final String column = StringUtils.camelToUnderline(fieldName);
+      columnAlia.setColumnName(column);
+      columnAlia.setColumnAlia(column);
+      columnAlia.setTableAlia(tableAlia);
+      columnAlia.setTableName(tableName);
+      return columnAlia;
+    }
+
+    @SuppressWarnings("unused")
+    public String getQueryString() {
+      StringBuilder sb = new StringBuilder();
+      // 这里可能会出现较复杂逻辑,不要改为三目运算符
+      if (Objects.nonNull(sqlFunction)) {
+        sb.append(sqlFunction.string(columnAlia));
+      } else {
+        sb.append(" ".concat(columnAlia));
+      }
+
+      return sb.toString();
+    }
   }
 }

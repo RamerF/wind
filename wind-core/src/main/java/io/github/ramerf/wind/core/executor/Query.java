@@ -1,13 +1,13 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
+import io.github.ramerf.wind.core.condition.QueryColumn.QueryAlia;
+import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.condition.function.SqlFunction;
 import io.github.ramerf.wind.core.config.PrototypeBean;
 import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.*;
-import io.github.ramerf.wind.core.handler.ResultHandler.QueryAlia;
 import io.github.ramerf.wind.core.util.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -354,7 +354,7 @@ public class Query<T> {
             .setSql(String.format(sql, countString))
             .setClazz(Long.class)
             .setEntityClazz(clazz)
-            .setAggregateFunction(SqlAggregateFunction.COUNT)
+            .setAggregateFunction(AggregateSqlFunction.COUNT)
             .setConditions(conditions)
             .setStartIndex(new AtomicInteger(1)));
   }
@@ -419,7 +419,7 @@ public class Query<T> {
     return executor.queryForObject(
         new SqlParam<T>()
             .setSql(sql)
-            .setAggregateFunction(SqlAggregateFunction.COUNT)
+            .setAggregateFunction(AggregateSqlFunction.COUNT)
             .setConditions(conditions),
         args,
         Long.class);

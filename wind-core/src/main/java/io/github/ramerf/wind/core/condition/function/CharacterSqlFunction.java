@@ -10,7 +10,7 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  * @author ramer
  * @since 2020/4/29
  */
-public enum SqlCharacterFunction implements SqlFunction {
+public enum CharacterSqlFunction implements SqlFunction {
   /** 取小写字母. */
   LOWER(str -> " lower(" + String.join("", str) + ") "),
   UPPER(str -> " upper(" + String.join("", str) + ") "),
@@ -19,12 +19,12 @@ public enum SqlCharacterFunction implements SqlFunction {
   ;
   private final VarArgsFunction<String, String> exec;
 
-  SqlCharacterFunction(final VarArgsFunction<String, String> exec) {
+  CharacterSqlFunction(final VarArgsFunction<String, String> exec) {
     this.exec = exec;
   }
 
   @Override
-  public VarArgsFunction<String, String> init() {
-    return this.exec;
+  public String string(final String... str) {
+    return exec.apply(str);
   }
 }

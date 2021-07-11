@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.support;
 
 /**
- * 传入n个string,返回指定类型.
+ * 传入n个变量,返回指定类型.
  *
  * @param <T> the type parameter
  * @param <R> the type parameter

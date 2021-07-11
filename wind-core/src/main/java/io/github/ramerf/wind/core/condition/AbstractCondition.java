@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
@@ -31,7 +30,6 @@ import static java.util.stream.Collectors.toCollection;
  * @author ramer
  */
 @Slf4j
-@ToString
 public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implements Condition<T> {
   /** where后的字符串,参数占位符为 ?. */
   protected final List<String> conditionSql = new LinkedList<>();

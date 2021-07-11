@@ -31,7 +31,7 @@ public class SqlHelper {
    * @return the string
    */
   public static String toSqlString(final Object value) {
-    if (Objects.isNull(value)) {
+    if (value == null) {
       return "null";
     }
     if (value instanceof String) {
@@ -43,7 +43,7 @@ public class SqlHelper {
       return QUOTE_FORMAT.format(val);
     }
     if (value instanceof Date) {
-      // return QUOTE_FORMAT.format(
+      /// return QUOTE_FORMAT.format(
       //     LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
       return QUOTE_FORMAT.format(((Date) value).toInstant().toString());
     }

@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.condition.QueryColumn;
-import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
+import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import java.util.List;
 import java.util.Map;
@@ -216,7 +216,7 @@ public interface Executor {
     /** sql条件,可获取占位符对应的值,用于redis缓存唯一key生成.{@link Condition#getValues(AtomicInteger)} */
     protected List<Condition<?>> conditions;
     /** 执行聚合函数,可为空. */
-    protected SqlAggregateFunction aggregateFunction;
+    protected AggregateSqlFunction aggregateFunction;
 
     public Class<?> getEntityClazz() {
       return entityClazz == null ? clazz : entityClazz;

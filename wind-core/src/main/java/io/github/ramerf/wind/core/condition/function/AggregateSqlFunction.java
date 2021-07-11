@@ -10,7 +10,7 @@ import io.github.ramerf.wind.core.support.VarArgsFunction;
  * @since 2020/4/29
  */
 @SuppressWarnings({"unused"})
-public enum SqlAggregateFunction implements SqlFunction {
+public enum AggregateSqlFunction implements SqlFunction {
   /** COUNT(%s) */
   COUNT(str -> " count(" + String.join("", str) + ") "),
   SUM(str -> " sum(" + String.join("", str) + ") "),
@@ -21,12 +21,12 @@ public enum SqlAggregateFunction implements SqlFunction {
   ;
   private final VarArgsFunction<String, String> exec;
 
-  SqlAggregateFunction(final VarArgsFunction<String, String> exec) {
+  AggregateSqlFunction(final VarArgsFunction<String, String> exec) {
     this.exec = exec;
   }
 
   @Override
-  public VarArgsFunction<String, String> init() {
-    return this.exec;
+  public String string(final String... str) {
+    return exec.apply(str);
   }
 }

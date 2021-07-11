@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.condition.function.SqlAggregateFunction;
+import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
@@ -24,7 +23,6 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
  * @author ramer
  */
 @Slf4j
-@ToString
 @SuppressWarnings("UnusedReturnValue")
 public class LambdaCondition<T> extends AbstractCondition<T> {
 
@@ -379,7 +377,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
         final QueryEntityMetaData<T> entityMetaData = childConditions.getQueryEntityMetaData();
         String childQuery =
             (conditionSql.size() > 0 ? AND.operator : "")
-                + SqlAggregateFunction.EXISTS.string(
+                + AggregateSqlFunction.EXISTS.string(
                     "select 1 from ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
 
         conditionSql.add(childQuery);
@@ -717,7 +715,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
         final QueryEntityMetaData<T> entityMetaData = childConditions.getQueryEntityMetaData();
         String childQuery =
             (conditionSql.size() > 0 ? OR.operator : "")
-                + SqlAggregateFunction.EXISTS.string(
+                + AggregateSqlFunction.EXISTS.string(
                     "select 1 from ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
         conditionSql.add(childQuery);
         valueTypes.addAll(((LambdaCondition<T>) childConditions).valueTypes);
