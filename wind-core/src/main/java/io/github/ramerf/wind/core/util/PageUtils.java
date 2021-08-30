@@ -11,7 +11,7 @@ import static io.github.ramerf.wind.core.util.CollectionUtils.toList;
 import static java.util.stream.Collectors.toCollection;
 
 /**
- * The type Page utils.
+ * 分页工具类.
  *
  * @author ramer
  * @since 2019 /12/26
@@ -57,15 +57,14 @@ public class PageUtils {
   @SuppressWarnings("unchecked")
   public static <T, R> Page<R> toPage(
       final Page<T> page, final Function<T, R> mapFunction, final Predicate<R> filterFunction) {
-    if (Objects.isNull(page)) {
+    if (page == null) {
       return new PageImpl<>(Collections.emptyList());
     }
     if (CollectionUtils.isEmpty(page.getContent())) {
       return new PageImpl<>(Collections.emptyList(), page.getPageable(), page.getTotalElements());
     }
     final Stream<R> stream =
-        page.getContent().stream()
-            .map(o -> Objects.nonNull(mapFunction) ? mapFunction.apply(o) : (R) o);
+        page.getContent().stream().map(o -> mapFunction != null ? mapFunction.apply(o) : (R) o);
     List<R> content =
         Optional.ofNullable(filterFunction)
             .map(stream::filter)

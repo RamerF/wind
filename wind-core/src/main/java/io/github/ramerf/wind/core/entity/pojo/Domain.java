@@ -1,14 +1,12 @@
 package io.github.ramerf.wind.core.entity.pojo;
 
-import io.github.ramerf.wind.core.condition.LambdaCondition;
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.service.GenericLambdaService;
-import io.github.ramerf.wind.core.service.InterService.Fields;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 
@@ -25,7 +23,7 @@ public class Domain<T, ID extends Serializable> {
    *
    * @throws DataAccessException 如果执行失败
    */
-  public final T create() throws DataAccessException {
+  public final int create() throws DataAccessException {
     return genericService().create(instance());
   }
 
@@ -36,7 +34,7 @@ public class Domain<T, ID extends Serializable> {
    * @return 包含主键
    * @throws DataAccessException 如果执行失败
    */
-  public final T create(final Fields<T> fields) throws DataAccessException {
+  public final int create(final Fields<T> fields) throws DataAccessException {
     return genericService().create(instance(), fields);
   }
 
@@ -64,13 +62,12 @@ public class Domain<T, ID extends Serializable> {
   /**
    * 更新.
    *
-   * @param conditionConsumer the fields consumer
+   * @param cnd the fields consumer
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  public final int updateByCondition(final LambdaCondition<T> conditionConsumer)
-      throws DataAccessException {
-    return genericService().update(instance(), null, conditionConsumer);
+  public final int update(final Cnd<T, ?, ?> cnd) throws DataAccessException {
+    return genericService().update(instance(), null, cnd);
   }
 
   /**
@@ -90,14 +87,13 @@ public class Domain<T, ID extends Serializable> {
   /**
    * 条件删除.
    *
-   * @param consumer the consumer.示例:<br>
-   *     {@code condition -> condition.eq(AbstractEntityPoJo::setId, 1L)}
-   * @return 删除记录数 long
+   * @param condition 示例: {@code LambdaCondition.of(Foo.class).eq(Foo::setId, 1L)}
+   * @return 删除记录数
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
-  public int delete(Consumer<LambdaCondition<T>> consumer) throws DataAccessException {
-    return genericService().delete(consumer);
+  public int delete(Condition<T, ?> condition) throws DataAccessException {
+    return genericService().delete(condition);
   }
 
   /**

@@ -9,36 +9,17 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 
 /**
- * The interface Condition.
+ * 条件对象.
  *
- * <p>TODO POST 如果要实现完整的连表查询,考虑在该类添加join方法
- *
- * @param <T> the type parameter
+ * @param <POJO> pojo对象
+ * @param <CONDITION> 当前对象
  * @since 2020.01.06
- * @author ramer
+ * @author ramer Xiaofeng
  */
-public interface Condition<T> extends Predicate<T> {
+public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
+  QueryEntityMetaData<POJO> getQueryEntityMetaData();
 
-  // TODO WARN 使用ConditionGroup实现and/or后,删除<br>
-  /**
-   * 创建一个空的条件,包含表信息.
-   *
-   * @return the Condition
-   * @see LambdaCondition#getInstance(QueryColumn)
-   */
-  @Deprecated
-  default Condition<T> condition() {
-    return condition(false);
-  }
-
-  /**
-   * 创建一个空的条件,包含表信息.
-   *
-   * @param genAlia 是否生成新的表别名,用于子查询时传true
-   * @return the Condition
-   */
-  @Deprecated
-  Condition<T> condition(final boolean genAlia);
+  String getString();
 
   /**
    * 获取占位符值.<br>
@@ -62,16 +43,24 @@ public interface Condition<T> extends Predicate<T> {
    */
   boolean isEmpty();
 
-  Condition<T> eq(@Nonnull final Field field, final Object value);
+  default CONDITION eq(@Nonnull final Field field, final Object value) {
+    return eq(true, field, value);
+  }
 
-  Condition<T> eq(final boolean condition, @Nonnull final Field field, final Object value);
+  CONDITION eq(final boolean condition, @Nonnull final Field field, final Object value);
 
-  Condition<T> in(@Nonnull Field field, @Nonnull Collection<?> values);
+  default CONDITION in(@Nonnull Field field, @Nonnull Collection<?> values) {
+    return in(true, field, values);
+  }
 
-  Condition<T> in(boolean condition, @Nonnull Field field, @Nonnull Collection<?> values);
+  CONDITION in(boolean condition, @Nonnull Field field, @Nonnull Collection<?> values);
+
+  CONDITION and(final String sql);
+
+  CONDITION or(final String sql);
 
   /** 拼接逻辑未删除条件,如果不支持逻辑删除,不执行操作. */
-  Condition<T> appendLogicNotDelete();
+  CONDITION appendLogicNotDelete();
 
   /** 属性匹配模式 */
   enum MatchPattern {
@@ -130,6 +119,77 @@ public interface Condition<T> extends Predicate<T> {
 
     MatchPattern(final String operator) {
       this.operator = operator;
+    }
+  }
+
+  enum SqlOperator {
+    /** 点. */
+    DOT("."),
+    /** 逗号. */
+    COMMA(","),
+    /** 问号. */
+    QUESTION_MARK("?"),
+    /** 百分号. */
+    PERCENT("%"),
+    /** 星号. */
+    WILDCARD("*"),
+    /** 等于. */
+    EQUAL("="),
+    EQUAL_FORMAT(" %s=%s "),
+
+    /** 引号. */
+    QUOTE("'"),
+    QUOTE_FORMAT("'%s'"),
+
+    /** 圆括号(小括号). */
+    LEFT_PARENTHESIS("("),
+    RIGHT_PARENTHESIS(")"),
+    PARENTHESIS_FORMAT("(%s)"),
+
+    /** 花括号(大括号). */
+    LEFT_BRACE("{"),
+    RIGHT_BRACE("}"),
+    BRACE_FORMAT("{%s}"),
+
+    /** 方括号(中括号) */
+    LEFT_SQUARE_BRACKETS("["),
+    RIGHT_SQUARE_BRACKETS("["),
+    SQUARE_BRACKETS_FORMAT("[%s]"),
+
+    INSERT_INTO("insert into "),
+
+    VALUES(" values"),
+
+    WHERE(" where "),
+
+    AS(" as "),
+
+    AND(" and "),
+
+    ORDER_BY(" order by "),
+
+    GROUP_BY(" group by "),
+
+    OR(" or "),
+    ;
+
+    final String operator;
+
+    SqlOperator(final String operator) {
+      this.operator = operator;
+    }
+
+    public String operator() {
+      return this.operator;
+    }
+
+    public String format(final Object... string) {
+      return String.format(this.operator, string);
+    }
+
+    @Override
+    public String toString() {
+      return this.operator;
     }
   }
 }

@@ -3,8 +3,10 @@ package io.github.ramerf.wind.core.executor;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.ramerf.wind.core.cache.Cache;
 import io.github.ramerf.wind.core.exception.TooManyResultException;
-import io.github.ramerf.wind.core.handler.*;
-import io.github.ramerf.wind.core.util.*;
+import io.github.ramerf.wind.core.handler.ResultHandler;
+import io.github.ramerf.wind.core.handler.ResultHandlerUtil;
+import io.github.ramerf.wind.core.util.CollectionUtils;
+import io.github.ramerf.wind.core.util.PageUtils;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -54,9 +56,7 @@ public class JdbcTemplateExecutor implements Executor {
               query(
                   sqlParam,
                   ps ->
-                      sqlParam.conditions.stream()
-                          .flatMap(condition -> condition.getValues(sqlParam.startIndex).stream())
-                          .forEach(o -> o.accept(ps)),
+                      sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
                   new ColumnMapRowMapper());
           if (CollectionUtils.isEmpty(result)) {
             return null;
@@ -66,12 +66,7 @@ public class JdbcTemplateExecutor implements Executor {
           }
           @SuppressWarnings("unchecked")
           final Class<R> clazz = (Class<R>) sqlParam.getClazz();
-          return (resultHandler != null
-                  ? resultHandler
-                  : (BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-                      ? new PrimitiveResultHandler<>(clazz)
-                      : new BeanResultHandler<>(clazz, sqlParam.queryColumns)))
-              .handle(result.get(0));
+          return ResultHandlerUtil.handle(result.get(0), clazz, resultHandler);
         },
         Thread.currentThread().getStackTrace()[1].getMethodName());
   }
@@ -86,45 +81,12 @@ public class JdbcTemplateExecutor implements Executor {
               query(
                   sqlParam,
                   ps ->
-                      sqlParam.conditions.stream()
-                          .flatMap(condition -> condition.getValues(sqlParam.startIndex).stream())
-                          .forEach(o -> o.accept(ps)),
+                      sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
                   new ColumnMapRowMapper());
           if (CollectionUtils.isEmpty(list)) {
             return Collections.emptyList();
           }
-          ResultHandler<Map<String, Object>, R> resultHandler =
-              BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-                  ? new PrimitiveResultHandler<>(clazz)
-                  : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
-          return resultHandler.handle(list);
-        },
-        Thread.currentThread().getStackTrace()[1].getMethodName());
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <T, R> List<R> fetchAll(@Nonnull final SqlParam<T> sqlParam) throws DataAccessException {
-    return cacheIfAbsent(
-        sqlParam,
-        () -> {
-          final List<Map<String, Object>> list =
-              query(
-                  sqlParam,
-                  ps ->
-                      sqlParam.conditions.stream()
-                          .flatMap(condition -> condition.getValues(sqlParam.startIndex).stream())
-                          .forEach(o -> o.accept(ps)),
-                  new ColumnMapRowMapper());
-          if (log.isDebugEnabled()) {
-            log.debug("fetch:[{}]", list);
-          }
-          final Class<R> clazz = (Class<R>) sqlParam.getClazz();
-          ResultHandler<Map<String, Object>, R> resultHandler =
-              BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-                  ? new PrimitiveResultHandler<>(clazz)
-                  : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
-          return resultHandler.handle(list);
+          return ResultHandlerUtil.handle(list, clazz);
         },
         Thread.currentThread().getStackTrace()[1].getMethodName());
   }
@@ -132,7 +94,7 @@ public class JdbcTemplateExecutor implements Executor {
   @Override
   @SuppressWarnings("unchecked")
   public <T, R> Page<R> fetchPage(
-      @Nonnull final SqlParam<T> sqlParam, final long total, final PageRequest pageable)
+      @Nonnull final SqlParam<T> sqlParam, final long total, final Pageable pageable)
       throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
@@ -143,9 +105,9 @@ public class JdbcTemplateExecutor implements Executor {
                   : query(
                       sqlParam,
                       ps ->
-                          sqlParam.conditions.stream()
-                              .flatMap(
-                                  condition -> condition.getValues(sqlParam.startIndex).stream())
+                          sqlParam
+                              .condition
+                              .getValues(sqlParam.startIndex)
                               .forEach(o -> o.accept(ps)),
                       new ColumnMapRowMapper());
           // 从0开始
@@ -155,14 +117,13 @@ public class JdbcTemplateExecutor implements Executor {
           if (CollectionUtils.isEmpty(list)) {
             return PageUtils.toPage(Collections.emptyList(), 0, currentPage, pageSize);
           }
-          final Class<?> clazz = sqlParam.getClazz();
-          @SuppressWarnings("rawtypes")
-          ResultHandler resultHandler =
-              BeanUtils.isPrimitiveType(clazz) || clazz.isArray()
-                  ? new PrimitiveResultHandler<>(clazz)
-                  : new BeanResultHandler<>(clazz, sqlParam.queryColumns);
+          final Class<R> clazz = (Class<R>) sqlParam.getClazz();
           return PageUtils.toPage(
-              resultHandler.handle(list), total, currentPage, pageSize, pageable.getSort());
+              ResultHandlerUtil.handle(list, clazz),
+              total,
+              currentPage,
+              pageSize,
+              pageable.getSort());
         },
         Thread.currentThread().getStackTrace()[1].getMethodName());
   }
@@ -175,10 +136,7 @@ public class JdbcTemplateExecutor implements Executor {
         () ->
             query(
                 sqlParam,
-                ps ->
-                    sqlParam.conditions.stream()
-                        .flatMap(condition -> condition.getValues(sqlParam.startIndex).stream())
-                        .forEach(o -> o.accept(ps)),
+                ps -> sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
                 rs -> {
                   if (rs.next()) {
                     return rs.getLong(1);
@@ -261,7 +219,7 @@ public class JdbcTemplateExecutor implements Executor {
   private <T> T cacheIfAbsent(
       @Nonnull final SqlParam<?> sqlParam, Supplier<T> supplier, final String methodName) {
     // 未开启缓存
-    if (Objects.isNull(cache)) {
+    if (cache == null) {
       return supplier.get();
     }
     final String key = cache.generateKey(sqlParam, methodName);
@@ -290,7 +248,7 @@ public class JdbcTemplateExecutor implements Executor {
     }
     // 空数据缓存50ms,防止穿透数据库,
     // TODO POST 这个数值可能应该允许让用户自定义
-    if (Objects.isNull(t)) {
+    if (t == null) {
       cache.put(key, null, 50, TimeUnit.MILLISECONDS);
     } else {
       // Page对象需要单独处理
@@ -302,7 +260,7 @@ public class JdbcTemplateExecutor implements Executor {
 
   private <T> T execAndClear(@Nonnull final Class<?> clazz, Supplier<T> supplier) {
     // 未开启缓存
-    if (Objects.isNull(cache)) {
+    if (cache == null) {
       return supplier.get();
     }
     cache.clear(clazz);

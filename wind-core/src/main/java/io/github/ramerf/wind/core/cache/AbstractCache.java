@@ -27,11 +27,7 @@ public abstract class AbstractCache implements Cache {
     return configuration;
   }
 
-  /**
-   * 清除对应key的数据.
-   *
-   * @param clazz {@link AbstractEntityPoJo}
-   */
+  /** 清除对应key的数据. */
   @Override
   public void clear(@Nonnull final Class<?> clazz) {
     final String key = getFixedKeyPrefix(clazz);
@@ -53,10 +49,9 @@ public abstract class AbstractCache implements Cache {
         + sqlParam.getSql()
         + (sqlParam.getAggregateFunction() != null
             ? ":" + sqlParam.getAggregateFunction().name()
-            : sqlParam.getConditions() != null
+            : sqlParam.getCondition() != null
                 ? ":"
-                    + sqlParam.getConditions().stream()
-                        .flatMap(o -> o.getOriginValues().stream())
+                    + sqlParam.getCondition().getOriginValues().stream()
                         .map(SqlHelper::toSqlString)
                         .collect(Collectors.joining())
                 : "");

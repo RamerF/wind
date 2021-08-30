@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.mysql;
 
-import io.github.ramerf.wind.core.condition.SortColumn;
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -15,6 +15,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -68,217 +69,154 @@ public class BaseServiceTest {
   }
 
   @Test
-  @DisplayName("count所有")
+  @DisplayName("Cnds条件构造工具类")
   @Transactional(rollbackFor = Exception.class)
-  public void testCount1() {
-    assertTrue(service.count() > 0);
+  public void testCnds() {
+    final Cnds<Foo> cnds =
+        // 指定操作的表
+        Cnds.of(Foo.class)
+            // 条件
+            .gt(Foo::setId, 0L)
+            // 分页
+            .limit(1, 10)
+            // 分组
+            .groupBy(Foo::getName)
+            // 排序
+            .orderBy(Foo::getId, Direction.DESC);
+    log.info("testCnds:[{}]", cnds.getString());
   }
 
   @Test
-  @DisplayName("count带条件")
-  @Transactional(rollbackFor = Exception.class)
-  public void testCount2() {
-    assertTrue(service.count(condition -> condition.gt(Foo::setId, 0L)) > 0);
-  }
-
-  @Test
-  @DisplayName("count指定列带条件")
-  @Transactional(rollbackFor = Exception.class)
-  public void testCount3() {
-    final long count =
-        service.count(query -> query.col(Foo::getId), condition -> condition.gt(Foo::setId, 0L));
-    assertTrue(count > 0);
+  @DisplayName("统计")
+  public void testCount() {
+    final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L);
+    assertTrue(service.count(cnds) > 0);
   }
 
   @Test
   @DisplayName("查询单个:通过id查询")
-  @Transactional(rollbackFor = Exception.class)
   public void testGetById() {
     assertNotNull(service.getById(id));
   }
 
   @Test
   @DisplayName("查询单个:条件查询")
-  @Transactional(rollbackFor = Exception.class)
   public void testGetOne1() {
-    assertNotNull(service.getOne(condition -> condition.eq(Foo::setId, id)));
+    assertNotNull(service.getOne(Cnds.of(Foo.class).eq(Foo::setId, id)));
   }
 
   @Test
   @DisplayName("查询单个:条件查询指定列")
-  @Transactional(rollbackFor = Exception.class)
   public void testGetOne2() {
-    assertNotNull(
-        service.getOne(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.eq(Foo::setId, id)));
+    final Cnds<Foo> cnds = Cnds.of(Foo.class).eq(Foo::setId, id);
+    final QueryColumn<Foo> queryColumn =
+        QueryColumn.of(Foo.class).col(Foo::getName).col(Foo::getId);
+    assertNotNull(service.getOne(cnds, queryColumn));
+  }
+
+  @Test
+  @DisplayName("查询单个:条件查询排序")
+  public void testGetOne3() {
+    assertNotNull(service.getOne(Cnds.of(Foo.class).limit(1).orderBy(Foo::getId, Direction.DESC)));
   }
 
   @Test
   @DisplayName("查询单个:条件查询指定列,返回任意对象")
-  @Transactional(rollbackFor = Exception.class)
-  public void testGetOne3() {
+  public void testGetOne4() {
     assertNotNull(
         service.getOne(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.eq(Foo::setId, id),
+            Cnds.of(Foo.class).eq(Foo::setId, id),
+            QueryColumn.of(Foo.class).col(Foo::getId),
             IdNameResponse.class));
   }
 
   @Test
   @DisplayName("查询单个:自定义sql")
-  @Transactional(rollbackFor = Exception.class)
-  public void testGetOne4() {
+  public void testGetOne5() {
     service.getOne(
-        query ->
-            query.col(
-                "(case name when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) as name,id"),
-        condition -> condition.eq(Foo::setId, 10000L).and("name is not null"));
+        Cnds.of(Foo.class).eq(Foo::setId, id).and("name is not null"),
+        QueryColumn.of(Foo.class)
+            .col(
+                "(case name when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) as name,id"));
   }
 
   @Test
   @DisplayName("查询单个:自定义sql")
-  @Transactional(rollbackFor = Exception.class)
-  public void testGetOne5() {
-    assertNotNull(service.getOne("select id,name from foo limit 1", IdNameResponse.class));
+  public void testGetOne6() {
+    assertNotNull(service.fetchOneBySql("select id,name from foo limit 1", IdNameResponse.class));
   }
 
   @Test
   @DisplayName("查询列表:通过id列表查询")
-  @Transactional(rollbackFor = Exception.class)
   public void testListByIds() {
     assertNotNull(service.listByIds(Arrays.asList(id, 2L, 3L)));
   }
 
   @Test
   @DisplayName("查询列表:条件查询")
-  @Transactional(rollbackFor = Exception.class)
   public void testList1() {
-    assertNotNull(service.list(condition -> condition.gt(Foo::setId, 0L)));
+    assertNotNull(service.list(Cnds.of(Foo.class).gt(Foo::setId, 0L)));
   }
 
   @Test
   @DisplayName("查询列表:指定列,返回任意对象")
-  @Transactional(rollbackFor = Exception.class)
   public void testList2() {
-    assertNotNull(
-        service.list(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
-  }
-
-  @Test
-  @DisplayName("查询列表:条件查询指定列")
-  @Transactional(rollbackFor = Exception.class)
-  public void testList3() {
-    assertNotNull(
-        service.list(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L)));
+    final Cnds<Foo> cnds = Cnds.of(Foo.class).eq(Foo::setId, id);
+    final QueryColumn<Foo> queryColumn =
+        QueryColumn.of(Foo.class).col(Foo::getName).col(Foo::getId);
+    assertNotNull(service.list(cnds, queryColumn, IdNameResponse.class));
   }
 
   @Test
   @DisplayName("查询列表:条件查询指定页,带排序")
-  @Transactional(rollbackFor = Exception.class)
-  public void testList4() {
-    assertNotNull(service.list(condition -> condition.gt(Foo::setId, 0L), 1, 10));
+  public void testList3() {
+    assertNotNull(
+        service.list(
+            Cnds.of(Foo.class)
+                .gt(Foo::setId, 0L)
+                .limit(1, 10)
+                .orderBy(Foo::getId, Direction.DESC)));
   }
 
   @Test
   @DisplayName("查询列表:条件查询指定列,返回任意对象")
-  @Transactional(rollbackFor = Exception.class)
   public void testList5() {
     assertNotNull(
         service.list(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L),
+            Cnds.of(Foo.class).col(Foo::getId).col(Foo::getName).gt(Foo::setId, 0L),
             IdNameResponse.class));
-  }
-
-  @Test
-  @DisplayName("查询列表:条件查询指定列指定页,返回任意对象,带条件")
-  @Transactional(rollbackFor = Exception.class)
-  public void testList6() {
-    assertNotNull(
-        service.list(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC),
-            IdNameResponse.class));
-  }
-
-  @Test
-  @DisplayName("查询列表:查询所有,指定列")
-  @Transactional(rollbackFor = Exception.class)
-  public void testListAll1() {
-    assertNotNull(service.listAll(query -> query.col(Foo::getId).col(Foo::getName)));
-  }
-
-  @Test
-  @DisplayName("查询列表:查询所有,指定列,返回任意对象")
-  @Transactional(rollbackFor = Exception.class)
-  public void testListAll2() {
-    assertNotNull(
-        service.listAll(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
-  }
-
-  @Test
-  @DisplayName("查询列表:自定义sql")
-  @Transactional(rollbackFor = Exception.class)
-  public List<Foo> testListAll3() {
-    return service.listAll("select * from foo", Foo.class);
   }
 
   @Test
   @DisplayName("查询分页:带条件,带排序")
-  @Transactional(rollbackFor = Exception.class)
   public void testPage1() {
     assertNotNull(
         service.page(
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC)));
+            Cnds.of(Foo.class).gt(Foo::setId, 0L).page(Pages.of(1, 10).desc(Foo::getName))));
   }
 
   @Test
   @DisplayName("查询分页:指定列,返回任意对象")
-  @Transactional(rollbackFor = Exception.class)
   public void testPage2() {
     assertNotNull(
         service.page(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC),
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .col(Foo::getName)
+                .page(Pages.of(1, 10).desc(Foo::getName)),
             IdNameResponse.class));
   }
 
   @Test
   @DisplayName("查询分页:带条件指定列,返回任意对象")
-  @Transactional(rollbackFor = Exception.class)
   public void testPage3() {
     assertNotNull(
         service.page(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC)));
-  }
-
-  @Test
-  @DisplayName("查询分页:带条件指定列,返回任意对象,多个字段排序")
-  @Transactional(rollbackFor = Exception.class)
-  public void testPage4() {
-    assertNotNull(
-        service.page(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getId, SortColumn.Order.DESC).desc(Foo::getName).asc(Foo::getType),
-            IdNameResponse.class));
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .col(Foo::getName)
+                .gt(Foo::setId, 0L)
+                .page(Pages.of(1, 10).desc(Foo::getName).desc(Foo::getId))));
   }
 
   @Test

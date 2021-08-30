@@ -6,7 +6,6 @@ import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
-import java.util.Objects;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -34,7 +33,7 @@ public class TypeHandlerHelper {
     if (log.isTraceEnabled()) {
       log.trace(
           "toJavaValue:match typeHandler[typeHandler:{},field:{}]",
-          Objects.isNull(typeHandler) ? null : typeHandler.getClass().getSimpleName(),
+          typeHandler == null ? null : typeHandler.getClass().getSimpleName(),
           valueType.originVal);
     }
     return typeHandler == null

@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.*;
-import java.io.*;
 import java.lang.invoke.SerializedLambda;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
@@ -87,21 +86,6 @@ public final class LambdaUtils {
       return serializedLambda;
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
       throw CommonException.of(e);
-    }
-  }
-
-  private static byte[] serialize(BeanFunction lambda) {
-    if (lambda == null) {
-      return null;
-    }
-    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(4096);
-        ObjectOutputStream oos = new ObjectOutputStream(byteArrayOutputStream)) {
-      oos.writeObject(lambda);
-      oos.flush();
-      return byteArrayOutputStream.toByteArray();
-    } catch (IOException ex) {
-      throw new IllegalArgumentException(
-          "Failed to serialize object of type: " + lambda.getClass(), ex);
     }
   }
 

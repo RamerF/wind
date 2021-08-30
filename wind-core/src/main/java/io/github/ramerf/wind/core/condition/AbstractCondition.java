@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.helper.*;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.EntityInfo;
@@ -15,24 +16,38 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import lombok.Getter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
+import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 import static java.util.stream.Collectors.toCollection;
 
 /**
  * 条件构造.
  *
+ * @param <POJO> the type parameter
+ * @param <CONDITION> 当前对象
  * @since 2020.09.16
- * @author ramer
+ * @author ramer Xiaofeng
  */
 @Slf4j
-public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implements Condition<T> {
+public abstract class AbstractCondition<POJO, CONDITION extends AbstractCondition<POJO, CONDITION>>
+    implements Condition<POJO, CONDITION> {
+
+  @Getter
+  @Setter(AccessLevel.PROTECTED)
+  private QueryEntityMetaData<POJO> queryEntityMetaData = new QueryEntityMetaData<>();
+
+  @Getter(AccessLevel.PROTECTED)
+  @Setter(AccessLevel.PROTECTED)
+  private EntityInfo entityInfo;
+
   /** where后的字符串,参数占位符为 ?. */
   protected final List<String> conditionSql = new LinkedList<>();
+
+  protected final List<String> groupBySql = new LinkedList<>();
 
   /** 占位符对应的值. */
   @Getter protected final List<ValueType> valueTypes = new LinkedList<>();
@@ -45,18 +60,18 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
 
   protected AbstractCondition() {}
 
-  public AbstractCondition(final QueryColumn<T> queryColumn) {
+  public AbstractCondition(final QueryColumn<POJO> queryColumn) {
     setEntityInfo(queryColumn.getEntityInfo());
     setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
   }
 
-  public AbstractCondition(final Class<T> clazz) {
+  public AbstractCondition(final Class<POJO> clazz) {
     this(clazz, null, null);
   }
 
-  public AbstractCondition(final Class<T> clazz, String tableName, String tableAlia) {
+  public AbstractCondition(final Class<POJO> clazz, String tableName, String tableAlia) {
     if (clazz == null && tableName == null && tableAlia == null) {
-      throw CommonException.of("[clazz,tableName,tableAlia]不能同时为空");
+      throw SimpleException.of("[clazz,tableName,tableAlia]不能同时为空");
     }
     final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
     if (clazz != null) {
@@ -69,7 +84,7 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
       }
       setEntityInfo(entityInfo);
     }
-    final QueryEntityMetaData<T> queryEntityMetaData = new QueryEntityMetaData<>();
+    final QueryEntityMetaData<POJO> queryEntityMetaData = new QueryEntityMetaData<>();
     queryEntityMetaData.setClazz(clazz);
     queryEntityMetaData.setTableName(tableName);
     tableAlia = tableAlia == null ? tableName : tableAlia;
@@ -83,29 +98,33 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
   }
 
   /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
-  public Condition<T> and(final String sql) {
+  @Override
+  public CONDITION and(final String sql) {
     if (StringUtils.nonEmpty(sql)) {
       conditionSql.add((conditionSql.size() > 0 ? AND.operator : "").concat(sql));
     }
-    return this;
+    //noinspection unchecked
+    return (CONDITION) this;
   }
 
   /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
-  public Condition<T> or(final String sql) {
+  @Override
+  public CONDITION or(final String sql) {
     if (StringUtils.nonEmpty(sql)) {
       conditionSql.add((conditionSql.size() > 0 ? OR.operator : "").concat(sql));
     }
-    return this;
+    //noinspection unchecked
+    return (CONDITION) this;
   }
 
-  public AbstractCondition<T> condition(final boolean genAlia) {
+  public AbstractCondition<POJO, ?> condition(final boolean genAlia) {
     this.getQueryEntityMetaData().setContainTableAlia(true);
 
     final EntityInfo entityInfo = new EntityInfo();
     BeanUtils.copyProperties(getEntityInfo(), entityInfo);
     setEntityInfo(entityInfo);
 
-    final QueryEntityMetaData<T> metaData = new QueryEntityMetaData<>();
+    final QueryEntityMetaData<POJO> metaData = new QueryEntityMetaData<>();
     BeanUtils.copyProperties(getQueryEntityMetaData(), metaData);
     setQueryEntityMetaData(metaData);
     if (genAlia) {
@@ -125,14 +144,17 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
     return String.valueOf(chars);
   }
 
+  @Override
   public String getString() {
-    // if (!containLogicNotDelete) {
-    //   appendLogicNotDelete();
-    //   containLogicNotDelete = true;
-    // }
-    return String.join("", conditionSql);
+    if (groupBySql.isEmpty()) {
+      return String.join("", conditionSql);
+    }
+    return String.join("", conditionSql)
+        .concat(GROUP_BY.operator)
+        .concat(String.join(",", groupBySql));
   }
 
+  @Override
   public List<Consumer<PreparedStatement>> getValues(final AtomicInteger startIndex) {
     // if (!containLogicNotDelete) {
     //   appendLogicNotDelete();
@@ -154,23 +176,20 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
         .collect(toCollection(LinkedList::new));
   }
 
+  @Override
   public List<Object> getOriginValues() {
     return valueTypes.stream()
         .map(ValueType::getOriginVal)
         .collect(Collectors.toCollection(LinkedList::new));
   }
 
+  @Override
   public boolean isEmpty() {
-    return valueTypes.size() <= 0;
+    return valueTypes.isEmpty();
   }
 
   @Override
-  public final Condition<T> eq(@Nonnull final Field field, final Object value) {
-    return eq(true, field, value);
-  }
-
-  @Override
-  public final Condition<T> eq(
+  public final CONDITION eq(
       final boolean condition, @Nonnull final Field field, final Object value) {
     if (condition) {
       conditionSql.add(
@@ -182,16 +201,12 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
               .concat(toPreFormatSqlVal(value)));
       valueTypes.add(ValueType.of(value, field));
     }
-    return this;
+    //noinspection unchecked
+    return (CONDITION) this;
   }
 
   @Override
-  public final Condition<T> in(@Nonnull final Field field, @Nonnull final Collection<?> values) {
-    return in(true, field, values);
-  }
-
-  @Override
-  public final Condition<T> in(
+  public final CONDITION in(
       final boolean condition, @Nonnull final Field field, @Nonnull final Collection<?> values) {
     if (condition) {
       conditionSql.add(
@@ -204,14 +219,15 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
                       MatchPattern.IN.operator,
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
-                          .collect(Collectors.joining(SEMICOLON.operator)))));
+                          .collect(Collectors.joining(COMMA.operator)))));
       values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
     }
-    return this;
+    //noinspection unchecked
+    return (CONDITION) this;
   }
 
   @Override
-  public synchronized Condition<T> appendLogicNotDelete() {
+  public final synchronized CONDITION appendLogicNotDelete() {
     final LogicDeleteProp logicDeleteProp = getEntityInfo().getLogicDeleteProp();
     final EntityColumn logicDeletePropColumn = getEntityInfo().getLogicDeletePropColumn();
     // 启用逻辑删除且当前未包含该条件(这个有必要?)
@@ -228,6 +244,7 @@ public abstract class AbstractCondition<T> extends AbstractQueryEntity<T> implem
               .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
       valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), logicDeleteField));
     }
-    return this;
+    //noinspection unchecked
+    return (CONDITION) this;
   }
 }

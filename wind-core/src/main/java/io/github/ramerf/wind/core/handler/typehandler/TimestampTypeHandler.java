@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
@@ -23,7 +22,7 @@ public class TimestampTypeHandler implements ITypeHandler<Date, Timestamp> {
   @Override
   public Date convertFromJdbc(
       final Timestamp jdbcVal, final Object defaultValue, final Field field) {
-    return Objects.nonNull(jdbcVal) ? new Date(jdbcVal.getTime()) : null;
+    return jdbcVal != null ? new Date(jdbcVal.getTime()) : null;
   }
 
   @Override

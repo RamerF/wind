@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.pgsql;
 
-import io.github.ramerf.wind.core.condition.SortColumn;
+import io.github.ramerf.wind.core.condition.Cnds;
+import io.github.ramerf.wind.core.condition.Pages;
 import io.github.ramerf.wind.core.pgsql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -81,15 +82,14 @@ public class BaseServiceTest {
   @DisplayName("count带条件")
   @Transactional(rollbackFor = Exception.class)
   public void testCount2() {
-    assertTrue(service.count(condition -> condition.gt(Foo::setId, 0L)) > 0);
+    assertTrue(service.count(Cnds.of(Foo.class).gt(Foo::setId, 0L)) > 0);
   }
 
   @Test
   @DisplayName("count指定列带条件")
   @Transactional(rollbackFor = Exception.class)
   public void testCount3() {
-    final long count =
-        service.count(query -> query.col(Foo::getId), condition -> condition.gt(Foo::setId, 0L));
+    final long count = service.count(Cnds.of(Foo.class).col(Foo::getId).gt(Foo::setId, 0L));
     assertTrue(count > 0);
   }
 
@@ -104,7 +104,7 @@ public class BaseServiceTest {
   @DisplayName("查询单个:条件查询")
   @Transactional(rollbackFor = Exception.class)
   public void testGetOne1() {
-    assertNotNull(service.getOne(condition -> condition.eq(Foo::setId, id)));
+    assertNotNull(service.getOne(Cnds.of(Foo.class).eq(Foo::setId, id)));
   }
 
   @Test
@@ -112,9 +112,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testGetOne2() {
     assertNotNull(
-        service.getOne(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.eq(Foo::setId, id)));
+        service.getOne(Cnds.of(Foo.class).col(Foo::getId).col(Foo::getName).eq(Foo::setId, id)));
   }
 
   @Test
@@ -123,8 +121,7 @@ public class BaseServiceTest {
   public void testGetOne3() {
     assertNotNull(
         service.getOne(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.eq(Foo::setId, id),
+            Cnds.of(Foo.class).col(Foo::getId).col(Foo::getName).eq(Foo::setId, id),
             IdNameResponse.class));
   }
 
@@ -133,17 +130,20 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testGetOne4() {
     service.getOne(
-        query ->
-            query.col(
-                "(case name when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) as name,id"),
-        condition -> condition.eq(Foo::setId, 10000L).and("name is not null"));
+        Cnds.of(Foo.class)
+            .col(
+                "(case name when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) as name,id")
+            .eq(Foo::setId, 10000L)
+            .and("name is not null"));
   }
 
   @Test
   @DisplayName("查询单个:自定义sql")
   @Transactional(rollbackFor = Exception.class)
   public void testGetOne5() {
-    assertNotNull(service.getOne("select id,name from foo limit 1", IdNameResponse.class));
+    assertNotNull(
+        service.getOne(
+            Cnds.of(Foo.class).and("select id,name from foo limit 1"), IdNameResponse.class));
   }
 
   @Test
@@ -157,7 +157,7 @@ public class BaseServiceTest {
   @DisplayName("查询列表:条件查询")
   @Transactional(rollbackFor = Exception.class)
   public void testList1() {
-    assertNotNull(service.list(condition -> condition.gt(Foo::setId, 0L)));
+    assertNotNull(service.list(Cnds.of(Foo.class).gt(Foo::setId, 0L)));
   }
 
   @Test
@@ -165,7 +165,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testList2() {
     assertNotNull(
-        service.list(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
+        service.list(Cnds.of(Foo.class).col(Foo::getId).col(Foo::getName), IdNameResponse.class));
   }
 
   @Test
@@ -173,16 +173,14 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testList3() {
     assertNotNull(
-        service.list(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L)));
+        service.list(Cnds.of(Foo.class).col(Foo::getId).col(Foo::getName).gt(Foo::setId, 0L)));
   }
 
   @Test
   @DisplayName("查询列表:条件查询指定页")
   @Transactional(rollbackFor = Exception.class)
   public void testList4() {
-    assertNotNull(service.list(condition -> condition.gt(Foo::setId, 0L), 1, 10));
+    assertNotNull(service.list(Cnds.of(Foo.class).gt(Foo::setId, 0L).page(Pages.of(1, 10))));
   }
 
   @Test
@@ -191,8 +189,7 @@ public class BaseServiceTest {
   public void testList5() {
     assertNotNull(
         service.list(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L),
+            Cnds.of(Foo.class).col(Foo::getId).col(Foo::getName).gt(Foo::setId, 0L),
             IdNameResponse.class));
   }
 
@@ -202,34 +199,12 @@ public class BaseServiceTest {
   public void testList6() {
     assertNotNull(
         service.list(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC),
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .col(Foo::getName)
+                .gt(Foo::setId, 0L)
+                .page(Pages.of(1, 10).desc(Foo::getName)),
             IdNameResponse.class));
-  }
-
-  @Test
-  @DisplayName("查询列表:查询所有,指定列")
-  @Transactional(rollbackFor = Exception.class)
-  public void testListAll1() {
-    assertNotNull(service.listAll(query -> query.col(Foo::getId).col(Foo::getName)));
-  }
-
-  @Test
-  @DisplayName("查询列表:查询所有,指定列,返回任意对象")
-  @Transactional(rollbackFor = Exception.class)
-  public void testListAll2() {
-    assertNotNull(
-        service.listAll(query -> query.col(Foo::getId).col(Foo::getName), IdNameResponse.class));
-  }
-
-  @Test
-  @DisplayName("查询列表:自定义sql")
-  @Transactional(rollbackFor = Exception.class)
-  public List<Foo> testListAll3() {
-    return service.listAll("select * from foo", Foo.class);
   }
 
   @Test
@@ -238,10 +213,7 @@ public class BaseServiceTest {
   public void testPage1() {
     assertNotNull(
         service.page(
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC)));
+            Cnds.of(Foo.class).gt(Foo::setId, 0L).page(Pages.of(1, 10).desc(Foo::getName))));
   }
 
   @Test
@@ -250,10 +222,10 @@ public class BaseServiceTest {
   public void testPage2() {
     assertNotNull(
         service.page(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC),
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .col(Foo::getName)
+                .page(Pages.of(1, 10).desc(Foo::getName)),
             IdNameResponse.class));
   }
 
@@ -263,11 +235,11 @@ public class BaseServiceTest {
   public void testPage3() {
     assertNotNull(
         service.page(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getName, SortColumn.Order.DESC)));
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .col(Foo::getName)
+                .gt(Foo::setId, 0L)
+                .page(Pages.of(1, 10).desc(Foo::getName))));
   }
 
   @Test
@@ -276,11 +248,11 @@ public class BaseServiceTest {
   public void testPage4() {
     assertNotNull(
         service.page(
-            query -> query.col(Foo::getId).col(Foo::getName),
-            condition -> condition.gt(Foo::setId, 0L),
-            1,
-            10,
-            SortColumn.by(Foo::getId, SortColumn.Order.DESC).desc(Foo::getName).asc(Foo::getType),
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .col(Foo::getName)
+                .gt(Foo::setId, 0L)
+                .page(Pages.of(1, 10).desc(Foo::getName).asc(Foo::getId)),
             IdNameResponse.class));
   }
 

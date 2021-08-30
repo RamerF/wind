@@ -78,12 +78,14 @@ public final class ValidateUtil implements ApplicationContextAware {
   private static <T> ViolationResult validate(T t, Class<?>... groups) {
     final Set<ConstraintViolation<T>> violations = validator.validate(t, groups);
     ViolationResult result = new ViolationResult();
-    violations.forEach(
-        violation -> {
-          final String path = ((PathImpl) violation.getPropertyPath()).getLeafNode().getName();
-          final String message = violation.getMessage();
-          result.addError(ViolationErrors.of(path, message));
-        });
+    result.addError(
+        violations.stream()
+            .map(
+                violation ->
+                    ViolationErrors.of(
+                        ((PathImpl) violation.getPropertyPath()).getLeafNode().getName(),
+                        violation.getMessage()))
+            .collect(Collectors.toList()));
     return result;
   }
 
@@ -95,7 +97,7 @@ public final class ValidateUtil implements ApplicationContextAware {
    */
   public static String collectFirst(ViolationResult result) {
     List<ViolationErrors> errors = result.getViolationErrors();
-    return errors.size() < 1 ? "" : errors.get(0).toString();
+    return errors.isEmpty() ? "" : errors.get(0).toString();
   }
 
   /**
@@ -106,6 +108,17 @@ public final class ValidateUtil implements ApplicationContextAware {
    */
   public static String collect(ViolationResult result) {
     return result.stream().map(ViolationErrors::toString).collect(Collectors.joining("\n"));
+  }
+
+  /**
+   * 获取所有校验错误信息.
+   *
+   * @param result the result
+   * @param delimeter 多个错误之间的分隔符
+   * @return the string
+   */
+  public static String collect(ViolationResult result, final String delimeter) {
+    return result.stream().map(ViolationErrors::toString).collect(Collectors.joining(delimeter));
   }
 
   /**
@@ -141,6 +154,23 @@ public final class ValidateUtil implements ApplicationContextAware {
                             ? ((FieldError) error).getField() + " 格式不正确"
                             : error.getDefaultMessage()));
     return errorMsg.toString().replaceFirst("<br/>", "");
+  }
+
+  /**
+   * 获取所有校验错误信息.
+   *
+   * @param bindingResult the binding result
+   * @return the string
+   */
+  public static String collect(BindingResult bindingResult, final String delimeter) {
+    return bindingResult.getAllErrors().stream()
+        .map(
+            error ->
+                Objects.requireNonNull(error.getDefaultMessage())
+                        .contains("Failed to convert property")
+                    ? ((FieldError) error).getField() + " 格式不正确"
+                    : error.getDefaultMessage())
+        .collect(Collectors.joining(delimeter));
   }
 
   /** 校验结果. */
@@ -193,7 +223,7 @@ public final class ValidateUtil implements ApplicationContextAware {
         private final AtomicInteger index = new AtomicInteger();
 
         @Override
-        public final boolean hasNext() {
+        public boolean hasNext() {
           return index.get() < violationErrors.size();
         }
 

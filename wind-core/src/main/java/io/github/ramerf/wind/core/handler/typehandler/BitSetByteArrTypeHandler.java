@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.handler.typehandler;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.util.BitSet;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
@@ -22,7 +21,7 @@ public class BitSetByteArrTypeHandler implements ITypeHandler<BitSet, byte[]> {
   @Override
   public BitSet convertFromJdbc(
       final byte[] jdbcVal, final Object defaultValue, final Field field) {
-    return Objects.nonNull(jdbcVal) ? BitSet.valueOf(jdbcVal) : null;
+    return jdbcVal != null ? BitSet.valueOf(jdbcVal) : null;
   }
 
   @Override

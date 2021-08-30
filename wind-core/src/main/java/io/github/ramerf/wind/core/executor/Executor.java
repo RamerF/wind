@@ -13,7 +13,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.lang.Nullable;
@@ -58,16 +58,6 @@ public interface Executor {
   <T, R> List<R> fetchAll(@Nonnull SqlParam<T> sqlParam, Class<R> clazz) throws DataAccessException;
 
   /**
-   * Fetch all list.
-   *
-   * @param <R> the type parameter
-   * @param sqlParam the sql param
-   * @return the list
-   * @throws DataAccessException the data access exception
-   */
-  <T, R> List<R> fetchAll(@Nonnull SqlParam<T> sqlParam) throws DataAccessException;
-
-  /**
    * Fetch page page.
    *
    * @param <R> the type parameter
@@ -77,7 +67,7 @@ public interface Executor {
    * @return the page
    * @throws DataAccessException the data access exception
    */
-  <T, R> Page<R> fetchPage(@Nonnull SqlParam<T> sqlParam, long total, PageRequest pageable)
+  <T, R> Page<R> fetchPage(@Nonnull SqlParam<T> sqlParam, long total, Pageable pageable)
       throws DataAccessException;
 
   /**
@@ -210,11 +200,11 @@ public interface Executor {
     /** 查询的实体对象,用于缓存操作. */
     protected Class<T> entityClazz;
     /** 查询列,用于映射查询列和bean字段名,填充返回对象. */
-    protected List<QueryColumn<T>> queryColumns;
+    protected QueryColumn<T> queryColumn;
     /** 参数填充起始位置. */
     protected AtomicInteger startIndex;
     /** sql条件,可获取占位符对应的值,用于redis缓存唯一key生成.{@link Condition#getValues(AtomicInteger)} */
-    protected List<Condition<?>> conditions;
+    protected Condition<?, ?> condition;
     /** 执行聚合函数,可为空. */
     protected AggregateSqlFunction aggregateFunction;
 

@@ -1,8 +1,9 @@
 package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
-import io.github.ramerf.wind.core.condition.QueryEntity;
+import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.function.BeanFunction;
 import java.beans.FeatureDescriptor;
 import java.beans.PropertyDescriptor;
@@ -12,11 +13,10 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -86,12 +86,12 @@ public final class BeanUtils {
    * @param obj the obj
    * @return the null prop
    */
-  public static List<String> getNullProp(@Nonnull final Object obj) {
+  public static Set<String> getNullProp(@Nonnull final Object obj) {
     final BeanWrapperImpl wrapper = new BeanWrapperImpl(obj);
     return Stream.of(wrapper.getPropertyDescriptors())
         .map(FeatureDescriptor::getName)
-        .filter(propertyName -> Objects.isNull(wrapper.getPropertyValue(propertyName)))
-        .collect(toList());
+        .filter(propertyName -> wrapper.getPropertyValue(propertyName) == null)
+        .collect(Collectors.toSet());
   }
 
   /**
@@ -100,13 +100,13 @@ public final class BeanUtils {
    * @param obj the obj
    * @return the non null prop
    */
-  public static List<String> getNonNullProp(Object obj) {
+  public static Set<String> getNonNullProp(Object obj) {
     final BeanWrapper wrapper = new BeanWrapperImpl(obj);
     return Stream.of(wrapper.getPropertyDescriptors())
-        .filter(o -> Objects.nonNull(wrapper.getPropertyValue(o.getName())))
         .map(FeatureDescriptor::getName)
-        .filter(o -> !Objects.equals("class", o))
-        .collect(toList());
+        .filter(name -> wrapper.getPropertyValue(name) != null)
+        .filter(name -> !Objects.equals("class", name))
+        .collect(Collectors.toSet());
   }
 
   /**
@@ -150,7 +150,7 @@ public final class BeanUtils {
           fields.add(superField);
         }
       }
-    } while (Objects.nonNull(clazz = clazz.getSuperclass()));
+    } while ((clazz = clazz.getSuperclass()) != null);
     return fields;
   }
 
@@ -439,22 +439,33 @@ public final class BeanUtils {
     }
   }
 
-  /**
-   * Is primitive type boolean.
-   *
-   * @param clazz the clazz
-   * @return the boolean
-   */
-  public static boolean isPrimitiveType(final Class<?> clazz) {
-    return (ClassUtils.isPrimitiveOrWrapper(clazz)
-        || Enum.class.isAssignableFrom(clazz)
-        || CharSequence.class.isAssignableFrom(clazz)
-        || Number.class.isAssignableFrom(clazz)
-        || Date.class.isAssignableFrom(clazz)
-        || URI.class == clazz
-        || URL.class == clazz
-        || Locale.class == clazz
-        || Class.class == clazz);
+  /** 基本类型零值. */
+  public static Object getPrimitiveDefaultValue(final Class<?> clazz) {
+    if (byte.class.equals(clazz)) {
+      return 0;
+    }
+    if (short.class.equals(clazz)) {
+      return 0;
+    }
+    if (int.class.equals(clazz)) {
+      return 0;
+    }
+    if (long.class.equals(clazz)) {
+      return 0L;
+    }
+    if (float.class.equals(clazz)) {
+      return 0.0f;
+    }
+    if (double.class.equals(clazz)) {
+      return 0d;
+    }
+    if (char.class.equals(clazz)) {
+      return '\u0000';
+    }
+    if (boolean.class.equals(clazz)) {
+      return false;
+    }
+    throw SimpleException.of("无法获取默认值:" + clazz);
   }
 
   /** Call {@link org.springframework.beans.BeanUtils#copyProperties(Object, Object, String...)} */
@@ -470,7 +481,7 @@ public final class BeanUtils {
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
-    BeanUtils.scanClasses("io.github.ramerf", QueryEntity.class)
+    BeanUtils.scanClasses("io.github.ramerf", Condition.class)
         .forEach(o -> log.info("main:[{}]", o));
 
     invoke(null, String.class.getMethods()[0], "string");

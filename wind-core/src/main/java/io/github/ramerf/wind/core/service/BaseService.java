@@ -1,11 +1,10 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.condition.LambdaCondition;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.io.Serializable;
-import java.util.function.Consumer;
+import java.lang.reflect.Field;
 import javax.annotation.Nonnull;
 import org.springframework.dao.DataAccessException;
 
@@ -18,98 +17,51 @@ import org.springframework.dao.DataAccessException;
  */
 public interface BaseService<T, ID extends Serializable>
     extends QueryService<T, ID>, UpdateService<T, ID> {
-  /**
-   * 创建记录,返回创建成功的对象.
-   *
-   * @param t the t
-   * @return the T
-   * @throws RuntimeException 创建失败时,抛异常
-   * @throws DataAccessException 如果执行失败
-   * @throws CommonException 创建记录条数不等于1
-   */
-  default T createAndGet(@Nonnull final T t) throws RuntimeException {
-    create(t, (Fields<T>) null);
+  /** 创建记录,返回创建成功的对象. */
+  default <E> E createAndGet(@Nonnull final E e) throws DataAccessException {
+    return createAndGet(e, null);
+  }
+
+  /** 创建记录,返回创建成功的对象. */
+  default <E> E createAndGet(@Nonnull final E e, final Fields<E> fields)
+      throws DataAccessException {
+    create(e, fields);
+    @SuppressWarnings("unchecked")
+    final Class<E> clazz = (Class<E>) e.getClass();
+    final Field idField = EntityHelper.getEntityIdField(clazz);
+    @SuppressWarnings("unchecked")
+    final ID id = (ID) BeanUtils.getValue(e, idField, null);
+    return getOne(Cnds.of(clazz).eq(idField, id));
+  }
+
+  /** 更新不为null的字段,返回更新成功的对象. */
+  default <E> E updateAndGet(final E e) throws DataAccessException {
+    return updateAndGet(e, null);
+  }
+
+  /** 更新.返回更新成功的对象. */
+  default <E> E updateAndGet(final E e, final Fields<E> fields) throws DataAccessException {
+    update(e, fields, null);
+    @SuppressWarnings("unchecked")
+    final Class<E> clazz = (Class<E>) e.getClass();
+    final Field idField = EntityHelper.getEntityIdField(clazz);
+    @SuppressWarnings("unchecked")
+    final ID id = (ID) BeanUtils.getValue(e, idField, null);
+    return getOne(Cnds.of(clazz).eq(idField, id));
+  }
+
+  /** 更新.返回更新成功的对象 */
+  default T updateAndGet(final T t, final Cnd<T, ?, ?> cnd) throws DataAccessException {
+    update(t, null, cnd);
     @SuppressWarnings("unchecked")
     final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
     return getById(id);
   }
 
-  /**
-   * 创建记录,返回创建成功的对象.
-   *
-   * @param t the t
-   * @param fieldsConsumer the fields consumer
-   * @return the T
-   * @throws RuntimeException 创建失败时,抛异常
-   */
-  default T createAndGet(@Nonnull final T t, final Consumer<Fields<T>> fieldsConsumer)
-      throws RuntimeException {
-    create(t, fieldsConsumer);
-    @SuppressWarnings("unchecked")
-    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
-    return getById(id);
-  }
-
-  /**
-   * 更新不为null的字段,返回更新成功的对象.
-   *
-   * @param t the t
-   * @return the t
-   * @throws RuntimeException the runtime exception
-   */
-  default T updateAndGet(final T t) throws RuntimeException {
-    update(t, null);
-    @SuppressWarnings("unchecked")
-    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
-    return getById(id);
-  }
-
-  /**
-   * 更新.返回更新成功的对象.
-   *
-   * @param t the t
-   * @param fieldsConsumer the fields consumer
-   * @return the t
-   * @throws RuntimeException the runtime exception
-   */
-  default T updateAndGet(final T t, final Consumer<Fields<T>> fieldsConsumer)
-      throws RuntimeException {
-    update(t, fieldsConsumer);
-    @SuppressWarnings("unchecked")
-    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
-    return getById(id);
-  }
-
-  /**
-   * 更新.返回更新成功的对象.
-   *
-   * @param t the t
-   * @param conditionConsumer the fields consumer
-   * @return the t
-   * @throws RuntimeException the runtime exception
-   */
-  default T updateByConditionAndGet(final T t, final Consumer<LambdaCondition<T>> conditionConsumer)
-      throws RuntimeException {
-    updateByCondition(t, conditionConsumer);
-    @SuppressWarnings("unchecked")
-    final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
-    return getById(id);
-  }
-
-  /**
-   * 更新.返回更新成功的对象.
-   *
-   * @param t the t
-   * @param conditionConsumer the fields consumer
-   * @return the t
-   * @throws RuntimeException the runtime exception
-   */
-  default T updateAndGet(
-      final T t,
-      final Consumer<Fields<T>> fieldsConsumer,
-      final Consumer<LambdaCondition<T>> conditionConsumer)
-      throws RuntimeException {
-    update(t, fieldsConsumer, conditionConsumer);
+  /** 更新.返回更新成功的对象. */
+  default T updateAndGet(final T t, final Fields<T> fields, final Cnd<T, ?, ?> cnd)
+      throws DataAccessException {
+    update(t, fields, cnd);
     @SuppressWarnings("unchecked")
     final ID id = (ID) BeanUtils.getValue(t, EntityHelper.getEntityIdField(t.getClass()), null);
     return getById(id);

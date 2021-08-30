@@ -14,7 +14,6 @@ import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.support.SnowflakeIdWorker;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
-import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
@@ -134,7 +133,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     String entityPackage;
     if (StringUtils.nonEmpty(configuration.getEntityPackage())) {
       entityPackage = configuration.getEntityPackage();
-    } else if (Objects.nonNull(application)
+    } else if (application != null
         && StringUtils.nonEmpty(
             scanBasePackages = String.join(",", application.scanBasePackages()))) {
       entityPackage = scanBasePackages;
@@ -172,7 +171,7 @@ public class WindAutoConfiguration implements ApplicationContextAware, Initializ
     String enumPackage;
     if (StringUtils.nonEmpty(configuration.getEnumPackage())) {
       enumPackage = configuration.getEnumPackage();
-    } else if (Objects.nonNull(application)
+    } else if (application != null
         && StringUtils.nonEmpty(
             scanBasePackages = String.join(",", application.scanBasePackages()))) {
       enumPackage = scanBasePackages;

@@ -21,7 +21,6 @@ import org.springframework.aop.framework.AdvisedSupport;
 import org.springframework.aop.framework.AopProxy;
 import org.springframework.aop.support.AopUtils;
 
-import static io.github.ramerf.wind.core.util.BeanUtils.isPrimitiveType;
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -77,7 +76,7 @@ public final class EntityUtils {
     final int modifiers = field.getModifiers();
     return !Modifier.isStatic(modifiers)
         && !Modifier.isTransient(modifiers)
-        && (isPrimitiveType(field.getType())
+        && (field.getType().getClassLoader() == null
             || MappingInfo.isValidMapping(field)
             || dialect.isSupportJavaType(field.getGenericType())
             || field.isAnnotationPresent(TableColumn.class));
@@ -94,7 +93,7 @@ public final class EntityUtils {
     final List<Field> fields =
         EntityHelper.getEntityInfo(t.getClass()).getEntityColumns().stream()
             .map(EntityColumn::getField)
-            .filter(field -> Objects.nonNull(BeanUtils.getValue(t, field, null)))
+            .filter(field -> BeanUtils.getValue(t, field, null) != null)
             .collect(toList());
     if (log.isTraceEnabled()) {
       log.debug("getNonNullColumnFields:[{}]", fields);
@@ -102,44 +101,6 @@ public final class EntityUtils {
     // return filterCustomField(t, fields);
     return fields;
   }
-
-  /*
-  // private static <T extends AbstractEntityPoJo<T, ID>, ID extends Serializable>
-  //     List<Field> filterCustomField(@Nonnull final T t, final List<Field> fields) {
-  //   @SuppressWarnings("unchecked")
-  //   final Class<T> clazz = (Class<T>) t.getClass();
-  //   final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
-  //   // 剔除掉自定义字段
-  //   Stream<Field> stream = fields.stream();
-  //   // 创建时间
-  //   final Field createTimeField = entityInfo.getCreateTimeField();
-  //   if (createTimeField != null) {
-  //     // 可能覆盖父类的字段
-  //     stream =
-  //         stream.filter(
-  //             field ->
-  //                 !CREATE_TIME_FIELD_NAME.equals(field.getName()) ||
-  // field.equals(createTimeField));
-  //   }
-  //   // 更新时间
-  //   final Field updateTimeField = entityInfo.getUpdateTimeField();
-  //   if (updateTimeField != null) {
-  //     stream =
-  //         stream.filter(
-  //             field ->
-  //                 !UPDATE_TIME_FIELD_NAME.equals(field.getName()) ||
-  // field.equals(updateTimeField));
-  //   }
-  //   // 逻辑删除
-  //   final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
-  //   // 未启用 或者 自定义字段
-  //   if (!logicDeleteProp.isEnable()
-  //       || !LOGIC_DELETE_COLUMN_NAME.equals(logicDeleteProp.getColumn())) {
-  //     stream = stream.filter(field -> !LOGIC_DELETE_FIELD_NAME.equals(field.getName()));
-  //   }
-  //   return stream.collect(toList());
-  // }
-  */
 
   /**
    * 获取对象映射到数据库且值为null的属性.
@@ -151,7 +112,7 @@ public final class EntityUtils {
     final List<Field> fields =
         BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
             .filter(EntityUtils::filterColumnField)
-            .filter(field -> Objects.isNull(BeanUtils.getValue(t, field, ex -> -1)))
+            .filter(field -> BeanUtils.getValue(t, field, ex -> -1) == null)
             .collect(toList());
     log.debug("getNullColumnFields:[{}]", fields);
     return fields;
@@ -232,7 +193,7 @@ public final class EntityUtils {
   public static String fieldToColumn(@Nonnull final Field field, final boolean depth) {
     final Class<?> fieldType = field.getType();
     // 普通字段判断TableColumn注解
-    if (!depth || BeanUtils.isPrimitiveType(fieldType) || !MappingInfo.isValidMapping(field)) {
+    if (!depth || field.getType().getClassLoader() == null || !MappingInfo.isValidMapping(field)) {
       final TableColumn column = field.getAnnotation(TableColumn.class);
       return column != null && !"".equals(column.name())
           ? column.name()
@@ -317,7 +278,7 @@ public final class EntityUtils {
             Optional.ofNullable(SERVICE_POJO_MAP.get(serviceClazz))
                 .map(Reference::get)
                 .orElse(null);
-    if (Objects.nonNull(classes)) {
+    if (classes != null) {
       return classes;
     }
 

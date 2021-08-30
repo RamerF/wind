@@ -1,11 +1,11 @@
 package io.github.ramerf.wind.core.mysql;
 
 import io.github.ramerf.wind.core.annotation.*;
+import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.entity.pojo.LambdaDomain;
+import io.github.ramerf.wind.core.entity.pojo.Domain;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.*;
-import io.github.ramerf.wind.core.service.InterService.Fields;
 import java.math.BigDecimal;
 import java.util.*;
 import javax.persistence.Id;
@@ -25,7 +25,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class Foo extends LambdaDomain<Foo, Long> {
+public class Foo extends Domain<Foo, Long> {
   @Id private Long id;
   private String name;
 

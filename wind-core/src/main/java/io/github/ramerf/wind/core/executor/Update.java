@@ -3,11 +3,11 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.exception.*;
+import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.service.InterService.Fields;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -54,7 +54,7 @@ import static java.util.stream.Collectors.toList;
 public final class Update<T> {
 
   private final Class<T> clazz;
-  private Condition<T> condition;
+  private Condition<T, ?> condition;
   private Fields<T> fields;
   private final EntityInfo entityInfo;
   private static Executor executor;
@@ -85,7 +85,7 @@ public final class Update<T> {
       logicDeletedValue = logicDeleteProp.isDeleted();
       logicNotDeleteValue = logicDeleteProp.isNotDelete();
     }
-    this.condition = LambdaCondition.getInstance(QueryColumn.fromClass(clazz));
+    this.condition = LambdaCondition.of(QueryColumn.of(clazz));
   }
 
   /**
@@ -126,7 +126,7 @@ public final class Update<T> {
    * @param condition the condition
    * @return the update
    */
-  public Update<T> where(@Nonnull final Condition<T> condition) {
+  public Update<T> where(@Nonnull final Condition<T, ?> condition) {
     this.condition = condition;
     return this;
   }
@@ -138,7 +138,7 @@ public final class Update<T> {
    * @return the t
    * @throws DataAccessException 如果执行失败
    */
-  public T create(@Nonnull final T t) throws DataAccessException {
+  public int create(@Nonnull final T t) throws DataAccessException {
     return create(t, null);
   }
 
@@ -149,7 +149,7 @@ public final class Update<T> {
    * @param fields the fields
    * @throws DataAccessException 如果执行失败
    */
-  public T create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
+  public int create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
     final Object id = idGenerator.nextId(t);
     if (id != null) {
       BeanUtils.setValue(t, idField, id, null);
@@ -187,16 +187,18 @@ public final class Update<T> {
               return ps;
             },
             keyHolder);
-
-    BeanUtils.setValue(
-        t,
-        idField,
-        Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey()),
-        null);
-    if (update != 1 || BeanUtils.getValue(t, idField, null) == null) {
-      throw new CreateNoIdDataAccessException("No identity return");
+    // 写入数据库生成的主键
+    if (id == null) {
+      BeanUtils.setValue(
+          t,
+          idField,
+          Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey()),
+          null);
     }
-    return t;
+    /// if (update != 1 || BeanUtils.getValue(t, idField, null) == null) {
+    //   throw new CreateNoIdDataAccessException("No identity return");
+    // }
+    return update;
   }
 
   /**
@@ -315,7 +317,7 @@ public final class Update<T> {
    * @param t the t
    * @return 受影响记录数 int
    */
-  public int update(@Nonnull final T t) {
+  public int update(@Nonnull final T t) throws DataAccessException {
     return update(t, null);
   }
 
@@ -326,8 +328,7 @@ public final class Update<T> {
    * @param fields the fields
    * @return 受影响记录数 int
    */
-  @SuppressWarnings("DuplicatedCode")
-  public int update(@Nonnull final T t, final Fields<T> fields) {
+  public int update(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
     setCurrentUpdateTime(t, entityInfo.getUpdateTimeField());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
@@ -362,7 +363,6 @@ public final class Update<T> {
    * @param ts the ts
    * @return the int
    */
-  @SuppressWarnings("DuplicatedCode")
   public Optional<Integer> updateBatch(@Nonnull final List<T> ts) {
     return updateBatch(ts, null);
   }
@@ -374,7 +374,6 @@ public final class Update<T> {
    * @param fields the fields
    * @return the int
    */
-  @SuppressWarnings("DuplicatedCode")
   public Optional<Integer> updateBatch(@Nonnull final List<T> ts, final Fields<T> fields) {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
@@ -419,7 +418,7 @@ public final class Update<T> {
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
-                      LambdaCondition.getInstance(QueryColumn.fromClass(clazz))
+                      LambdaCondition.of(QueryColumn.of(clazz))
                           .eq(idField, BeanUtils.getValue(obj, idField, null))
                           .getValues(index)
                           .forEach(val -> val.accept(ps));

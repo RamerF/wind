@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
@@ -28,26 +27,19 @@ import static io.github.ramerf.wind.core.util.EntityUtils.getAllColumnFields;
  *
  * @since 2019 /12/27
  * @author ramer
- * @param <P> PoJo
  * @param <E> the type parameter
  */
 @Slf4j
-public class BeanResultHandler<P, E> extends AbstractResultHandler<P, Map<String, Object>, E> {
+public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
 
   /** 列对应的字段. */
   private static final Map<ClazzColumn, Field> CLAZZ_COLUMN_FIELD =
       Collections.synchronizedMap(new WeakHashMap<>());
 
-  private Map<String, Field> columnFieldMap;
+  private final Map<String, Field> columnFieldMap;
 
-  /**
-   * Instantiates a new Bean result handler.
-   *
-   * @param clazz the clazz
-   * @param queryColumns the query columns
-   */
-  public BeanResultHandler(@Nonnull final Class<E> clazz, final List<QueryColumn<P>> queryColumns) {
-    super(clazz, queryColumns);
+  public BeanResultHandler(@Nonnull final Class<E> clazz) {
+    super(clazz);
     if (clazz.isAnnotationPresent(TableInfo.class)) {
       final EntityInfo entityInfo = EntityHelper.getEntityInfo((Class<?>) clazz);
       columnFieldMap = entityInfo.getColumnFieldMap();
@@ -55,17 +47,6 @@ public class BeanResultHandler<P, E> extends AbstractResultHandler<P, Map<String
       columnFieldMap = new HashMap<>(20);
       getAllColumnFields(clazz).forEach(field -> columnFieldMap.put(fieldToColumn(field), field));
     }
-  }
-
-  /**
-   * Instantiates a new Bean result handler.
-   *
-   * @param clazz the clazz
-   * @param queryColumns the query columns
-   */
-  @SafeVarargs
-  public BeanResultHandler(@Nonnull final Class<E> clazz, final QueryColumn<P>... queryColumns) {
-    super(clazz, queryColumns);
   }
 
   @Override

@@ -281,7 +281,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testPage1() {
     assertNotNull(
-        service.page(
+        service.pages(
             condition -> condition.gt(Foo::setId, 0L),
             1,
             10,
@@ -293,7 +293,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testPage2() {
     assertNotNull(
-        service.page(
+        service.pages(
             query -> query.col(Foo::getId).col(Foo::getName),
             1,
             10,
@@ -306,7 +306,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testPage3() {
     assertNotNull(
-        service.page(
+        service.pages(
             query -> query.col(Foo::getId).col(Foo::getName),
             condition -> condition.gt(Foo::setId, 0L),
             1,
@@ -319,7 +319,7 @@ public class BaseServiceTest {
   @Transactional(rollbackFor = Exception.class)
   public void testPage4() {
     assertNotNull(
-        service.page(
+        service.pages(
             query -> query.col(Foo::getId).col(Foo::getName),
             condition -> condition.gt(Foo::setId, 0L),
             1,

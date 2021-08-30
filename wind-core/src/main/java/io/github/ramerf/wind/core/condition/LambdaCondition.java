@@ -1,19 +1,16 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.function.IConsumer;
 import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
-import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.Collection;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
+import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 
 /**
@@ -24,7 +21,8 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
  */
 @Slf4j
 @SuppressWarnings("UnusedReturnValue")
-public class LambdaCondition<T> extends AbstractCondition<T> {
+public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
+    implements ILambdaCondition<T, LambdaCondition<T>> {
 
   protected LambdaCondition() {
     super();
@@ -42,18 +40,15 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     super(clazz, tableName, tableAlia);
   }
 
-  public static <T> LambdaCondition<T> getInstance(final Class<T> clazz) {
+  public static <T> LambdaCondition<T> of(final Class<T> clazz) {
     return new LambdaCondition<>(clazz);
   }
 
-  public static <T> LambdaCondition<T> getInstance(final QueryColumn<T> queryColumn) {
+  public static <T> LambdaCondition<T> of(final QueryColumn<T> queryColumn) {
     return new LambdaCondition<>(queryColumn);
   }
 
-  public <V> LambdaCondition<T> eq(@Nonnull final IConsumer<T, V> field, final V value) {
-    return eq(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> eq(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -69,10 +64,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> ne(@Nonnull final IConsumer<T, V> field, final V value) {
-    return ne(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> ne(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -88,10 +80,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> gt(@Nonnull final IConsumer<T, V> field, final V value) {
-    return gt(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> gt(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -107,10 +96,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> ge(@Nonnull final IConsumer<T, V> field, final V value) {
-    return ge(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> ge(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -126,10 +112,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> lt(@Nonnull final IConsumer<T, V> field, final V value) {
-    return lt(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> lt(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -145,10 +128,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> le(@Nonnull final IConsumer<T, V> field, final V value) {
-    return le(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> le(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -164,10 +144,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> like(@Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    return like(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> like(
       final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     if (condition) {
@@ -182,11 +159,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> notLike(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    return notLike(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> notLike(
       final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     if (condition) {
@@ -201,11 +174,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> between(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final V start, @Nonnull final V end) {
-    return between(true, field, start, end);
-  }
-
+  @Override
   public <V> LambdaCondition<T> between(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
@@ -228,11 +197,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> notBetween(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final V start, @Nonnull final V end) {
-    return notBetween(true, field, start, end);
-  }
-
+  @Override
   public <V> LambdaCondition<T> notBetween(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
@@ -253,10 +218,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> isNull(@Nonnull final IConsumer<T, V> field) {
-    return isNull(true, field);
-  }
-
+  @Override
   public <V> LambdaCondition<T> isNull(
       final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
@@ -270,10 +232,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> isNotNull(@Nonnull final IConsumer<T, V> field) {
-    return isNotNull(true, field);
-  }
-
+  @Override
   public <V> LambdaCondition<T> isNotNull(
       final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
@@ -287,11 +246,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> in(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
-    return in(true, field, values);
-  }
-
+  @Override
   public <V> LambdaCondition<T> in(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
@@ -307,17 +262,13 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
                       MatchPattern.IN.operator,
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
-                          .collect(Collectors.joining(SEMICOLON.operator)))));
+                          .collect(Collectors.joining(COMMA.operator)))));
       values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
     }
     return this;
   }
 
-  public <V> LambdaCondition<T> notIn(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
-    return notIn(true, field, values);
-  }
-
+  @Override
   public <V> LambdaCondition<T> notIn(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
@@ -333,64 +284,13 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
                       NOT_IN.operator,
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
-                          .collect(Collectors.joining(SEMICOLON.operator)))));
+                          .collect(Collectors.joining(COMMA.operator)))));
       values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
     }
     return this;
   }
 
-  public <R, Q> LambdaCondition<T> eq(
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final QueryColumn<Q> queryColumn,
-      @Nonnull final IFunction<R, ?> field2) {
-    return eq(true, field, queryColumn, field2);
-  }
-
-  public <R, Q> LambdaCondition<T> eq(
-      final boolean condition,
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final AbstractQueryEntity<Q> queryColumn,
-      @Nonnull final IFunction<R, ?> field2) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(field.getColumn())
-              .concat(MatchPattern.EQUAL.operator)
-              .concat(queryColumn.getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(field2.getColumn()));
-    }
-    return this;
-  }
-
-  public LambdaCondition<T> exists(@Nonnull final Condition<T> childConditions) {
-    return exists(true, childConditions);
-  }
-
-  public LambdaCondition<T> exists(
-      final boolean condition, @Nonnull final Condition<T> childConditions) {
-    if (condition) {
-      final String childConditionsSql = childConditions.getString();
-      if (StringUtils.nonEmpty(childConditionsSql)) {
-        final QueryEntityMetaData<T> entityMetaData = childConditions.getQueryEntityMetaData();
-        String childQuery =
-            (conditionSql.size() > 0 ? AND.operator : "")
-                + AggregateSqlFunction.EXISTS.string(
-                    "select 1 from ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
-
-        conditionSql.add(childQuery);
-        valueTypes.addAll(((LambdaCondition<T>) childConditions).valueTypes);
-      }
-    }
-    return this;
-  }
-
-  public <V> LambdaCondition<T> orEq(@Nonnull final IConsumer<T, V> field, final V value) {
-    return orEq(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orEq(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -406,10 +306,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orNe(@Nonnull final IConsumer<T, V> field, final V value) {
-    return orNe(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orNe(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -425,10 +322,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orGt(@Nonnull final IConsumer<T, V> field, final V value) {
-    return orGt(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orGt(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -444,10 +338,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orGe(@Nonnull final IConsumer<T, V> field, final V value) {
-    return orGe(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orGe(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -463,10 +354,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orLt(@Nonnull final IConsumer<T, V> field, final V value) {
-    return orLt(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orLt(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -482,10 +370,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orLe(@Nonnull final IConsumer<T, V> field, final V value) {
-    return orLe(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orLe(
       final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
@@ -501,11 +386,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orLike(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    return orLike(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orLike(
       final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     if (condition) {
@@ -520,11 +401,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orNotLike(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    return orNotLike(true, field, value);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orNotLike(
       final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
     if (condition) {
@@ -539,11 +416,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orBetween(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final V start, @Nonnull final V end) {
-    return orBetween(true, field, start, end);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orBetween(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
@@ -566,11 +439,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orNotBetween(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final V start, @Nonnull final V end) {
-    return orNotBetween(true, field, start, end);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orNotBetween(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
@@ -591,10 +460,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orIsNull(@Nonnull final IConsumer<T, V> field) {
-    return orIsNull(true, field);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orIsNull(
       final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
@@ -608,10 +474,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orIsNotNull(@Nonnull final IConsumer<T, V> field) {
-    return orIsNotNull(true, field);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orIsNotNull(
       final boolean condition, @Nonnull final IConsumer<T, V> field) {
     if (condition) {
@@ -625,11 +488,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public <V> LambdaCondition<T> orIn(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
-    return orIn(true, field, values);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orIn(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
@@ -645,17 +504,13 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
                       MatchPattern.IN.operator,
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
-                          .collect(Collectors.joining(SEMICOLON.operator)))));
+                          .collect(Collectors.joining(COMMA.operator)))));
       values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
     }
     return this;
   }
 
-  public <V> LambdaCondition<T> orNotIn(
-      @Nonnull final IConsumer<T, V> field, @Nonnull final Collection<V> values) {
-    return orNotIn(true, field, values);
-  }
-
+  @Override
   public <V> LambdaCondition<T> orNotIn(
       final boolean condition,
       @Nonnull final IConsumer<T, V> field,
@@ -671,59 +526,13 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
                       NOT_IN.operator,
                       values.stream()
                           .map(SqlHelper::toPreFormatSqlVal)
-                          .collect(Collectors.joining(SEMICOLON.operator)))));
+                          .collect(Collectors.joining(COMMA.operator)))));
       values.forEach(value -> valueTypes.add(ValueType.of(value, field)));
     }
     return this;
   }
 
-  public <R, Q> LambdaCondition<T> orEq(
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final QueryColumn<Q> queryColumn,
-      @Nonnull final IFunction<R, ?> field2) {
-    return orEq(true, field, queryColumn, field2);
-  }
-
-  public <R, Q> LambdaCondition<T> orEq(
-      final boolean condition,
-      @Nonnull final IFunction<T, ?> field,
-      @Nonnull final AbstractQueryEntity<Q> queryColumn,
-      @Nonnull final IFunction<R, ?> field2) {
-    if (condition) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(field.getColumn())
-              .concat(MatchPattern.EQUAL.operator)
-              .concat(queryColumn.getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
-              .concat(field2.getColumn()));
-    }
-    return this;
-  }
-
-  public LambdaCondition<T> orExists(@Nonnull final Condition<T> childConditions) {
-    return orExists(true, childConditions);
-  }
-
-  public LambdaCondition<T> orExists(
-      final boolean condition, @Nonnull final Condition<T> childConditions) {
-    if (condition) {
-      final String childConditionsSql = childConditions.getString();
-      if (StringUtils.nonEmpty(childConditionsSql)) {
-        final QueryEntityMetaData<T> entityMetaData = childConditions.getQueryEntityMetaData();
-        String childQuery =
-            (conditionSql.size() > 0 ? OR.operator : "")
-                + AggregateSqlFunction.EXISTS.string(
-                    "select 1 from ", entityMetaData.getFromTable(), " WHERE ", childConditionsSql);
-        conditionSql.add(childQuery);
-        valueTypes.addAll(((LambdaCondition<T>) childConditions).valueTypes);
-      }
-    }
-    return this;
-  }
-
+  @Override
   public LambdaCondition<T> and(@Nonnull LambdaConditionGroup<T> group) {
     if (!group.isEmpty()) {
       conditionSql.add(
@@ -734,24 +543,7 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public LambdaCondition<T> and(@Nonnull Consumer<LambdaConditionGroup<T>> group) {
-    LambdaConditionGroup<T> conditionGroup = LambdaConditionGroup.getInstance(this);
-    group.accept(conditionGroup);
-    if (!conditionGroup.isEmpty()) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator() : "")
-              .concat(PARENTHESIS_FORMAT.format(conditionGroup.getCondition().getString())));
-      valueTypes.addAll(conditionGroup.getCondition().getValueTypes());
-    }
-    return this;
-  }
-
   @Override
-  public LambdaCondition<T> and(final String sql) {
-    super.and(sql);
-    return this;
-  }
-
   public LambdaCondition<T> or(@Nonnull LambdaConditionGroup<T> group) {
     if (!group.isEmpty()) {
       conditionSql.add(
@@ -762,21 +554,9 @@ public class LambdaCondition<T> extends AbstractCondition<T> {
     return this;
   }
 
-  public LambdaCondition<T> or(@Nonnull Consumer<LambdaConditionGroup<T>> group) {
-    LambdaConditionGroup<T> conditionGroup = LambdaConditionGroup.getInstance(this);
-    group.accept(conditionGroup);
-    if (!conditionGroup.isEmpty()) {
-      conditionSql.add(
-          (conditionSql.size() > 0 ? OR.operator() : "")
-              .concat(PARENTHESIS_FORMAT.format(conditionGroup.getCondition().getString())));
-      valueTypes.addAll(conditionGroup.getCondition().getValueTypes());
-    }
-    return this;
-  }
-
   @Override
-  public LambdaCondition<T> or(final String sql) {
-    super.or(sql);
+  public final LambdaCondition<T> groupBy(@Nonnull final IFunction<T, ?> field) {
+    groupBySql.add(field.getColumn());
     return this;
   }
 }

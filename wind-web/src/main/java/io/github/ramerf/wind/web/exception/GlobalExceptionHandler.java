@@ -7,7 +7,6 @@ import io.github.ramerf.wind.core.util.StringUtils;
 import io.github.ramerf.wind.web.entity.response.ResultCode;
 import io.github.ramerf.wind.web.entity.response.Rs;
 import java.sql.SQLException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
@@ -110,7 +109,7 @@ public class GlobalExceptionHandler {
               .orElse(CommonException.of(ResultCode.ERROR));
       log.warn(commonException.getMessage(), commonException);
       final ResultCode resultCode = commonException.getResultCode();
-      return Objects.isNull(resultCode) ? Rs.fail(exception.getMessage()) : Rs.fail(resultCode);
+      return resultCode == null ? Rs.fail(exception.getMessage()) : Rs.fail(resultCode);
     }
     handleError(request, exception);
     final String fieldName = ((MethodArgumentTypeMismatchException) exception).getName();

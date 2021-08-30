@@ -100,7 +100,7 @@ public interface ITypeHandler<T, V> {
     Class<? extends ITypeHandler> clazz = this.getClass();
     Type[] types =
         Optional.ofNullable(PARAM_TYPE_CLAZZ.get(clazz)).map(Reference::get).orElse(new Type[2]);
-    if (Objects.nonNull(types[0])) {
+    if (types[0] != null) {
       return types;
     }
     ParameterizedType parameterizedType = (ParameterizedType) clazz.getGenericInterfaces()[0];

@@ -24,7 +24,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
+import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 
 /**
@@ -66,8 +66,8 @@ public class QueryUpdateController {
             .name("name" + LocalDateTime.now())
             .title("title" + LocalDateTime.now())
             .build();
-    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
-    final LambdaCondition<Product> condition = LambdaCondition.getInstance(queryColumn);
+    final QueryColumn<Product> queryColumn = QueryColumn.of(Product.class);
+    final LambdaCondition<Product> condition = LambdaCondition.of(queryColumn);
     // 指定更新字段:title,name
     final Fields<Product> fields =
         Fields.of(Product.class).include(Product::getTitle, Product::getName);
@@ -81,10 +81,10 @@ public class QueryUpdateController {
   @GetMapping(value = "/query", params = "type=1")
   @ApiOperation("使用Query,条件组,or条件拼接")
   public Rs<List<Product>> query1() {
-    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
+    final QueryColumn<Product> queryColumn = QueryColumn.of(Product.class);
     final CustomCondition<Product> condition = CustomCondition.getInstance(queryColumn);
     // 条件组 (id='string-id' or name ='name')
-    LambdaConditionGroup<Product> conditionGroup = LambdaConditionGroup.getInstance(queryColumn);
+    LambdaConditionGroup<Product> conditionGroup = LambdaConditionGroup.of(queryColumn);
     conditionGroup.orEq(Product::setId, "string-id");
     conditionGroup.orEq(Product::setName, "name");
     // 获取Update实例
@@ -100,12 +100,18 @@ public class QueryUpdateController {
   @GetMapping(value = "/query", params = "type=2")
   @ApiOperation("使用Query,or拼接")
   public Rs<List<Product>> query2() {
-    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
+    final QueryColumn<Product> queryColumn = QueryColumn.of(Product.class);
     // 查询条件: (id='ramer' and name like 'a%') or (id='jerry' and name like 'b%')
-    final LambdaCondition<Product> condition = LambdaCondition.getInstance(queryColumn);
+    final LambdaCondition<Product> condition = LambdaCondition.of(queryColumn);
     condition
-        .and(group -> group.andEq(Product::setId, "ramer").andLike(Product::setName, "a%"))
-        .or(group -> group.andEq(Product::setId, "jerry").andLike(Product::setName, "b%"));
+        .and(
+            LambdaConditionGroup.of(Product.class)
+                .eq(Product::setId, "ramer")
+                .like(Product::setName, "a%"))
+        .or(
+            LambdaConditionGroup.of(Product.class)
+                .eq(Product::setId, "jerry")
+                .like(Product::setName, "b%"));
     final Query<Product> query = prototypeBean.query(Product.class);
     final List<Product> products =
         query.select(queryColumn).where(condition).fetchAll(Product.class);
@@ -116,8 +122,8 @@ public class QueryUpdateController {
   @GetMapping(value = "/query", params = "type=3")
   @ApiOperation("使用Query,指定字段")
   public Rs<List<IdNameResponse>> query3() {
-    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
-    final LambdaCondition<Product> condition = LambdaCondition.getInstance(queryColumn);
+    final QueryColumn<Product> queryColumn = QueryColumn.of(Product.class);
+    final LambdaCondition<Product> condition = LambdaCondition.of(queryColumn);
     final Query<Product> query = prototypeBean.query(Product.class);
     final List<IdNameResponse> products =
         query
@@ -130,8 +136,8 @@ public class QueryUpdateController {
   @GetMapping(value = "/query", params = "type=4")
   @ApiOperation("使用Query,返回基本类型")
   public Rs<List<Long>> query4() {
-    final QueryColumn<Foo> queryColumn = QueryColumn.fromClass(Foo.class);
-    final LambdaCondition<Foo> condition = LambdaCondition.getInstance(queryColumn);
+    final QueryColumn<Foo> queryColumn = QueryColumn.of(Foo.class);
+    final LambdaCondition<Foo> condition = LambdaCondition.of(queryColumn);
     final Query<Foo> query = prototypeBean.query(Foo.class);
     final List<Long> ids =
         query
@@ -144,8 +150,8 @@ public class QueryUpdateController {
   @GetMapping(value = "/query", params = "type=5")
   @ApiOperation("使用Query,使用StringCondition构造条件")
   public Rs<List<Product>> query5() {
-    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
-    final StringCondition<Product> condition = StringCondition.getInstance(queryColumn);
+    final QueryColumn<Product> queryColumn = QueryColumn.of(Product.class);
+    final StringCondition<Product> condition = StringCondition.of(queryColumn);
     final Query<Product> query = prototypeBean.query(Product.class);
     final List<Product> products =
         query
@@ -158,14 +164,15 @@ public class QueryUpdateController {
   @GetMapping(value = "/query", params = "type=6")
   @ApiOperation("使用Query,自定义sql查询)")
   public Rs<List<Product>> query6() {
-    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
-    final LambdaCondition<Product> condition = LambdaCondition.getInstance(queryColumn);
-    // 执行连表: foo.id=account.id
-    condition.eq(Product::getId, queryColumn, Product::getId);
     final Query<Product> query = Query.getInstance(Product.class);
+    final QueryColumn<Product> queryColumn = QueryColumn.of(Product.class);
     queryColumn.col(
         "(case title when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) title,id");
-    return Rs.ok(query.select(queryColumn).where(condition.and("id<>'1'")).fetchAll(Product.class));
+    return Rs.ok(
+        query
+            .select(queryColumn)
+            .where(LambdaCondition.of(Product.class).and("id<>'1'"))
+            .fetchAll(Product.class));
   }
 
   @GetMapping(value = "/query", params = "type=7")
@@ -177,7 +184,7 @@ public class QueryUpdateController {
         query.fetchOneBySql("select * from product where title = 'halo'", Product.class);
     // 多条记录
     final List<Product> products =
-        query.fetchAllBySql("select * from product where id='string-id'", Product.class);
+        query.fetchListBySql("select * from product where id='string-id'", Product.class);
     return Rs.ok(products);
   }
 
@@ -185,16 +192,13 @@ public class QueryUpdateController {
   @GetMapping(value = "/query", params = "type=8")
   @ApiOperation("使用Query,groupBy,sum")
   public Rs<List<GroupBySum>> query8() {
-    QueryColumn<Foo> queryColumn = QueryColumn.fromClass(Foo.class);
-    LambdaCondition<Foo> condition = LambdaCondition.getInstance(queryColumn);
-    final QueryEntityMetaData<Foo> queryEntityMetaData = queryColumn.getQueryEntityMetaData();
-    final GroupByClause<Foo> clause = queryEntityMetaData.getGroupByClause();
+    QueryColumn<Foo> queryColumn = QueryColumn.of(Foo.class);
+    LambdaCondition<Foo> condition = LambdaCondition.of(queryColumn);
     final Query<Foo> query = prototypeBean.query(Foo.class);
     final List<GroupBySum> list =
         query
             .select(queryColumn.sum(Foo::getId, "big_decimal").col(Foo::getName, "name"))
-            .where(condition)
-            .groupBy(clause.col(Foo::getName))
+            .where(condition.groupBy(Foo::getName))
             .fetchAll(GroupBySum.class);
     return Rs.ok(list);
   }
@@ -203,7 +207,7 @@ public class QueryUpdateController {
   @ApiOperation("使用Query,返回任意对象)")
   public Rs<List<Product>> extendCondition() {
     // 可指定查询列
-    final QueryColumn<Product> queryColumn = QueryColumn.fromClass(Product.class);
+    final QueryColumn<Product> queryColumn = QueryColumn.of(Product.class);
     // 扩展Condition
     final CustomCondition<Product> condition = CustomCondition.getInstance(queryColumn);
     // 获取Query实例
@@ -217,7 +221,7 @@ public class QueryUpdateController {
   }
 
   /** 示例:扩展条件{@link Condition}. */
-  public static class CustomCondition<T> extends AbstractCondition<T> {
+  public static class CustomCondition<T> extends AbstractCondition<T, CustomCondition<T>> {
     public CustomCondition(final QueryColumn<T> queryColumn) {
       super(queryColumn);
     }

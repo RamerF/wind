@@ -193,7 +193,7 @@ public class TypeHandlerRegistryFactory {
    */
   public ITypeHandler getToJdbcTypeHandler(final ValueType valueType) {
     final Object value = valueType.getOriginVal();
-    if (Objects.isNull(value)) {
+    if (value == null) {
       return null;
     }
     if (valueType.getField() == null) {

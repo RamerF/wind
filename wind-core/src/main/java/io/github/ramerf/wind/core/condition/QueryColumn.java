@@ -12,50 +12,49 @@ import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.util.*;
 import javax.annotation.Nonnull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.AS;
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.DOT;
+import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.AS;
+import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.DOT;
 import static java.util.stream.Collectors.joining;
 
 /**
- * sql查询列定义.即 select... from之间的字符串.<br>
- * 注意:当查询所有字段(未指定查询列)时,如果属性的下划线格式与对应数据库列不匹配,返回对象的该属性值将始终为零值.<br>
- * 可以指定查询列或者确保返回对象的属性下划线格式与数据库列对应,详情见<br>
+ * sql查询列定义.<br>
  *
  * @param <T> the type parameter
  * @author ramer
  * @since 2019/12/26
  */
 @Slf4j
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @SuppressWarnings("UnusedReturnValue")
-public class QueryColumn<T> extends AbstractQueryEntity<T> {
-  /** 预留嵌套语句. */
-  //  private List<QueryColumn<T>> children = new ArrayList<>();
+public class QueryColumn<T> {
+  @Getter
+  @Setter(AccessLevel.PROTECTED)
+  private QueryEntityMetaData<T> queryEntityMetaData = new QueryEntityMetaData<>();
 
-  public static <T> QueryColumn<T> fromClass(final Class<T> clazz) {
-    return getInstance(clazz, null, null);
+  @Getter(AccessLevel.PROTECTED)
+  @Setter(AccessLevel.PROTECTED)
+  private EntityInfo entityInfo;
+
+  public static <T> QueryColumn<T> of(final Class<T> clazz) {
+    return of(clazz, null, null);
   }
 
-  public static <T> QueryColumn<T> fromClassAndTableAlia(
-      final Class<T> clazz, final String tableAlia) {
-    return getInstance(clazz, null, tableAlia);
+  public static <T> QueryColumn<T> of(final Class<T> clazz, final String tableAlia) {
+    return of(clazz, null, tableAlia);
   }
 
-  public static <T> QueryColumn<T> fromTableName(final String tableName) {
-    return getInstance(null, tableName, null);
+  public static <T> QueryColumn<T> of(final String tableName) {
+    return of(null, tableName, null);
   }
 
-  public static <T> QueryColumn<T> fromTableNameAndAlia(
-      final String tableName, final String tableAlia) {
-    return getInstance(null, tableName, tableAlia);
+  public static <T> QueryColumn<T> of(final String tableName, final String tableAlia) {
+    return of(null, tableName, tableAlia);
   }
 
-  private static <T> QueryColumn<T> getInstance(
-      final Class<T> clazz, String tableName, String tableAlia) {
+  private static <T> QueryColumn<T> of(final Class<T> clazz, String tableName, String tableAlia) {
     if (clazz == null && tableName == null && tableAlia == null) {
       throw new IllegalArgumentException("[clazz,tableName,tableAlia]不能同时为空");
     }
@@ -249,7 +248,6 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
     return this;
   }
 
-  @Override
   public String getString() {
     return getString(true);
   }
@@ -419,7 +417,7 @@ public class QueryColumn<T> extends AbstractQueryEntity<T> {
     public String getQueryString() {
       StringBuilder sb = new StringBuilder();
       // 这里可能会出现较复杂逻辑,不要改为三目运算符
-      if (Objects.nonNull(sqlFunction)) {
+      if (sqlFunction != null) {
         sb.append(sqlFunction.string(columnAlia));
       } else {
         sb.append(" ".concat(columnAlia));

@@ -83,7 +83,7 @@ public class CollectionUtils {
       @Nonnull final Function<T, R> mapFunction,
       final Predicate<R> filterFunction) {
     Objects.requireNonNull(mapFunction);
-    return Objects.isNull(filterFunction)
+    return filterFunction == null
         ? list.stream().map(mapFunction).collect(Collectors.toList())
         : list.stream().map(mapFunction).filter(filterFunction).collect(Collectors.toList());
   }

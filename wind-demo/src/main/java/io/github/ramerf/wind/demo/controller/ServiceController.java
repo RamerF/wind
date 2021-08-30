@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.demo.controller;
 
-import io.github.ramerf.wind.core.condition.SortColumn;
-import io.github.ramerf.wind.core.condition.SortColumn.Order;
+import io.github.ramerf.wind.core.condition.Cnds;
+import io.github.ramerf.wind.core.condition.Pages;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
 import io.github.ramerf.wind.demo.entity.pojo.Foo.Type;
@@ -15,7 +15,6 @@ import java.util.stream.LongStream;
 import javax.annotation.Resource;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import static java.util.stream.Collectors.toList;
@@ -64,15 +63,13 @@ public class ServiceController {
   @GetMapping(value = "/count", params = "type=2")
   @ApiOperation("count,条件count")
   public Rs<Long> count2() {
-    return Rs.ok(service.count(condition -> condition.like(Foo::setName, "foo")));
+    return Rs.ok(service.count(Cnds.of(Foo.class).like(Foo::setName, "foo")));
   }
 
   @GetMapping(value = "/count", params = "type=3")
   @ApiOperation("count,指定返回列")
   public Rs<Long> count3() {
-    return Rs.ok(
-        service.count(
-            query -> query.col(Foo::getId), condition -> condition.like(Foo::setName, "foo")));
+    return Rs.ok(service.count(Cnds.of(Foo.class).col(Foo::getId).like(Foo::setName, "foo")));
   }
 
   @GetMapping("/get-by-id")
@@ -84,7 +81,7 @@ public class ServiceController {
   @GetMapping("/get-one")
   @ApiOperation("查询,单条查询,指定条件获取poJo")
   public Rs<Foo> getOne() {
-    return Rs.ok(service.getOne(condition -> condition.eq(Foo::setId, 1L)));
+    return Rs.ok(service.getOne(Cnds.of(Foo.class).eq(Foo::setId, 1L)));
   }
 
   @GetMapping(value = "/get-one", params = "type=2")
@@ -92,14 +89,16 @@ public class ServiceController {
   public Rs<FooThinResponse> getOne2() {
     // 支持返回基本类型,支持枚举
     final Long one =
-        service.getOne(
-            query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L), Long.class);
+        service.getOne(Cnds.of(Foo.class).col(Foo::getId).eq(Foo::setId, 1L), Long.class);
     log.info("getOne2:[{}]", one);
     // 返回自定义对象
     final FooThinResponse thinResponse =
         service.getOne(
-            query -> query.col(Foo::getId).col(Foo::getName).col(Foo::getCreateTime),
-            condition -> condition.eq(Foo::setId, 1L),
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .col(Foo::getName)
+                .col(Foo::getCreateTime)
+                .eq(Foo::setId, 1L),
             FooThinResponse.class);
     log.info("getOne2:[{}]", thinResponse);
     return Rs.ok(thinResponse);
@@ -110,27 +109,24 @@ public class ServiceController {
   public Rs<Foo> getOne3() {
     return Rs.ok(
         service.getOne(
-            query ->
-                query
-                    .col(Foo::getId)
-                    .col(Foo::getName)
-                    .col(Foo::getCreateTime)
-                    .col(Foo::getUpdateTime),
-            condition -> condition.eq(Foo::setId, 1L)));
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .col(Foo::getName)
+                .col(Foo::getCreateTime)
+                .col(Foo::getUpdateTime)
+                .eq(Foo::setId, 1L)));
   }
 
   @GetMapping(value = "/get-one", params = "type=4")
   @ApiOperation("查询,单条查询,指定条件,指定返回列,返回指定对象")
   public Rs<Long> getOne4() {
-    return Rs.ok(
-        service.getOne(
-            query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L), Long.class));
+    return Rs.ok(service.getOne(Cnds.of(Foo.class).col(Foo::getId).eq(Foo::setId, 1L), Long.class));
   }
 
   @GetMapping(value = "/get-one", params = "type=5")
   @ApiOperation("查询,单条查询,自定义sql")
   public Rs<Foo> getOne5() {
-    return Rs.ok(service.getOne("select * from foo limit 1", Foo.class));
+    return Rs.ok(service.getOne(Cnds.of(Foo.class).and("select * from foo limit 1"), Foo.class));
   }
 
   @GetMapping("/list-by-ids")
@@ -142,28 +138,25 @@ public class ServiceController {
   @GetMapping("/list")
   @ApiOperation("查询,列表查询,指定条件")
   public Rs<List<Foo>> list() {
-    return Rs.ok(service.list(condition -> condition.eq(Foo::setId, 1L)));
+    return Rs.ok(service.list(Cnds.of(Foo.class).eq(Foo::setId, 1L)));
   }
 
   @GetMapping(value = "/list", params = "type=2")
   @ApiOperation("查询,列表查询,指定返回列,返回自定义对象")
   public Rs<List<Long>> list2() {
-    return Rs.ok(service.list(query -> query.col(Foo::getId), Long.class));
+    return Rs.ok(service.list(Cnds.of(Foo.class).col(Foo::getId), Long.class));
   }
 
   @GetMapping(value = "/list", params = "type=3")
   @ApiOperation("查询,列表查询,指定条件,指定返回列")
   public Rs<List<Foo>> list3() {
-    return Rs.ok(
-        service.list(query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L)));
+    return Rs.ok(service.list(Cnds.of(Foo.class).col(Foo::getId).eq(Foo::setId, 1L)));
   }
 
   @GetMapping(value = "/list", params = "type=4")
   @ApiOperation("查询,列表查询,指定条件,指定返回列,返回自定义对象")
   public Rs<List<Long>> list4() {
-    return Rs.ok(
-        service.list(
-            query -> query.col(Foo::getId), condition -> condition.eq(Foo::setId, 1L), Long.class));
+    return Rs.ok(service.list(Cnds.of(Foo.class).col(Foo::getId).eq(Foo::setId, 1L), Long.class));
   }
 
   @GetMapping(value = "/list", params = "type=5")
@@ -171,10 +164,9 @@ public class ServiceController {
   public Rs<List<Foo>> list5() {
     return Rs.ok(
         service.list(
-            condition -> condition.eq(Foo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
+            Cnds.of(Foo.class)
+                .eq(Foo::setId, 1L)
+                .page(Pages.of(1, 10).desc(Foo::getCreateTime).asc(Foo::getId))));
   }
 
   @GetMapping(value = "/list", params = "type=6")
@@ -182,11 +174,10 @@ public class ServiceController {
   public Rs<List<Long>> list6() {
     return Rs.ok(
         service.list(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(Foo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .eq(Foo::setId, 1L)
+                .page(Pages.of(1, 10).desc(Foo::getCreateTime).asc(Foo::getId)),
             Long.class));
   }
 
@@ -195,81 +186,54 @@ public class ServiceController {
   public Rs<List<Foo>> list7() {
     return Rs.ok(
         service.list(
-            query ->
-                query.col(
-                    "(case title when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) title,id"),
-            condition -> condition.eq(Foo::setId, 1L).and("title is not null")));
-  }
-
-  @GetMapping(value = "/list", params = "type=8")
-  @ApiOperation("查询,列表查询,自定义sql")
-  public Rs<List<Foo>> list8() {
-    return Rs.ok(service.listAll("select * from foo", Foo.class));
-  }
-
-  @GetMapping(value = "/listAll")
-  @ApiOperation("查询,列表查询,所有记录,指定返回列,返回自定义对象")
-  public Rs<List<Long>> listAll() {
-    return Rs.ok(service.listAll(query -> query.col(Foo::getId), Long.class));
-  }
-
-  @GetMapping(value = "/listAll", params = "type=2")
-  @ApiOperation("查询,列表查询,所有记录,指定返回列,返回自定义对象")
-  public Rs<List<Foo>> listAll2() {
-    return Rs.ok(service.listAll(query -> query.col(Foo::getId), Foo.class));
-  }
-
-  @GetMapping(value = "/listAll", params = "type=3")
-  @ApiOperation("查询,自定义sql")
-  public Rs<List<Foo>> listAll3() {
-    return Rs.ok(service.listAll("select * from foo", Foo.class));
+            Cnds.of(Foo.class)
+                .col(
+                    "(case title when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) title,id")
+                .eq(Foo::setId, 1L)
+                .and("title is not null")));
   }
 
   @GetMapping(value = "/page")
   @ApiOperation("查询,分页查询,指定条件,指定排序规则")
-  public Rs<Page<Foo>> page() {
+  public Rs<org.springframework.data.domain.Page> page() {
     return Rs.ok(
         service.page(
-            condition -> condition.eq(Foo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
+            Cnds.of(Foo.class)
+                .eq(Foo::setId, 1L)
+                .page(Pages.of(1, 10).desc(Foo::getCreateTime).asc(Foo::getId))));
   }
 
   @GetMapping(value = "/page", params = "type=2")
   @ApiOperation("查询,分页查询,指定返回列,指定排序规则,返回自定义对象")
-  public Rs<Page<Long>> page2() {
+  public Rs<org.springframework.data.domain.Page> page2() {
     return Rs.ok(
         service.page(
-            query -> query.col(Foo::getId),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .page(Pages.of(1, 10).desc(Foo::getCreateTime).asc(Foo::getId)),
             Long.class));
   }
 
   @GetMapping(value = "/page", params = "type=3")
   @ApiOperation("查询,分页查询,指定返回列,指定条件,指定排序规则")
-  public Rs<Page<Foo>> page3() {
+  public Rs<org.springframework.data.domain.Page> page3() {
     return Rs.ok(
         service.page(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(Foo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime)));
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .eq(Foo::setId, 1L)
+                .page(Pages.of(1, 10).desc(Foo::getCreateTime).asc(Foo::getId))));
   }
 
   @GetMapping(value = "/page", params = "type=4")
   @ApiOperation("查询,分页查询,指定返回列,指定条件,指定排序规则,返回自定义对象")
-  public Rs<Page<Long>> page4() {
+  public Rs<org.springframework.data.domain.Page> page4() {
     return Rs.ok(
         service.page(
-            query -> query.col(Foo::getId),
-            condition -> condition.eq(Foo::setId, 1L),
-            1,
-            10,
-            SortColumn.by(Foo::getCreateTime, Order.DESC).asc(Foo::getUpdateTime),
+            Cnds.of(Foo.class)
+                .col(Foo::getId)
+                .eq(Foo::setId, 1L)
+                .page(Pages.of(1, 10).desc(Foo::getCreateTime).asc(Foo::getId)),
             Long.class));
   }
 
@@ -346,7 +310,7 @@ public class ServiceController {
     foo.setName("<" + LocalDateTime.now() + ">");
     return Rs.ok(
         service.updateByCondition(
-            foo, condition -> condition.eq(Foo::setId, 1L).isNotNull(Foo::setCreateTime)));
+            Cnds.of(Foo.class).eq(Foo::setId, 1L).isNotNull(Foo::setCreateTime)));
   }
 
   @PostMapping(value = "/updateBatch")
@@ -424,7 +388,7 @@ public class ServiceController {
   @GetMapping(value = "/delete", params = "type=2")
   @ApiOperation("删除,条件删除")
   public Rs<Long> delete2() {
-    final long affectRow = service.delete(condition -> condition.eq(Foo::setId, 1L));
+    final long affectRow = service.delete(Cnds.of(Foo.class).eq(Foo::setId, 1L));
     log.info("delete2:[{}]", affectRow);
     return Rs.ok(affectRow);
   }

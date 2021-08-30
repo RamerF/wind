@@ -7,18 +7,18 @@ package io.github.ramerf.wind.core.condition;
  * @author ramer
  * @since 2019 /12/28
  */
-public interface QueryEntity<T> {
-  /**
-   * Gets string.
-   *
-   * @return the string
-   */
-  String getString();
-
-  /**
-   * Gets query entity meta data.
-   *
-   * @return the query entity meta data
-   */
-  QueryEntityMetaData<T> getQueryEntityMetaData();
-}
+// public interface QueryEntity<T> {
+//   /**
+//    * Gets string.
+//    *
+//    * @return the string
+//    */
+//   String getString();
+//
+//   /**
+//    * Gets query entity meta data.
+//    *
+//    * @return the query entity meta data
+//    */
+//   QueryEntityMetaData<T> getQueryEntityMetaData();
+// }

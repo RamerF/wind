@@ -41,8 +41,8 @@ public enum MappingType {
       final Field joinField = mappingInfo.getJoinField();
       final Class<T> targetClazz = mappingInfo.getTargetClazz();
       final Object relationValue = BeanUtils.getValue(poJo, joinField, null);
-      final QueryColumn<T> queryColumn = QueryColumn.fromClass(targetClazz);
-      final StringCondition<T> stringCondition = StringCondition.getInstance(queryColumn);
+      final QueryColumn<T> queryColumn = QueryColumn.of(targetClazz);
+      final StringCondition<T> stringCondition = StringCondition.of(queryColumn);
       return Query.getInstance(targetClazz)
           .select(queryColumn)
           .where(stringCondition.eq(mappingInfo.getTargetColumn(), relationValue))
@@ -102,8 +102,8 @@ public enum MappingType {
     public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
       final Class<E> targetClazz = mappingInfo.getTargetClazz();
       final Object relationValue = BeanUtils.getValue(poJo, mappingInfo.getJoinField(), null);
-      final QueryColumn<E> queryColumn = QueryColumn.fromClass(targetClazz);
-      final StringCondition<E> condition = StringCondition.getInstance(queryColumn);
+      final QueryColumn<E> queryColumn = QueryColumn.of(targetClazz);
+      final StringCondition<E> condition = StringCondition.of(queryColumn);
       final Object mapping =
           Query.getInstance(targetClazz)
               .select(queryColumn)
@@ -150,8 +150,8 @@ public enum MappingType {
         mappingInfo.setJoinField(joinField);
         mappingInfo.setJoinColumn(fieldToColumn(joinField, false));
       }
-      // 解析目标字段,分为基本类型和引用类型两种情况
-      if (BeanUtils.isPrimitiveType(manyField.getType())) {
+      // 解析目标字段,分为普通类型和引用类型两种情况
+      if (manyField.getType().getClassLoader() == null) {
         mappingInfo.setTargetField(manyField);
         mappingInfo.setTargetColumn(fieldToColumn(manyField, false));
       } else {
@@ -184,8 +184,8 @@ public enum MappingType {
       final Field joinField = mappingInfo.getJoinField();
       final Class<T> targetClazz = mappingInfo.getTargetClazz();
       final Object relationValue = BeanUtils.getValue(poJo, joinField, null);
-      final QueryColumn<T> queryColumn = QueryColumn.fromClass(targetClazz);
-      final StringCondition<T> stringCondition = StringCondition.getInstance(queryColumn);
+      final QueryColumn<T> queryColumn = QueryColumn.of(targetClazz);
+      final StringCondition<T> stringCondition = StringCondition.of(queryColumn);
       return Query.getInstance(targetClazz)
           .select(queryColumn)
           .where(stringCondition.eq(mappingInfo.getTargetField(), relationValue))

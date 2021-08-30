@@ -1,18 +1,9 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
-import io.github.ramerf.wind.core.function.BeanFunction;
-import io.github.ramerf.wind.core.function.IFunction;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.*;
-import javax.annotation.Nonnull;
-import lombok.Getter;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * The interface Inter service.
@@ -29,16 +20,7 @@ public interface InterService<T, ID extends Serializable> {
    * @param trans 原始对象
    * @param filtered 过滤后的对象
    */
-  default void textFilter(T trans, T filtered) {}
-
-  /**
-   * Gets query column.
-   *
-   * @return the query column
-   */
-  default QueryColumn<T> getQueryColumn() {
-    return QueryColumn.fromClass(getPoJoClass());
-  }
+  default <E> void textFilter(E trans, E filtered) {}
 
   /**
    * Gets query.
@@ -47,6 +29,15 @@ public interface InterService<T, ID extends Serializable> {
    */
   default Query<T> getQuery() {
     return Query.getInstance(getPoJoClass());
+  }
+
+  /**
+   * Gets query.
+   *
+   * @return the query
+   */
+  default <R> Query<R> getQuery(final Class<R> clazz) {
+    return Query.getInstance(clazz);
   }
 
   /**
@@ -86,62 +77,5 @@ public interface InterService<T, ID extends Serializable> {
    */
   default <U> U getRepository() throws RuntimeException {
     throw new RuntimeException("Not implemented");
-  }
-
-  /** 可用于指定一个操作包含/不包含的字段. */
-  class Fields<T> {
-    @Getter private final Set<Field> includes = new HashSet<>();
-    @Getter private final Set<Field> excludes = new HashSet<>();
-
-    private Fields() {}
-
-    public static <T> Fields<T> of() {
-      return new Fields<>();
-    }
-
-    public static <T> Fields<T> of(Class<T> clazz) {
-      return new Fields<>();
-    }
-
-    @SafeVarargs
-    public final Fields<T> include(final IFunction<T, ?>... includeFields) {
-      this.includes.addAll(
-          Arrays.stream(includeFields).map(BeanFunction::getField).collect(toList()));
-      return this;
-    }
-
-    public final Fields<T> include(final boolean include, final IFunction<T, ?> includeField) {
-      if (include) {
-        this.includes.add(includeField.getField());
-      }
-      return this;
-    }
-
-    @SafeVarargs
-    public final Fields<T> exclude(@Nonnull final IFunction<T, ?>... excludeFields) {
-      for (final IFunction<T, ?> function : excludeFields) {
-        this.includes.remove(function.getField());
-      }
-      this.excludes.addAll(
-          Arrays.stream(excludeFields).map(BeanFunction::getField).collect(toList()));
-      return this;
-    }
-
-    public final Fields<T> exclude(
-        final boolean exclude, @Nonnull final IFunction<T, ?> excludeField) {
-      if (exclude) {
-        this.includes.remove(excludeField.getField());
-        this.excludes.add(excludeField.getField());
-      }
-      return this;
-    }
-
-    public Set<Field> getIncludeFields() {
-      return includes.isEmpty() ? Collections.emptySet() : includes;
-    }
-
-    public Set<Field> getExcludeFields() {
-      return excludes.isEmpty() ? Collections.emptySet() : excludes;
-    }
   }
 }

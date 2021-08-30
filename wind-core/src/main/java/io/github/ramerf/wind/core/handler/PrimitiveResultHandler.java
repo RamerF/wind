@@ -1,10 +1,7 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.handler.PrimitiveResultHandler.EmptyPoJo;
 import io.github.ramerf.wind.core.util.CollectionUtils;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nonnull;
@@ -18,8 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2019 /12/27
  */
 @Slf4j
-public class PrimitiveResultHandler<E>
-    extends AbstractResultHandler<EmptyPoJo, Map<String, Object>, E> {
+public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
 
   /**
    * Instantiates a new Primitive result handler.
@@ -27,7 +23,7 @@ public class PrimitiveResultHandler<E>
    * @param clazz the clazz
    */
   public PrimitiveResultHandler(@Nonnull final Class<E> clazz) {
-    super(clazz, null, false);
+    super(clazz);
   }
 
   @Override
@@ -38,24 +34,18 @@ public class PrimitiveResultHandler<E>
     }
     final Object value = map.entrySet().stream().findFirst().map(Entry::getValue).orElse(null);
     if (value == null) {
-      return nullToZero();
+      return null;
     }
     final Class<?> valueClass = value.getClass();
     if (valueClass.equals(clazz)) {
       return (E) value;
     }
-    if (value instanceof String) {
-      return (E) String.valueOf(value);
-    }
-    if (value instanceof Long) {
-      return (E) Long.valueOf(value.toString());
+    if (valueClass.isArray()) {
+      return (E) value;
     }
     if (InterEnum.class.isAssignableFrom(clazz)) {
       final Class<? extends InterEnum> cls = (Class<? extends InterEnum>) clazz;
       return (E) InterEnum.ofNullable(value, cls);
-    }
-    if (valueClass.isArray()) {
-      return (E) value;
     }
     // 使用构造器
     try {
@@ -71,27 +61,4 @@ public class PrimitiveResultHandler<E>
     }
     return (E) value;
   }
-
-  /** null转换为基本类型零值. */
-  @SuppressWarnings("unchecked")
-  private E nullToZero() {
-    if (Long.class.isAssignableFrom(clazz)) {
-      return (E) Long.valueOf(0);
-    }
-    if (Integer.class.isAssignableFrom(clazz)) {
-      return (E) Integer.valueOf(0);
-    }
-    if (BigInteger.class.isAssignableFrom(clazz)) {
-      return (E) BigInteger.valueOf(0);
-    }
-    if (BigDecimal.class.isAssignableFrom(clazz)) {
-      return (E) BigDecimal.valueOf(0);
-    }
-    if (Double.class.isAssignableFrom(clazz)) {
-      return (E) Double.valueOf(0);
-    }
-    return null;
-  }
-
-  public static class EmptyPoJo {}
 }

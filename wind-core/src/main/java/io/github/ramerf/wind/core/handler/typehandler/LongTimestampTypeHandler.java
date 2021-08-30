@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.handler.typehandler;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
@@ -23,7 +22,7 @@ public class LongTimestampTypeHandler implements ITypeHandler<Long, Timestamp> {
   @Override
   public Long convertFromJdbc(
       final Timestamp jdbcVal, final Object defaultValue, final Field field) {
-    return Objects.nonNull(jdbcVal) ? jdbcVal.getTime() : null;
+    return jdbcVal == null ? null : jdbcVal.getTime();
   }
 
   @Override

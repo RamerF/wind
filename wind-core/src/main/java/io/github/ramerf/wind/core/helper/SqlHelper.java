@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.helper;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.condition.Predicate.SqlOperator.*;
+import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.*;
 
 /**
  * The type Sql helper.
@@ -55,7 +55,7 @@ public class SqlHelper {
               ((List<?>) value)
                   .stream()
                       .map(Object::toString)
-                      .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+                      .reduce((a, b) -> String.join(COMMA.operator(), a, b))
                       .orElse(value.toString())));
     }
     if (value instanceof Collection) {
@@ -65,7 +65,7 @@ public class SqlHelper {
               .map(SqlHelper::toSqlString)
               .filter(Objects::nonNull)
               .map(Object::toString)
-              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+              .reduce((a, b) -> String.join(COMMA.operator(), a, b))
               .orElse(value.toString());
     }
     if (value.getClass().isArray()) {
@@ -75,14 +75,14 @@ public class SqlHelper {
                 .operator()
                 .concat(
                     Arrays.stream((String[]) value)
-                        .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+                        .reduce((a, b) -> String.join(COMMA.operator(), a, b))
                         .orElse(value.toString()))
                 .concat(RIGHT_BRACE.operator()));
       }
       String str =
           Arrays.stream((Object[]) value)
               .map(SqlHelper::toSqlString)
-              .reduce((a, b) -> String.join(SEMICOLON.operator(), a, b))
+              .reduce((a, b) -> String.join(COMMA.operator(), a, b))
               .orElse(value.toString());
       return QUOTE_FORMAT.format(LEFT_BRACE.operator().concat(str).concat(RIGHT_BRACE.operator()));
     }
@@ -98,6 +98,7 @@ public class SqlHelper {
    * @return string string
    */
   public static <R> String optimizeQueryString(final String old, final Class<R> clazz) {
+    // 可以改为如果返回对象和查询对象不同时,根据原始list string匹配字段
     /// 根据返回对象推断查询字段,返回对象可能包含数据库不存在的字段,禁用
     //    if (log.isDebugEnabled()) {
     //      log.debug("optimizeQueryString:start optimize query string[{}]", old);

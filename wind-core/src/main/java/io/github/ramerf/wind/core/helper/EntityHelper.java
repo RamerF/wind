@@ -14,7 +14,6 @@ import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +86,7 @@ public class EntityHelper {
   public static String getJdbcTypeName(final Field field, final String defaultValue) {
     String typeName = defaultValue;
     final TableColumn column = field.getAnnotation(TableColumn.class);
-    if (Objects.nonNull(column)) {
+    if (column != null) {
       final String columnDefinition = column.columnDefinition();
       if (StringUtils.nonEmpty(columnDefinition)) {
         final String trim = StringUtils.trimWhitespace(columnDefinition);
