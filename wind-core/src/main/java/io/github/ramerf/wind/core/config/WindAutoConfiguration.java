@@ -24,7 +24,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ansi.*;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.*;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Slf4j
 @Configuration
-@ConditionalOnBean(DataSource.class)
+// @ConditionalOnBean(DataSource.class)
 @EnableConfigurationProperties(WindConfiguration.class)
 @AutoConfigureAfter({CommonBean.class, PrototypeBean.class})
 public class WindAutoConfiguration implements ApplicationContextAware, InitializingBean {

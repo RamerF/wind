@@ -11,7 +11,8 @@ import org.springframework.dao.DataAccessException;
 /**
  * 通用业务方法.
  *
- * @param <T> the type parameter
+ * @param <T> 实体
+ * @param <ID> 主键类型
  * @author ramer
  * @since 2019/11/13
  */

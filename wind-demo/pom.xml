@@ -11,12 +11,12 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wind-demo</artifactId>
     <name>wind-demo</name>
-    <version>4.0.4</version>
+    <version>4.0.5-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <druid.version>1.1.22</druid.version>
-        <wind.version>4.0.4</wind.version>
+        <wind.version>4.0.5-SNAPSHOT</wind.version>
         <lombok.version>1.18.20</lombok.version>
         <postgresql.version>42.2.23.jre7</postgresql.version>
     </properties>

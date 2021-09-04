@@ -12,6 +12,7 @@ import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.sql.*;
 import java.time.*;
 import java.util.Date;
@@ -189,11 +190,11 @@ public final class Update<T> {
             keyHolder);
     // 写入数据库生成的主键
     if (id == null) {
-      BeanUtils.setValue(
-          t,
-          idField,
-          Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey()),
-          null);
+      Object idValue = Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey());
+      if (idValue instanceof BigInteger) {
+        idValue = ((BigInteger) idValue).longValue();
+      }
+      BeanUtils.setValue(t, idField, idValue, null);
     }
     /// if (update != 1 || BeanUtils.getValue(t, idField, null) == null) {
     //   throw new CreateNoIdDataAccessException("No identity return");
