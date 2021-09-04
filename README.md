@@ -1,6 +1,9 @@
 #  wind
 
 ---
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.ramerf/wind-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.ramerf/wind-core)
+
 基于JdbcTemplate实现的快速开发框架，简单高效。
 
 ### 特性
@@ -27,7 +30,7 @@
     <dependency>
         <groupId>io.github.ramerf</groupId>
         <artifactId>wind-core</artifactId>
-        <version>4.0.5-SNAPSHOT</version>
+        <version>4.0.5</version>
     </dependency>
     ```
     
