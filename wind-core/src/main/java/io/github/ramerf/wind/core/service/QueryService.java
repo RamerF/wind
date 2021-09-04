@@ -141,13 +141,12 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   }
 
   /** 查询关联对象. */
-  default <R> T queryMapping(@Nonnull T t, IConsumer<T, R> setField) {
+  default <R> void populateMapping(@Nonnull T t, IConsumer<T, R> setField) {
     setField.accept(
         t,
         EntityMapping.get(t.getClass(), setField.getField())
             .<R>map(mappingInfo -> mappingInfo.getMappingObject(t))
             .orElse(null));
-    return t;
   }
 
   /** 自定义sql查询clazz表. */

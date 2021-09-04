@@ -2,6 +2,45 @@
 
 ---
 
+#### 4.0.5-SNAPSHOT
+
+- 新增：支持查询关联对象
+
+  ```java
+  service.populateMapping(foo, Foo::setBar);
+  ```
+
+- 新增：Cnds，StringCnds条件构造类，任意选择，简化service调用方式
+
+  ```java
+  final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L).limit(1, 10).orderBy(Foo::getId);
+  // final StringCnds<Foo> cnds = StringCnds.of(Foo.class).gt("id", 0L).limit(1, 10).orderBy("id");
+  service.list(cnds);
+  // 查询指定字段
+  final QueryColumn queryColumn = QueryColumn.of(Foo.class).col(Foo::getId).col(Foo::getName);
+  service.list(cnds, queryColumn);
+  ```
+
+- 新增：service支持表互操作
+
+  ```java
+  fooService.create(foo);
+  // 可操作bar表
+  fooService.create(bar);
+  ```
+
+- 新增：打印sql和参数信息
+
+  ```properties
+  logging.level.io.github.ramerf.wind.core=debug
+  ```
+
+- 更新：去掉实体注解`TableInfo`依赖，没有`TableInfo`注解的实体唯一的区别仅仅是不支持自动建表
+
+- 修复：支持LocalDateTime，LocalDate，LocalTime
+
+- 修复：当列指定备注时自动建表失败
+
 #### 4.0.4
 
 - 新增：添加对象到JSON转换器，现在对象/集合对象 可以直接保存为JSON字符串了

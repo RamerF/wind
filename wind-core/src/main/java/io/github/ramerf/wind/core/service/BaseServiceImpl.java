@@ -37,10 +37,4 @@ public class BaseServiceImpl<T, ID extends Serializable, R> implements BaseServi
     this.repository = repository;
     this.service = service;
   }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <U> U getRepository() throws RuntimeException {
-    return (U) repository;
-  }
 }

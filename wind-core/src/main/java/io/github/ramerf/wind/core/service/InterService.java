@@ -67,15 +67,4 @@ public interface InterService<T, ID extends Serializable> {
   default Class<T> getPoJoClass() {
     return EntityUtils.getPoJoClass(this);
   }
-
-  /**
-   * 该方法作为扩展,可在service接口中获取到repository.
-   *
-   * @param <U> the type parameter
-   * @return the repository
-   * @throws RuntimeException the runtime exception
-   */
-  default <U> U getRepository() throws RuntimeException {
-    throw new RuntimeException("Not implemented");
-  }
 }

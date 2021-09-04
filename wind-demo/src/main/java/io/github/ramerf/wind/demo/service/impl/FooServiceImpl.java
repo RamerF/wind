@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.demo.service.impl;
 
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.service.BaseServiceImpl;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
@@ -71,11 +70,5 @@ public class FooServiceImpl implements FooService {
   @Bean("fooBs")
   public BaseService<Foo, Long> setBaseService(@Autowired FooRepository repository) {
     return new BaseServiceImpl<>(repository, this);
-  }
-
-  @SuppressWarnings({"unchecked"})
-  @Override
-  public <U> U getRepository() throws CommonException {
-    return (U) repository;
   }
 }
