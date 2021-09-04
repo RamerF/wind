@@ -205,7 +205,7 @@ public class EntityColumn {
       definition.append(" default ").append(defaultValue);
     }
     if (!dialect.isSupportCommentOn() && StringUtils.nonEmpty(comment)) {
-      definition.append(" comment ").append(comment);
+      definition.append(" comment '").append(comment).append("'");
     }
     return definition.toString();
   }
