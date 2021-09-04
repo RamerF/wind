@@ -102,25 +102,6 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
                         .orElse(null)));
       }
     }
-    // 保存关联字段值
-    /*TODO POST 关联查询暂不开启
-    if (AbstractEntityPoJo.class.isAssignableFrom(clazz)) {
-      final List<MappingInfo> mappingInfos = EntityMapping.get((Class<AbstractEntityPoJo>) clazz);
-      mappingInfos.forEach(
-          mappingInfo -> {
-            final Field field = mappingInfo.getField();
-            if (MappingInfo.isOneMapping(field)) {
-              initMappingObj(
-                  map,
-                  (AbstractEntityPoJo) obj,
-                  field,
-                  (Class<? >) field.getType());
-              // TODO WARN 一对一
-            } else if (MappingInfo.isManyMapping(field)) {
-              // TODO WARN 一对多
-            }
-          });
-    }*/
     return obj;
   }
 

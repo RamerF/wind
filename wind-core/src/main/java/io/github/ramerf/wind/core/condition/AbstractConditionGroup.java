@@ -16,7 +16,7 @@ import lombok.Getter;
  * @param <CONDITION_GROUP> 当前对象
  * @param <CONDITION> 当前对象持有的{@link Condition}对象
  * @since 2021.08.15
- * @author ramer Xiaofeng
+ * @author ramer
  */
 public abstract class AbstractConditionGroup<
         POJO,
@@ -33,6 +33,11 @@ public abstract class AbstractConditionGroup<
   @Override
   public String getString() {
     return condition.getString();
+  }
+
+  @Override
+  public String toString() {
+    return getString();
   }
 
   @Override

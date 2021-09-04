@@ -249,7 +249,7 @@ public class QueryColumn<T> {
   }
 
   public String getString() {
-    return getString(true);
+    return getString(false);
   }
 
   /** 是否包含列别名,单表时不需要包含别名,传false. */

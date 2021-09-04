@@ -30,7 +30,7 @@ import static java.util.stream.Collectors.toCollection;
  * @param <POJO> the type parameter
  * @param <CONDITION> 当前对象
  * @since 2020.09.16
- * @author ramer Xiaofeng
+ * @author ramer
  */
 @Slf4j
 public abstract class AbstractCondition<POJO, CONDITION extends AbstractCondition<POJO, CONDITION>>
@@ -152,6 +152,11 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
     return String.join("", conditionSql)
         .concat(GROUP_BY.operator)
         .concat(String.join(",", groupBySql));
+  }
+
+  @Override
+  public String toString() {
+    return getString();
   }
 
   @Override

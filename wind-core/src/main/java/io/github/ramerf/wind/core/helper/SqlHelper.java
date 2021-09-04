@@ -90,7 +90,7 @@ public class SqlHelper {
   }
 
   /**
-   * 优化查询字符串,目前主要是更新返回类型推断查询字段,只会优化单表查询.
+   * 优化查询字符串.
    *
    * @param <R> the type parameter
    * @param old 原字符串
@@ -100,23 +100,6 @@ public class SqlHelper {
   public static <R> String optimizeQueryString(final String old, final Class<R> clazz) {
     // 可以改为如果返回对象和查询对象不同时,根据原始list string匹配字段
     /// 根据返回对象推断查询字段,返回对象可能包含数据库不存在的字段,禁用
-    //    if (log.isDebugEnabled()) {
-    //      log.debug("optimizeQueryString:start optimize query string[{}]", old);
-    //    }
-    //    if (AbstractEntityPoJo.class.isAssignableFrom(clazz) || !old.matches("\\w+\\.\\*")) {
-    //      return old;
-    //    }
-    //    return Optional.ofNullable(QUERY_CLAZZ_FIELD.get(clazz)).map(Reference::get).orElseGet(()
-    // -> {
-    //      final String optimizedString = BeanUtils.getPrivateFields(clazz,
-    // true).stream().filter(str -> !str.contains("."))
-    //          .map(StringUtils::camelToUnderline).reduce((a, b) ->
-    // String.join(SEMICOLON.operator(), a, b))
-    //          .orElse(old);
-    //      log.info("optimizeQueryString:after optimized[{}]", optimizedString);
-    //      QUERY_CLAZZ_FIELD.put(clazz, new WeakReference<>(optimizedString));
-    //      return QUERY_CLAZZ_FIELD.get(clazz).get();
-    //    });
     return old;
   }
 }

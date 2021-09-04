@@ -14,7 +14,7 @@ import javax.annotation.Nonnull;
  * @param <POJO> pojo对象
  * @param <CONDITION> 当前对象
  * @since 2020.01.06
- * @author ramer Xiaofeng
+ * @author ramer
  */
 public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
   QueryEntityMetaData<POJO> getQueryEntityMetaData();

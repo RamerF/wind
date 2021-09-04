@@ -7,6 +7,7 @@ import io.github.ramerf.wind.core.entity.pojo.Domain;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import javax.persistence.Id;
 import lombok.*;
@@ -95,6 +96,9 @@ public class Foo extends Domain<Foo, Long> {
   @TableColumn(columnDefinition = "text", comment = "对象转存json")
   @TypeHandler(ObjectToJsonTypeHandler.class)
   private Type typeJson;
+
+  @CreateTimestamp private LocalDateTime createTime;
+  @UpdateTimestamp private LocalDateTime updateTime;
 
   public enum Type implements InterEnum<Integer> {
     /** 商品类别 */

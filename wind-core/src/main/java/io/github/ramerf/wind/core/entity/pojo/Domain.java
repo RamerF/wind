@@ -13,6 +13,8 @@ import org.springframework.dao.DataAccessException;
 /**
  * 实体域.
  *
+ * @param <T> 实体对象
+ * @param <ID> 主键类型
  * @since 2021.02.06
  * @author ramer
  */
@@ -51,7 +53,6 @@ public class Domain<T, ID extends Serializable> {
   /**
    * 更新指定字段.
    *
-   * @param fields the fields consumer
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
@@ -62,12 +63,22 @@ public class Domain<T, ID extends Serializable> {
   /**
    * 更新.
    *
-   * @param cnd the fields consumer
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
   public final int update(final Cnd<T, ?, ?> cnd) throws DataAccessException {
     return genericService().update(instance(), null, cnd);
+  }
+
+  /**
+   * 更新.
+   *
+   * @return 实际受影响的行数 int
+   * @throws DataAccessException 如果执行失败
+   */
+  public final int update(final Cnd<T, ?, ?> cnd, final Fields<T> fields)
+      throws DataAccessException {
+    return genericService().update(instance(), fields, cnd);
   }
 
   /**
@@ -87,8 +98,11 @@ public class Domain<T, ID extends Serializable> {
   /**
    * 条件删除.
    *
-   * @param condition 示例: {@code LambdaCondition.of(Foo.class).eq(Foo::setId, 1L)}
-   * @return 删除记录数
+   * @param condition the condition.
+   *     <p>示例:
+   *     <li>{@code Cnds.of(Foo.class).eq(Foo::setId, id)}
+   *     <li>{@code LambdaCondition.of(Foo.class).eq(Foo::setId, 1L)}
+   * @return 删除记录数 long
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
    */
@@ -101,13 +115,13 @@ public class Domain<T, ID extends Serializable> {
    *
    * @return the update
    */
-  @SuppressWarnings("unchecked")
   private T instance() {
+    //noinspection unchecked
     return (T) this;
   }
 
-  @SuppressWarnings("unchecked")
   private GenericLambdaService<T, ID> genericService() {
+    //noinspection unchecked
     return GenericLambdaService.with(
         (Class<T>) instance().getClass(),
         (Class<ID>) EntityHelper.getEntityIdField(instance().getClass()).getType());

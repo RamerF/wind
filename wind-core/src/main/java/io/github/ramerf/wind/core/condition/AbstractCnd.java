@@ -19,7 +19,7 @@ import org.springframework.data.domain.Sort.Order;
  * @param <CND> 当前对象
  * @param <CONDITION> 持有的Condition对象,比如:LambdaCondition,StringCondition
  * @since 2021.08.22
- * @author ramer Xiaofeng
+ * @author ramer
  */
 public abstract class AbstractCnd<
         POJO, //
@@ -91,6 +91,11 @@ public abstract class AbstractCnd<
   @Override
   public String getString() {
     return getCondition().getString();
+  }
+
+  @Override
+  public String toString() {
+    return getString();
   }
 
   @Override

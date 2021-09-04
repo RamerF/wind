@@ -93,12 +93,37 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * 更新所有符合条件的记录的指定字段.
    *
    * @param object the t
+   * @return 实际受影响的行数 int
+   * @throws DataAccessException 如果执行失败
+   */
+  default <E> int update(@Nonnull final E object, final Cnd<E, ?, ?> cnd)
+      throws DataAccessException {
+    return update(object, null, cnd);
+  }
+
+  /**
+   * 更新所有符合条件的记录的指定字段.
+   *
+   * @param object the t
+   * @param fields 更新字段
+   * @return 实际受影响的行数 int
+   * @throws DataAccessException 如果执行失败
+   */
+  default <E> int update(@Nonnull final E object, final Fields<E> fields)
+      throws DataAccessException {
+    return update(object, fields, null);
+  }
+
+  /**
+   * 更新所有符合条件的记录的指定字段.
+   *
+   * @param object the t
    * @param fields 更新字段
    * @param cnd the cnd
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  default <E> int update(@Nonnull final E object, Fields<E> fields, final Cnd<E, ?, ?> cnd)
+  default <E> int update(@Nonnull final E object, final Fields<E> fields, final Cnd<E, ?, ?> cnd)
       throws DataAccessException {
     if (cnd == null) {
       @SuppressWarnings("unchecked")
@@ -175,8 +200,10 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
   /**
    * 条件删除.
    *
-   * @param condition the condition.示例:<br>
-   *     {@code LambdaCondition.of(Foo.class).eq(AbstractEntityPoJo::setId, 1L)}
+   * @param condition the condition.
+   *     <p>示例:
+   *     <li>{@code Cnds.of(Foo.class).eq(Foo::setId, id)}
+   *     <li>{@code LambdaCondition.of(Foo.class).eq(Foo::setId, 1L)}
    * @return 删除记录数 long
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException

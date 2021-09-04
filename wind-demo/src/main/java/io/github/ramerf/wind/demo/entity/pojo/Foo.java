@@ -2,12 +2,12 @@ package io.github.ramerf.wind.demo.entity.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.ramerf.wind.core.annotation.*;
+import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.Domain;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.ObjectCollectionToJsonTypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.ObjectToJsonTypeHandler;
-import io.github.ramerf.wind.core.service.InterService.Fields;
 import java.math.BigDecimal;
 import java.util.*;
 import javax.persistence.Id;

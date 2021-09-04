@@ -21,10 +21,6 @@ public class Fields<T> {
 
   private Fields() {}
 
-  public static <T> Fields<T> of() {
-    return new Fields<>();
-  }
-
   public static <T> Fields<T> of(Class<T> clazz) {
     return new Fields<>();
   }

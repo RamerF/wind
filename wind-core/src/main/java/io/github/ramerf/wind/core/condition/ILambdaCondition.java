@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  * @param <T> pojo
  * @param <U> 当前对象
  * @since 15 /08/2021
- * @author ramer Xiaofeng
+ * @author ramer
  */
 public interface ILambdaCondition<T, U extends ILambdaCondition<T, U>> extends Condition<T, U> {
   default <V> U eq(@Nonnull IConsumer<T, V> field, V value) {

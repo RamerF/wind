@@ -20,7 +20,7 @@ import org.springframework.context.ApplicationEvent;
  * }</pre>
  *
  * @since 13 /08/2020
- * @author ramer Xiaofeng
+ * @author ramer
  */
 @Slf4j
 public class InitFinishEvent extends ApplicationEvent {

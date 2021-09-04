@@ -155,8 +155,8 @@ public final class Update<T> {
       BeanUtils.setValue(t, idField, id, null);
     }
     // TODO POST 如果sql ddl 包含default这里就不需要设置
-    setCurrentCreateTime(t, entityInfo.getCreateTimeField());
-    setCurrentUpdateTime(t, entityInfo.getUpdateTimeField());
+    setCurrentTime(t, entityInfo.getCreateTimeField());
+    setCurrentTime(t, entityInfo.getUpdateTimeField());
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -225,8 +225,8 @@ public final class Update<T> {
     // 取第一条记录获取批量保存sql
     ts.forEach(
         t -> {
-          setCurrentCreateTime(t, entityInfo.getCreateTimeField());
-          setCurrentUpdateTime(t, entityInfo.getUpdateTimeField());
+          setCurrentTime(t, entityInfo.getCreateTimeField());
+          setCurrentTime(t, entityInfo.getUpdateTimeField());
           BeanUtils.setValue(t, idField, idGenerator.nextId(t), null);
         });
     final T t = ts.get(0);
@@ -329,7 +329,7 @@ public final class Update<T> {
    * @return 受影响记录数 int
    */
   public int update(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
-    setCurrentUpdateTime(t, entityInfo.getUpdateTimeField());
+    setCurrentTime(t, entityInfo.getUpdateTimeField());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
@@ -379,7 +379,7 @@ public final class Update<T> {
       return Optional.empty();
     }
     // 保存更新时间
-    ts.forEach(o -> setCurrentUpdateTime(o, entityInfo.getUpdateTimeField()));
+    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeField()));
 
     // 取第一条记录获取批量更新sql
     final T t = ts.get(0);
@@ -414,7 +414,7 @@ public final class Update<T> {
                     public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                       final AtomicInteger index = new AtomicInteger(1);
                       final T obj = execList.get(i);
-                      setCurrentUpdateTime(obj, entityInfo.getUpdateTimeField());
+                      setCurrentTime(obj, entityInfo.getUpdateTimeField());
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
@@ -471,7 +471,7 @@ public final class Update<T> {
           clazz,
           updateString,
           ps -> {
-            ps.setObject(1, getUpdateTimeValue(updateTimeField));
+            ps.setObject(1, getCurrentTimeValue(updateTimeField));
             condition.getValues(new AtomicInteger(2)).forEach(val -> val.accept(ps));
           });
     } else {
@@ -529,33 +529,26 @@ public final class Update<T> {
     return savingFields;
   }
 
-  /** 设置更新时间为当前. */
-  private void setCurrentUpdateTime(@Nonnull final T t, final Field field) {
-    setCurrentTime(t, field, true);
-  }
-
-  /** 设置创建时间为当前. */
-  private void setCurrentCreateTime(@Nonnull final T t, final Field field) {
-    setCurrentTime(t, field, false);
-  }
-
-  private void setCurrentTime(@Nonnull final T t, final Field field, final boolean isUpdateTime) {
+  /** 设置为当前时间. */
+  private void setCurrentTime(@Nonnull final T t, final Field field) {
     if (field == null) {
       return;
     }
     final Object val = BeanUtils.getValue(t, field, null);
-    // 只考虑了有限的情况,如果使用了基本类型long,默认值为0,此时也需要赋值
-    if (val == null
-        || (val instanceof Long && (Long) val == 0)
-        || (val instanceof Integer && (Integer) val == 0)) {
-      BeanUtils.setValue(t, field, getUpdateTimeValue(field), null);
+    final Class<?> type = field.getType();
+    if (val == null) {
+      BeanUtils.setValue(t, field, getCurrentTimeValue(field), null);
+      return;
+    }
+    // 如果是基本类型int,long,默认值为0,此时也需要赋值
+    if ((type.equals(int.class) || type.equals(long.class)) && (long) val == 0) {
+      BeanUtils.setValue(t, field, getCurrentTimeValue(field), null);
     }
   }
 
   /** 获取当前时间特定类型值,如果是Long/long型,使用毫秒;如果是Integer/int型,使用秒. */
-  private Object getUpdateTimeValue(final Field updateTimeField) {
-    final Class<?> fieldType = updateTimeField.getType();
-    final Object value;
+  private Object getCurrentTimeValue(final Field field) {
+    final Class<?> fieldType = field.getType();
     if (LocalDate.class.isAssignableFrom(fieldType)) {
       return LocalDate.now();
     }
@@ -566,9 +559,9 @@ public final class Update<T> {
       return LocalDateTime.now();
     }
     if (Date.class.isAssignableFrom(fieldType)) {
-      return new Timestamp(System.currentTimeMillis());
+      return new Date();
     }
-    if (Integer.class.isAssignableFrom(fieldType)) {
+    if (Integer.class.isAssignableFrom(fieldType) || int.class.equals(fieldType)) {
       return System.currentTimeMillis() / 1000;
     }
     return System.currentTimeMillis();
