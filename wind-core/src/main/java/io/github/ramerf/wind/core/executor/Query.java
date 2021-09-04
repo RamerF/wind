@@ -163,8 +163,8 @@ public class Query<T> {
      * <li><code>cnds.limit(1);</code>
      * <li><code>cnds.limit(1, 10).orderBy(Foo::setId);</code>
      */
-    public QueryExecutor<T> pageable(@Nonnull final Pages pages) {
-      query.pageable = pages.getPageable();
+    public QueryExecutor<T> pageable(final Pages pages) {
+      query.pageable = pages == null ? null : pages.getPageable();
       return this;
     }
 

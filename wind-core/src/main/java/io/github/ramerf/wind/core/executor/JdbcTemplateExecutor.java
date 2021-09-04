@@ -94,7 +94,7 @@ public class JdbcTemplateExecutor implements Executor {
   @Override
   @SuppressWarnings("unchecked")
   public <T, R> Page<R> fetchPage(
-      @Nonnull final SqlParam<T> sqlParam, final long total, final Pageable pageable)
+      @Nonnull final SqlParam<T> sqlParam, final long total, final Pageable page)
       throws DataAccessException {
     return cacheIfAbsent(
         sqlParam,
@@ -110,6 +110,7 @@ public class JdbcTemplateExecutor implements Executor {
                               .getValues(sqlParam.startIndex)
                               .forEach(o -> o.accept(ps)),
                       new ColumnMapRowMapper());
+          final Pageable pageable = page == null ? PageRequest.of(0, Integer.MAX_VALUE) : page;
           // 从0开始
           final int currentPage = pageable.getPageNumber();
           // 每页大小
