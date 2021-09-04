@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
@@ -70,7 +69,7 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
   }
 
   public AbstractCondition(final Class<POJO> clazz, String tableName, String tableAlia) {
-    if (clazz == null && tableName == null && tableAlia == null) {
+    if (clazz == null && tableName == null) {
       throw SimpleException.of("[clazz,tableName,tableAlia]不能同时为空");
     }
     final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
@@ -115,33 +114,6 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
     }
     //noinspection unchecked
     return (CONDITION) this;
-  }
-
-  public AbstractCondition<POJO, ?> condition(final boolean genAlia) {
-    this.getQueryEntityMetaData().setContainTableAlia(true);
-
-    final EntityInfo entityInfo = new EntityInfo();
-    BeanUtils.copyProperties(getEntityInfo(), entityInfo);
-    setEntityInfo(entityInfo);
-
-    final QueryEntityMetaData<POJO> metaData = new QueryEntityMetaData<>();
-    BeanUtils.copyProperties(getQueryEntityMetaData(), metaData);
-    setQueryEntityMetaData(metaData);
-    if (genAlia) {
-      // 我们需要为子查询设置表别名
-      final String alia = randomString(5);
-      metaData.setFromTable(metaData.getTableName() + " " + alia);
-      metaData.setTableAlia(alia);
-    }
-    return this;
-  }
-
-  private String randomString(int count) {
-    final Random random = new Random();
-    char[] chars = new char[count];
-    int i = 0;
-    while (i < count) chars[i++] = alphabets[random.nextInt(26)];
-    return String.valueOf(chars);
   }
 
   @Override
@@ -199,8 +171,6 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(EntityUtils.fieldToColumn(field))
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(value)));
@@ -216,8 +186,6 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(EntityUtils.fieldToColumn(field))
               .concat(
                   String.format(
@@ -242,8 +210,6 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
       final Field logicDeleteField = logicDeletePropColumn.getField();
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(EntityUtils.fieldToColumn(logicDeleteField))
               .concat(MatchPattern.EQUAL.operator)
               .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
