@@ -214,8 +214,8 @@ public class EntityColumn {
       final Dialect dialect, final EntityColumn entityColumn) {
     final Type type = entityColumn.type;
     // 只有主键类型是整型时,才可能自增
-    if (type instanceof Class
-        && (long.class.equals(type)
+    if (!(type instanceof Class)
+        || !(long.class.equals(type)
             || Long.class.equals(type)
             || int.class.equals(type)
             || Integer.class.equals(type)
