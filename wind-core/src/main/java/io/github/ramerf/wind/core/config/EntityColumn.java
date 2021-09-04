@@ -214,7 +214,13 @@ public class EntityColumn {
       final Dialect dialect, final EntityColumn entityColumn) {
     final Type type = entityColumn.type;
     // 只有主键类型是整型时,才可能自增
-    if (type instanceof Class && !Number.class.isAssignableFrom((Class<?>) type)) {
+    if (type instanceof Class
+        && (long.class.equals(type)
+            || Long.class.equals(type)
+            || int.class.equals(type)
+            || Integer.class.equals(type)
+            || short.class.equals(type)
+            || Short.class.equals(type))) {
       return entityColumn.columnDefinition;
     }
     final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
