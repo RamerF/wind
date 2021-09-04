@@ -76,7 +76,7 @@ public class Cnds<T> extends AbstractCnd<T, Cnds<T>, LambdaCondition<T>>
 
   @Override
   public <V> Cnds<T> lt(final boolean cond, @Nonnull final IConsumer<T, V> field, final V value) {
-    condition.gt(cond, field, value);
+    condition.lt(cond, field, value);
     return this;
   }
 
@@ -87,35 +87,28 @@ public class Cnds<T> extends AbstractCnd<T, Cnds<T>, LambdaCondition<T>>
   }
 
   @Override
-  public <V> Cnds<T> like(
-      final boolean cond, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+  public <V> Cnds<T> like(final boolean cond, @Nonnull final IConsumer<T, V> field, final V value) {
     condition.like(cond, field, value);
     return this;
   }
 
   @Override
   public <V> Cnds<T> notLike(
-      final boolean cond, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final V value) {
     condition.notLike(cond, field, value);
     return this;
   }
 
   @Override
   public <V> Cnds<T> between(
-      final boolean cond,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final V start,
-      @Nonnull final V end) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final V start, final V end) {
     condition.between(cond, field, start, end);
     return this;
   }
 
   @Override
   public <V> Cnds<T> notBetween(
-      final boolean cond,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final V start,
-      @Nonnull final V end) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final V start, final V end) {
     condition.notBetween(cond, field, start, end);
     return this;
   }
@@ -134,18 +127,14 @@ public class Cnds<T> extends AbstractCnd<T, Cnds<T>, LambdaCondition<T>>
 
   @Override
   public <V> Cnds<T> in(
-      final boolean cond,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final Collection<V> values) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final Collection<V> values) {
     condition.in(cond, field, values);
     return this;
   }
 
   @Override
   public <V> Cnds<T> notIn(
-      final boolean cond,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final Collection<V> values) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final Collection<V> values) {
     condition.notIn(cond, field, values);
     return this;
   }
@@ -188,34 +177,28 @@ public class Cnds<T> extends AbstractCnd<T, Cnds<T>, LambdaCondition<T>>
 
   @Override
   public <V> Cnds<T> orLike(
-      final boolean cond, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final V value) {
     condition.orLike(cond, field, value);
     return this;
   }
 
   @Override
   public <V> Cnds<T> orNotLike(
-      final boolean cond, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final V value) {
     condition.orNotLike(cond, field, value);
     return this;
   }
 
   @Override
   public <V> Cnds<T> orBetween(
-      final boolean cond,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final V start,
-      @Nonnull final V end) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final V start, final V end) {
     condition.orBetween(cond, field, start, end);
     return this;
   }
 
   @Override
   public <V> Cnds<T> orNotBetween(
-      final boolean cond,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final V start,
-      @Nonnull final V end) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final V start, final V end) {
     condition.orNotBetween(cond, field, start, end);
     return this;
   }
@@ -234,18 +217,14 @@ public class Cnds<T> extends AbstractCnd<T, Cnds<T>, LambdaCondition<T>>
 
   @Override
   public <V> Cnds<T> orIn(
-      final boolean cond,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final Collection<V> values) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final Collection<V> values) {
     condition.orIn(cond, field, values);
     return this;
   }
 
   @Override
   public <V> Cnds<T> orNotIn(
-      final boolean cond,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final Collection<V> values) {
+      final boolean cond, @Nonnull final IConsumer<T, V> field, final Collection<V> values) {
     condition.orNotIn(cond, field, values);
     return this;
   }

@@ -198,6 +198,9 @@ public class Query<T> {
               templateSql,
               optimizeQueryString(query.queryColumn.getString(), clazz),
               conditionClause.concat(orderByClause).concat(limitClause));
+      if (log.isDebugEnabled()) {
+        log.debug("fetchOne:[{}]", sql);
+      }
       return executor.fetchOne(
           new SqlParam<T>()
               .setSql(sql)
@@ -226,8 +229,8 @@ public class Query<T> {
               templateSql,
               optimizeQueryString(query.queryColumn.getString(), clazz),
               conditionClause.concat(orderByClause).concat(limitClause));
-      if (log.isTraceEnabled()) {
-        log.trace("fetchAll:sql:[{}]", sql);
+      if (log.isDebugEnabled()) {
+        log.debug("fetchAll:[{}]", sql);
       }
       return executor.fetchAll(
           new SqlParam<T>()
@@ -257,6 +260,9 @@ public class Query<T> {
               templateSql,
               optimizeQueryString(query.queryColumn.getString(), clazz),
               conditionClause.concat(orderByClause).concat(limitClause));
+      if (log.isDebugEnabled()) {
+        log.debug("fetchPage:[{}]", sql);
+      }
       return executor.fetchPage(
           new SqlParam<T>()
               .setSql(sql)

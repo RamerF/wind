@@ -16,7 +16,7 @@ public class TimestampTypeHandler implements ITypeHandler<Date, Timestamp> {
   @Override
   public Object convertToJdbc(
       Date javaVal, final Field field, @Nonnull final PreparedStatement ps) {
-    return new java.sql.Timestamp(javaVal.getTime());
+    return new Timestamp(javaVal.getTime());
   }
 
   @Override
@@ -27,6 +27,6 @@ public class TimestampTypeHandler implements ITypeHandler<Date, Timestamp> {
 
   @Override
   public String getJdbcType(@Nonnull final Field field) {
-    return null;
+    return "TIMESTAMP";
   }
 }

@@ -46,7 +46,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> eq(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       and(column, MatchPattern.EQUAL, value);
     }
@@ -55,7 +55,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> ne(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       and(column, MatchPattern.NOT_EQUAL, value);
     }
@@ -64,7 +64,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> gt(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       and(column, MatchPattern.GREATER, value);
     }
@@ -73,7 +73,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> ge(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       and(column, MatchPattern.GE, value);
     }
@@ -82,7 +82,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> lt(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       and(column, MatchPattern.LESS, value);
     }
@@ -91,7 +91,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> le(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       and(column, MatchPattern.LE, value);
     }
@@ -100,7 +100,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> like(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       and(column, MatchPattern.LIKE, value);
     }
@@ -109,7 +109,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> notLike(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       and(column, MatchPattern.NOT_LIKE, value);
     }
@@ -118,15 +118,10 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> between(
-      final boolean condition,
-      @Nonnull final String column,
-      @Nonnull final Object start,
-      @Nonnull final Object end) {
+      final boolean condition, @Nonnull final String column, final Object start, final Object end) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(
                   String.format(
@@ -141,15 +136,10 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> notBetween(
-      final boolean condition,
-      @Nonnull final String column,
-      @Nonnull final Object start,
-      @Nonnull final Object end) {
+      final boolean condition, @Nonnull final String column, final Object start, final Object end) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(
                   String.format(
@@ -167,8 +157,6 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(MatchPattern.IS_NULL.operator));
     }
@@ -180,8 +168,6 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(MatchPattern.IS_NOT_NULL.operator));
     }
@@ -190,12 +176,10 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> in(
-      final boolean condition, @Nonnull final String column, @Nonnull final Collection<?> values) {
+      final boolean condition, @Nonnull final String column, final Collection<?> values) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(
                   String.format(
@@ -210,12 +194,10 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> notIn(
-      final boolean condition, @Nonnull final String column, @Nonnull final Collection<?> values) {
+      final boolean condition, @Nonnull final String column, final Collection<?> values) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(
                   String.format(
@@ -230,7 +212,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orEq(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       or(column, MatchPattern.EQUAL, value);
     }
@@ -239,7 +221,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orNe(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       or(column, MatchPattern.NOT_EQUAL, value);
     }
@@ -248,7 +230,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orGt(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       or(column, MatchPattern.GREATER, value);
     }
@@ -257,7 +239,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orGe(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       or(column, MatchPattern.GE, value);
     }
@@ -266,7 +248,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orLt(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       or(column, MatchPattern.LESS, value);
     }
@@ -275,7 +257,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orLe(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       or(column, MatchPattern.LE, value);
     }
@@ -284,7 +266,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orLike(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       or(column, MatchPattern.LIKE, value);
     }
@@ -293,7 +275,7 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orNotLike(
-      final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
+      final boolean condition, @Nonnull final String column, final Object value) {
     if (condition) {
       or(column, MatchPattern.NOT_LIKE, value);
     }
@@ -302,15 +284,10 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orBetween(
-      final boolean condition,
-      @Nonnull final String column,
-      @Nonnull final Object start,
-      @Nonnull final Object end) {
+      final boolean condition, @Nonnull final String column, final Object start, final Object end) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(
                   String.format(
@@ -325,15 +302,10 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orNotBetween(
-      final boolean condition,
-      @Nonnull final String column,
-      @Nonnull final Object start,
-      @Nonnull final Object end) {
+      final boolean condition, @Nonnull final String column, final Object start, final Object end) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(
                   String.format(
@@ -351,8 +323,6 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(MatchPattern.IS_NULL.operator));
     }
@@ -364,8 +334,6 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(MatchPattern.IS_NOT_NULL.operator));
     }
@@ -374,12 +342,10 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orIn(
-      final boolean condition, @Nonnull final String column, @Nonnull final Collection<?> values) {
+      final boolean condition, @Nonnull final String column, final Collection<?> values) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(
                   String.format(
@@ -394,12 +360,10 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
 
   @Override
   public StringCondition<T> orNotIn(
-      final boolean condition, @Nonnull final String column, @Nonnull final Collection<?> values) {
+      final boolean condition, @Nonnull final String column, final Collection<?> values) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
-              .concat(getQueryEntityMetaData().getTableAlia())
-              .concat(DOT.operator)
               .concat(column)
               .concat(
                   String.format(
@@ -438,8 +402,6 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
   public StringCondition<T> and(final String column, final String operator, final Object value) {
     conditionSql.add(
         (conditionSql.size() > 0 ? AND.operator : "")
-            .concat(getQueryEntityMetaData().getTableAlia())
-            .concat(DOT.operator)
             .concat(column)
             .concat(operator)
             .concat(toPreFormatSqlVal(value)));
@@ -451,8 +413,6 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
   public StringCondition<T> or(final String column, final String operator, final Object value) {
     conditionSql.add(
         (conditionSql.size() > 0 ? OR.operator : "")
-            .concat(getQueryEntityMetaData().getTableAlia())
-            .concat(DOT.operator)
             .concat(column)
             .concat(operator)
             .concat(toPreFormatSqlVal(value)));

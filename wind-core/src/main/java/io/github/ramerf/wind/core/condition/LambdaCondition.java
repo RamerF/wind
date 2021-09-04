@@ -134,7 +134,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> like(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -147,7 +147,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> notLike(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -160,10 +160,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> between(
-      final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final V start,
-      @Nonnull final V end) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V start, final V end) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -181,10 +178,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> notBetween(
-      final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final V start,
-      @Nonnull final V end) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V start, final V end) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -199,8 +193,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
   }
 
   @Override
-  public <V> LambdaCondition<T> isNull(
-      final boolean condition, @Nonnull final IConsumer<T, V> field) {
+  public <V> LambdaCondition<T> isNull(final boolean condition, final IConsumer<T, V> field) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -224,9 +217,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> in(
-      final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final Collection<V> values) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final Collection<V> values) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -244,9 +235,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> notIn(
-      final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final Collection<V> values) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final Collection<V> values) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
@@ -348,7 +337,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> orLike(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
@@ -361,7 +350,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> orNotLike(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
@@ -374,10 +363,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> orBetween(
-      final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final V start,
-      @Nonnull final V end) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V start, final V end) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
@@ -395,10 +381,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> orNotBetween(
-      final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final V start,
-      @Nonnull final V end) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final V start, final V end) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
@@ -438,9 +421,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> orIn(
-      final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final Collection<V> values) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final Collection<V> values) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")
@@ -458,9 +439,7 @@ public class LambdaCondition<T> extends AbstractCondition<T, LambdaCondition<T>>
 
   @Override
   public <V> LambdaCondition<T> orNotIn(
-      final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
-      @Nonnull final Collection<V> values) {
+      final boolean condition, @Nonnull final IConsumer<T, V> field, final Collection<V> values) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator : "")

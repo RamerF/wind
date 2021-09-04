@@ -17,7 +17,9 @@ public class LocalDateTimeToTimestampTypeHandler implements ITypeHandler<LocalDa
   @Override
   public Object convertToJdbc(
       LocalDateTime javaVal, final Field field, @Nonnull final PreparedStatement ps) {
-    return javaVal == null ? 0 : javaVal.atZone(ZoneId.systemDefault()).toEpochSecond();
+    return javaVal == null
+        ? 0
+        : new Timestamp(javaVal.atZone(ZoneId.systemDefault()).toEpochSecond());
   }
 
   @Override
@@ -31,6 +33,6 @@ public class LocalDateTimeToTimestampTypeHandler implements ITypeHandler<LocalDa
 
   @Override
   public String getJdbcType(@Nonnull final Field field) {
-    return "bigint";
+    return "TIMESTAMP";
   }
 }

@@ -19,7 +19,7 @@ public class LocalDateToDateTypeHandler implements ITypeHandler<LocalDate, Date>
       LocalDate javaVal, final Field field, @Nonnull final PreparedStatement ps) {
     return javaVal == null
         ? 0
-        : javaVal.atTime(0, 0).atZone(ZoneId.systemDefault()).toEpochSecond();
+        : new Date(javaVal.atTime(LocalTime.MIN).atZone(ZoneId.systemDefault()).toEpochSecond());
   }
 
   @Override
@@ -34,6 +34,6 @@ public class LocalDateToDateTypeHandler implements ITypeHandler<LocalDate, Date>
 
   @Override
   public String getJdbcType(@Nonnull final Field field) {
-    return "bigint";
+    return "DATETIME";
   }
 }

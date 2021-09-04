@@ -177,6 +177,9 @@ public final class Update<T> {
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql =
         String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
+    if (log.isDebugEnabled()) {
+      log.debug("create:[{}]", execSql);
+    }
     KeyHolder keyHolder = new GeneratedKeyHolder();
     final int update =
         executor.update(
@@ -223,13 +226,13 @@ public final class Update<T> {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
     }
-    // 取第一条记录获取批量保存sql
     ts.forEach(
         t -> {
           setCurrentTime(t, entityInfo.getCreateTimeField());
           setCurrentTime(t, entityInfo.getUpdateTimeField());
           BeanUtils.setValue(t, idField, idGenerator.nextId(t), null);
         });
+    // 取第一条记录获取批量保存sql
     final T t = ts.get(0);
     final List<Field> savingFields = getWritingFields(t, fields);
     // 插入列
@@ -261,8 +264,6 @@ public final class Update<T> {
                     public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                       final AtomicInteger index = new AtomicInteger(1);
                       final T obj = execList.get(i);
-                      // TODO WARN 创建时间戳
-                      // obj.setCreateTime(new Date());
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
@@ -349,6 +350,9 @@ public final class Update<T> {
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
+    if (log.isDebugEnabled()) {
+      log.debug("update:[{}]", execSql);
+    }
     return executor.update(
         clazz,
         execSql,
@@ -379,11 +383,11 @@ public final class Update<T> {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
     }
-    // 保存更新时间
-    ts.forEach(o -> setCurrentTime(o, entityInfo.getUpdateTimeField()));
-
     // 取第一条记录获取批量更新sql
     final T t = ts.get(0);
+    // 保存更新时间
+    setCurrentTime(t, entityInfo.getUpdateTimeField());
+
     final List<Field> savingFields = getWritingFields(t, fields);
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger();
@@ -588,10 +592,7 @@ public final class Update<T> {
                 TypeHandlerHelper.toJdbcValue(ValueType.of(originValue, field), ps);
             if (log.isDebugEnabled()) {
               log.debug(
-                  "setParameterConsumer:[index:{},originValue:{},value:{}]",
-                  index.get(),
-                  originValue,
-                  value);
+                  "params:[index:{},originValue:{},value:{}]", index.get(), originValue, value);
             }
             ps.setObject(index.getAndIncrement(), value);
           } catch (SQLException e) {
@@ -612,8 +613,8 @@ public final class Update<T> {
   private void setArgsValue(
       AtomicInteger index, Field field, Object originValue, PreparedStatement ps) {
     final Object value = TypeHandlerHelper.toJdbcValue(ValueType.of(originValue, field), ps);
-    if (log.isTraceEnabled()) {
-      log.trace("setArgsValue:[index:{},originValue:{},value:{}]", index.get(), originValue, value);
+    if (log.isDebugEnabled()) {
+      log.debug("params:[index:{},originValue:{},value:{}]", index.get(), originValue, value);
     }
     try {
       ps.setObject(index.getAndIncrement(), value);

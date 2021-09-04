@@ -29,6 +29,6 @@ public class LocalDateTimeToLongTypeHandler implements ITypeHandler<LocalDateTim
 
   @Override
   public String getJdbcType(@Nonnull final Field field) {
-    return "bigint";
+    return "BIGINT";
   }
 }

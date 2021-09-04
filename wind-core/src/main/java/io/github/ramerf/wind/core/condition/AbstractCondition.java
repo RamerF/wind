@@ -143,9 +143,16 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
                 (Consumer<PreparedStatement>)
                     ps -> {
                       try {
-                        ps.setObject(
-                            startIndex.getAndIncrement(),
-                            TypeHandlerHelper.toJdbcValue(valueType, ps));
+                        final int index = startIndex.getAndIncrement();
+                        final Object jdbcValue = TypeHandlerHelper.toJdbcValue(valueType, ps);
+                        if (log.isDebugEnabled()) {
+                          log.debug(
+                              "params:[index:{},originValue:{},value:{}]",
+                              index,
+                              valueType.getOriginVal(),
+                              jdbcValue);
+                        }
+                        ps.setObject(index, jdbcValue);
                       } catch (SQLException e) {
                         throw CommonException.of(e);
                       }
