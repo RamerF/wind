@@ -16,7 +16,6 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.AS;
-import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.DOT;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -252,8 +251,8 @@ public class QueryColumn<T> {
     return getString(false);
   }
 
-  /** 是否包含列别名,单表时不需要包含别名,传false. */
-  public String getString(final boolean containAlia) {
+  /** @param containTableName 是否包含表名(如:foo.name),单表时不需要包含表名传false. */
+  public String getString(final boolean containTableName) {
     final QueryEntityMetaData<T> metaData = getQueryEntityMetaData();
     if (CollectionUtils.isEmpty(metaData.queryAlias)) {
       EntityHelper.getEntityInfo(metaData.clazz).getEntityColumns().stream()
@@ -261,7 +260,7 @@ public class QueryColumn<T> {
           .forEach(this::col);
     }
     return metaData.queryAlias.stream()
-        .map(o -> toColumnWithAlia(o, containAlia))
+        .map(o -> toColumnWithAlia(o, containTableName))
         .collect(joining(","));
   }
 
@@ -279,8 +278,9 @@ public class QueryColumn<T> {
     return this;
   }
 
-  /** 增加额外的表别名前缀 */
-  private static String toColumnWithAlia(final QueryAlia queryAlia, final boolean containAlia) {
+  /** @param containTableName 是否包含表名(如:foo.name),单表时不需要包含表名传false. */
+  private static String toColumnWithAlia(
+      final QueryAlia queryAlia, final boolean containTableName) {
     final String customSql = queryAlia.getCustomSql();
     if (customSql != null) {
       return customSql;
@@ -292,10 +292,9 @@ public class QueryColumn<T> {
 
     final SqlFunction sqlFunction = queryAlia.getSqlFunction();
     final String queryName =
-        sqlFunction != null
-            ? sqlFunction.string(tableAlias.concat(DOT.operator()).concat(name))
-            : tableAlias.concat(DOT.operator()).concat(name);
-    return containAlia ? queryName.concat(AS.operator()).concat(alia) : queryName;
+        (sqlFunction != null ? sqlFunction.string(name) : name)
+            .concat(name.equals(alia) ? "" : AS.operator().concat(alia));
+    return containTableName ? tableAlias.concat(queryName) : queryName;
   }
 
   @Data

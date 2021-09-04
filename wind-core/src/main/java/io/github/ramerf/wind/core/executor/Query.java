@@ -196,7 +196,7 @@ public class Query<T> {
       final String sql =
           String.format(
               templateSql,
-              optimizeQueryString(query.queryColumn.getString(false), clazz),
+              optimizeQueryString(query.queryColumn.getString(), clazz),
               conditionClause.concat(orderByClause).concat(limitClause));
       return executor.fetchOne(
           new SqlParam<T>()
@@ -224,7 +224,7 @@ public class Query<T> {
       final String sql =
           String.format(
               templateSql,
-              optimizeQueryString(query.queryColumn.getString(false), clazz),
+              optimizeQueryString(query.queryColumn.getString(), clazz),
               conditionClause.concat(orderByClause).concat(limitClause));
       if (log.isTraceEnabled()) {
         log.trace("fetchAll:sql:[{}]", sql);
@@ -255,7 +255,7 @@ public class Query<T> {
       final String sql =
           String.format(
               templateSql,
-              optimizeQueryString(query.queryColumn.getString(false), clazz),
+              optimizeQueryString(query.queryColumn.getString(), clazz),
               conditionClause.concat(orderByClause).concat(limitClause));
       return executor.fetchPage(
           new SqlParam<T>()
@@ -290,7 +290,7 @@ public class Query<T> {
     }
 
     private String getQueryClause() {
-      return query.queryColumn.getString(false);
+      return query.queryColumn.getString();
     }
 
     private String getFromTableClause() {
