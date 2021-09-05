@@ -245,7 +245,7 @@ public enum MappingType {
   // MANY_TO_MANY {
   //   @Override
   //   public <T> T fetchMapping(
-  //       final AbstractEntityPoJo obj, final MappingInfo mappingInfo, final Object relationValue)
+  //       final E obj, final MappingInfo mappingInfo, final Object relationValue)
   // {
   //     throw CommonException.of("方法不支持");
   //   }

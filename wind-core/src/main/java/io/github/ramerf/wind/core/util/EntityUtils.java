@@ -67,7 +67,7 @@ public final class EntityUtils {
    * <li>非transient
    * <li>基本类型(对应的包装类型)<br>
    *
-   *     <p>或 AbstractEntityPoJo的子类并且标记有注解({@link OneToOne},{@link OneToMany},{@link ManyToOne})中的一个
+   *     <p>或 标记有注解({@link OneToOne},{@link OneToMany},{@link ManyToOne})中的一个
    *     <br>
    *
    *     <p>或 List{@code <T>}/Set{@code <T>},T满足上一个条件

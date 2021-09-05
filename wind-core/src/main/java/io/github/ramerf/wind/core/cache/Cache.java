@@ -52,11 +52,7 @@ public interface Cache {
    */
   void clear(@Nonnull String keyPrefix);
 
-  /**
-   * 清除对应key的数据.
-   *
-   * @param clazz {@link AbstractEntityPoJo}
-   */
+  /** 清除对应key的数据. */
   void clear(@Nonnull final Class<?> clazz);
 
   /**

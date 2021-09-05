@@ -37,7 +37,7 @@
  2. 新建实体`Foo`
     ```java
     @TableInfo
-    public class Foo extends AbstractEntityPoJo<Foo, Long> {
+    public class Foo {
       // 实体必须有主键
       @javax.persistence.Id private Long id;
     }
