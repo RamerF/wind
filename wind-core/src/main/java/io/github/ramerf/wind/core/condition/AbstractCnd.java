@@ -80,7 +80,7 @@ public abstract class AbstractCnd<
   @Override
   @Nullable
   public Pages getPages() {
-    return Pages.of(page == 0 ? 0 : page - 1, size, orders);
+    return Pages.of(page, size, orders);
   }
 
   @Override
