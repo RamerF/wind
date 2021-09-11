@@ -8,7 +8,7 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>wind</artifactId>
     <name>wind</name>
-    <version>4.0.5</version>
+    <version>4.0.6</version>
     <modules>
         <module>wind-core</module>
         <module>wind-web</module>

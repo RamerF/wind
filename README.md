@@ -30,7 +30,7 @@
     <dependency>
         <groupId>io.github.ramerf</groupId>
         <artifactId>wind-core</artifactId>
-        <version>4.0.5</version>
+        <version>4.0.6</version>
     </dependency>
     ```
     
