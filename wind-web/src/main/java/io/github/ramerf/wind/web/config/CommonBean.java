@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.format.FormatterRegistry;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -51,17 +50,17 @@ public class CommonBean {
         registry.addConverterFactory(new StringToEnumConverterFactory());
       }
 
-      @Override
-      public void addCorsMappings(@Nonnull CorsRegistry registry) {
-        // TODO WARN 这个跨域配置有问题
-        final long maxAge = 3600L;
-        registry
-            .addMapping("/**")
-            .allowedOrigins("*")
-            .allowedMethods("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE")
-            .allowCredentials(false)
-            .maxAge(maxAge);
-      }
+      // @Override
+      // public void addCorsMappings(@Nonnull CorsRegistry registry) {
+      //   // TODO WARN 这个跨域配置有问题
+      //   final long maxAge = 3600L;
+      //   registry
+      //       .addMapping("/**")
+      //       .allowedOrigins("*")
+      //       .allowedMethods("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE")
+      //       .allowCredentials(false)
+      //       .maxAge(maxAge);
+      // }
     };
   }
 

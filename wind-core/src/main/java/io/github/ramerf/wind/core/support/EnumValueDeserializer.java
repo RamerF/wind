@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.parser.*;
 import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.exception.InvalidEnumException;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
@@ -38,12 +37,12 @@ public class EnumValueDeserializer implements ObjectDeserializer {
     }
     // 对象参数中包含枚举字段,值无效时
     if (token == JSONToken.LITERAL_INT) {
-      throw new InvalidEnumException(lexer.intValue());
+      return null;
     }
     if (token == JSONToken.LITERAL_STRING) {
-      throw new InvalidEnumException(lexer.stringVal());
+      return null;
     }
-    throw new InvalidEnumException(Objects.toString(fieldName));
+    return null;
   }
 
   @Override

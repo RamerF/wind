@@ -19,7 +19,7 @@
  - 可配置是否写入null值
  - 支持关系映射
 
-#### 迭代计划
+### 迭代计划
 
  - [ ] 支持指定表的索引@TableIndexes(@TableIndex(name= "", fields = {""}, unique = false ))
 
@@ -29,14 +29,14 @@
     ```xml
     <dependency>
         <groupId>io.github.ramerf</groupId>
-        <artifactId>wind-core</artifactId>
-        <version>4.0.6</version>
+        <artifactId>wind</artifactId>
+        <version>4.0.7</version>
     </dependency>
     ```
     
  2. 新建实体`Foo`
     ```java
-    @TableInfo
+    @TableInfo // 该注解是可选的
     public class Foo {
       // 实体必须有主键
       @javax.persistence.Id private Long id;
@@ -48,26 +48,20 @@
     ```java
     GenericService service = GenericService.with(Foo.class, Long.class);
     // service可以操作任意实体 service.create(bar)
-    service.getById(1L);
+    final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L).limit(1, 10).orderBy(Foo::getName);
+    service.page(cnds);
     ```
 
-### 当然，通常你还会定义service
+### 如果定义service
 
- 1. 新建 service `FooService`继承于`BaseService`
+ 需要继承于`BaseService`
 
-    ```java
-    public interface FooService extends BaseService<Foo, Long> {}
-    ```
-
- 2. 新建serviceImpl `FooServiceImpl`
-    ```java
-    @Service
-    public class FooServiceImpl implements FooService {}
-    ```
-
- 3. 注入`FooService`即可使用.
+```java
+public interface FooService extends BaseService<Foo, Long> {}
+```
 
 ### 方法示例
+
 参考 `wind-demo` 模块 和 `wind-core` 测试代码 
 
 ```java
@@ -350,30 +344,33 @@ wind:
 
 #### 自定义枚举序列化
 
- - 默认枚举序列化为 key:value 格式
+ - 默认枚举序列化为 value 
     ```json
-    {
-        "value": "值",
-        "desc": "中文描述"
-    }
-    ```
- - 自定义
-    ```java
-    /** 自定义枚举的序列化格式,只返回value. */
     @Bean
     public InterEnumSerializer interEnumSerializer() {
         return InterEnum::value;
     }
     ```
+ - 自定义
+    ```java
+    @Bean
+    public InterEnumSerializer interEnumSerializer() {
+      return interEnum -> {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("key", interEnum.value());
+        jsonObject.put("value", interEnum.desc());
+        return jsonObject;
+      };
+    }
+    ```
 
 #### 自定义主键生成策略
 
-默认使用雪花算法
+默认id自增，以下是雪花算法写法
 ```java
 @Bean
 public IdGenerator autoIncrementGenerator() {
-    // 自定义id生成策略,下方为数据库自增写法
-    return o -> null;
+  return new SnowflakeIdGenerator();
 }
 ```
 
@@ -443,7 +440,7 @@ wind:
 
 代码格式化使用: google-java-format
 
-- 单个: getXxx/getOne
+- 单个: getXxx，getOne
 - 多个: listXxx
 - 分页: pageXxx
 - 批量: xxxBatch
@@ -455,9 +452,8 @@ wind:
 
 #### 联系我
 
-如果你在使用本项目时遇到问题,可以通过以下方式解决
+如果您在使用本项目时遇到问题,请邮件联系
 
-- QQ群: 975225058
 - Mail: [1390635973@qq.com](mailto:1390635973@qq.com)
 
 #### 开源协议

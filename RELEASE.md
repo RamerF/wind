@@ -2,9 +2,16 @@
 
 ---
 
+#### 4.0.7
+
+- 修复：Cnds bug
+- 更新：主键默认自增
+- 更新：Controller参数，InterEnum枚举子类默认支持传递value值
+- 更新：InterEnum枚举子类默认使用value方法序列化
+
 #### 4.0.6
 
-- 修复分页查询bug
+- 修复：分页查询bug
 
 #### 4.0.5
 

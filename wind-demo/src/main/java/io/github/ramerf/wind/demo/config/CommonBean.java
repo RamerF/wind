@@ -1,8 +1,9 @@
 package io.github.ramerf.wind.demo.config;
 
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import com.alibaba.fastjson.JSONObject;
 import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
 import io.github.ramerf.wind.core.support.IdGenerator;
+import io.github.ramerf.wind.core.support.SnowflakeIdGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -26,11 +27,10 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 @Configuration("config_common_bean")
 public class CommonBean {
-
+  /** id 使用雪花算法. */
   @Bean
   public IdGenerator autoIncrementGenerator() {
-    // 自定义id生成策略,下方为数据库自增写法
-    return o -> null;
+    return new SnowflakeIdGenerator();
   }
 
   /**
@@ -40,7 +40,12 @@ public class CommonBean {
    */
   @Bean
   public InterEnumSerializer interEnumSerializer() {
-    return InterEnum::value;
+    return interEnum -> {
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("key", interEnum.value());
+      jsonObject.put("value", interEnum.desc());
+      return jsonObject;
+    };
   }
 
   /**
@@ -75,9 +80,7 @@ public class CommonBean {
     return new ApiInfoBuilder()
         .title("项目接口文档")
         .description("项目描述")
-        .contact(
-            new Contact(
-                "ramer", "https://github.com/ramerf/spring-web.git", "1390635973@qq.com"))
+        .contact(new Contact("ramer", "https://github.com/ramerf/wind.git", "1390635973@qq.com"))
         .version("1.0.0")
         .build();
   }

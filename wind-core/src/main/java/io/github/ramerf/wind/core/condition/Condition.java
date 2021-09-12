@@ -49,11 +49,19 @@ public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
     return in(true, field, values);
   }
 
-  CONDITION in(boolean condition, @Nonnull Field field, @Nonnull Collection<?> values);
+  CONDITION in(final boolean condition, @Nonnull Field field, @Nonnull Collection<?> values);
 
-  CONDITION and(final String sql);
+  default CONDITION and(final String sql) {
+    return and(true, sql);
+  }
 
-  CONDITION or(final String sql);
+  CONDITION and(final boolean condition, final String sql);
+
+  default CONDITION or(final String sql) {
+    return or(true, sql);
+  }
+
+  CONDITION or(final boolean condition, final String sql);
 
   /** 拼接逻辑未删除条件,如果不支持逻辑删除,不执行操作. */
   CONDITION appendLogicNotDelete();

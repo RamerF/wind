@@ -52,7 +52,7 @@ public final class StringToEnumConverterFactory implements ConverterFactory<Stri
       if (optional.isPresent()) {
         return optional.get();
       }
-      return (T) InterEnum.of(source.trim(), this.enumType, () -> null);
+      return (T) InterEnum.ofNullable(source.trim(), this.enumType);
     }
   }
 }

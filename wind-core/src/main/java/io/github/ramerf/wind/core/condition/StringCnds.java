@@ -198,7 +198,7 @@ public class StringCnds<T> extends AbstractCnd<T, StringCnds<T>, StringCondition
 
   @Override
   public StringCnds<T> eq(final boolean cond, @Nonnull final String column, final Object value) {
-    condition.eq(true, column, value);
+    condition.eq(cond, column, value);
     return this;
   }
 

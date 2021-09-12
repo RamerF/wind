@@ -52,7 +52,7 @@ public class Cnds<T> extends AbstractCnd<T, Cnds<T>, LambdaCondition<T>>
 
   @Override
   public <V> Cnds<T> eq(final boolean cond, @Nonnull final IConsumer<T, V> field, final V value) {
-    condition.eq(true, field, value);
+    condition.eq(cond, field, value);
     return this;
   }
 

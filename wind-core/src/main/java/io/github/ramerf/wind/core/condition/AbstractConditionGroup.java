@@ -72,15 +72,15 @@ public abstract class AbstractConditionGroup<
   }
 
   @Override
-  public CONDITION_GROUP and(final String sql) {
-    condition.and(sql);
+  public CONDITION_GROUP and(final boolean cond, final String sql) {
+    condition.and(cond, sql);
     //noinspection unchecked
     return (CONDITION_GROUP) this;
   }
 
   @Override
-  public CONDITION_GROUP or(final String sql) {
-    condition.or(sql);
+  public CONDITION_GROUP or(final boolean cond, final String sql) {
+    condition.or(cond, sql);
     //noinspection unchecked
     return (CONDITION_GROUP) this;
   }

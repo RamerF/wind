@@ -98,8 +98,8 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
 
   /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
   @Override
-  public CONDITION and(final String sql) {
-    if (StringUtils.nonEmpty(sql)) {
+  public CONDITION and(final boolean condition, final String sql) {
+    if (condition && StringUtils.nonEmpty(sql)) {
       conditionSql.add((conditionSql.size() > 0 ? AND.operator : "").concat(sql));
     }
     //noinspection unchecked
@@ -108,8 +108,8 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
 
   /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
   @Override
-  public CONDITION or(final String sql) {
-    if (StringUtils.nonEmpty(sql)) {
+  public CONDITION or(final boolean condition, final String sql) {
+    if (condition && StringUtils.nonEmpty(sql)) {
       conditionSql.add((conditionSql.size() > 0 ? OR.operator : "").concat(sql));
     }
     //noinspection unchecked

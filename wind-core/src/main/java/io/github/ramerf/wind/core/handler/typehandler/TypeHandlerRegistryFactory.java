@@ -36,7 +36,7 @@ public class TypeHandlerRegistryFactory {
     try {
       BeanUtils.scanClasses("io.github.ramerf.wind.core.handler.typehandler", ITypeHandler.class)
           .stream()
-          .peek(clazz -> log.info("registerDefaultTypeHandlers:[{}]", clazz.getName()))
+          .peek(clazz -> log.debug("registerDefaultTypeHandlers:[{}]", clazz.getName()))
           .filter(clazz -> !clazz.equals(ITypeHandler.class))
           // 跳过类型处理器
           .filter(clazz -> !clazz.isAnnotationPresent(Skip.class))

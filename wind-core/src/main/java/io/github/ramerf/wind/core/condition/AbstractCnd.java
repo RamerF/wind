@@ -115,32 +115,37 @@ public abstract class AbstractCnd<
 
   @Override
   public CND eq(final boolean condition, @Nonnull final Field field, final Object value) {
+    getCondition().eq(condition, field, value);
     //noinspection unchecked
-    return (CND) getCondition().eq(condition, field, value);
+    return (CND) this;
   }
 
   @Override
   public CND in(
       final boolean condition, @Nonnull final Field field, @Nonnull final Collection<?> values) {
+    getCondition().in(condition, field, values);
     //noinspection unchecked
-    return (CND) getCondition().in(condition, field, values);
+    return (CND) this;
   }
 
   @Override
-  public CND and(final String sql) {
+  public CND and(final boolean condition, final String sql) {
+    getCondition().and(condition, sql);
     //noinspection unchecked
-    return (CND) getCondition().and(sql);
+    return (CND) this;
   }
 
   @Override
-  public CND or(final String sql) {
+  public CND or(final boolean condition, final String sql) {
+    getCondition().or(condition, sql);
     //noinspection unchecked
-    return (CND) getCondition().or(sql);
+    return (CND) this;
   }
 
   @Override
   public final CND appendLogicNotDelete() {
+    getCondition().appendLogicNotDelete();
     //noinspection unchecked
-    return (CND) getCondition().appendLogicNotDelete();
+    return (CND) this;
   }
 }

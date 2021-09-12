@@ -1,12 +1,13 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.cache.*;
+import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.executor.JdbcTemplateExecutor;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
+import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
 import io.github.ramerf.wind.core.support.IdGenerator;
-import io.github.ramerf.wind.core.support.SnowflakeIdGenerator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -85,14 +86,21 @@ public class CommonBean {
     return new JdbcTemplateExecutor(cacheObjectProvider.getIfAvailable());
   }
 
-  /**
-   * Snowflake id generator id generator.
-   *
-   * @return the id generator
-   */
+  /** id默认自增. */
   @Bean
   @ConditionalOnMissingBean(IdGenerator.class)
-  public IdGenerator snowflakeIdGenerator() {
-    return new SnowflakeIdGenerator();
+  public IdGenerator autoIncrementIdGenerator() {
+    return o -> null;
+  }
+
+  /**
+   * 枚举默认使用value方法序列化.
+   *
+   * @return the inter enum serializer
+   */
+  @Bean
+  @ConditionalOnMissingBean(InterEnumSerializer.class)
+  public InterEnumSerializer interEnumSerializer() {
+    return InterEnum::value;
   }
 }
