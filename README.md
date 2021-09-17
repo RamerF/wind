@@ -29,7 +29,7 @@
     ```xml
     <dependency>
         <groupId>io.github.ramerf</groupId>
-        <artifactId>wind</artifactId>
+        <artifactId>wind-core</artifactId>
         <version>4.0.7</version>
     </dependency>
     ```

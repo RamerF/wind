@@ -59,11 +59,7 @@ public interface InterService<T, ID extends Serializable> {
     return Update.getInstance(clazz);
   }
 
-  /**
-   * 获取service泛型PoJo.
-   *
-   * @return the po jo class
-   */
+  /** 获取service操作的实体. */
   default Class<T> getPoJoClass() {
     return EntityUtils.getPoJoClass(this);
   }

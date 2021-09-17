@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.util.EntityUtils;
 import java.io.Serializable;
 
 /**
@@ -27,11 +26,6 @@ import java.io.Serializable;
 public class BaseServiceImpl<T, ID extends Serializable, R> implements BaseService<T, ID> {
   private final R repository;
   private final BaseService<T, ID> service;
-
-  @Override
-  public Class<T> getPoJoClass() {
-    return EntityUtils.getPoJoClass(service);
-  }
 
   public BaseServiceImpl(R repository, BaseService<T, ID> service) {
     this.repository = repository;

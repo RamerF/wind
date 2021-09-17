@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.*;
@@ -472,6 +471,38 @@ public final class BeanUtils {
   public static void copyProperties(Object source, Object target, String... ignoreProperties)
       throws BeansException {
     org.springframework.beans.BeanUtils.copyProperties(source, target, ignoreProperties);
+  }
+
+  /**
+   * 获取一个 Type 类型实际对应的Class
+   *
+   * @param type 类型
+   * @return 与Type类型实际对应的Class
+   */
+  @SuppressWarnings("rawtypes")
+  public static Class<?> getTypeClass(Type type) {
+    Class<?> clazz = null;
+    if (type instanceof Class<?>) {
+      clazz = (Class<?>) type;
+    } else if (type instanceof ParameterizedType) {
+      ParameterizedType pt = (ParameterizedType) type;
+      clazz = (Class<?>) pt.getRawType();
+    } else if (type instanceof GenericArrayType) {
+      GenericArrayType gat = (GenericArrayType) type;
+      Class<?> typeClass = getTypeClass(gat.getGenericComponentType());
+      return Array.newInstance(typeClass, 0).getClass();
+    } else if (type instanceof TypeVariable) {
+      TypeVariable tv = (TypeVariable) type;
+      Type[] ts = tv.getBounds();
+      if (ts != null && ts.length > 0) return getTypeClass(ts[0]);
+    } else if (type instanceof WildcardType) {
+      WildcardType wt = (WildcardType) type;
+      Type[] t_low = wt.getLowerBounds();
+      if (t_low.length > 0) return getTypeClass(t_low[0]);
+      Type[] t_up = wt.getUpperBounds();
+      return getTypeClass(t_up[0]);
+    }
+    return clazz;
   }
 
   /**

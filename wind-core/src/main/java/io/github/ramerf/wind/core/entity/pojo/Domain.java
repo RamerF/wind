@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.entity.pojo;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
-import io.github.ramerf.wind.core.service.GenericLambdaService;
+import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -120,9 +120,9 @@ public class Domain<T, ID extends Serializable> {
     return (T) this;
   }
 
-  private GenericLambdaService<T, ID> genericService() {
+  private GenericService<T, ID> genericService() {
     //noinspection unchecked
-    return GenericLambdaService.with(
+    return GenericService.with(
         (Class<T>) instance().getClass(),
         (Class<ID>) EntityHelper.getEntityIdField(instance().getClass()).getType());
   }

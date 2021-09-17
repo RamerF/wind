@@ -15,6 +15,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AdvisedSupport;
@@ -67,8 +68,7 @@ public final class EntityUtils {
    * <li>非transient
    * <li>基本类型(对应的包装类型)<br>
    *
-   *     <p>或 标记有注解({@link OneToOne},{@link OneToMany},{@link ManyToOne})中的一个
-   *     <br>
+   *     <p>或 标记有注解({@link OneToOne},{@link OneToMany},{@link ManyToOne})中的一个 <br>
    *
    *     <p>或 List{@code <T>}/Set{@code <T>},T满足上一个条件
    */
@@ -261,18 +261,16 @@ public final class EntityUtils {
     return StringUtils.camelToUnderline(clazz.getSimpleName());
   }
 
-  /**
-   * 获取Service泛型参数poJo.
-   *
-   * @param <T> the type parameter
-   * @param <S> the type parameter
-   * @param service the service
-   * @return the poJo class
-   */
   @SuppressWarnings("unchecked")
   public static <T, S extends InterService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
       S service) {
-    Class<S> serviceClazz = (Class<S>) getProxyTarget(service).getClass();
+    return getPoJoClass((Class<S>) getProxyTarget(service).getClass());
+  }
+
+  /** 获取Service泛型参数poJo. */
+  @SuppressWarnings("unchecked")
+  public static <T, S extends InterService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
+      Class<S> serviceClazz) {
     Class<T> classes =
         (Class<T>)
             Optional.ofNullable(SERVICE_POJO_MAP.get(serviceClazz))
@@ -282,17 +280,33 @@ public final class EntityUtils {
       return classes;
     }
 
-    // TODO WARN 这里应该通过循环，获取pojo，如果类包含TableInfo注解就停止
-    final Type baseServiceType = serviceClazz.getInterfaces()[0].getGenericInterfaces()[0];
-    ParameterizedType parameterizedType = (ParameterizedType) baseServiceType;
-    final Type[] arguments = parameterizedType.getActualTypeArguments();
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    final Type[] baseServiceTypes =
+        Stream.of(serviceClazz.getInterfaces())
+            .filter(InterService.class::isAssignableFrom)
+            .findFirst()
+            .get()
+            .getGenericInterfaces();
+    for (Type baseServiceType : baseServiceTypes) {
+      if (baseServiceType instanceof ParameterizedType) {
+        ParameterizedType parameterizedType = (ParameterizedType) baseServiceType;
+        final Type[] arguments = parameterizedType.getActualTypeArguments();
+        try {
+          classes = (Class<T>) Class.forName(arguments[0].getTypeName());
+        } catch (ClassNotFoundException ignored) {
+          throw CommonException.of("cannot get service bound type poJo.");
+        }
+        SERVICE_POJO_MAP.put(serviceClazz, new WeakReference<>(classes));
+        return classes;
+      }
+    }
+    Class<S> cls;
     try {
-      classes = (Class<T>) Class.forName(arguments[0].getTypeName());
-    } catch (ClassNotFoundException ignored) {
+      cls = (Class<S>) BeanUtils.getTypeClass(baseServiceTypes[0]);
+    } catch (ClassCastException e) {
       throw CommonException.of("cannot get service bound type poJo.");
     }
-    SERVICE_POJO_MAP.put(serviceClazz, new WeakReference<>(classes));
-    return classes;
+    return getPoJoClass(cls);
   }
 
   /**
@@ -319,7 +333,7 @@ public final class EntityUtils {
         log.error(e.getMessage(), e);
       }
     }
-    return proxy;
+    return getProxyTarget(proxy);
   }
 
   private static Object getCglibProxyTargetObject(Object proxy) throws Exception {
