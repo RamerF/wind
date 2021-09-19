@@ -1,16 +1,16 @@
-name: Sync Github Repos To Gitee
+name: Sync Gitee Repos To Github
 on: push
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync Github Repos To Gitee #名字随便起
-        uses: Yikun/hub-mirror-action@v1.0 #使用Yikun开发的hub-mirror-action
+      - name: Sync Gitee Repos To Github
+        uses: Yikun/hub-mirror-action@v1.0
         with:
-          src: github/ramerf #源端账户名
-          dst: gitee/ramer #目的端账户名
+          src: gitee/ramer
+          dst: github/ramerf
           dst_key: ${{secrets.GITEE_PUB_KEY}} #SSH密钥对中的私钥，即 id_rsa
-          dst_token: ${{secrets.GITEE_TOKEN}} #Gitee账户的私人令牌
+          dst_token: ${{secrets.GITEE_TOKEN}} #账户的私人令牌
           account_type: user #账户类型
           clone_style: "ssh" #使用ssh方式进行clone，也可以使用https
           debug: true #启用后会显示所有执行命令
