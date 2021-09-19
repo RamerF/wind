@@ -6,13 +6,12 @@
     <packaging>pom</packaging>
 
     <groupId>io.github.ramerf</groupId>
-    <artifactId>wind-parent</artifactId>
-    <name>wind-parent</name>
+    <artifactId>wind</artifactId>
+    <name>wind</name>
     <version>4.0.7</version>
     <modules>
         <module>wind-core</module>
         <module>wind-web</module>
-        <module>wind</module>
     </modules>
     <url>http://maven.apache.org</url>
     <description>springboot web at once.</description>
