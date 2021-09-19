@@ -1,7 +1,7 @@
 name: Sync Gitee Repos To Github
 on:
   schedule:
-    - cron: '0/5 * * * *'
+    - cron: '0-59 * * * *'
     branches:
       - master
 jobs:
