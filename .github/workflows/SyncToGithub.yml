@@ -2,8 +2,6 @@ name: Sync Gitee Repos To Github
 on:
   schedule:
     - cron: '0/5 * * * *'
-    branches:
-      - master
 jobs:
   build:
     runs-on: ubuntu-latest
