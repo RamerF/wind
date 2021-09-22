@@ -1,7 +1,7 @@
 name: Sync Gitee Repos To Github
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 0 * * 1'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,7 +9,7 @@ jobs:
       - name: Sync Gitee Repos To Github
         uses: Yikun/hub-mirror-action@v1.0
         with:
-#          ref: master
+          # ref: master
           src: gitee/ramer
           dst: github/ramerf
           dst_key: ${{secrets.GITEE_PUB_KEY}} #SSH密钥对中的私钥，即 id_rsa
