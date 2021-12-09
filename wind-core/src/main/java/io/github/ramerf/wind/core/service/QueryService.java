@@ -25,7 +25,14 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   }
 
   /** 通过id获取对象. */
-  default T getById(final ID id) {
+  default T getOne(final ID id) {
+    return getOne(
+        StringCnds.of(getPoJoClass())
+            .eq(EntityHelper.getEntityInfo(getPoJoClass()).getIdColumn().getName(), id));
+  }
+
+  /** 通过id获取对象. */
+  default T getOne(final ID id, final Fields<T> fields) {
     return getOne(
         StringCnds.of(getPoJoClass())
             .eq(EntityHelper.getEntityInfo(getPoJoClass()).getIdColumn().getName(), id));

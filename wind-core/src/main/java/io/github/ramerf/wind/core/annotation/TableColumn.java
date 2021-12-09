@@ -28,6 +28,12 @@ public @interface TableColumn {
   /** 是否可为空,默认可为空. */
   boolean nullable() default true;
 
+  /** 是否支持 INSERT 语句. */
+  boolean insertable() default true;
+
+  /** 是否支持 UPDATE 语句. */
+  boolean updatable() default true;
+
   /**
    * 列定义.如:smallint(1) default 1
    *

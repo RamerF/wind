@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.metadata;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import lombok.Data;
 
 /**
@@ -24,5 +23,9 @@ public class NameTableInformation {
 
   public TableInformation getTableInformation(String tableName) {
     return tables.get(tableName);
+  }
+
+  public List<TableInformation> getTableInformations() {
+    return new ArrayList<>(tables.values());
   }
 }

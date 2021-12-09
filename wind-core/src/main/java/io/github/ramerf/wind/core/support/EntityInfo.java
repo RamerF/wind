@@ -49,8 +49,8 @@ public final class EntityInfo {
   /** 是否映射到数据库. */
   private boolean mapToTable = true;
 
-  /** 字段与列名映射 {field:column}. */
-  private Map<Field, String> fieldColumnMap;
+  /** 字段与列映射 {Field:EntityColumn}. */
+  private Map<Field, EntityColumn> fieldColumnMap;
 
   /** 列名与字段映射 {column:field}. */
   private Map<String, Field> columnFieldMap;
@@ -95,8 +95,8 @@ public final class EntityInfo {
             .map(TableInfo::comment)
             .orElse(null));
 
-    final List<Field> columnFields = EntityUtils.getAllColumnFields(clazz);
-    Map<Field, String> fieldColumnMap = new HashMap<>(20);
+    final List<Field> columnFields = EntityUtils.getAllColumnFields(clazz, null);
+    Map<Field, EntityColumn> fieldColumnMap = new HashMap<>(20);
     Map<String, Field> columnFieldMap = new HashMap<>(20);
     // 0:创建时间 1:更新时间
     final Field[] timeField = new Field[2];
@@ -118,7 +118,7 @@ public final class EntityInfo {
       if (entityColumn == null) {
         continue;
       }
-      fieldColumnMap.put(field, entityColumn.getName());
+      fieldColumnMap.put(field, entityColumn);
       columnFieldMap.put(entityColumn.getName(), field);
       if (entityColumn.isPrimaryKey()) {
         primaryKeys.add(entityColumn);

@@ -18,7 +18,7 @@
         <druid.version>1.1.22</druid.version>
         <wind.version>4.0.7</wind.version>
         <lombok.version>1.18.20</lombok.version>
-        <postgresql.version>42.2.23.jre7</postgresql.version>
+        <postgresql.version>42.2.23</postgresql.version>
     </properties>
     <dependencies>
         <dependency>
@@ -38,11 +38,6 @@
             <scope>provided</scope>
         </dependency>
         <!-- postgresql 驱动 -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql.version}</version>
-        </dependency>
         <!-- druid 官方 starter -->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -52,6 +47,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- postgresql 驱动 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.version}</version>
         </dependency>
     </dependencies>
     <build>

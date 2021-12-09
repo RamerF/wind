@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AdvisedSupport;
 import org.springframework.aop.framework.AopProxy;
@@ -45,17 +46,30 @@ public final class EntityUtils {
     EntityUtils.dialect = context.getDbMetaData().getDialect();
   }
 
+  public static List<Field> getAllColumnFields(@Nonnull final Class<?> obj) {
+    return getAllColumnFields(obj, null);
+  }
   /**
    * 获取对象映射到数据库的属性,包括关系属性.<br>
    *
    * @param obj the obj
    * @return the non null field
    */
-  public static List<Field> getAllColumnFields(@Nonnull final Class<?> obj) {
-    final List<Field> fields =
+  public static List<Field> getAllColumnFields(
+      @Nonnull final Class<?> obj, @Nullable SqlStatementType sqlStatementType) {
+    Stream<Field> stream =
         BeanUtils.retrievePrivateFields(obj, ArrayList::new).stream()
-            .filter(EntityUtils::filterColumnField)
-            .collect(toList());
+            .filter(EntityUtils::filterColumnField);
+    if (sqlStatementType != null) {
+      final EntityInfo entityInfo = EntityHelper.getEntityInfo(obj);
+      final Map<Field, EntityColumn> fieldColumnMap = entityInfo.getFieldColumnMap();
+      if (sqlStatementType.equals(SqlStatementType.INSERT)) {
+        stream = stream.filter(o -> fieldColumnMap.get(o).isInsertable());
+      } else if (sqlStatementType.equals(SqlStatementType.UPDATE)) {
+        stream = stream.filter(o -> fieldColumnMap.get(o).isUpdatable());
+      }
+    }
+    final List<Field> fields = stream.collect(toList());
     if (log.isTraceEnabled()) {
       log.trace("getAllColumnFields:[{}]", fields);
     }
@@ -72,7 +86,7 @@ public final class EntityUtils {
    *
    *     <p>或 List{@code <T>}/Set{@code <T>},T满足上一个条件
    */
-  private static boolean filterColumnField(Field field) {
+  private static boolean filterColumnField(final Field field) {
     final int modifiers = field.getModifiers();
     return !Modifier.isStatic(modifiers)
         && !Modifier.isTransient(modifiers)
@@ -82,19 +96,30 @@ public final class EntityUtils {
             || field.isAnnotationPresent(TableColumn.class));
   }
 
-  /**
-   * 获取对象映射到数据库且值不为null的属性.<br>
-   *
-   * @param <T> the type parameter
-   * @param t the t
-   * @return the non null Field
-   */
-  public static <T> List<Field> getNonNullColumnFields(@Nonnull final T t) {
-    final List<Field> fields =
+  public enum SqlStatementType {
+    INSERT,
+    DELETE,
+    UPDATE,
+    SELECT
+  }
+
+  /** 获取对象映射到数据库且值不为null的属性. */
+  public static <T> List<Field> getNonNullColumnFields(
+      @Nonnull final T t, final SqlStatementType sqlStatementType) {
+    Stream<Field> stream =
         EntityHelper.getEntityInfo(t.getClass()).getEntityColumns().stream()
-            .map(EntityColumn::getField)
-            .filter(field -> BeanUtils.getValue(t, field, null) != null)
-            .collect(toList());
+            .map(EntityColumn::getField);
+    if (sqlStatementType != null) {
+      final EntityInfo entityInfo = EntityHelper.getEntityInfo(t.getClass());
+      final Map<Field, EntityColumn> fieldColumnMap = entityInfo.getFieldColumnMap();
+      if (sqlStatementType.equals(SqlStatementType.INSERT)) {
+        stream = stream.filter(o -> fieldColumnMap.get(o).isInsertable());
+      } else if (sqlStatementType.equals(SqlStatementType.UPDATE)) {
+        stream = stream.filter(o -> fieldColumnMap.get(o).isUpdatable());
+      }
+    }
+    final List<Field> fields =
+        stream.filter(field -> BeanUtils.getValue(t, field, null) != null).collect(toList());
     if (log.isTraceEnabled()) {
       log.debug("getNonNullColumnFields:[{}]", fields);
     }
@@ -103,35 +128,18 @@ public final class EntityUtils {
   }
 
   /**
-   * 获取对象映射到数据库且值为null的属性.
+   * 获取对象映射到数据库的列名.
    *
-   * @param t the t
-   * @return the non null field
-   */
-  public static List<Field> getNullColumnFields(@Nonnull final Object t) {
-    final List<Field> fields =
-        BeanUtils.retrievePrivateFields(t.getClass(), ArrayList::new).stream()
-            .filter(EntityUtils::filterColumnField)
-            .filter(field -> BeanUtils.getValue(t, field, ex -> -1) == null)
-            .collect(toList());
-    log.debug("getNullColumnFields:[{}]", fields);
-    return fields;
-  }
-
-  /**
-   * 获取对象映射到数据库的列名.<br>
-   * 默认值为{@link TableColumn#name()};如果前者为空,值为对象属性名的下划线表示<br>
-   * {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
-   *
-   * @param obj the obj
-   * @return string all columns
    * @see TableColumn#name() Column#name()
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
-  public static List<String> getAllColumns(@Nonnull final Class<?> obj) {
+  public static List<String> getAllColumns(
+      @Nonnull final Class<?> obj, final SqlStatementType sqlStatementType) {
     final List<String> columns =
-        getAllColumnFields(obj).stream().map(EntityUtils::fieldToColumn).collect(toList());
+        getAllColumnFields(obj, sqlStatementType).stream()
+            .map(EntityUtils::fieldToColumn)
+            .collect(toList());
     log.debug("getAllColumn:[{}]", columns);
     return columns;
   }
@@ -147,9 +155,12 @@ public final class EntityUtils {
    * @see StringUtils#camelToUnderline(String) StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
    */
-  public static List<String> getNonNullColumns(@Nonnull final Object t) {
+  public static List<String> getNonNullColumns(
+      @Nonnull final Object t, final SqlStatementType sqlStatementType) {
     final List<String> columns =
-        getNonNullColumnFields(t).stream().map(EntityUtils::fieldToColumn).collect(toList());
+        getNonNullColumnFields(t, sqlStatementType).stream()
+            .map(EntityUtils::fieldToColumn)
+            .collect(toList());
     log.debug("getNonNullColumns:[{}]", columns);
     return columns;
   }
@@ -164,10 +175,11 @@ public final class EntityUtils {
    * @see TableColumn#name() Column#name()
    * @see StringUtils#camelToUnderline(String)
    * @see Field#getName() Field#getName()
-   * @see #getNonNullColumns(Object)
+   * @see #getNonNullColumns(Object,SqlStatementType)
    */
-  public static String getNonNullColumn(@Nonnull final Object t) {
-    final String nonNullColumn = String.join(",", getNonNullColumns(t));
+  public static String getNonNullColumn(
+      @Nonnull final Object t, final SqlStatementType sqlStatementType) {
+    final String nonNullColumn = String.join(",", getNonNullColumns(t, sqlStatementType));
     log.debug("getNonNullColumn:[{}]", nonNullColumn);
     return nonNullColumn;
   }
@@ -354,12 +366,7 @@ public final class EntityUtils {
     return ((AdvisedSupport) advised.get(aopProxy)).getTargetSource().getTarget();
   }
 
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   */
   public static void main(String[] args) {
-    log.info("main:[{}]", getAllColumnFields(Ts.class));
+    getAllColumnFields(Ts.class).forEach(o -> System.out.println(o.getName()));
   }
 }

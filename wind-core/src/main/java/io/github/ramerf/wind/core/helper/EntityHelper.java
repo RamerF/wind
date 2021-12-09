@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.TestLambda;
@@ -69,9 +70,11 @@ public class EntityHelper {
     if (log.isTraceEnabled()) {
       log.trace("getColumn:[{}]", CLAZZ_ENTITY_MAP);
     }
-    return initEntityIfNeeded(function.getImplClassFullPath())
-        .getFieldColumnMap()
-        .get(function.getField());
+    final EntityColumn entityColumn =
+        initEntityIfNeeded(function.getImplClassFullPath())
+            .getFieldColumnMap()
+            .get(function.getField());
+    return entityColumn == null ? null : entityColumn.getName();
   }
 
   /**

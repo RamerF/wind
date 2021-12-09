@@ -11,6 +11,7 @@ import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
+import io.github.ramerf.wind.core.util.EntityUtils.SqlStatementType;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.sql.*;
@@ -34,17 +35,17 @@ import static java.util.stream.Collectors.toList;
  * <p>获取PoJo的写入实例<br>
  *
  * <p>方式1<br>
- * {@code Update.getInstance(PoJo.class)}
+ * {@literal Update.getInstance(PoJo.class)}
  *
  * <p>方式2<br>
- * {@code @Resource private Provider<Update<PoJo>> updateProvider;}
+ * {@literal @Resource private Provider<Update<PoJo>> updateProvider;}
  *
  * <p>方式3<br>
- * {@code @Resource private ObjectProvider<Update<PoJo>> updateProvider;}<br>
+ * {@literal @Resource private ObjectProvider<Update<PoJo>> updateProvider;}<br>
  * final Update<PoJo> update = updateProvider.get();
  *
  * <p>方式4<br>
- * {@code @Resource private PrototypeBean prototypeBean;}<br>
+ * {@literal @Resource private PrototypeBean prototypeBean;}<br>
  * final Update<PoJo> update = prototypeBean.update(PoJo.class);
  *
  * @author ramer
@@ -64,9 +65,6 @@ public final class Update<T> {
   private static Dialect dialect;
   private static PrototypeBean prototypeBean;
   private final Field idField;
-  private Field logicDeleteField;
-  private boolean logicDeletedValue;
-  private boolean logicNotDeleteValue;
 
   /**
    * Instantiates a new Update.
@@ -78,14 +76,7 @@ public final class Update<T> {
   public Update(@Nonnull final Class<T> clazz) {
     this.clazz = clazz;
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
-    this.idField = EntityHelper.getEntityIdField(clazz);
-    final EntityColumn deletePropColumn = this.entityInfo.getLogicDeletePropColumn();
-    if (deletePropColumn != null) {
-      logicDeleteField = deletePropColumn.getField();
-      final LogicDeleteProp logicDeleteProp = this.entityInfo.getLogicDeleteProp();
-      logicDeletedValue = logicDeleteProp.isDeleted();
-      logicNotDeleteValue = logicDeleteProp.isNotDelete();
-    }
+    this.idField = this.entityInfo.getIdColumn().getField();
     this.condition = LambdaCondition.of(QueryColumn.of(clazz));
   }
 
@@ -153,7 +144,8 @@ public final class Update<T> {
   public int create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
     final Object id = idGenerator.nextId(t);
     if (id != null) {
-      BeanUtils.setValue(t, idField, id, null);
+      // 如果主键设置失败,不需要处理
+      BeanUtils.setValue(t, idField, id, e -> {});
     }
     // TODO POST 如果sql ddl 包含default这里就不需要设置
     setCurrentTime(t, entityInfo.getCreateTimeField());
@@ -166,7 +158,7 @@ public final class Update<T> {
     final AtomicInteger index = new AtomicInteger(1);
 
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
-    getWritingFields(t, fields)
+    getWritingFields(t, fields, SqlStatementType.INSERT)
         .forEach(
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
@@ -230,11 +222,11 @@ public final class Update<T> {
         t -> {
           setCurrentTime(t, entityInfo.getCreateTimeField());
           setCurrentTime(t, entityInfo.getUpdateTimeField());
-          BeanUtils.setValue(t, idField, idGenerator.nextId(t), null);
+          BeanUtils.setValue(t, idField, idGenerator.nextId(t), e -> {});
         });
     // 取第一条记录获取批量保存sql
     final T t = ts.get(0);
-    final List<Field> savingFields = getWritingFields(t, fields);
+    final List<Field> savingFields = getWritingFields(t, fields, SqlStatementType.INSERT);
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -317,7 +309,7 @@ public final class Update<T> {
    * 更新,默认根据id更新且不更新值为null的列.
    *
    * @param t the t
-   * @return 受影响记录数 int
+   * @return 受影响记录数
    */
   public int update(@Nonnull final T t) throws DataAccessException {
     return update(t, null);
@@ -326,16 +318,15 @@ public final class Update<T> {
   /**
    * 更新,默认根据id更新.
    *
-   * @param t the t
-   * @param fields the fields
-   * @return 受影响记录数 int
+   * @param fields 当排除不为空时,忽略全局是否写入空配置
+   * @return 受影响记录数
    */
   public int update(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
     setCurrentTime(t, entityInfo.getUpdateTimeField());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
-    getWritingFields(t, fields)
+    getWritingFields(t, fields, SqlStatementType.UPDATE)
         .forEach(
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
@@ -375,8 +366,7 @@ public final class Update<T> {
   /**
    * 批量更新,根据id更新.
    *
-   * @param ts the ts
-   * @param fields the fields
+   * @param fields 当排除不为空时,忽略全局是否写入空配置
    * @return the int
    */
   public Optional<Integer> updateBatch(@Nonnull final List<T> ts, final Fields<T> fields) {
@@ -388,7 +378,7 @@ public final class Update<T> {
     // 保存更新时间
     setCurrentTime(t, entityInfo.getUpdateTimeField());
 
-    final List<Field> savingFields = getWritingFields(t, fields);
+    final List<Field> savingFields = getWritingFields(t, fields, SqlStatementType.UPDATE);
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger();
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
@@ -470,7 +460,7 @@ public final class Update<T> {
               entityInfo.getName(),
               entityInfo.getLogicDeletePropColumn().getName(),
               entityInfo.getLogicDeleteProp().isDeleted(),
-              entityInfo.getFieldColumnMap().get(updateTimeField),
+              entityInfo.getFieldColumnMap().get(updateTimeField).getName(),
               condition.getString());
       return executor.update(
           clazz,
@@ -495,25 +485,27 @@ public final class Update<T> {
   }
 
   /**
-   * 获取写入字段.{@code fields}为null时,根据配置判断是否写入null字段
+   * 获取写入字段.{@code fields}为null时,根据配置判断是否写入null字段;当排除不为空时,忽略全局是否写入空配置
    *
    * @see WindConfiguration#isWriteNullProp()
    */
-  private List<Field> getWritingFields(final @Nonnull T t, final Fields<T> fields) {
+  private List<Field> getWritingFields(
+      final @Nonnull T t, final Fields<T> fields, final SqlStatementType sqlStatementType) {
     final List<Field> savingFields;
     if (fields == null) {
       savingFields =
           configuration.isWriteNullProp()
-              ? EntityUtils.getAllColumnFields(t.getClass())
-              : EntityUtils.getNonNullColumnFields(t);
+              ? EntityUtils.getAllColumnFields(t.getClass(), sqlStatementType)
+              : EntityUtils.getNonNullColumnFields(t, sqlStatementType);
     } else {
       final Set<Field> includeFields = fields.getIncludeFields();
       final Set<Field> excludeFields = fields.getExcludeFields();
       if (includeFields.isEmpty()) {
+        // 当排除不为空时,忽略是否写入空配置
         savingFields =
-            (configuration.isWriteNullProp()
-                    ? EntityUtils.getAllColumnFields(t.getClass())
-                    : EntityUtils.getNonNullColumnFields(t))
+            (!excludeFields.isEmpty() || configuration.isWriteNullProp()
+                    ? EntityUtils.getAllColumnFields(t.getClass(), sqlStatementType)
+                    : EntityUtils.getNonNullColumnFields(t, sqlStatementType))
                 .stream().filter(field -> !excludeFields.contains(field)).collect(toList());
       } else {
         savingFields =

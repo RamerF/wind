@@ -16,6 +16,8 @@ public class TableInformation {
   private String schema;
   /** 表名. */
   private String name;
-
+  /** 列信息. */
   private List<TableColumnInformation> columns = new ArrayList<>();
+  /** 索引信息. */
+  private List<TableIndexInformation> indexes = new ArrayList<>();
 }

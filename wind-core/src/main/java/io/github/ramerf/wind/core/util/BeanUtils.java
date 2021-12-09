@@ -525,9 +525,14 @@ public final class BeanUtils {
 
 /** The type Ts. */
 class Ts {
+  @TableColumn(updatable = false)
+  private long id;
+
   @TableColumn(name = "alia")
   private String name;
 
-  private Integer size;
-  private transient String nameSize;
+  @TableColumn(insertable = false)
+  private String db;
+
+  private transient String idName;
 }

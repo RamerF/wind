@@ -13,15 +13,12 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 public @interface TableInfo {
 
-  /**
-   * 表名.
-   *
-   * @return the string
-   */
+  /** 表名. */
   String name() default "";
 
   /** 备注. */
   String comment() default "";
 
+  /** 支持逻辑删除. */
   LogicDelete logicDelete() default @LogicDelete(enable = false, fieldName = "");
 }

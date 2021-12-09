@@ -49,6 +49,12 @@ public class EntityColumn {
   /** 精度,小数点位数. */
   private int scale = DEFAULT_SCALE;
 
+  /** 是否支持 INSERT 语句.为false时,保存会跳过该值. */
+  private boolean insertable = true;
+
+  /** 是否支持 UPDATE 语句.为false时,更新会跳过该值. */
+  private boolean updatable = true;
+
   /** 是否可为空.true:可为空. */
   private boolean nullable = true;
 
@@ -69,7 +75,7 @@ public class EntityColumn {
   private String columnDefinition;
 
   /** 数据库是否支持列类型. 如果不支持,ddl时会跳过该字段. */
-  private boolean supported = false;
+  private boolean supported;
 
   public String getColumnDdl(final Dialect dialect) {
     return name + " " + columnDefinition;
@@ -161,7 +167,8 @@ public class EntityColumn {
       // 使用默认值而不是0
       NumberUtils.doIfGreaterThanZero(tableColumn.precision(), o -> entityColumn.precision = o);
       NumberUtils.doIfGreaterThanZero(tableColumn.scale(), o -> entityColumn.scale = o);
-
+      entityColumn.insertable = tableColumn.insertable();
+      entityColumn.updatable = tableColumn.updatable();
       entityColumn.nullable = entityColumn.nullable && tableColumn.nullable();
       entityColumn.unique = tableColumn.unique();
 

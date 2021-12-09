@@ -7,6 +7,7 @@ import java.util.Collection;
 import javax.sql.DataSource;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.support.JdbcUtils;
 
 import static io.github.ramerf.wind.core.metadata.DbResolver.getConnection;
 import static io.github.ramerf.wind.core.metadata.DbResolver.getMetaData;
@@ -21,10 +22,10 @@ import static io.github.ramerf.wind.core.metadata.DbResolver.getMetaData;
 public class DbMetaData {
   private static volatile DbMetaData INSTANCE;
   @Getter private final Dialect dialect;
-  @Getter private String catelog;
-  @Getter private String schema;
+  @Getter private final String catelog;
+  @Getter private final String schema;
 
-  private NameTableInformation tableInformations;
+  private final NameTableInformation tableInformations;
 
   private DbMetaData(DataSource dataSource, final String dialectName) {
     Connection connection = getConnection(dataSource);
@@ -36,6 +37,7 @@ public class DbMetaData {
     this.tableInformations = DbResolver.getTables(databaseMetaData, catalog, schema);
     this.dialect =
         dialectName != null ? Dialect.getInstance(dialectName) : Dialect.getInstance(dataSource);
+    JdbcUtils.closeConnection(connection);
   }
 
   /** 该方法返回一个单例. */

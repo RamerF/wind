@@ -28,7 +28,7 @@ public class InterEnumUtils {
    * @param clazz the clazz
    * @return the e
    */
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings("unchecked")
   public static <V, E extends InterEnum<V>> E of(V value, Class<E> clazz) {
     if (value == null) {
       return null;
@@ -39,11 +39,11 @@ public class InterEnumUtils {
             .map(o -> o.get(value.toString()))
             .orElseGet(
                 () -> {
-                  final Map clazzMap =
+                  final Map<?, ?> clazzMap =
                       Arrays.stream(clazz.getEnumConstants())
-                          .collect(toMap(o -> o.value().toString(), o -> o));
+                          .collect(toMap(InterEnum::value, o -> o));
                   MAP.put(clazz, new WeakReference<>(clazzMap));
-                  return clazzMap.get(value.toString());
+                  return clazzMap.get(value);
                 });
   }
 

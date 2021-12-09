@@ -1,13 +1,10 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.function.BeanFunction;
 import io.github.ramerf.wind.core.function.IFunction;
 import java.lang.reflect.Field;
 import java.util.*;
 import javax.annotation.Nonnull;
 import lombok.Getter;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * 可用于指定一个操作包含/不包含的字段.
@@ -26,9 +23,10 @@ public class Fields<T> {
   }
 
   @SafeVarargs
-  public final Fields<T> include(final IFunction<T, ?>... includeFields) {
-    this.includes.addAll(
-        Arrays.stream(includeFields).map(BeanFunction::getField).collect(toList()));
+  public final Fields<T> include(@Nonnull final IFunction<T, ?>... includeFields) {
+    for (final IFunction<T, ?> includeField : includeFields) {
+      include(true, includeField);
+    }
     return this;
   }
 
@@ -41,11 +39,9 @@ public class Fields<T> {
 
   @SafeVarargs
   public final Fields<T> exclude(@Nonnull final IFunction<T, ?>... excludeFields) {
-    for (final IFunction<T, ?> function : excludeFields) {
-      this.includes.remove(function.getField());
+    for (final IFunction<T, ?> excludeField : excludeFields) {
+      exclude(true, excludeField);
     }
-    this.excludes.addAll(
-        Arrays.stream(excludeFields).map(BeanFunction::getField).collect(toList()));
     return this;
   }
 
