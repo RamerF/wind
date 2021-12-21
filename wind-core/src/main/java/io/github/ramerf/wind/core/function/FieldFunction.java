@@ -140,7 +140,7 @@ public interface FieldFunction extends Serializable {
               });
     }
 
-    public static void main(String args[]) throws NoSuchFieldException {
+    public static void main(String[] args) throws NoSuchFieldException {
       User user = new User();
       SetterFunction<User, String> name = User::setName;
       log.info("main:[{}]", user.getName());

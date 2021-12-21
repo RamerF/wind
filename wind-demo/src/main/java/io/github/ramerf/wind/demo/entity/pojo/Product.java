@@ -44,6 +44,8 @@ public class Product extends Domain<Product, String> {
   private String title;
   private Type type;
   private LocalDate localDate;
+
+  @TableColumn(defaultValue = "now()")
   private Date date;
 
   @CreateTimestamp
