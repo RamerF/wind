@@ -13,6 +13,6 @@ public class IdentityColumnSupportImpl implements IdentityColumnSupport {
 
   @Override
   public String getIdentityColumnString(Type type) throws CommonException {
-    throw CommonException.of(getClass().getName() + " does not support identity key generation");
+    throw new CommonException(getClass().getName() + " does not support identity key generation");
   }
 }

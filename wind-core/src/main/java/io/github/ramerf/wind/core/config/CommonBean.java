@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.cache.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.executor.JdbcTemplateExecutor;
@@ -11,13 +10,12 @@ import io.github.ramerf.wind.core.support.IdGenerator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -36,11 +34,7 @@ public class CommonBean {
   @SuppressWarnings({"rawtypes", "SpringJavaAutowiredFieldsWarningInspection"})
   private final Set<ITypeHandler> typeHandlers = new LinkedHashSet<>();
 
-  /**
-   * Type handler registry factory type handler registry factory.
-   *
-   * @return the type handler registry factory
-   */
+  /** 注册类型转换器. */
   @Bean
   public TypeHandlerRegistryFactory typeHandlerRegistryFactory() {
     final TypeHandlerRegistryFactory factory = new TypeHandlerRegistryFactory();
@@ -49,41 +43,10 @@ public class CommonBean {
     return factory;
   }
 
-  /**
-   * Default redis cache redis cache.
-   *
-   * @return the redis cache
-   */
-  @Bean
-  @ConditionalOnMissingBean(Cache.class)
-  @DependsOn("redisCacheRedisTemplate")
-  @ConditionalOnProperty(value = "wind.cache.type", havingValue = "redis")
-  public Cache defaultRedisCache(WindConfiguration configuration) {
-    return new RedisCache(configuration);
-  }
-
-  /**
-   * In memory cache cache.
-   *
-   * @param configuration the configuration
-   * @return the redis cache
-   */
-  @Bean
-  @ConditionalOnMissingBean(Cache.class)
-  @ConditionalOnProperty(value = "wind.cache.type", havingValue = "memory")
-  public Cache inMemoryCache(WindConfiguration configuration) {
-    return new InMemoryCache(configuration);
-  }
-
-  /**
-   * Jdbc template executor executor.
-   *
-   * @return the executor
-   */
   @Bean
   @ConditionalOnMissingBean
-  public Executor jdbcTemplateExecutor(ObjectProvider<Cache> cacheObjectProvider) {
-    return new JdbcTemplateExecutor(cacheObjectProvider.getIfAvailable());
+  public Executor jdbcTemplateExecutor() {
+    return new JdbcTemplateExecutor();
   }
 
   /** id默认自增. */
@@ -93,11 +56,7 @@ public class CommonBean {
     return o -> null;
   }
 
-  /**
-   * 枚举默认使用value方法序列化.
-   *
-   * @return the inter enum serializer
-   */
+  /** 枚举默认使用value方法序列化. */
   @Bean
   @ConditionalOnMissingBean(InterEnumSerializer.class)
   public InterEnumSerializer interEnumSerializer() {

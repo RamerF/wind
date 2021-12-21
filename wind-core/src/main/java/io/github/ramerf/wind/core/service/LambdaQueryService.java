@@ -60,7 +60,8 @@
 //   default long count(
 //       final Consumer<QueryColumn<T>> queryConsumer,
 //       final Consumer<LambdaCondition<T>> conditionConsumer) {
-//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
+//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer,
+// this);
 //     return getQuery()
 //         .select(queryBound.queryColumn)
 //         .where(queryBound.condition)
@@ -77,7 +78,8 @@
 //     return getOne(
 //         null,
 //         condition ->
-//             condition.eq(EntityHelper.getEntityInfo(getPoJoClass()).getIdColumn().getField(), id),
+//             condition.eq(EntityHelper.getEntityInfo(getPoJoClass()).getIdColumn().getField(),
+// id),
 //         getPoJoClass());
 //   }
 //
@@ -129,7 +131,8 @@
 //       final Consumer<QueryColumn<T>> queryConsumer,
 //       final Consumer<LambdaCondition<T>> conditionConsumer,
 //       @Nonnull final Class<R> clazz) {
-//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
+//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer,
+// this);
 //     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchOne(clazz);
 //   }
 //
@@ -138,7 +141,8 @@
 //    *
 //    * @param args 占位符?参数
 //    */
-//   default <R> R getOne(final String sql, @Nonnull final Class<R> respClazz, final Object... args) {
+//   default <R> R getOne(final String sql, @Nonnull final Class<R> respClazz, final Object... args)
+// {
 //     return getQuery().fetchOneBySql(sql, respClazz, args);
 //   }
 //
@@ -224,7 +228,8 @@
 //       Consumer<QueryColumn<T>> queryConsumer,
 //       Consumer<LambdaCondition<T>> conditionConsumer,
 //       @Nonnull final Class<R> clazz) {
-//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
+//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer,
+// this);
 //     return getQuery().select(queryBound.queryColumn).where(queryBound.condition).fetchAll(clazz);
 //   }
 //
@@ -280,7 +285,8 @@
 //     if (Objects.isNull(pageable)) {
 //       return Collections.emptyList();
 //     }
-//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
+//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer,
+// this);
 //     return getQuery()
 //         .select(queryBound.queryColumn)
 //         .where(queryBound.condition)
@@ -418,7 +424,8 @@
 //     if (Objects.isNull(pageable)) {
 //       return new PageImpl<>(Collections.emptyList());
 //     }
-//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer, this);
+//     final QueryBound<T, ID> queryBound = QueryBound.consume(queryConsumer, conditionConsumer,
+// this);
 //     return getQuery()
 //         .select(queryBound.queryColumn)
 //         .where(queryBound.condition)
@@ -448,7 +455,8 @@
 //    * @see Sort
 //    */
 //   default PageRequest pageRequest(final int page, final int size, final SortColumn sortColumn) {
-//     return pageRequest(page, size, (sortColumn == null ? new SortColumn() : sortColumn).getSort());
+//     return pageRequest(page, size, (sortColumn == null ? new SortColumn() :
+// sortColumn).getSort());
 //   }
 //
 //   /**

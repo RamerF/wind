@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.exception.SimpleException;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.GetterFunction;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.util.*;
@@ -55,7 +55,7 @@ public abstract class AbstractCnd<
       return (CND) this;
     }
     if (page < 1 || size < 1) {
-      throw SimpleException.of("page,size不能小于1");
+      throw new SimpleException("page,size不能小于1");
     }
     this.page = page;
     this.size = size;
@@ -64,15 +64,16 @@ public abstract class AbstractCnd<
   }
 
   /** 默认倒序 desc. */
-  public CND orderBy(@Nonnull final IFunction<POJO, ?> field) {
-    orders.add(Order.desc(field.getColumn()));
+  public CND orderBy(@Nonnull final GetterFunction<POJO, ?> getter) {
+    orders.add(Order.desc(getter.getColumn()));
     //noinspection unchecked
     return (CND) this;
   }
 
-  public CND orderBy(@Nonnull final IFunction<POJO, ?> field, @Nonnull final Direction direction) {
+  public CND orderBy(
+      @Nonnull final GetterFunction<POJO, ?> getter, @Nonnull final Direction direction) {
     orders.add(
-        direction.isAscending() ? Order.asc(field.getColumn()) : Order.desc(field.getColumn()));
+        direction.isAscending() ? Order.asc(getter.getColumn()) : Order.desc(getter.getColumn()));
     //noinspection unchecked
     return (CND) this;
   }
@@ -81,11 +82,6 @@ public abstract class AbstractCnd<
   @Nullable
   public Pages getPages() {
     return Pages.of(page, size, orders);
-  }
-
-  @Override
-  public QueryEntityMetaData<POJO> getQueryEntityMetaData() {
-    return getCondition().getQueryEntityMetaData();
   }
 
   @Override

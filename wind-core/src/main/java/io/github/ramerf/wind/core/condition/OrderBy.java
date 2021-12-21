@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.GetterFunction;
 import javax.annotation.Nonnull;
 import lombok.*;
 import org.springframework.data.domain.Sort.Direction;
@@ -13,17 +13,17 @@ import org.springframework.data.domain.Sort.Direction;
  */
 @NoArgsConstructor(access = AccessLevel.NONE)
 public class OrderBy<T> {
-  @Getter private IFunction<T, ?> field;
+  @Getter private GetterFunction<T, ?> getter;
   @Getter private Direction direction;
 
-  public static <T> OrderBy<T> of(@Nonnull IFunction<T, ?> field) {
-    return of(field, Direction.ASC);
+  public static <T> OrderBy<T> of(@Nonnull GetterFunction<T, ?> getter) {
+    return of(getter, Direction.ASC);
   }
 
   public static <T> OrderBy<T> of(
-      @Nonnull final IFunction<T, ?> field, @Nonnull final Direction direction) {
+      @Nonnull final GetterFunction<T, ?> getter, @Nonnull final Direction direction) {
     OrderBy<T> orderBy = new OrderBy<>();
-    orderBy.field = field;
+    orderBy.getter = getter;
     orderBy.direction = direction;
     return orderBy;
   }

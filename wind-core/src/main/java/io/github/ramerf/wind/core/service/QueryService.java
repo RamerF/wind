@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.function.IConsumer;
+import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -16,10 +16,11 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
 
   default <E> long count(@Nullable final Cnd<E, ?, ?> cnd) {
     if (cnd == null) {
-      return count(Cnds.of(getPoJoClass()));
+      Class<T> clazz = getPoJoClass();
+      return getQuery(clazz).select(null).where(LambdaCondition.of(clazz)).fetchCount(clazz);
     }
     return getQuery(cnd.getClazz())
-        .select(QueryColumn.of(cnd.getClazz()))
+        .select(null)
         .where(cnd.getCondition())
         .fetchCount(cnd.getClazz());
   }
@@ -35,7 +36,8 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   default T getOne(final ID id, final Fields<T> fields) {
     return getOne(
         StringCnds.of(getPoJoClass())
-            .eq(EntityHelper.getEntityInfo(getPoJoClass()).getIdColumn().getName(), id));
+            .eq(EntityHelper.getEntityInfo(getPoJoClass()).getIdColumn().getName(), id),
+        fields);
   }
 
   /** 获取单个任意对象. */
@@ -44,8 +46,8 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   }
 
   /** 获取单个任意对象,指定字段. */
-  default <E> E getOne(final Cnd<E, ?, ?> cnd, @Nullable final QueryColumn<E> queryColumn) {
-    return getOne(cnd, queryColumn, cnd.getClazz());
+  default <E> E getOne(final Cnd<E, ?, ?> cnd, final Fields<E> fields) {
+    return getOne(cnd, fields, cnd.getClazz());
   }
 
   /** 获取单个任意对象,返回指定对象. */
@@ -55,24 +57,27 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
 
   /** 获取单个任意对象,指定字段,返回指定对象. */
   default <E, R> R getOne(
-      final Cnd<E, ?, ?> cnd,
-      @Nullable final QueryColumn<E> queryColumn,
-      @Nonnull final Class<R> respClazz) {
+      final Cnd<E, ?, ?> cnd, @Nullable final Fields<E> fields, @Nonnull final Class<R> respClazz) {
     return getQuery(cnd.getClazz())
-        .select(queryColumn == null ? QueryColumn.of(cnd.getClazz()) : queryColumn)
+        .select(fields)
         .where(cnd.getCondition())
         .pageable(cnd.getPages())
         .fetchOne(respClazz);
   }
 
   /** 通过id集合查询列表. */
-  default List<T> listByIds(final Collection<Long> ids) {
+  default List<T> list(final Collection<Long> ids) {
+    return list(ids, null);
+  }
+
+  /** 通过id集合查询列表. */
+  default List<T> list(final Collection<Long> ids, final Fields<T> fields) {
     if (CollectionUtils.isEmpty(ids)) {
       return Collections.emptyList();
     }
     final Class<T> clazz = getPoJoClass();
     return getQuery()
-        .select(QueryColumn.of(clazz))
+        .select(fields)
         .where(
             LambdaCondition.of(clazz)
                 .in(EntityHelper.getEntityInfo(clazz).getIdColumn().getField(), ids))
@@ -84,24 +89,21 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
     return list(cnd, cnd.getClazz());
   }
 
+  /** 列表查询任意对象,指定字段. */
+  default <E> List<E> list(@Nonnull final Cnd<E, ?, ?> cnd, @Nullable final Fields<E> fields) {
+    return list(cnd, fields, cnd.getClazz());
+  }
+
   /** 列表查询任意对象,返回指定对象. */
   default <E, R> List<R> list(@Nonnull final Cnd<E, ?, ?> cnd, @Nonnull final Class<R> respClazz) {
     return list(cnd, null, respClazz);
   }
 
-  /** 列表查询任意对象,指定字段. */
-  default <E> List<E> list(
-      @Nonnull final Cnd<E, ?, ?> cnd, @Nullable final QueryColumn<E> queryColumn) {
-    return list(cnd, queryColumn, cnd.getClazz());
-  }
-
   /** 列表查询任意对象,指定字段,返回指定对象. */
   default <E, R> List<R> list(
-      @Nonnull final Cnd<E, ?, ?> cnd,
-      @Nullable final QueryColumn<E> queryColumn,
-      @Nonnull final Class<R> respClazz) {
+      @Nonnull final Cnd<E, ?, ?> cnd, final Fields<E> fields, @Nonnull final Class<R> respClazz) {
     return getQuery(cnd.getClazz())
-        .select(queryColumn == null ? QueryColumn.of(cnd.getClazz()) : queryColumn)
+        .select(fields)
         .where(cnd.getCondition())
         .pageable(cnd.getPages())
         .fetchAll(respClazz);
@@ -113,9 +115,8 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   }
 
   /** 分页查询任意对象,指定字段. */
-  default <E> Page<E> page(
-      @Nonnull final Cnd<E, ?, ?> cnd, @Nullable final QueryColumn<E> queryColumn) {
-    return page(cnd, queryColumn, cnd.getClazz());
+  default <E> Page<E> page(@Nonnull final Cnd<E, ?, ?> cnd, @Nullable final Fields<E> fields) {
+    return page(cnd, fields, cnd.getClazz());
   }
 
   /**
@@ -134,24 +135,24 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
    */
   default <E, R> Page<R> page(
       @Nonnull final Cnd<E, ?, ?> cnd,
-      @Nullable final QueryColumn<E> queryColumn,
+      @Nullable final Fields<E> fields,
       @Nonnull final Class<R> respClazz) {
     final Pages pageable = cnd.getPages();
     if (pageable == null) {
       return new PageImpl<>(Collections.emptyList());
     }
     return getQuery(cnd.getClazz())
-        .select(queryColumn == null ? QueryColumn.of(cnd.getClazz()) : queryColumn)
+        .select(fields)
         .where(cnd.getCondition())
         .pageable(cnd.getPages())
         .fetchPage(respClazz);
   }
 
   /** 查询关联对象. */
-  default <R> void populateMapping(@Nonnull T t, IConsumer<T, R> setField) {
-    setField.accept(
+  default <E, R> void populateMapping(@Nonnull E t, SetterFunction<E, R> setter) {
+    setter.accept(
         t,
-        EntityMapping.get(t.getClass(), setField.getField())
+        EntityMapping.get(t.getClass(), setter.getField())
             .<R>map(mappingInfo -> mappingInfo.getMappingObject(t))
             .orElse(null));
   }

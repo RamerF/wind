@@ -4,7 +4,7 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.exception.SimpleException;
-import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.function.FieldFunction;
 import java.beans.FeatureDescriptor;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public final class BeanUtils {
   private static final Map<Class<?>, WeakReference<List<Method>>> WRITE_METHOD_MAP =
       new ConcurrentHashMap<>();
   /** lambda和对应的Field. */
-  private static final Map<BeanFunction, WeakReference<Field>> LAMBDA_FIELD_MAP =
+  private static final Map<FieldFunction, WeakReference<Field>> LAMBDA_FIELD_MAP =
       new ConcurrentHashMap<>();
 
   /**
@@ -189,7 +189,7 @@ public final class BeanUtils {
       log.warn("initial:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
     }
-    throw CommonException.of(String.format("无法实例化对象[%s]", clazz.getSimpleName()));
+    throw new CommonException(String.format("无法实例化对象[%s]", clazz.getSimpleName()));
   }
 
   /**
@@ -206,7 +206,7 @@ public final class BeanUtils {
       log.warn("initial:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
     }
-    throw CommonException.of(String.format("无法实例化对象[%s]", classPath));
+    throw new CommonException(String.format("无法实例化对象[%s]", classPath));
   }
 
   /**
@@ -229,7 +229,7 @@ public final class BeanUtils {
       log.warn("initial:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
     }
-    throw CommonException.of(String.format("无法获取class[%s]", classPath));
+    throw new CommonException(String.format("无法获取class[%s]", classPath));
   }
 
   /**
@@ -433,7 +433,7 @@ public final class BeanUtils {
       if (consumer != null) {
         consumer.accept(e);
       } else {
-        throw CommonException.of(e);
+        throw new CommonException(e);
       }
     }
   }
@@ -464,7 +464,7 @@ public final class BeanUtils {
     if (boolean.class.equals(clazz)) {
       return false;
     }
-    throw SimpleException.of("无法获取默认值:" + clazz);
+    throw new SimpleException("无法获取默认值:" + clazz);
   }
 
   /** Call {@link org.springframework.beans.BeanUtils#copyProperties(Object, Object, String...)} */

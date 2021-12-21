@@ -16,18 +16,22 @@ public @interface TableIndexes {
   Index[] value();
 
   @interface Index {
-
     /** 名称. */
     String name();
-
-    /** java字段名. */
-    String[] fields();
-
     /** 是否唯一索引. */
     boolean unique() default false;
 
+    IndexField[] indexFields();
     /** 备注. */
     String comment() default "";
+  }
+
+  @interface IndexField {
+
+    /** java字段名. */
+    String field();
+
+    int length() default -1;
 
     /** 排序. */
     Direction direction() default Direction.ASC;

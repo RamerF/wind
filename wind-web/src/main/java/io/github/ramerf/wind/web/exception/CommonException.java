@@ -18,42 +18,10 @@ public class CommonException extends RuntimeException {
     return resultCode;
   }
 
-  public static CommonException of() {
-    return new CommonException();
-  }
-
-  public static CommonException of(final String message) {
-    return new CommonException(message);
-  }
-
-  public static CommonException of(final int code, final String message) {
-    return new CommonException(ResultCode.of(code, message));
-  }
-
-  public static CommonException of(final int code, final String message, final Throwable cause) {
-    return new CommonException(ResultCode.of(code, message), cause);
-  }
-
-  public static CommonException of(@Nonnull final ResultCode resultCode) {
-    return new CommonException(resultCode);
-  }
-
-  public static CommonException of(@Nonnull final ResultCode resultCode, final Throwable cause) {
-    return new CommonException(resultCode, cause);
-  }
-
-  public static CommonException of(final String message, final Throwable cause) {
-    return new CommonException(message, cause);
-  }
-
-  public static CommonException of(final Throwable cause) {
-    return new CommonException(cause);
-  }
-
   /** 如果对象为空,抛出异常. */
   public static Object requireNonNull(Object obj, String message) {
     if (obj == null) {
-      throw CommonException.of(message);
+      throw new CommonException(message);
     }
     return obj;
   }
@@ -61,35 +29,35 @@ public class CommonException extends RuntimeException {
   /** 如果对象为空,抛出异常. */
   public static Object requireNonNull(Object obj, final ResultCode resultcode) {
     if (obj == null) {
-      throw CommonException.of(resultcode);
+      throw new CommonException(resultcode);
     }
     return obj;
   }
 
-  private CommonException() {
+  public CommonException() {
     super(ResultCode.ERROR.desc());
     this.resultCode = ResultCode.ERROR;
   }
 
-  private CommonException(final String message) {
+  public CommonException(final String message) {
     super(message);
   }
 
-  private CommonException(@Nonnull final ResultCode resultCode) {
+  public CommonException(@Nonnull final ResultCode resultCode) {
     super(resultCode.desc());
     this.resultCode = resultCode;
   }
 
-  private CommonException(final String message, final Throwable cause) {
+  public CommonException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  private CommonException(@Nonnull final ResultCode resultCode, final Throwable cause) {
+  public CommonException(@Nonnull final ResultCode resultCode, final Throwable cause) {
     super(resultCode.desc(), cause);
     this.resultCode = resultCode;
   }
 
-  private CommonException(final Throwable cause) {
+  public CommonException(final Throwable cause) {
     super(cause);
   }
 }

@@ -7,8 +7,10 @@ import io.github.ramerf.wind.core.config.WindConfiguration;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.handler.ResultHandlerUtil;
-import io.github.ramerf.wind.core.util.BeanUtils;
-import io.github.ramerf.wind.core.util.CollectionUtils;
+import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.support.EntityInfo;
+import io.github.ramerf.wind.core.util.*;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -19,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.GROUP_BY;
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.WHERE;
-import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
 
 /**
  * 通用查询操作对象.
@@ -45,7 +46,7 @@ import static io.github.ramerf.wind.core.helper.SqlHelper.optimizeQueryString;
  */
 @Slf4j
 public class Query<T> {
-  private QueryColumn<T> queryColumn;
+  private Fields<T> fields;
 
   private Condition<?, ?> condition;
   private Pageable pageable;
@@ -77,14 +78,9 @@ public class Query<T> {
     return prototypeBean.query(clazz);
   }
 
-  /**
-   * 指定查询列.
-   *
-   * @param queryColumn the query column
-   * @return the query
-   */
-  public final QueryWhere<T> select(@Nonnull final QueryColumn<T> queryColumn) {
-    this.queryColumn = queryColumn;
+  /** 指定查询列. */
+  public final QueryWhere<T> select(final Fields<T> fields) {
+    this.fields = fields;
     return new QueryWhere<>(this);
   }
 
@@ -177,11 +173,12 @@ public class Query<T> {
       final String conditionClause = getConditionClause();
       final String limitClause = getLimitClause();
 
-      final String templateSql = "select %s from %s";
+      final String templateSql = "select %s from %s%s";
       final String sql =
           String.format(
               templateSql,
-              optimizeQueryString(query.queryColumn.getString(), clazz),
+              getQueryString(this.query.fields),
+              getTableName(),
               conditionClause.concat(orderByClause).concat(limitClause));
       if (log.isDebugEnabled()) {
         log.debug("fetchOne:[{}]", sql);
@@ -191,7 +188,6 @@ public class Query<T> {
               .setSql(sql)
               .setClazz(clazz)
               .setCondition(query.condition)
-              .setQueryColumn(query.queryColumn)
               .setStartIndex(new AtomicInteger(1)),
           resultHandler);
     }
@@ -208,11 +204,12 @@ public class Query<T> {
       final String conditionClause = getConditionClause();
       final String limitClause = getLimitClause();
 
-      final String templateSql = "select %s from %s";
+      final String templateSql = "select %s from %s%s";
       final String sql =
           String.format(
               templateSql,
-              optimizeQueryString(query.queryColumn.getString(), clazz),
+              getQueryString(this.query.fields),
+              getTableName(),
               conditionClause.concat(orderByClause).concat(limitClause));
       if (log.isDebugEnabled()) {
         log.debug("fetchAll:[{}]", sql);
@@ -222,7 +219,6 @@ public class Query<T> {
               .setSql(sql)
               .setClazz(clazz)
               .setCondition(query.condition)
-              .setQueryColumn(query.queryColumn)
               .setStartIndex(new AtomicInteger(1)),
           clazz);
     }
@@ -239,11 +235,12 @@ public class Query<T> {
       final String conditionClause = getConditionClause();
       final String limitClause = getLimitClause();
 
-      final String templateSql = "select %s from %s";
+      final String templateSql = "select %s from %s%s";
       final String sql =
           String.format(
               templateSql,
-              optimizeQueryString(query.queryColumn.getString(), clazz),
+              getQueryString(this.query.fields),
+              getTableName(),
               conditionClause.concat(orderByClause).concat(limitClause));
       if (log.isDebugEnabled()) {
         log.debug("fetchPage:[{}]", sql);
@@ -253,7 +250,6 @@ public class Query<T> {
               .setSql(sql)
               .setClazz(clazz)
               .setCondition(query.condition)
-              .setQueryColumn(query.queryColumn)
               .setStartIndex(new AtomicInteger(1)),
           fetchCount(query.clazz),
           query.pageable);
@@ -268,11 +264,11 @@ public class Query<T> {
       final String conditionClause = getConditionClause();
       final String sql =
           conditionClause.contains(GROUP_BY.operator())
-              ? "select sum(b.a) from (select 1 a from %s) b"
-              : "select count(1) from %s";
+              ? "select sum(b.a) from (select 1 a from %s%s) b"
+              : "select count(1) from %s%s";
       return executor.fetchCount(
           new SqlParam<T>()
-              .setSql(String.format(sql, conditionClause))
+              .setSql(String.format(sql, getTableName(), conditionClause))
               .setClazz(Long.class)
               .setEntityClazz(clazz)
               .setAggregateFunction(AggregateSqlFunction.COUNT)
@@ -280,19 +276,42 @@ public class Query<T> {
               .setStartIndex(new AtomicInteger(1)));
     }
 
-    private String getQueryClause() {
-      return query.queryColumn.getString();
+    /** 获取查询列.{@code fields}为null时,根据配置判断是否写入null字段;当排除不为空时,忽略全局是否写入空配置 */
+    private String getQueryString(final Fields<T> fields) {
+      if (fields == null)
+        return EntityUtils.getAllColumnFields(this.query.clazz, null).stream()
+            .map(EntityUtils::fieldToColumn)
+            .collect(Collectors.joining(","));
+      final Collection<Field> queryFields;
+      final Set<Field> includeFields = fields.getIncludeFields();
+      final Set<Field> excludeFields = fields.getExcludeFields();
+      if (!includeFields.isEmpty()) {
+        queryFields =
+            excludeFields.isEmpty()
+                ? includeFields
+                : includeFields.stream()
+                    .filter(include -> !excludeFields.contains(include))
+                    .collect(Collectors.toSet());
+      } else {
+        final List<Field> allColumnFields = EntityUtils.getAllColumnFields(this.query.clazz, null);
+        // 当排除不为空时,忽略是否写入空配置
+        queryFields =
+            excludeFields.isEmpty()
+                ? allColumnFields
+                : allColumnFields.stream()
+                    .filter(include -> !excludeFields.contains(include))
+                    .collect(Collectors.toSet());
+      }
+      return queryFields.stream().map(EntityUtils::fieldToColumn).collect(Collectors.joining(","));
     }
 
-    private String getFromTableClause() {
-      return query.condition.getQueryEntityMetaData().getFromTable();
+    private String getTableName() {
+      EntityInfo entityInfo = EntityHelper.getEntityInfo(this.query.clazz);
+      return entityInfo.getName();
     }
 
     private String getConditionClause() {
-      final String fromTables = query.condition.getQueryEntityMetaData().getFromTable();
-      return query.condition.isEmpty()
-          ? fromTables
-          : fromTables.concat(WHERE.operator()).concat(query.condition.getString());
+      return query.condition.isEmpty() ? "" : WHERE.operator().concat(query.condition.getString());
     }
 
     private String getOrderByClause() {

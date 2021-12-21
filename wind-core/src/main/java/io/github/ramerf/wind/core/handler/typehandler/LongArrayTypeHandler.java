@@ -23,7 +23,7 @@ public class LongArrayTypeHandler implements ITypeHandler<Long[], Long[]> {
       final Connection connection = ps.getConnection();
       return connection.createArrayOf(getJdbcType(field), javaVal);
     } catch (SQLException e) {
-      throw CommonException.of(e);
+      throw new CommonException(e);
     }
   }
 

@@ -113,7 +113,7 @@ public abstract class Dialect {
     } catch (SQLException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
-      throw CommonException.of(e);
+      throw new CommonException(e);
     }
 
     for (DatabaseEnum database : DatabaseEnum.values()) {
@@ -150,7 +150,7 @@ public abstract class Dialect {
   public String getTypeName(Type type) throws CommonException {
     final String result = typeNames.get(type);
     if (result == null) {
-      throw CommonException.of("No default type mapping for (java.sql.Types) " + type);
+      throw new CommonException("No default type mapping for (java.sql.Types) " + type);
     }
     return result;
   }
@@ -169,14 +169,14 @@ public abstract class Dialect {
   public String getTypeName(Type type, long length, int precision, int scale)
       throws CommonException {
     if (!isSupportJavaType(type)) {
-      throw CommonException.of("Not supported type " + type.getTypeName());
+      throw new CommonException("Not supported type " + type.getTypeName());
     }
     final String result =
         notSupportedLengthType(type)
             ? typeNames.get(type)
             : typeNames.get(type, length, precision, scale);
     if (result == null) {
-      throw CommonException.of(
+      throw new CommonException(
           String.format("No sql type mapping for java type: %s, length: %s", type, length));
     }
     return result;
@@ -267,7 +267,7 @@ public abstract class Dialect {
 
   public String getCommonOnTableString(
       String category, String schema, String table, String comment) {
-    throw CommonException.of("Not implemented");
+    throw new CommonException("Not implemented");
   }
 
   public String getCommentOnColumnString(

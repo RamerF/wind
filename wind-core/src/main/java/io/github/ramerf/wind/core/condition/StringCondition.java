@@ -28,20 +28,8 @@ public class StringCondition<T> extends AbstractCondition<T, StringCondition<T>>
     super(clazz);
   }
 
-  public StringCondition(final QueryColumn<T> queryColumn) {
-    super(queryColumn);
-  }
-
-  public StringCondition(final Class<T> clazz, final String tableName, final String tableAlia) {
-    super(clazz, tableName, tableAlia);
-  }
-
   public static <T> StringCondition<T> of(final Class<T> clazz) {
     return new StringCondition<>(clazz);
-  }
-
-  public static <T> StringCondition<T> of(final QueryColumn<T> queryColumn) {
-    return new StringCondition<>(queryColumn);
   }
 
   @Override

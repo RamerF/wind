@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.exporter;
 
-import io.github.ramerf.wind.core.config.EntityColumn;
-import io.github.ramerf.wind.core.config.WindContext;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.metadata.TableColumnInformation;
 import io.github.ramerf.wind.core.metadata.TableInformation;
@@ -33,49 +32,65 @@ public class TableExporter {
   }
 
   public void createTable(@Nonnull final EntityInfo entityInfo) {
-    final List<EntityColumn> columns = entityInfo.getEntityColumns();
-    StringBuilder sql = new StringBuilder("create table ");
-    sql.append(entityInfo.getName()).append("(\n\t");
-    final String columnDefinition =
-        columns.stream()
-            .filter(EntityColumn::isSupported)
-            .map(column -> column.getColumnDdl(dialect))
-            .collect(Collectors.joining(",\n\t"));
-    sql.append(columnDefinition).append(",\n\t");
-    final List<EntityColumn> keys = entityInfo.getPrimaryKeys();
-    sql.append("primary key (")
-        .append(keys.stream().map(EntityColumn::getName).collect(Collectors.joining(",")))
-        .append(")\n\t)");
-
-    final String entityComment = entityInfo.getComment();
-    // 不支持comment on的数据库直接跟comment
-    if (!dialect.isSupportCommentOn() && StringUtils.nonEmpty(entityComment)) {
-      sql.append(" comment ").append("'").append(entityComment).append("'");
-    }
-    // 存储引擎,针对mysql
-    sql.append(dialect.getTableTypeString());
-    // 列注释
-    if (dialect.isSupportCommentOn()) {
-      final String columnComment =
+    // 列信息
+    {
+      final List<EntityColumn> columns = entityInfo.getEntityColumns();
+      StringBuilder sql = new StringBuilder("create table ");
+      sql.append(entityInfo.getName()).append("(\n\t");
+      final String columnDefinition =
           columns.stream()
               .filter(EntityColumn::isSupported)
-              .filter(column -> StringUtils.nonEmpty(column.getComment()))
-              .map(comment -> comment.getComment(entityInfo.getName(), dialect))
-              .collect(Collectors.joining(";\n\t"));
-      log.debug("createTable:columnComment[\n{}\n]", columnComment);
-      sql.append(";\n\t").append(columnComment);
-      if (StringUtils.nonEmpty(entityComment)) {
-        final String tableComment =
-            dialect.getCommonOnTableString(
-                windContext.getDbMetaData().getCatelog(),
-                windContext.getDbMetaData().getSchema(),
-                entityInfo.getName(),
-                entityComment);
-        sql.append(";\n\t").append(tableComment);
+              .map(column -> column.getColumnDdl(dialect))
+              .collect(Collectors.joining(",\n\t"));
+      sql.append(columnDefinition).append(",\n\t");
+      final List<EntityColumn> keys = entityInfo.getPrimaryKeys();
+      sql.append("primary key (")
+          .append(keys.stream().map(EntityColumn::getName).collect(Collectors.joining(",")))
+          .append(")\n\t)");
+
+      final String entityComment = entityInfo.getComment();
+      // 不支持comment on的数据库直接跟comment
+      if (!dialect.isSupportCommentOn() && StringUtils.nonEmpty(entityComment)) {
+        sql.append(" comment ").append("'").append(entityComment).append("'");
+      }
+      // 存储引擎,针对mysql
+      sql.append(dialect.getTableTypeString());
+      // 列注释
+      if (dialect.isSupportCommentOn()) {
+        final String columnComment =
+            columns.stream()
+                .filter(EntityColumn::isSupported)
+                .filter(column -> StringUtils.nonEmpty(column.getComment()))
+                .map(comment -> comment.getComment(entityInfo.getName(), dialect))
+                .collect(Collectors.joining(";\n\t"));
+        log.debug("createTable:columnComment[\n{}\n]", columnComment);
+        sql.append(";\n\t").append(columnComment);
+        if (StringUtils.nonEmpty(entityComment)) {
+          final String tableComment =
+              dialect.getCommonOnTableString(
+                  windContext.getDbMetaData().getCatelog(),
+                  windContext.getDbMetaData().getSchema(),
+                  entityInfo.getName(),
+                  entityComment);
+          sql.append(";\n\t").append(tableComment);
+        }
+      }
+      log.info("createTable:[\n{}\n]", sql);
+      windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
+    }
+    // 索引
+    {
+      StringBuilder sql = new StringBuilder();
+      final List<EntityIndex> entityIndexes = entityInfo.getEntityIndexes();
+      if (!entityIndexes.isEmpty()) {
+        for (EntityIndex entityIndex : entityIndexes) {
+          String sqlDefinition = entityIndex.getSqlDefinition(dialect);
+          sql.append(sqlDefinition).append(";\n");
+        }
+        log.info("createTable:index[{}]", sql);
+        windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
       }
     }
-    log.info("createTable:[\n{}\n]", sql);
-    windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
   public void updateTable(@Nonnull final EntityInfo entityInfo) {

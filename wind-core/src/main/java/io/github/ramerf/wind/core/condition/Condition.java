@@ -17,7 +17,6 @@ import javax.annotation.Nonnull;
  * @author ramer
  */
 public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
-  QueryEntityMetaData<POJO> getQueryEntityMetaData();
 
   String getString();
 

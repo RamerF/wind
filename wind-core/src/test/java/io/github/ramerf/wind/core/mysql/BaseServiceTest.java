@@ -85,15 +85,13 @@ public class BaseServiceTest {
             // 排序
             .orderBy(Foo::getId, Direction.DESC);
     log.info("testCnds:[{}]", cnds.getString());
-    final QueryColumn<Foo> queryColumn =
-        QueryColumn.of(Foo.class)
+    final Fields<Foo> fields =
+        Fields.of(Foo.class)
             // 查询指定列
-            .col(Foo::getId)
-            .col(Foo::getName)
-            // 自定义sql
-            .col(
-                "(case name when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) as name,id");
-    log.info("testCnds:[{}]", queryColumn.getString());
+            .include(Foo::getId)
+            .include(Foo::getName);
+    log.info(
+        "testCnds:[include:{},exlucde:{}]", fields.getIncludeFields(), fields.getExcludeFields());
   }
 
   @Test
@@ -107,13 +105,12 @@ public class BaseServiceTest {
   @DisplayName("查询单个")
   public void testGetOne() {
     // 通过id查询
-    assertNotNull(service.getById(id));
+    assertNotNull(service.getOne(id));
     // 条件查询
     assertNotNull(service.getOne(Cnds.of(Foo.class).eq(Foo::setId, id)));
     // 条件查询指定列
     final Cnds<Foo> cnds = Cnds.of(Foo.class).eq(Foo::setId, id);
-    final QueryColumn<Foo> queryColumn =
-        QueryColumn.of(Foo.class).col(Foo::getName).col(Foo::getId);
+    final Fields<Foo> queryColumn = Fields.of(Foo.class).include(Foo::getName).include(Foo::getId);
     assertNotNull(service.getOne(cnds, queryColumn));
     // 条件查询排序
     assertNotNull(service.getOne(Cnds.of(Foo.class).limit(1).orderBy(Foo::getId, Direction.DESC)));
@@ -121,14 +118,8 @@ public class BaseServiceTest {
     assertNotNull(
         service.getOne(
             Cnds.of(Foo.class).eq(Foo::setId, id),
-            QueryColumn.of(Foo.class).col(Foo::getId),
+            Fields.of(Foo.class).include(Foo::getId),
             IdNameResponse.class));
-    // 自定义sql
-    service.getOne(
-        Cnds.of(Foo.class).eq(Foo::setId, id).and("name is not null"),
-        QueryColumn.of(Foo.class)
-            .col(
-                "(case name when 'halo1' then '匹配1' when 'halo2' then '匹配2' else '未匹配' end) as name,id"));
     // 自定义sql
     assertNotNull(service.fetchOneBySql("select id,name from foo limit 1", IdNameResponse.class));
   }
@@ -137,13 +128,12 @@ public class BaseServiceTest {
   @DisplayName("查询列表")
   public void testList() {
     // 通过id列表查询
-    assertNotNull(service.listByIds(Arrays.asList(id, 2L, 3L)));
+    assertNotNull(service.list(Arrays.asList(id, 2L, 3L)));
     final Cnds<Foo> cnds = Cnds.of(Foo.class).eq(Foo::setId, id);
     // 条件查询
     assertNotNull(service.list(cnds));
     // 查询指定列
-    final QueryColumn<Foo> queryColumn =
-        QueryColumn.of(Foo.class).col(Foo::getName).col(Foo::getId);
+    final Fields<Foo> queryColumn = Fields.of(Foo.class).include(Foo::getName).include(Foo::getId);
     assertNotNull(service.list(cnds, queryColumn, IdNameResponse.class));
     // 查询指定页
     cnds.limit(1, 10).orderBy(Foo::getId, Direction.DESC);
@@ -158,7 +148,8 @@ public class BaseServiceTest {
     final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L).limit(1, 10).orderBy(Foo::getName);
     assertNotNull(service.page(cnds));
     // 指定列
-    assertNotNull(service.page(cnds, QueryColumn.of(Foo.class).col(Foo::getId).col(Foo::getName)));
+    assertNotNull(
+        service.page(cnds, Fields.of(Foo.class).include(Foo::getId).include(Foo::getName)));
   }
 
   @Test
@@ -174,8 +165,6 @@ public class BaseServiceTest {
     // 排除指定字段
     // fields.exclude(Foo::getAge)
     assertTrue(service.create(foo, fields) > 0);
-    // 返回当前对象相当于 create + getOne
-    assertNotNull(service.createAndGet(foo));
   }
 
   @Test
@@ -227,8 +216,6 @@ public class BaseServiceTest {
             Fields.of(Foo.class).include(Foo::getName),
             Cnds.of(Foo.class).eq(Foo::setId, id)),
         1);
-    // 返回当前对象相当于 update + getOne
-    assertNotNull(service.updateAndGet(foo));
   }
 
   @Test
@@ -260,7 +247,7 @@ public class BaseServiceTest {
     // 通过id删除
     assertEquals(service.delete(id), 1);
     // 通过id列表删除
-    assertTrue(service.deleteByIds(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
+    assertTrue(service.delete(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
     // 条件删除
     assertEquals(service.delete(Cnds.of(Foo.class).eq(Foo::setId, id)), 1);
   }

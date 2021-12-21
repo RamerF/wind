@@ -23,7 +23,7 @@ public class StringArrayTypeHandler implements ITypeHandler<String[], String[]> 
     try {
       return ps.getConnection().createArrayOf(getJdbcType(field), javaVal);
     } catch (SQLException e) {
-      throw CommonException.of(e);
+      throw new CommonException(e);
     }
   }
 

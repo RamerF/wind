@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
-import io.github.ramerf.wind.core.function.BeanFunction;
+import io.github.ramerf.wind.core.function.FieldFunction;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import java.lang.reflect.*;
@@ -67,7 +67,7 @@ public class TypeHandlerHelper {
       return new ValueType(value, null, null);
     }
 
-    public static ValueType of(final Object originVal, final BeanFunction function) {
+    public static ValueType of(final Object originVal, final FieldFunction function) {
       return new ValueType(originVal, function.getGenericType(), function.getField());
     }
 

@@ -38,10 +38,6 @@ public class Rs<T> implements Serializable {
   @ApiModelProperty(value = "描述", example = "操作成功")
   private String msg = ResultCode.SUCCESS.desc();
 
-  /** 时间戳 */
-  @ApiModelProperty(value = "请求响应时间戳", example = "1575435889491")
-  private long timestamp = System.currentTimeMillis();
-
   private Rs() {}
 
   /**

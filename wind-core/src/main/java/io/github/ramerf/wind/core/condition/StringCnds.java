@@ -1,8 +1,5 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.condition.function.*;
-import io.github.ramerf.wind.core.function.IFunction;
-import java.math.BigDecimal;
 import java.util.Collection;
 import javax.annotation.Nonnull;
 import lombok.Getter;
@@ -14,7 +11,6 @@ import lombok.Getter;
 public class StringCnds<T> extends AbstractCnd<T, StringCnds<T>, StringCondition<T>>
     implements IStringCondition<T, StringCnds<T>> {
   @Getter private Class<T> clazz;
-  @Getter private QueryColumn<T> queryColumn;
   @Getter private StringCondition<T> condition;
 
   private StringCnds() {}
@@ -22,7 +18,6 @@ public class StringCnds<T> extends AbstractCnd<T, StringCnds<T>, StringCondition
   public static <T> StringCnds<T> of(final Class<T> clazz) {
     final StringCnds<T> cnds = new StringCnds<>();
     cnds.clazz = clazz;
-    cnds.queryColumn = QueryColumn.of(clazz);
     cnds.condition = StringCondition.of(clazz);
     return cnds;
   }
@@ -31,169 +26,8 @@ public class StringCnds<T> extends AbstractCnd<T, StringCnds<T>, StringCondition
       @Nonnull final Class<T> clazz, @Nonnull final StringCondition<T> condition) {
     final StringCnds<T> cnds = new StringCnds<>();
     cnds.clazz = clazz;
-    cnds.queryColumn = QueryColumn.of(clazz);
     cnds.condition = condition;
     return cnds;
-  }
-
-  public static <T> StringCnds<T> of(
-      @Nonnull final Class<T> cls,
-      @Nonnull final QueryColumn<T> queryColumn,
-      @Nonnull final StringCondition<T> condition) {
-    final StringCnds<T> cnds = new StringCnds<>();
-    cnds.clazz = cls;
-    cnds.queryColumn = queryColumn;
-    cnds.condition = condition;
-    return cnds;
-  }
-
-  public StringCnds<T> col(IFunction<T, ?> field) {
-    queryColumn.col(field);
-    return this;
-  }
-
-  /**
-   * 查询列.
-   *
-   * @param function the function
-   * @param alia the alia
-   * @return the query column
-   */
-  public StringCnds<T> col(final IFunction<T, ?> function, final String alia) {
-    return col(function, alia, null);
-  }
-
-  /**
-   * sql函数.
-   *
-   * @see BaseSqlFunction
-   * @see CaseWhenSqlFunction
-   */
-  public StringCnds<T> col(final SqlFunction sqlFunction) {
-    return col(sqlFunction.string());
-  }
-
-  /**
-   * 自定义查询表达式.
-   *
-   * <p>示例:col("id,case sex when 1 then '男' when 2 then '女' else '未知' end")
-   *
-   * @param sql 查询列表达式
-   * @return the query column
-   */
-  public StringCnds<T> col(@Nonnull final String sql) {
-    queryColumn.col(sql);
-    return this;
-  }
-
-  /**
-   * 对指定字段做统计.
-   *
-   * @param function the function
-   * @return the query column
-   */
-  public StringCnds<T> count(final IFunction<T, ?> function) {
-    return count(function, null);
-  }
-
-  /**
-   * 对指定字段做统计.
-   *
-   * @param function the function
-   * @param alia the alia
-   * @return the query column
-   */
-  public StringCnds<T> count(final IFunction<T, ?> function, final String alia) {
-    return col(function, alia, AggregateSqlFunction.COUNT);
-  }
-
-  /**
-   * 对指定字段求和.
-   *
-   * @param function the function
-   * @return the query column
-   * @see #sum(IFunction, String) #sum(IFunction, String)
-   */
-  public StringCnds<T> sum(final IFunction<T, ?> function) {
-    return sum(function, null);
-  }
-
-  /**
-   * 对指定字段求和.不确定返回类型的情况下使用{@link BigDecimal}
-   *
-   * <pre>
-   * <b>注意:该列的返回类型与数据库对应关系</b>
-   * <b>java           jdbc</b>
-   * BigDecimal     bigint/numeric/decimal
-   * Double         double/float
-   *
-   * </pre>
-   *
-   * @param function the function
-   * @param alia the alia
-   * @return the query column
-   */
-  public StringCnds<T> sum(final IFunction<T, ?> function, final String alia) {
-    return col(function, alia, AggregateSqlFunction.SUM);
-  }
-
-  /** 对指定表达式求和,比如sum(case when...) */
-  public StringCnds<T> sum(final SqlFunction sqlFunction) {
-    return col(AggregateSqlFunction.SUM.string(sqlFunction.string()));
-  }
-
-  /**
-   * 对指定字段求最大值.
-   *
-   * @param function the function
-   * @return the query column
-   */
-  public StringCnds<T> max(final IFunction<T, ?> function) {
-    return max(function, null);
-  }
-
-  /**
-   * 对指定字段求最大值.
-   *
-   * @param function the function
-   * @param alia the alia
-   * @return the query column
-   */
-  public StringCnds<T> max(final IFunction<T, ?> function, final String alia) {
-    return col(function, alia, AggregateSqlFunction.MAX);
-  }
-
-  /**
-   * 对指定字段求最小值.
-   *
-   * @param function the function
-   * @return the query column
-   */
-  public StringCnds<T> min(final IFunction<T, ?> function) {
-    return min(function, null);
-  }
-
-  /**
-   * 对指定字段求最小值.
-   *
-   * @param function the function
-   * @param alia the alia
-   * @return the query column
-   */
-  public StringCnds<T> min(final IFunction<T, ?> function, final String alia) {
-    return col(function, alia, AggregateSqlFunction.MIN);
-  }
-
-  /** 添加查询对象(列/聚合函数). */
-  public StringCnds<T> col(final IFunction<T, ?> function, final SqlFunction sqlFunction) {
-    return col(function, null, sqlFunction);
-  }
-
-  /** 添加查询对象(列/聚合函数). */
-  public StringCnds<T> col(
-      final IFunction<T, ?> function, final String alia, final SqlFunction sqlFunction) {
-    queryColumn.col(function, alia, sqlFunction);
-    return this;
   }
 
   @Override

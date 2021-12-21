@@ -7,8 +7,8 @@ import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.exporter.TableExporter;
-import io.github.ramerf.wind.core.function.BeanFunction;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.FieldFunction;
+import io.github.ramerf.wind.core.function.GetterFunction;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
@@ -66,7 +66,7 @@ public class EntityHelper {
    * @param function the function
    * @return the column
    */
-  public static String getColumn(BeanFunction function) {
+  public static String getColumn(FieldFunction function) {
     if (log.isTraceEnabled()) {
       log.trace("getColumn:[{}]", CLAZZ_ENTITY_MAP);
     }
@@ -108,13 +108,6 @@ public class EntityHelper {
     return typeName;
   }
 
-  /**
-   * Gets entity info.
-   *
-   * @param <T> the type parameter
-   * @param clazz the clazz
-   * @return the entity info
-   */
   public static <T> EntityInfo getEntityInfo(@Nonnull final Class<T> clazz) {
     return initEntityIfNeeded(clazz);
   }
@@ -181,16 +174,11 @@ public class EntityHelper {
    * <p>映射到数据库表需要实体包含注解: {@link TableInfo}.
    */
   public static boolean isMapToTable(final Class<?> clazz) {
-    return clazz != null && clazz.getAnnotation(TableInfo.class) != null;
+    return clazz != null && clazz.isAnnotationPresent(TableInfo.class);
   }
 
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   */
   public static void main(String[] args) {
-    IFunction<TestLambda, String> function = TestLambda::getName;
+    GetterFunction<TestLambda, String> function = TestLambda::getName;
     log.info("main:[{}]", getColumn(function));
   }
 }

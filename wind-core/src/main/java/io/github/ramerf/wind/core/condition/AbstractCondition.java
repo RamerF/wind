@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.helper.*;
 import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.EntityInfo;
@@ -35,13 +34,7 @@ import static java.util.stream.Collectors.toCollection;
 public abstract class AbstractCondition<POJO, CONDITION extends AbstractCondition<POJO, CONDITION>>
     implements Condition<POJO, CONDITION> {
 
-  @Getter
-  @Setter(AccessLevel.PROTECTED)
-  private QueryEntityMetaData<POJO> queryEntityMetaData = new QueryEntityMetaData<>();
-
-  @Getter(AccessLevel.PROTECTED)
-  @Setter(AccessLevel.PROTECTED)
-  private EntityInfo entityInfo;
+  private Class<POJO> clazz;
 
   /** where后的字符串,参数占位符为 ?. */
   protected final List<String> conditionSql = new LinkedList<>();
@@ -59,41 +52,8 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
 
   protected AbstractCondition() {}
 
-  public AbstractCondition(final QueryColumn<POJO> queryColumn) {
-    setEntityInfo(queryColumn.getEntityInfo());
-    setQueryEntityMetaData(queryColumn.getQueryEntityMetaData());
-  }
-
-  public AbstractCondition(final Class<POJO> clazz) {
-    this(clazz, null, null);
-  }
-
-  public AbstractCondition(final Class<POJO> clazz, String tableName, String tableAlia) {
-    if (clazz == null && tableName == null) {
-      throw SimpleException.of("[clazz,tableName,tableAlia]不能同时为空");
-    }
-    final WindConfiguration configuration = AppContextInject.getBean(WindConfiguration.class);
-    if (clazz != null) {
-      final EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
-      // 如果tableName不为空,需要覆盖entityInfo的值.传入的tableName优先级最高,因为支持使用不相关的类查询表
-      if (tableName != null) {
-        entityInfo.setName(tableName);
-      } else {
-        tableName = entityInfo.getName();
-      }
-      setEntityInfo(entityInfo);
-    }
-    final QueryEntityMetaData<POJO> queryEntityMetaData = new QueryEntityMetaData<>();
-    queryEntityMetaData.setClazz(clazz);
-    queryEntityMetaData.setTableName(tableName);
-    tableAlia = tableAlia == null ? tableName : tableAlia;
-    queryEntityMetaData.setTableAlia(tableAlia);
-    String fromTable = tableName;
-    if (tableAlia != null && !tableAlia.equals(tableName)) {
-      fromTable = tableName.concat(" ").concat(tableAlia);
-    }
-    queryEntityMetaData.setFromTable(fromTable);
-    setQueryEntityMetaData(queryEntityMetaData);
+  public AbstractCondition(@Nonnull final Class<POJO> clazz) {
+    this.clazz = clazz;
   }
 
   /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
@@ -133,10 +93,6 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
 
   @Override
   public List<Consumer<PreparedStatement>> getValues(final AtomicInteger startIndex) {
-    // if (!containLogicNotDelete) {
-    //   appendLogicNotDelete();
-    //   containLogicNotDelete = true;
-    // }
     return valueTypes.stream()
         .map(
             valueType ->
@@ -154,7 +110,7 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
                         }
                         ps.setObject(index, jdbcValue);
                       } catch (SQLException e) {
-                        throw CommonException.of(e);
+                        throw new CommonException(e);
                       }
                     })
         .collect(toCollection(LinkedList::new));
@@ -208,8 +164,9 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
 
   @Override
   public final synchronized CONDITION appendLogicNotDelete() {
-    final LogicDeleteProp logicDeleteProp = getEntityInfo().getLogicDeleteProp();
-    final EntityColumn logicDeletePropColumn = getEntityInfo().getLogicDeletePropColumn();
+    EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
+    final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
+    final EntityColumn logicDeletePropColumn = entityInfo.getLogicDeletePropColumn();
     // 启用逻辑删除且当前未包含该条件(这个有必要?)
     if (logicDeleteProp.isEnable()
         && conditionSql.stream()

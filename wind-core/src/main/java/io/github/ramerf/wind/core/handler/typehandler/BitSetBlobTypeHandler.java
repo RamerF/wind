@@ -24,7 +24,7 @@ public class BitSetBlobTypeHandler implements ITypeHandler<BitSet, byte[]> {
       blob.setBytes(1, javaVal.toByteArray());
       return blob;
     } catch (SQLException e) {
-      throw CommonException.of(e);
+      throw new CommonException(e);
     }
   }
 

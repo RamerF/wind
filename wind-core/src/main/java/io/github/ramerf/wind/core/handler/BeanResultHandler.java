@@ -50,7 +50,6 @@ public class BeanResultHandler<E> extends AbstractResultHandler<Map<String, Obje
   }
 
   @Override
-  // @SuppressWarnings({"unchecked", "rawtypes"})
   public E handle(Map<String, Object> map) {
     // map = {alia:value}
     if (CollectionUtils.isEmpty(map)) {

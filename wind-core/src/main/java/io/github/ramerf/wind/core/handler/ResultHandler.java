@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.handler;
 
-import java.util.List;
+import io.github.ramerf.wind.core.util.CollectionUtils;
+import java.util.*;
 
 /**
  * 返回结果转换.
@@ -27,5 +28,14 @@ public interface ResultHandler<T, E> {
    * @param ts the ts
    * @return the list
    */
-  List<E> handle(List<T> ts);
+  default List<E> handle(List<T> ts) {
+    if (CollectionUtils.isEmpty(ts)) {
+      return Collections.emptyList();
+    }
+    List<E> es = new ArrayList<>();
+    for (T t : ts) {
+      es.add(handle(t));
+    }
+    return es;
+  }
 }

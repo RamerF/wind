@@ -13,10 +13,7 @@ public class StringConditionGroup<T>
 
   public static <T> StringConditionGroup<T> of(final StringCondition<T> stringCondition) {
     final StringConditionGroup<T> group = new StringConditionGroup<>();
-    final StringCondition<T> condition = new StringCondition<>();
-    condition.setEntityInfo(stringCondition.getEntityInfo());
-    condition.setQueryEntityMetaData(stringCondition.getQueryEntityMetaData());
-    group.condition = condition;
+    group.condition = new StringCondition<>();
     return group;
   }
 
@@ -24,28 +21,10 @@ public class StringConditionGroup<T>
     return new StringConditionGroup<>(clazz);
   }
 
-  public static <T> StringConditionGroup<T> of(final QueryColumn<T> queryColumn) {
-    StringConditionGroup<T> conditionGroup = new StringConditionGroup<>();
-    return new StringConditionGroup<>(queryColumn);
-  }
-
-  public static <T> StringConditionGroup<T> of(
-      final Class<T> clazz, String tableName, String tableAlia) {
-    return new StringConditionGroup<>(clazz, tableName, tableAlia);
-  }
-
   private StringConditionGroup() {}
 
   private StringConditionGroup(final Class<T> clazz) {
-    this.condition = new StringCondition<>(clazz, null, null);
-  }
-
-  private StringConditionGroup(final QueryColumn<T> queryColumn) {
-    this.condition = new StringCondition<>(queryColumn);
-  }
-
-  private StringConditionGroup(final Class<T> clazz, String tableName, String tableAlia) {
-    this.condition = new StringCondition<>(clazz, tableName, tableAlia);
+    this.condition = new StringCondition<>(clazz);
   }
 
   @Override

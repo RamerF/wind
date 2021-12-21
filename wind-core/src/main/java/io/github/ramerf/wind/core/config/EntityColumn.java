@@ -4,11 +4,12 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.*;
-import java.util.Objects;
+import java.util.*;
 import javax.annotation.Nonnull;
 import javax.persistence.Id;
 import lombok.*;
@@ -122,7 +123,7 @@ public class EntityColumn {
       entityColumn.typeName =
           entityColumn.supported
               ? dialect.getTypeName(
-                  entityColumn.getType(field, entityColumn.type),
+                  entityColumn.getType(field),
                   entityColumn.length,
                   entityColumn.precision,
                   entityColumn.scale)
@@ -176,7 +177,7 @@ public class EntityColumn {
         entityColumn.typeName =
             entityColumn.supported
                 ? dialect.getTypeName(
-                    entityColumn.getType(field, entityColumn.type),
+                    entityColumn.getType(field),
                     entityColumn.length,
                     entityColumn.precision,
                     entityColumn.scale)
@@ -191,10 +192,26 @@ public class EntityColumn {
     return entityColumn;
   }
 
-  private Type getType(Field field, Type type) {
+  private Type getType(Field field) {
     if (this.type instanceof Class && InterEnum.class.isAssignableFrom((Class<?>) this.type)) {
-      return ((ParameterizedType) field.getType().getGenericInterfaces()[0])
-          .getActualTypeArguments()[0];
+      int maxDepth = 3;
+      Deque<Type> interfaceDeque =
+          new ArrayDeque<>(Arrays.asList(field.getType().getGenericInterfaces()));
+      do {
+        maxDepth--;
+        Type current = interfaceDeque.pop();
+        if (current instanceof ParameterizedType
+            && ((ParameterizedType) current).getRawType().equals(InterEnum.class)) {
+          return ((ParameterizedType) current).getActualTypeArguments()[0];
+        }
+        if (current instanceof Class) {
+          Type[] subInterfaces = ((Class<?>) current).getGenericInterfaces();
+          for (Type anInterface : subInterfaces) {
+            interfaceDeque.push(anInterface);
+          }
+        }
+      } while (!interfaceDeque.isEmpty() && maxDepth > 0);
+      throw new CommonException("could not reference generic type for: " + field.getType());
     }
     return this.type;
   }

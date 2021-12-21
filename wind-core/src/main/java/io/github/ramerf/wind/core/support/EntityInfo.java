@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.support;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.function.IConsumer;
+import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
@@ -58,6 +58,9 @@ public final class EntityInfo {
   /** 列信息. */
   private List<EntityColumn> entityColumns;
 
+  /** 索引信息. */
+  private List<EntityIndex> entityIndexes;
+
   /** 主键. */
   private List<EntityColumn> primaryKeys;
 
@@ -65,7 +68,7 @@ public final class EntityInfo {
   private List<MappingInfo> mappingInfos = new ArrayList<>();
 
   /** TODO WARN 保存字段的写入方法，更新时可以避免使用反射. */
-  private Map<Field, IConsumer<?, ?>> writeMethods;
+  private Map<Field, SetterFunction<?, ?>> writeMethods;
 
   private Dialect dialect;
 
@@ -142,6 +145,11 @@ public final class EntityInfo {
               "Not found logic delete prop [%s] for %s",
               logicDeleteProp.getFieldName(), entityInfo.getName()));
     }
+    // 索引信息
+    List<EntityIndex> entityIndexes =
+        EntityIndex.getEntityIndexes(clazz, entityInfo.getName(), entityColumns, dialect);
+    entityInfo.setEntityIndexes(entityIndexes);
+
     entityInfo.setPrimaryKeys(primaryKeys);
     entityInfo.setEntityColumns(new ArrayList<>(entityColumns));
 

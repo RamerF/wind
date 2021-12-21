@@ -26,11 +26,6 @@ public abstract class AbstractConditionGroup<
   @Getter protected CONDITION condition;
 
   @Override
-  public QueryEntityMetaData<POJO> getQueryEntityMetaData() {
-    return condition.getQueryEntityMetaData();
-  }
-
-  @Override
   public String getString() {
     return condition.getString();
   }

@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.annotation.*;
-import io.github.ramerf.wind.core.condition.QueryColumn;
 import io.github.ramerf.wind.core.condition.StringCondition;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -41,11 +40,9 @@ public enum MappingType {
       final Field joinField = mappingInfo.getJoinField();
       final Class<T> targetClazz = mappingInfo.getTargetClazz();
       final Object relationValue = BeanUtils.getValue(poJo, joinField, null);
-      final QueryColumn<T> queryColumn = QueryColumn.of(targetClazz);
-      final StringCondition<T> stringCondition = StringCondition.of(queryColumn);
       return Query.getInstance(targetClazz)
-          .select(queryColumn)
-          .where(stringCondition.eq(mappingInfo.getTargetColumn(), relationValue))
+          .select(null)
+          .where(StringCondition.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue))
           .fetchOne(targetClazz);
     }
 
@@ -102,12 +99,11 @@ public enum MappingType {
     public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
       final Class<E> targetClazz = mappingInfo.getTargetClazz();
       final Object relationValue = BeanUtils.getValue(poJo, mappingInfo.getJoinField(), null);
-      final QueryColumn<E> queryColumn = QueryColumn.of(targetClazz);
-      final StringCondition<E> condition = StringCondition.of(queryColumn);
       final Object mapping =
           Query.getInstance(targetClazz)
-              .select(queryColumn)
-              .where(condition.eq(mappingInfo.getTargetColumn(), relationValue))
+              .select(null)
+              .where(
+                  StringCondition.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue))
               .fetchAll(targetClazz);
       return (T) mapping;
     }
@@ -184,11 +180,9 @@ public enum MappingType {
       final Field joinField = mappingInfo.getJoinField();
       final Class<T> targetClazz = mappingInfo.getTargetClazz();
       final Object relationValue = BeanUtils.getValue(poJo, joinField, null);
-      final QueryColumn<T> queryColumn = QueryColumn.of(targetClazz);
-      final StringCondition<T> stringCondition = StringCondition.of(queryColumn);
       return Query.getInstance(targetClazz)
-          .select(queryColumn)
-          .where(stringCondition.eq(mappingInfo.getTargetField(), relationValue))
+          .select(null)
+          .where(StringCondition.of(targetClazz).eq(mappingInfo.getTargetField(), relationValue))
           .fetchOne(targetClazz);
     }
 
@@ -247,7 +241,7 @@ public enum MappingType {
   //   public <T> T fetchMapping(
   //       final E obj, final MappingInfo mappingInfo, final Object relationValue)
   // {
-  //     throw CommonException.of("方法不支持");
+  //     throw new CommonException("方法不支持");
   //   }
   // },
   /** The None. */
@@ -284,7 +278,7 @@ public enum MappingType {
     }
     /* 后续可能会支持
     if (field.isAnnotationPresent(ManyToMany.class)) {
-      throw CommonException.of("方法不支持");
+      throw new CommonException("方法不支持");
       return MANY_TO_MANY;
     }*/
     return NONE;

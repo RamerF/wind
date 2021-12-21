@@ -177,7 +177,6 @@ public final class DbResolver {
   private static void extractTableColumnsResultSet(
       final ResultSet resultSet, final NameTableInformation nameTableInformation)
       throws SQLException {
-    NameTableColumnInformation nameTableColumnInformation = new NameTableColumnInformation();
     while (resultSet.next()) {
       final String tableName = resultSet.getString(3);
       final TableInformation tableInformation = nameTableInformation.getTableInformation(tableName);
@@ -186,7 +185,9 @@ public final class DbResolver {
             .getColumns()
             .add(
                 TableColumnInformation.of(
-                    resultSet.getString(4), resultSet.getInt(5), resultSet.getString(6)));
+                    resultSet.getString(4), //
+                    resultSet.getInt(5),
+                    resultSet.getString(6)));
       }
     }
   }

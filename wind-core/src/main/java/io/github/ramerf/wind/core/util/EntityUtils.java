@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
@@ -49,12 +50,8 @@ public final class EntityUtils {
   public static List<Field> getAllColumnFields(@Nonnull final Class<?> obj) {
     return getAllColumnFields(obj, null);
   }
-  /**
-   * 获取对象映射到数据库的属性,包括关系属性.<br>
-   *
-   * @param obj the obj
-   * @return the non null field
-   */
+
+  /** TODO WARN 这里不应该包含关联属性，获取对象映射到数据库的属性,包括关系属性.<br> */
   public static List<Field> getAllColumnFields(
       @Nonnull final Class<?> obj, @Nullable SqlStatementType sqlStatementType) {
     Stream<Field> stream =
@@ -88,12 +85,17 @@ public final class EntityUtils {
    */
   private static boolean filterColumnField(final Field field) {
     final int modifiers = field.getModifiers();
-    return !Modifier.isStatic(modifiers)
-        && !Modifier.isTransient(modifiers)
-        && (field.getType().getClassLoader() == null
-            || MappingInfo.isValidMapping(field)
-            || dialect.isSupportJavaType(field.getGenericType())
-            || field.isAnnotationPresent(TableColumn.class));
+    // 不保存 static 和 transient 修饰的字段
+    if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) {
+      return false;
+    }
+    if (field.isAnnotationPresent(TableColumn.class)) {
+      return true;
+    }
+    if (dialect.isSupportJavaType(field.getGenericType())) {
+      return true;
+    }
+    return InterEnum.class.isAssignableFrom(field.getType());
   }
 
   public enum SqlStatementType {
@@ -108,7 +110,8 @@ public final class EntityUtils {
       @Nonnull final T t, final SqlStatementType sqlStatementType) {
     Stream<Field> stream =
         EntityHelper.getEntityInfo(t.getClass()).getEntityColumns().stream()
-            .map(EntityColumn::getField);
+            .map(EntityColumn::getField)
+            .filter(EntityUtils::filterColumnField);
     if (sqlStatementType != null) {
       final EntityInfo entityInfo = EntityHelper.getEntityInfo(t.getClass());
       final Map<Field, EntityColumn> fieldColumnMap = entityInfo.getFieldColumnMap();
@@ -123,7 +126,6 @@ public final class EntityUtils {
     if (log.isTraceEnabled()) {
       log.debug("getNonNullColumnFields:[{}]", fields);
     }
-    // return filterCustomField(t, fields);
     return fields;
   }
 
@@ -306,7 +308,7 @@ public final class EntityUtils {
         try {
           classes = (Class<T>) Class.forName(arguments[0].getTypeName());
         } catch (ClassNotFoundException ignored) {
-          throw CommonException.of("cannot get service bound type poJo.");
+          throw new CommonException("cannot get service bound type poJo.");
         }
         SERVICE_POJO_MAP.put(serviceClazz, new WeakReference<>(classes));
         return classes;
@@ -316,7 +318,7 @@ public final class EntityUtils {
     try {
       cls = (Class<S>) BeanUtils.getTypeClass(baseServiceTypes[0]);
     } catch (ClassCastException e) {
-      throw CommonException.of("cannot get service bound type poJo.");
+      throw new CommonException("cannot get service bound type poJo.");
     }
     return getPoJoClass(cls);
   }

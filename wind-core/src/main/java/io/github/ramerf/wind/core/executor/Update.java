@@ -77,7 +77,7 @@ public final class Update<T> {
     this.clazz = clazz;
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
     this.idField = this.entityInfo.getIdColumn().getField();
-    this.condition = LambdaCondition.of(QueryColumn.of(clazz));
+    this.condition = LambdaCondition.of(clazz);
   }
 
   /**
@@ -413,7 +413,7 @@ public final class Update<T> {
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
-                      LambdaCondition.of(QueryColumn.of(clazz))
+                      LambdaCondition.of(clazz)
                           .eq(idField, BeanUtils.getValue(obj, idField, null))
                           .getValues(index)
                           .forEach(val -> val.accept(ps));
@@ -588,7 +588,7 @@ public final class Update<T> {
             }
             ps.setObject(index.getAndIncrement(), value);
           } catch (SQLException e) {
-            throw CommonException.of(e);
+            throw new CommonException(e);
           }
         };
     list.add(function);
@@ -613,7 +613,7 @@ public final class Update<T> {
     } catch (SQLException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
-      throw CommonException.of(e.getMessage(), e);
+      throw new CommonException(e.getMessage(), e);
     }
   }
 }

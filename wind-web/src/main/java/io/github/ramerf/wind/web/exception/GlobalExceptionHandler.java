@@ -106,7 +106,7 @@ public class GlobalExceptionHandler {
           Optional.ofNullable(exception.getCause())
               .map(Throwable::getCause)
               .map(CommonException.class::cast)
-              .orElse(CommonException.of(ResultCode.ERROR));
+              .orElse(new CommonException(ResultCode.ERROR));
       log.warn(commonException.getMessage(), commonException);
       final ResultCode resultCode = commonException.getResultCode();
       return resultCode == null ? Rs.fail(exception.getMessage()) : Rs.fail(resultCode);

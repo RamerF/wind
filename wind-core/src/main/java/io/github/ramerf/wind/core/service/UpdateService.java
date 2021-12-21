@@ -173,7 +173,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @see CommonException
    */
   default int delete(final ID id) throws DataAccessException {
-    final LambdaCondition<T> condition = LambdaCondition.of(QueryColumn.of(getPoJoClass()));
+    final LambdaCondition<T> condition = LambdaCondition.of(getPoJoClass());
     return getUpdate()
         .where(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id))
         .delete();
@@ -187,11 +187,11 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  default Optional<Integer> deleteByIds(final Collection<ID> ids) throws DataAccessException {
+  default Optional<Integer> delete(final Collection<ID> ids) throws DataAccessException {
     if (CollectionUtils.isEmpty(ids)) {
       return Optional.empty();
     }
-    final LambdaCondition<T> condition = LambdaCondition.of(QueryColumn.of(getPoJoClass()));
+    final LambdaCondition<T> condition = LambdaCondition.of(getPoJoClass());
     condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids);
     final int affectRow = getUpdate().where(condition).delete();
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);

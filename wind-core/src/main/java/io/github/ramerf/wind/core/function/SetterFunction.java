@@ -9,7 +9,7 @@ package io.github.ramerf.wind.core.function;
  * @since 2020/5/5
  */
 @FunctionalInterface
-public interface IConsumer<T, U> extends BeanFunction {
+public interface SetterFunction<T, U> extends FieldFunction {
   /**
    * Accept.
    *

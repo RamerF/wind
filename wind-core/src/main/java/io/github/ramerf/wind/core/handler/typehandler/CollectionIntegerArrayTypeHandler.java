@@ -25,7 +25,7 @@ public class CollectionIntegerArrayTypeHandler
       final Connection connection = ps.getConnection();
       return connection.createArrayOf(getJdbcType(field), javaVal.toArray());
     } catch (SQLException e) {
-      throw CommonException.of(e);
+      throw new CommonException(e);
     }
   }
 

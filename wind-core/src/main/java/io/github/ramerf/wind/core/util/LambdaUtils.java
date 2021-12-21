@@ -27,65 +27,65 @@ public final class LambdaUtils {
   /**
    * 获取lambda表达式对应的方法名.
    *
-   * @param beanFunction 需要解析的 lambda 对象
+   * @param fieldFunction 需要解析的 lambda 对象
    * @return 返回解析后的结果 method name
-   * @see LambdaUtils#serializedLambda(BeanFunction) LambdaUtils#serializedLambda(BeanFunction)
+   * @see LambdaUtils#serializedLambda(FieldFunction) LambdaUtils#serializedLambda(BeanFunction)
    */
-  public static String getMethodName(BeanFunction beanFunction) {
-    return serializedLambda(beanFunction).getImplMethodName();
+  public static String getMethodName(FieldFunction fieldFunction) {
+    return serializedLambda(fieldFunction).getImplMethodName();
   }
 
   /**
    * 获取lambda表达式对应的方法引用类名全路径.
    *
-   * @param beanFunction 需要解析的 lambda 对象
+   * @param fieldFunction 需要解析的 lambda 对象
    * @return 返回解析后的结果 method name
-   * @see LambdaUtils#serializedLambda(BeanFunction) LambdaUtils#serializedLambda(BeanFunction)
+   * @see LambdaUtils#serializedLambda(FieldFunction) LambdaUtils#serializedLambda(BeanFunction)
    */
-  public static String getImplClassFullPath(BeanFunction beanFunction) {
-    return serializedLambda(beanFunction).getImplClass().replaceAll("/", ".");
+  public static String getImplClassFullPath(FieldFunction fieldFunction) {
+    return serializedLambda(fieldFunction).getImplClass().replaceAll("/", ".");
   }
 
   /**
    * 获取lambda表达式对应的方法引用类名.
    *
-   * @param beanFunction 需要解析的 lambda 对象
+   * @param fieldFunction 需要解析的 lambda 对象
    * @return 返回解析后的结果 method name
-   * @see LambdaUtils#serializedLambda(BeanFunction) LambdaUtils#serializedLambda(BeanFunction)
+   * @see LambdaUtils#serializedLambda(FieldFunction) LambdaUtils#serializedLambda(BeanFunction)
    */
-  public static String getImplClassName(BeanFunction beanFunction) {
-    final String implClass = serializedLambda(beanFunction).getImplClass().replaceAll("/", ".");
+  public static String getImplClassName(FieldFunction fieldFunction) {
+    final String implClass = serializedLambda(fieldFunction).getImplClass().replaceAll("/", ".");
     return implClass.substring(implClass.lastIndexOf(".") + 1);
   }
 
   /**
    * Serialized beanFunction serialized beanFunction.
    *
-   * @param beanFunction the beanFunction
+   * @param fieldFunction the beanFunction
    * @return the serialized beanFunction
    */
-  public static SerializedLambda serializedLambda(BeanFunction beanFunction) {
-    if (!beanFunction.getClass().isSynthetic()) {
-      throw CommonException.of("不支持非lambda表达式");
+  public static SerializedLambda serializedLambda(FieldFunction fieldFunction) {
+    if (!fieldFunction.getClass().isSynthetic()) {
+      throw new CommonException("不支持非lambda表达式");
     }
-    return Optional.ofNullable(LAMBDA_MAP.get(beanFunction.getClass()))
+    return Optional.ofNullable(LAMBDA_MAP.get(fieldFunction.getClass()))
         .map(WeakReference::get)
-        .orElseGet(() -> getSerializedLambda(beanFunction));
+        .orElseGet(() -> getSerializedLambda(fieldFunction));
   }
 
-  private static SerializedLambda getSerializedLambda(final BeanFunction beanFunction) {
+  private static SerializedLambda getSerializedLambda(final FieldFunction fieldFunction) {
     try {
-      final Class<? extends BeanFunction> clazz = beanFunction.getClass();
+      final Class<? extends FieldFunction> clazz = fieldFunction.getClass();
       final Method writeReplace = clazz.getDeclaredMethod("writeReplace");
       if (!writeReplace.isAccessible()) {
         writeReplace.setAccessible(true);
       }
       final SerializedLambda serializedLambda =
-          (SerializedLambda) writeReplace.invoke(beanFunction);
+          (SerializedLambda) writeReplace.invoke(fieldFunction);
       LAMBDA_MAP.put(clazz, new WeakReference<>(serializedLambda));
       return serializedLambda;
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw CommonException.of(e);
+      throw new CommonException(e);
     }
   }
 
@@ -95,9 +95,9 @@ public final class LambdaUtils {
    * @param args the input arguments
    */
   public static void main(String[] args) {
-    IFunction<TestLambda, Long> function = TestLambda::getId;
-    IConsumer<TestLambda, Long> consumer = TestLambda::setId;
-    log.info("main:getMethodName[{}]", getMethodName(function));
-    log.info("main:getActualTypePath:[{}]" + getImplClassFullPath(consumer));
+    GetterFunction<TestLambda, Long> getterFunction = TestLambda::getId;
+    SetterFunction<TestLambda, Long> setterFunction = TestLambda::setId;
+    log.info("main:getMethodName[{}]", getMethodName(getterFunction));
+    log.info("main:getActualTypePath:[{}]" + getImplClassFullPath(setterFunction));
   }
 }

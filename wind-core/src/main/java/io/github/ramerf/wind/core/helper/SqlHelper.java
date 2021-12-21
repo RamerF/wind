@@ -88,18 +88,4 @@ public class SqlHelper {
     }
     return String.valueOf(value);
   }
-
-  /**
-   * 优化查询字符串.
-   *
-   * @param <R> the type parameter
-   * @param old 原字符串
-   * @param clazz 返回类型
-   * @return string string
-   */
-  public static <R> String optimizeQueryString(final String old, final Class<R> clazz) {
-    // 可以改为如果返回对象和查询对象不同时,根据原始list string匹配字段
-    /// 根据返回对象推断查询字段,返回对象可能包含数据库不存在的字段,禁用
-    return old;
-  }
 }

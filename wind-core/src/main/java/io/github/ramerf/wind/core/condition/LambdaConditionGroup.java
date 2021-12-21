@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.function.IConsumer;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.SetterFunction;
+import io.github.ramerf.wind.core.function.GetterFunction;
 import java.util.Collection;
 import javax.annotation.Nonnull;
 
@@ -15,10 +15,7 @@ public class LambdaConditionGroup<T>
 
   public static <T> LambdaConditionGroup<T> of(final LambdaCondition<T> lambdaCondition) {
     final LambdaConditionGroup<T> group = new LambdaConditionGroup<>();
-    final LambdaCondition<T> condition = new LambdaCondition<>();
-    condition.setEntityInfo(lambdaCondition.getEntityInfo());
-    condition.setQueryEntityMetaData(lambdaCondition.getQueryEntityMetaData());
-    group.condition = condition;
+    group.condition = new LambdaCondition<>();
     return group;
   }
 
@@ -26,243 +23,225 @@ public class LambdaConditionGroup<T>
     return new LambdaConditionGroup<>(clazz);
   }
 
-  public static <T> LambdaConditionGroup<T> of(final QueryColumn<T> queryColumn) {
-    LambdaConditionGroup<T> conditionGroup = new LambdaConditionGroup<>();
-    return new LambdaConditionGroup<>(queryColumn);
-  }
-
-  public static <T> LambdaConditionGroup<T> of(
-      final Class<T> clazz, String tableName, String tableAlia) {
-    return new LambdaConditionGroup<>(clazz, tableName, tableAlia);
-  }
-
   private LambdaConditionGroup() {}
 
   private LambdaConditionGroup(final Class<T> clazz) {
-    this.condition = new LambdaCondition<>(clazz, null, null);
-  }
-
-  private LambdaConditionGroup(final QueryColumn<T> queryColumn) {
-    this.condition = new LambdaCondition<>(queryColumn);
-  }
-
-  private LambdaConditionGroup(final Class<T> clazz, String tableName, String tableAlia) {
-    this.condition = new LambdaCondition<>(clazz, tableName, tableAlia);
+    this.condition = new LambdaCondition<>(clazz);
   }
 
   @Override
   public <V> LambdaConditionGroup<T> eq(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.eq(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.eq(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> ne(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.ne(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.ne(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> gt(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.gt(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.gt(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> ge(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.ge(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.ge(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> lt(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.lt(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.lt(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> le(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.le(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.le(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> like(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    this.condition.like(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
+    this.condition.like(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> notLike(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    this.condition.notLike(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
+    this.condition.notLike(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> between(
       final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
       @Nonnull final V end) {
-    this.condition.between(condition, field, start, end);
+    this.condition.between(condition, setter, start, end);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> notBetween(
       final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
       @Nonnull final V end) {
-    this.condition.notBetween(condition, field, start, end);
+    this.condition.notBetween(condition, setter, start, end);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> isNull(
-      final boolean condition, @Nonnull final IConsumer<T, V> field) {
-    this.condition.isNull(condition, field);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
+    this.condition.isNull(condition, setter);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> isNotNull(
-      final boolean condition, @Nonnull final IConsumer<T, V> field) {
-    this.condition.isNotNull(condition, field);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
+    this.condition.isNotNull(condition, setter);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> in(
       final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
-    this.condition.in(condition, field, values);
+    this.condition.in(condition, setter, values);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> notIn(
       final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
-    this.condition.notIn(condition, field, values);
+    this.condition.notIn(condition, setter, values);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orEq(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.orEq(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.orEq(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orNe(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.orNe(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.orNe(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orGt(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.orGt(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.orGt(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orGe(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.orGe(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.orGe(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orLt(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.orLt(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.orLt(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orLe(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, final V value) {
-    this.condition.orLe(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.orLe(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orLike(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    this.condition.orLike(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
+    this.condition.orLike(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orNotLike(
-      final boolean condition, @Nonnull final IConsumer<T, V> field, @Nonnull final V value) {
-    this.condition.orNotLike(condition, field, value);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
+    this.condition.orNotLike(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orBetween(
       final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
       @Nonnull final V end) {
-    this.condition.orBetween(condition, field, start, end);
+    this.condition.orBetween(condition, setter, start, end);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orNotBetween(
       final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
       @Nonnull final V end) {
-    this.condition.orNotBetween(condition, field, start, end);
+    this.condition.orNotBetween(condition, setter, start, end);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orIsNull(
-      final boolean condition, @Nonnull final IConsumer<T, V> field) {
-    this.condition.orIsNull(condition, field);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
+    this.condition.orIsNull(condition, setter);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orIsNotNull(
-      final boolean condition, @Nonnull final IConsumer<T, V> field) {
-    this.condition.orIsNotNull(condition, field);
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
+    this.condition.orIsNotNull(condition, setter);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orIn(
       final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
-    this.condition.orIn(condition, field, values);
+    this.condition.orIn(condition, setter, values);
     return this;
   }
 
   @Override
   public <V> LambdaConditionGroup<T> orNotIn(
       final boolean condition,
-      @Nonnull final IConsumer<T, V> field,
+      @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
-    this.condition.orNotIn(condition, field, values);
+    this.condition.orNotIn(condition, setter, values);
     return this;
   }
 
@@ -279,8 +258,8 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public LambdaConditionGroup<T> groupBy(@Nonnull final IFunction<T, ?> field) {
-    this.condition.groupBy(field);
+  public LambdaConditionGroup<T> groupBy(@Nonnull final GetterFunction<T, ?> getter) {
+    this.condition.groupBy(getter);
     return this;
   }
 }

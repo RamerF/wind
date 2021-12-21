@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.exception.SimpleException;
-import io.github.ramerf.wind.core.function.IFunction;
+import io.github.ramerf.wind.core.function.GetterFunction;
 import java.util.*;
 import javax.annotation.Nonnull;
 import lombok.Getter;
@@ -44,7 +44,7 @@ public class Pages {
       return null;
     }
     if (page < 1 || size < 1) {
-      throw SimpleException.of("page,size不能小于1");
+      throw new SimpleException("page,size不能小于1");
     }
     final Pages pages = new Pages();
     pages.page = page;
@@ -53,19 +53,12 @@ public class Pages {
     return pages;
   }
 
-  /**
-   * Asc sort column.
-   *
-   * @param <T> the type parameter
-   * @param function the function
-   * @return the sort column
-   */
-  public <T> Pages asc(final IFunction<T, ?> function) {
-    return asc(function.getColumn());
+  public <T> Pages asc(final GetterFunction<T, ?> getter) {
+    return asc(getter.getColumn());
   }
 
   /**
-   * {@link Pages#asc(IFunction)}
+   * {@link Pages#asc(GetterFunction)}
    *
    * @param column the column
    * @return the sort column
@@ -75,19 +68,12 @@ public class Pages {
     return this;
   }
 
-  /**
-   * Desc sort column.
-   *
-   * @param <T> the type parameter
-   * @param function the function
-   * @return the sort column
-   */
-  public <T> Pages desc(final IFunction<T, ?> function) {
-    return desc(function.getColumn());
+  public <T> Pages desc(final GetterFunction<T, ?> getter) {
+    return desc(getter.getColumn());
   }
 
   /**
-   * {@link Pages#desc(IFunction)}
+   * {@link Pages#desc(GetterFunction)}
    *
    * @param column the column
    * @return the sort column

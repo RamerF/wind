@@ -11,35 +11,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SimpleException extends CommonException {
 
-  public static SimpleException of() {
-    return new SimpleException();
-  }
-
-  public static SimpleException of(final String message) {
-    return new SimpleException(message);
-  }
-
-  public static SimpleException of(final String message, final Throwable cause) {
-    return new SimpleException(message, cause);
-  }
-
-  public static SimpleException of(final Throwable cause) {
-    return new SimpleException(cause);
-  }
-
-  private SimpleException() {
+  public SimpleException() {
     super();
   }
 
-  private SimpleException(final String message) {
+  public SimpleException(final String message) {
     super(message);
   }
 
-  private SimpleException(final String message, final Throwable cause) {
+  public SimpleException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  private SimpleException(final Throwable cause) {
+  public SimpleException(final Throwable cause) {
     super(cause);
   }
 

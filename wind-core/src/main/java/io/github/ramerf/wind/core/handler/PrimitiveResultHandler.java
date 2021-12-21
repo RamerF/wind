@@ -17,11 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
 
-  /**
-   * Instantiates a new Primitive result handler.
-   *
-   * @param clazz the clazz
-   */
   public PrimitiveResultHandler(@Nonnull final Class<E> clazz) {
     super(clazz);
   }
