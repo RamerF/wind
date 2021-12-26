@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.helper;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.EntityColumn;
-import io.github.ramerf.wind.core.config.WindConfiguration.DdlAuto;
+import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.exporter.TableExporter;
@@ -46,7 +46,7 @@ public class EntityHelper {
   public static <T> void initEntity(final Class<T> clazz) {
     final EntityInfo entityInfo =
         EntityInfo.of(
-            clazz, windContext.getWindConfiguration(), windContext.getDbMetaData().getDialect());
+            clazz, windContext.getConfiguration(), windContext.getDbMetaData().getDialect());
     CLAZZ_ENTITY_MAP.put(clazz, entityInfo);
     // 这里进行表定义更新
     ddlAuto(entityInfo);
@@ -146,7 +146,7 @@ public class EntityHelper {
   }
 
   private static void ddlAuto(final EntityInfo entityInfo) {
-    final DdlAuto ddlAuto = windContext.getWindConfiguration().getDdlAuto();
+    final DdlAuto ddlAuto = windContext.getConfiguration().getDdlAuto();
     if (ddlAuto == null || DdlAuto.NONE.equals(ddlAuto)) {
       return;
     }

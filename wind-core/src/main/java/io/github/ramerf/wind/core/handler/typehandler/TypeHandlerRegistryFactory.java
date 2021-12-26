@@ -1,10 +1,10 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.handler.TypeHandler;
-import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.BeanUtils;
-import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.*;
@@ -20,21 +20,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressWarnings({"rawtypes"})
 public class TypeHandlerRegistryFactory {
-  private Set<ITypeHandler> typeHandlers = new HashSet<>();
+  private static final List<ITypeHandler> typeHandlers;
   /** 缓存字段类型处理器. */
-  private static final Map<Field, ITypeHandler> toJavaTypeHandlers =
-      Collections.synchronizedMap(new WeakHashMap<>());
+  private static final Map<Field, ITypeHandler> toJavaTypeHandlers;
 
-  private static final Map<Class<? extends ITypeHandler>, ITypeHandler> typeHandlerMap =
-      Collections.synchronizedMap(new WeakHashMap<>());
+  private static final Map<Class<? extends ITypeHandler>, ITypeHandler> typeHandlerMap;
 
-  /** Instantiates a new Type handler registry factory. */
-  public TypeHandlerRegistryFactory() {}
-
-  /** 注册默认的类型转换器,在添加自定义转换器之后添加这些,保持自定义的转换器优先级更高. */
-  public void registerDefaultTypeHandlers() {
+  static {
+    typeHandlers = new LinkedList<>();
+    toJavaTypeHandlers = Collections.synchronizedMap(new WeakHashMap<>());
+    typeHandlerMap = Collections.synchronizedMap(new WeakHashMap<>());
+    // 注册默认类型转换器
     try {
-      BeanUtils.scanClasses("io.github.ramerf.wind.core.handler.typehandler", ITypeHandler.class)
+      BeanUtils.scanClasses(
+              TypeHandlerRegistryFactory.class.getPackage().getName(), ITypeHandler.class)
           .stream()
           .peek(clazz -> log.debug("registerDefaultTypeHandlers:[{}]", clazz.getName()))
           .filter(clazz -> !clazz.equals(ITypeHandler.class))
@@ -52,67 +51,39 @@ public class TypeHandlerRegistryFactory {
     }
   }
 
-  /**
-   * 添加类型转换器.
-   *
-   * @param typeHandlers the {@link ITypeHandler}
-   * @see ITypeHandler
-   */
-  public void addTypeHandlers(@Nonnull ITypeHandler... typeHandlers) {
-    this.typeHandlers.addAll(Arrays.asList(typeHandlers));
+  /** 添加自定义类型转换器,后添加的优先级更高. */
+  public static void addTypeHandlers(@Nonnull ITypeHandler... typeHandlers) {
+    addTypeHandlers(Arrays.asList(typeHandlers));
   }
 
-  /**
-   * Add type handler.
-   *
-   * @param typeHandlers the list of handler
-   */
-  public void addTypeHandlers(@Nonnull Set<ITypeHandler> typeHandlers) {
-    CollectionUtils.doIfNonEmpty(typeHandlers, o -> this.typeHandlers.addAll(typeHandlers));
+  /** 添加自定义类型转换器,后添加的优先级更高. */
+  public static void addTypeHandlers(@Nonnull List<ITypeHandler> typeHandlers) {
+    for (int i = typeHandlers.size() - 1; i >= 0; i--) {
+      ITypeHandler typeHandler = typeHandlers.get(i);
+      TypeHandlerRegistryFactory.typeHandlers.add(0, typeHandler);
+    }
   }
 
-  /**
-   * 设置类型转换器,将会覆盖默认的类型转换器.
-   *
-   * @param typeHandlers the type handler
-   */
-  public void setTypeHandlers(Set<ITypeHandler> typeHandlers) {
-    this.typeHandlers = typeHandlers;
-  }
-
-  /**
-   * Gets type handler.
-   *
-   * @return the type handler
-   */
-  public Set<ITypeHandler> getTypeHandlers() {
+  public static List<ITypeHandler> getTypeHandlers() {
     return typeHandlers;
   }
 
-  public ITypeHandler getTypeHandler(Class<? extends ITypeHandler> clazz) {
+  public static ITypeHandler getTypeHandler(Class<? extends ITypeHandler> clazz) {
     ITypeHandler typeHandler = typeHandlerMap.get(clazz);
     if (typeHandler == null) {
       try {
         typeHandler = clazz.newInstance();
         typeHandlerMap.put(clazz, typeHandler);
       } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException(e);
+        throw new CommonException("Need default constructor for typeHandler" + clazz, e);
       }
     }
     return typeHandler;
   }
 
-  /**
-   * 获取Jdbc值转换为Java值类型转换器,用于将数据库值转换为Java类型.<br>
-   *
-   * <p>valueType {@link ValueType}
-   *
-   * @param valueType the value type
-   * @return the type handler
-   * @see ITypeHandler
-   */
+  /** 获取Jdbc值转换为Java值类型转换器,用于将数据库值转换为Java类型. */
   @SuppressWarnings({"DuplicatedCode", "unchecked"})
-  public ITypeHandler getToJavaTypeHandler(final ValueType valueType) {
+  public static ITypeHandler getToJavaTypeHandler(final ValueType valueType) {
     if (toJavaTypeHandlers.containsKey(valueType.getField())) {
       return toJavaTypeHandlers.get(valueType.getField());
     }
@@ -186,12 +157,8 @@ public class TypeHandlerRegistryFactory {
    * 获取Java值转换为Jdbc值类型转换器,用于将Java值转换为数据库值.<br>
    *
    * <p>转换为jdbc值时,只有字段注解了类型转换器或者{@link InterEnum}的子类会用到,其余返回原值
-   *
-   * @param valueType {@link ValueType}
-   * @return the type handler
-   * @see ITypeHandler
    */
-  public ITypeHandler getToJdbcTypeHandler(final ValueType valueType) {
+  public static ITypeHandler getToJdbcTypeHandler(final ValueType valueType) {
     final Object value = valueType.getOriginVal();
     if (value == null) {
       return null;
@@ -230,7 +197,7 @@ public class TypeHandlerRegistryFactory {
     return null;
   }
 
-  private ITypeHandler getHandlerFromAnnotation(final ValueType valueType) {
+  private static ITypeHandler getHandlerFromAnnotation(final ValueType valueType) {
     final Field field = valueType.getField();
     final TypeHandler typeHandler = field.getAnnotation(TypeHandler.class);
     return typeHandler == null ? null : getTypeHandler(typeHandler.value());

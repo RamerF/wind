@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.handler;
 
-import io.github.ramerf.wind.core.util.CollectionUtils;
-import java.util.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * 返回结果转换.
@@ -12,30 +12,6 @@ import java.util.*;
  * @since 2019 /12/27
  * @see AbstractResultHandler
  */
-public interface ResultHandler<T, E> {
-
-  /**
-   * Handler e.
-   *
-   * @param t the t
-   * @return the e
-   */
-  E handle(T t);
-
-  /**
-   * Handler list.
-   *
-   * @param ts the ts
-   * @return the list
-   */
-  default List<E> handle(List<T> ts) {
-    if (CollectionUtils.isEmpty(ts)) {
-      return Collections.emptyList();
-    }
-    List<E> es = new ArrayList<>();
-    for (T t : ts) {
-      es.add(handle(t));
-    }
-    return es;
-  }
+public interface ResultHandler<E> {
+  E handle(ResultSet rs) throws SQLException;
 }

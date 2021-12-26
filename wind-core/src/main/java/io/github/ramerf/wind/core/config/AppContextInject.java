@@ -1,9 +1,9 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.executor.Query;
+import io.github.ramerf.wind.core.ioc.ApplicationContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
 
 /**
  * 该类用于在接口默认方法中获取bean.由于违背Ioc,不建议使用{@link #getBean(Class)}}获取bean.

@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.exception;
 
-import lombok.extern.slf4j.Slf4j;
+import io.github.ramerf.wind.core.executor.DataAccessException;
 
 /**
  * 未返回期望的结果数量.
@@ -8,11 +8,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2021.01.31
  * @author ramer
  */
-@Slf4j
-public class TooManyResultException extends RuntimeException {
+public class TooManyResultException extends DataAccessException {
   private final int count;
 
   public TooManyResultException(final int count) {
+    super("Too many result exception");
     this.count = count;
   }
 

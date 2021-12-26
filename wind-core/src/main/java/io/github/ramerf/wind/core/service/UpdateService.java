@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @param <T> the type parameter
  * @author ramer
  * @since 2020/1/5
- * @see WindConfiguration#isWriteNullProp()
+ * @see Configuration#isWriteNullProp()
  */
 public interface UpdateService<T, ID extends Serializable> extends InterService<T, ID> {
 

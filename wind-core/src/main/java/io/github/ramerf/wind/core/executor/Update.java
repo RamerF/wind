@@ -6,8 +6,8 @@ import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
-import io.github.ramerf.wind.core.helper.TypeHandlerHelper;
-import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
+import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -23,7 +23,6 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
@@ -60,19 +59,11 @@ public final class Update<T> {
   private Fields<T> fields;
   private final EntityInfo entityInfo;
   private static Executor executor;
-  private static WindConfiguration configuration;
+  private static Configuration configuration;
   private static IdGenerator idGenerator;
   private static Dialect dialect;
-  private static PrototypeBean prototypeBean;
   private final Field idField;
 
-  /**
-   * Instantiates a new Update.
-   *
-   * @param clazz the clazz
-   * @since 2020.11.13
-   * @author ramer
-   */
   public Update(@Nonnull final Class<T> clazz) {
     this.clazz = clazz;
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
@@ -80,44 +71,21 @@ public final class Update<T> {
     this.condition = LambdaCondition.of(clazz);
   }
 
-  /**
-   * Initial.
-   *
-   * @param executor the executor
-   * @param configuration the configuration
-   * @param idGenerator the id generator
-   * @param dialect the dialect
-   */
   public static void initial(
       final Executor executor,
-      final WindConfiguration configuration,
+      final Configuration configuration,
       final IdGenerator idGenerator,
-      final Dialect dialect,
-      final PrototypeBean prototypeBean) {
+      final Dialect dialect) {
     Update.executor = executor;
     Update.configuration = configuration;
     Update.idGenerator = idGenerator;
     Update.dialect = dialect;
-    Update.prototypeBean = prototypeBean;
   }
 
-  /**
-   * Gets instance.
-   *
-   * @param <T> the type parameter
-   * @param clazz the clazz
-   * @return the instance
-   */
   public static <T> Update<T> getInstance(final Class<T> clazz) {
-    return prototypeBean.update(clazz);
+    return new Update<>(clazz);
   }
 
-  /**
-   * Where update.
-   *
-   * @param condition the condition
-   * @return the update
-   */
   public Update<T> where(@Nonnull final Condition<T, ?> condition) {
     this.condition = condition;
     return this;
@@ -167,8 +135,7 @@ public final class Update<T> {
               getArgsValueSetConsumer(index, field, BeanUtils.getValue(t, field, null), list);
             });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
-    final String execSql =
-        String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
+    final String execSql = String.format(sql, entityInfo.getName(), columns, valueMarks);
     if (log.isDebugEnabled()) {
       log.debug("create:[{}]", execSql);
     }
@@ -178,7 +145,8 @@ public final class Update<T> {
             clazz,
             connection -> {
               final PreparedStatement ps =
-                  connection.prepareStatement(execSql, Statement.RETURN_GENERATED_KEYS);
+                  DataSourceUtils.preparedStatement(
+                      connection, execSql, Statement.RETURN_GENERATED_KEYS);
               list.forEach(val -> val.accept(ps));
               return ps;
             },
@@ -238,8 +206,7 @@ public final class Update<T> {
           valueMarks.append(valueMarks.length() > 0 ? ",?" : "?");
         });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
-    final String execSql =
-        String.format(sql, entityInfo.getName(), columns.toString(), valueMarks.toString());
+    final String execSql = String.format(sql, entityInfo.getName(), columns, valueMarks);
 
     AtomicInteger createRow = new AtomicInteger();
     BatchExecUtil.batchExec(
@@ -340,7 +307,7 @@ public final class Update<T> {
     this.condition.appendLogicNotDelete();
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
-        String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
+        String.format(sql, entityInfo.getName(), setBuilder, condition.getString());
     if (log.isDebugEnabled()) {
       log.debug("update:[{}]", execSql);
     }
@@ -392,7 +359,7 @@ public final class Update<T> {
     this.condition.appendLogicNotDelete();
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
-        String.format(sql, entityInfo.getName(), setBuilder.toString(), condition.getString());
+        String.format(sql, entityInfo.getName(), setBuilder, condition.getString());
 
     AtomicInteger updateRow = new AtomicInteger();
     BatchExecUtil.batchExec(
@@ -466,7 +433,7 @@ public final class Update<T> {
           clazz,
           updateString,
           ps -> {
-            ps.setObject(1, getCurrentTimeValue(updateTimeField));
+            JdbcUtils.setObject(ps, 1, getCurrentTimeValue(updateTimeField));
             condition.getValues(new AtomicInteger(2)).forEach(val -> val.accept(ps));
           });
     } else {
@@ -487,7 +454,7 @@ public final class Update<T> {
   /**
    * 获取写入字段.{@code fields}为null时,根据配置判断是否写入null字段;当排除不为空时,忽略全局是否写入空配置
    *
-   * @see WindConfiguration#isWriteNullProp()
+   * @see Configuration#isWriteNullProp()
    */
   private List<Field> getWritingFields(
       final @Nonnull T t, final Fields<T> fields, final SqlStatementType sqlStatementType) {

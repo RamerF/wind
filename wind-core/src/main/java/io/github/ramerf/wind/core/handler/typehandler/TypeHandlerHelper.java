@@ -1,14 +1,11 @@
-package io.github.ramerf.wind.core.helper;
+package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.function.FieldFunction;
-import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
-import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import java.lang.reflect.*;
 import java.sql.PreparedStatement;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * The type Type handler helper.
@@ -16,20 +13,14 @@ import org.springframework.stereotype.Component;
  * @author ramer
  * @since 2020/5/12
  */
-@SuppressWarnings("unchecked")
 @Slf4j
-@Component
 public class TypeHandlerHelper {
-  private static TypeHandlerRegistryFactory typeHandlerRegistryFactory;
 
-  public TypeHandlerHelper(final TypeHandlerRegistryFactory typeHandlerRegistryFactory) {
-    TypeHandlerHelper.typeHandlerRegistryFactory = typeHandlerRegistryFactory;
-  }
-
+  @SuppressWarnings("unchecked")
   public static Object toJavaValue(
       final ValueType valueType, final Object defaultValue, final Field field) {
     @SuppressWarnings("rawtypes")
-    final ITypeHandler typeHandler = typeHandlerRegistryFactory.getToJavaTypeHandler(valueType);
+    final ITypeHandler typeHandler = TypeHandlerRegistryFactory.getToJavaTypeHandler(valueType);
     if (log.isTraceEnabled()) {
       log.trace(
           "toJavaValue:match typeHandler[typeHandler:{},field:{}]",
@@ -41,9 +32,10 @@ public class TypeHandlerHelper {
         : typeHandler.convertFromJdbc(valueType.originVal, defaultValue, field);
   }
 
+  @SuppressWarnings("unchecked")
   public static Object toJdbcValue(final ValueType valueType, final PreparedStatement ps) {
     @SuppressWarnings("rawtypes")
-    final ITypeHandler typeHandler = typeHandlerRegistryFactory.getToJdbcTypeHandler(valueType);
+    final ITypeHandler typeHandler = TypeHandlerRegistryFactory.getToJdbcTypeHandler(valueType);
     return typeHandler == null
         ? valueType.originVal
         : typeHandler.convertToJdbc(valueType.originVal, valueType.field, ps);

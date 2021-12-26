@@ -36,14 +36,14 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 public final class EntityUtils {
-  private static WindConfiguration configuration;
+  private static Configuration configuration;
   private static Dialect dialect;
   /** {@link BaseService} */
   private static final Map<Class<?>, WeakReference<Class<?>>> SERVICE_POJO_MAP =
       new ConcurrentHashMap<>();
 
   public static void initial(final WindContext context) {
-    EntityUtils.configuration = context.getWindConfiguration();
+    EntityUtils.configuration = context.getConfiguration();
     EntityUtils.dialect = context.getDbMetaData().getDialect();
   }
 

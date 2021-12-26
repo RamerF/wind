@@ -4,4 +4,4 @@ io.github.ramerf.wind.core.config.RedisCacheConfiguration,\
 io.github.ramerf.wind.core.config.CommonBean,\
 io.github.ramerf.wind.core.config.PrototypeBean,\
 io.github.ramerf.wind.core.config.WindAutoConfiguration,\
-io.github.ramerf.wind.core.helper.TypeHandlerHelper
+io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper

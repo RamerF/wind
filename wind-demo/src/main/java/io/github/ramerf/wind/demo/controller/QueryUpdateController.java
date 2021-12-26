@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.demo.controller;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.PrototypeBean;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.demo.entity.pojo.Foo;
@@ -15,7 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Resource;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +29,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/query-update")
 @Api(tags = "Query/Update使用示例")
 public class QueryUpdateController {
-  @Resource private PrototypeBean prototypeBean;
 
   @GetMapping("/create")
   @ApiOperation("使用Update,创建")
@@ -46,7 +43,7 @@ public class QueryUpdateController {
             .localDate(LocalDate.now())
             .createTime(LocalDateTime.now())
             .build();
-    final Update<Product> update = prototypeBean.update(Product.class);
+    final Update<Product> update = Update.getInstance(Product.class);
     update.create(product);
     return Rs.ok(product);
   }
@@ -64,7 +61,7 @@ public class QueryUpdateController {
     final Fields<Product> fields =
         Fields.of(Product.class).include(Product::getTitle, Product::getName);
     // 获取Update实例
-    final Update<Product> update = prototypeBean.update(Product.class);
+    final Update<Product> update = Update.getInstance(Product.class);
     final int affectRow =
         update.where(condition.eq(Product::setId, "string-id")).update(product, fields);
     return Rs.ok(affectRow);
@@ -79,7 +76,7 @@ public class QueryUpdateController {
     conditionGroup.orEq(Product::setId, "string-id");
     conditionGroup.orEq(Product::setName, "name");
     // 获取Update实例
-    final Query<Product> query = prototypeBean.query(Product.class);
+    final Query<Product> query = Query.getInstance(Product.class);
     final List<Product> products =
         query
             .select(Fields.of(Product.class))
@@ -98,7 +95,7 @@ public class QueryUpdateController {
             .orEq(Product::setId, "ramer")
             .orLike(Product::setName, "a%");
     condition.and(group);
-    final Query<Product> query = prototypeBean.query(Product.class);
+    final Query<Product> query = Query.getInstance(Product.class);
     final List<Product> products =
         query.select(Fields.of(Product.class)).where(condition).fetchAll(Product.class);
     log.info("query2:[{}]", products);
@@ -109,7 +106,7 @@ public class QueryUpdateController {
   @ApiOperation("使用Query,指定字段")
   public Rs<List<IdNameResponse>> query3() {
     final LambdaCondition<Product> condition = LambdaCondition.of(Product.class);
-    final Query<Product> query = prototypeBean.query(Product.class);
+    final Query<Product> query = Query.getInstance(Product.class);
     Fields<Product> fields = Fields.of(Product.class).include(Product::getId, Product::getName);
     final List<IdNameResponse> products =
         query
@@ -123,7 +120,7 @@ public class QueryUpdateController {
   @ApiOperation("使用Query,返回基本类型")
   public Rs<List<Long>> query4() {
     final LambdaCondition<Foo> condition = LambdaCondition.of(Foo.class);
-    final Query<Foo> query = prototypeBean.query(Foo.class);
+    final Query<Foo> query = Query.getInstance(Foo.class);
     final List<Long> ids =
         query
             .select(Fields.of(Foo.class).include(Foo::getId))
@@ -136,7 +133,7 @@ public class QueryUpdateController {
   @ApiOperation("使用Query,使用StringCondition构造条件")
   public Rs<List<Product>> query5() {
     final StringCondition<Product> condition = StringCondition.of(Product.class);
-    final Query<Product> query = prototypeBean.query(Product.class);
+    final Query<Product> query = Query.getInstance(Product.class);
     final List<Product> products =
         query
             .select(Fields.of(Product.class))

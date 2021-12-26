@@ -29,7 +29,7 @@ public class WindContext {
 
   private DbMetaData dbMetaData;
 
-  private WindConfiguration windConfiguration;
+  private Configuration configuration;
 
   private Executor executor;
 }

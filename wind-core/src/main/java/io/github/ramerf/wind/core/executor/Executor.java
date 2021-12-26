@@ -41,8 +41,7 @@ public interface Executor {
    * @return the r
    * @throws DataAccessException the data access exception
    */
-  <T, R> R fetchOne(
-      @Nonnull SqlParam<T> sqlParam, ResultHandler<Map<String, Object>, R> resultHandler)
+  <T, R> R fetchOne(@Nonnull SqlParam<T> sqlParam, ResultHandler<R> resultHandler)
       throws DataAccessException;
 
   /**
@@ -77,17 +76,7 @@ public interface Executor {
    */
   <T> long fetchCount(@Nonnull SqlParam<T> sqlParam);
 
-  /**
-   * Query for object t.
-   *
-   * @param <T> the type parameter
-   * @param sqlParam the sql param
-   * @param args the args
-   * @param requiredType the required type
-   * @return the t
-   * @throws DataAccessException the data access exception
-   */
-  <T> T queryForObject(@Nonnull final SqlParam<?> sqlParam, Object[] args, Class<T> requiredType)
+  <T, R> R queryForObject(@Nonnull final SqlParam<?> sqlParam, Object[] args)
       throws DataAccessException;
 
   /**
@@ -112,36 +101,10 @@ public interface Executor {
   List<Map<String, Object>> queryForList(
       @Nonnull final SqlParam<?> sqlParam, @Nullable Object... args) throws DataAccessException;
 
-  /**
-   * Query t.
-   *
-   * @param <T> the type parameter
-   * @param sqlParam the sql param
-   * @param pss the pss
-   * @param rse the rse
-   * @return the t
-   * @throws DataAccessException the data access exception
-   */
-  <T> T query(
-      @Nonnull final SqlParam<?> sqlParam,
-      @Nullable PreparedStatementSetter pss,
-      ResultSetExtractor<T> rse)
-      throws DataAccessException;
-
-  /**
-   * Query list.
-   *
-   * @param <T> the type parameter
-   * @param sqlParam the sql param
-   * @param pss the pss
-   * @param rowMapper the row mapper
-   * @return the list
-   * @throws DataAccessException the data access exception
-   */
   <T> List<T> query(
       @Nonnull final SqlParam<?> sqlParam,
       @Nullable PreparedStatementSetter pss,
-      RowMapper<T> rowMapper)
+      ResultHandler<T> resultHandler)
       throws DataAccessException;
 
   /**
@@ -197,7 +160,7 @@ public interface Executor {
     /** 查询的实体对象,用于缓存操作. */
     protected Class<T> entityClazz;
     /** 参数填充起始位置. */
-    protected AtomicInteger startIndex;
+    protected AtomicInteger startIndex = new AtomicInteger(1);
     /** sql条件,可获取占位符对应的值,用于redis缓存唯一key生成.{@link Condition#getValues(AtomicInteger)} */
     protected Condition<?, ?> condition;
     /** 执行聚合函数,可为空. */

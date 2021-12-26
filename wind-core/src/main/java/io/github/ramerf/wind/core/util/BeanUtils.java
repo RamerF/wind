@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.function.FieldFunction;
 import java.beans.FeatureDescriptor;
 import java.beans.PropertyDescriptor;
@@ -206,7 +205,7 @@ public final class BeanUtils {
       log.warn("initial:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
     }
-    throw new CommonException(String.format("无法实例化对象[%s]", classPath));
+    throw new CommonException(String.format("Cannot initial object class [%s]", classPath));
   }
 
   /**
@@ -352,6 +351,23 @@ public final class BeanUtils {
     return classes;
   }
 
+  /** 获取类所有方法,包括父类 */
+  public static Set<Method> retrieveMethods(@Nonnull Class<?> clazz) {
+    Set<Method> methods = new HashSet<>();
+    do {
+      methods.addAll(Arrays.asList(clazz.getDeclaredMethods()));
+    } while ((clazz = clazz.getSuperclass()) != null && !clazz.equals(Object.class));
+    return methods;
+  }
+
+  /** 获取指定类中包含指定注解的方法 */
+  public static Set<Method> scanMethodsWithAnnotation(
+      final Class<?> clazz, final Class<? extends Annotation> annotationClass) throws IOException {
+    return retrieveMethods(clazz).stream()
+        .filter(o -> o.getAnnotation(annotationClass) != null)
+        .collect(Collectors.toSet());
+  }
+
   /**
    * 对于 {@link Method#invoke(Object, Object...)}<br>
    * 用法:
@@ -464,7 +480,7 @@ public final class BeanUtils {
     if (boolean.class.equals(clazz)) {
       return false;
     }
-    throw new SimpleException("无法获取默认值:" + clazz);
+    throw new CommonException("无法获取默认值:" + clazz);
   }
 
   /** Call {@link org.springframework.beans.BeanUtils#copyProperties(Object, Object, String...)} */

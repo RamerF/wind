@@ -1,9 +1,7 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.util.CollectionUtils;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.sql.*;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,19 +13,19 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2019 /12/27
  */
 @Slf4j
-public class PrimitiveResultHandler<E> extends AbstractResultHandler<Map<String, Object>, E> {
+public class PrimitiveResultHandler<E> extends AbstractResultHandler<E> {
+  private final Class<E> clazz;
 
   public PrimitiveResultHandler(@Nonnull final Class<E> clazz) {
-    super(clazz);
+    this.clazz = clazz;
   }
 
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public E handle(Map<String, Object> map) {
-    if (CollectionUtils.isEmpty(map)) {
-      return null;
-    }
-    final Object value = map.entrySet().stream().findFirst().map(Entry::getValue).orElse(null);
+  public E handle(ResultSet rs) throws SQLException {
+    ResultSetMetaData rsmd = rs.getMetaData();
+    int columnCount = rsmd.getColumnCount();
+    final Object value = rs.getObject(1);
     if (value == null) {
       return null;
     }

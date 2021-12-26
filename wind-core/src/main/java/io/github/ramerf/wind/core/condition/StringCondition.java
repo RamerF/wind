@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
 import io.github.ramerf.wind.core.helper.SqlHelper;
-import io.github.ramerf.wind.core.helper.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;

@@ -2,13 +2,13 @@ package io.github.ramerf.wind.core.entity.pojo;
 
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.executor.DataAccessException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 
 /**
  * 实体域.
@@ -110,11 +110,6 @@ public class Domain<T, ID extends Serializable> {
     return genericService().delete(condition);
   }
 
-  /**
-   * Gets update.
-   *
-   * @return the update
-   */
   private T instance() {
     //noinspection unchecked
     return (T) this;

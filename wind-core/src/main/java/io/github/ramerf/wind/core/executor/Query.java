@@ -2,8 +2,7 @@ package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
-import io.github.ramerf.wind.core.config.PrototypeBean;
-import io.github.ramerf.wind.core.config.WindConfiguration;
+import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.handler.ResultHandlerUtil;
@@ -52,17 +51,12 @@ public class Query<T> {
   private Pageable pageable;
 
   private static Executor executor;
-  private static WindConfiguration configuration;
-  private static PrototypeBean prototypeBean;
+  private static Configuration configuration;
   private final Class<T> clazz;
 
-  public static void initial(
-      final Executor executor,
-      final WindConfiguration configuration,
-      final PrototypeBean prototypeBean) {
+  public static void initial(final Executor executor, final Configuration configuration) {
     Query.executor = executor;
     Query.configuration = configuration;
-    Query.prototypeBean = prototypeBean;
   }
 
   public Query(final Class<T> clazz) {
@@ -75,7 +69,7 @@ public class Query<T> {
    * @return the instance
    */
   public static <T> Query<T> getInstance(final Class<T> clazz) {
-    return prototypeBean.query(clazz);
+    return new Query<>(clazz);
   }
 
   /** 指定查询列. */
@@ -86,32 +80,32 @@ public class Query<T> {
 
   /** 自定义sql查询单个. */
   public <R> R fetchOneBySql(final String sql, final Class<R> respClazz, final Object... args) {
-    final Map<String, Object> map =
-        executor.queryForMap(new SqlParam<T>().setSql(sql).setClazz(respClazz), args);
-    if (CollectionUtils.isEmpty(map)) {
-      return null;
-    }
-    return ResultHandlerUtil.handle(map, respClazz);
+    List<R> rs = fetchListBySql(sql, respClazz, args);
+    return rs.isEmpty() ? null : rs.get(0);
   }
 
   /** 自定义sql查询列表. */
   public <R> List<R> fetchListBySql(
       final String sql, final Class<R> respClazz, final Object... args) {
-    final List<Map<String, Object>> list =
-        executor.queryForList(new SqlParam<T>().setSql(sql).setClazz(respClazz), args);
-    if (CollectionUtils.isEmpty(list)) {
-      return Collections.emptyList();
-    }
-    return ResultHandlerUtil.handle(list, respClazz);
+    return executor.query(
+        new SqlParam<T>().setSql(sql).setClazz(respClazz),
+        ps -> {
+          for (int i = 1; i < args.length + 1; i++) {
+            JdbcUtils.setObject(ps, i, args[i - 1]);
+          }
+        },
+        ResultHandlerUtil.getResultHandler(respClazz));
   }
 
   /** 自定义sql查询count. */
   public long countBySql(final String sql, final Object... args) {
     return Optional.ofNullable(
-            executor.queryForObject(
-                new SqlParam<T>().setSql(sql).setAggregateFunction(AggregateSqlFunction.COUNT),
-                args,
-                Long.class))
+            executor.<T, Long>queryForObject(
+                new SqlParam<T>()
+                    .setClazz(Long.class)
+                    .setSql(sql)
+                    .setAggregateFunction(AggregateSqlFunction.COUNT),
+                args))
         .orElseGet(() -> (Long) BeanUtils.getPrimitiveDefaultValue(long.class));
   }
 
@@ -167,8 +161,7 @@ public class Query<T> {
      * @param clazz the clazz
      * @return the r
      */
-    public <R> R fetchOne(
-        final Class<R> clazz, final ResultHandler<Map<String, Object>, R> resultHandler) {
+    public <R> R fetchOne(final Class<R> clazz, final ResultHandler<R> resultHandler) {
       final String orderByClause = getOrderByClause();
       final String conditionClause = getConditionClause();
       final String limitClause = getLimitClause();

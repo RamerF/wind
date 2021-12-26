@@ -72,11 +72,11 @@ public final class EntityInfo {
 
   private Dialect dialect;
 
-  public static EntityInfo of(@Nonnull final WindConfiguration configuration) {
+  public static EntityInfo of(@Nonnull final Configuration configuration) {
     return of(configuration, null);
   }
 
-  public static EntityInfo of(@Nonnull final WindConfiguration configuration, Dialect dialect) {
+  public static EntityInfo of(@Nonnull final Configuration configuration, Dialect dialect) {
     EntityInfo entityInfo = new EntityInfo();
     entityInfo.dialect = dialect;
     entityInfo.setLogicDeleteProp(LogicDeleteProp.of(configuration));
@@ -84,7 +84,7 @@ public final class EntityInfo {
   }
 
   public static EntityInfo of(
-      @Nonnull final Class<?> clazz, final WindConfiguration configuration, Dialect dialect) {
+      @Nonnull final Class<?> clazz, final Configuration configuration, Dialect dialect) {
     EntityInfo entityInfo = new EntityInfo();
     entityInfo.setLogicDeleteProp(
         LogicDeleteProp.of(clazz.getAnnotation(TableInfo.class), configuration));

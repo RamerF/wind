@@ -1,9 +1,11 @@
 package io.github.ramerf.wind.core.config;
 
+import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.support.IdGenerator;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
 /**
@@ -14,8 +16,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  */
 @Data
 @Slf4j
-@ConfigurationProperties("wind")
-public class WindConfiguration {
+public class Configuration {
 
   /** 逻辑删除配置. */
   @NestedConfigurationProperty private LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
@@ -41,8 +42,8 @@ public class WindConfiguration {
   /** 是否启用默认mvc配置. */
   private boolean enableWebMvcConfigurer = true;
 
-  /** 自动更新表模式. */
-  private DdlAuto ddlAuto;
+  /** 表更新模式. */
+  private DdlAuto ddlAuto = DdlAuto.NONE;
 
   /** 数据库方言全路径. */
   private String dialect;
@@ -50,42 +51,16 @@ public class WindConfiguration {
   /** 新增/更新时写入值为null的属性,默认写入所有字段. */
   private boolean writeNullProp = true;
 
-  /** 雪花分布式id. */
-  @NestedConfigurationProperty private SnowflakeProp snowflakeProp = new SnowflakeProp();
+  /** 全局id生成器,实体可以单独指定{@link TableInfo#idGenerator()} */
+  @Getter(AccessLevel.NONE)
+  private String idGenerator;
 
-  /** 缓存配置. */
-  @NestedConfigurationProperty private CacheConfig cache = new CacheConfig();
-
-  /**
-   * Redis 缓存配置.
-   *
-   * @since 2020.08.23
-   * @author ramer
-   */
-  @Setter
-  @Getter
-  public static class CacheConfig {
-    /** 是否启用. */
-    private CacheType type = CacheType.NONE;
-
-    /** 缓存key前缀. */
-    private String keyPrefix = "io.github.ramerf.wind";
+  public IdGenerator getIdGenerator() {
+    return idGenerator != null
+        ? BeanUtils.initial(this.idGenerator)
+        : IdGenerator.VOID_ID_GENERATOR;
   }
 
-  public enum CacheType {
-    /** none cache. */
-    NONE,
-    /** redis. */
-    REDIS,
-    /** memory. */
-    MEMORY,
-  }
-
-  /**
-   * The enum Ddl auto.
-   *
-   * @author ramer
-   */
   public enum DdlAuto {
     /** Create ddl auto. */
     CREATE,

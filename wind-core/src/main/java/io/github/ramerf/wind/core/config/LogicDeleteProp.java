@@ -30,7 +30,7 @@ public class LogicDeleteProp {
   /** 逻辑已删除值. */
   private boolean deleted = true;
 
-  public static LogicDeleteProp of(@Nonnull final WindConfiguration configuration) {
+  public static LogicDeleteProp of(@Nonnull final Configuration configuration) {
     LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
     logicDeleteProp.setEnable(configuration.getLogicDeleteProp().isEnable());
     logicDeleteProp.setFieldName(configuration.getLogicDeleteProp().getFieldName());
@@ -40,7 +40,7 @@ public class LogicDeleteProp {
   }
 
   public static LogicDeleteProp of(
-      final TableInfo tableInfo, @Nonnull final WindConfiguration configuration) {
+      final TableInfo tableInfo, @Nonnull final Configuration configuration) {
     LogicDelete logicDelete;
     // 如果fieldName为默认值XX_FIELD_NAME_XX,说明未指定该属性,使用全局配置
     if (tableInfo == null || (logicDelete = tableInfo.logicDelete()).fieldName().equals("")) {
