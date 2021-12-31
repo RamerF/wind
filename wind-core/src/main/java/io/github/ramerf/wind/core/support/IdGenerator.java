@@ -14,7 +14,7 @@ public interface IdGenerator {
   IdGenerator AUTO_INCREMENT_ID_GENERATOR = new AutoIncrementIdGenerator();
 
   /** 零值,该值表示用户未指定 */
-  IdGenerator VOID_ID_GENERATOR = new VoidIdGenerator();
+  IdGenerator VOID_ID_GENERATOR = VoidIdGenerator.INSTANCE;
 
   /**
    * 生成id.
@@ -33,6 +33,10 @@ public interface IdGenerator {
   }
 
   class VoidIdGenerator implements IdGenerator {
+    private static final VoidIdGenerator INSTANCE = new VoidIdGenerator();
+
+    private VoidIdGenerator() {}
+
     @Override
     public Object nextId(Object obj) {
       throw new CommonException("Void id generator");

@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.executor;
 
-import io.github.ramerf.wind.core.exception.NotImplementedException;
 import io.github.ramerf.wind.core.exception.TooManyResultException;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.util.*;
@@ -12,9 +11,8 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
-import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.lang.Nullable;
 
 /**
  * The jdbc template executor.
@@ -180,14 +178,13 @@ public class SimpleJdbcExecutor implements Executor {
       final ResultHandler<T> resultHandler)
       throws DataAccessException {
     Connection connection = DataSourceUtils.getConnection(dataSource);
-    PreparedStatement preparedStatement =
-        DataSourceUtils.preparedStatement(connection, sqlParam.sql);
+    PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sqlParam.sql);
     if (pss != null) {
-      pss.setValues(preparedStatement);
+      pss.setValues(ps);
     }
     ResultSet resultSet;
     try {
-      resultSet = preparedStatement.executeQuery();
+      resultSet = ps.executeQuery();
     } catch (SQLException e) {
       DataSourceUtils.release(connection);
       throw new DataAccessException("Fail to execute query:" + sqlParam.sql, e);
@@ -201,7 +198,7 @@ public class SimpleJdbcExecutor implements Executor {
       throw new DataAccessException("Fail to handle resultSet:" + sqlParam.sql, e);
     } finally {
       DataSourceUtils.release(resultSet);
-      DataSourceUtils.release(preparedStatement);
+      DataSourceUtils.release(ps);
       DataSourceUtils.release(connection);
     }
     return ts;
@@ -216,14 +213,24 @@ public class SimpleJdbcExecutor implements Executor {
     return aroundWrite(
         clazz,
         () -> {
-          PreparedStatement preparedStatement =
-              psc.createPreparedStatement(DataSourceUtils.getConnection(dataSource));
+          Connection connection = DataSourceUtils.getConnection(dataSource);
+          PreparedStatement ps = psc.createPreparedStatement(connection);
           try {
-            return preparedStatement.executeUpdate();
+            List<Map<String, Object>> generatedKeys = generatedKeyHolder.getKeyList();
+            generatedKeys.clear();
+
+            int rows = ps.executeUpdate();
+            MapResultHandler resultHandler = new MapResultHandler();
+            ResultSet resultSet = ps.getGeneratedKeys();
+            while (resultSet.next()) {
+              generatedKeys.add(resultHandler.handle(resultSet));
+            }
+            return rows;
           } catch (SQLException e) {
             throw new DataAccessException("Fail to exexute update", e);
           } finally {
-            DataSourceUtils.release(preparedStatement);
+            DataSourceUtils.release(ps);
+            DataSourceUtils.release(connection);
           }
         });
   }
@@ -232,8 +239,34 @@ public class SimpleJdbcExecutor implements Executor {
   public int[] batchUpdate(
       @Nonnull final Class<?> clazz, String sql, final BatchPreparedStatementSetter pss)
       throws DataAccessException {
-    //    return aroundWrite(clazz, () -> jdbcTemplate.batchUpdate(sql, pss));
-    throw new NotImplementedException("batchUpdate");
+    return aroundWrite(
+        clazz,
+        () -> {
+          Connection connection = DataSourceUtils.getConnection(dataSource);
+          PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
+          int batchSize = pss.getBatchSize();
+          try {
+            if (JdbcUtils.supportsBatchUpdates(connection)) {
+              for (int i = 0; i < batchSize; i++) {
+                pss.setValues(ps, i);
+                ps.addBatch();
+              }
+              return ps.executeBatch();
+            } else {
+              int[] rowsAffectedArray = new int[batchSize];
+              for (int i = 0; i < batchSize; i++) {
+                pss.setValues(ps, i);
+                rowsAffectedArray[i] = ps.executeUpdate();
+              }
+              return rowsAffectedArray;
+            }
+          } catch (SQLException e) {
+            throw new DataAccessException("Fail to execute batch update", e);
+          } finally {
+            DataSourceUtils.release(ps);
+            DataSourceUtils.release(connection);
+          }
+        });
   }
 
   @Override
@@ -242,11 +275,23 @@ public class SimpleJdbcExecutor implements Executor {
   }
 
   @Override
-  public int update(
-      @Nonnull final Class<?> clazz, String sql, @Nullable PreparedStatementSetter pss)
+  public int update(@Nonnull final Class<?> clazz, String sql, @Nonnull PreparedStatementSetter pss)
       throws DataAccessException {
-    //    return aroundWrite(clazz, () -> jdbcTemplate.update(sql, pss));
-    throw new NotImplementedException("update");
+    return aroundWrite(
+        clazz,
+        () -> {
+          Connection connection = DataSourceUtils.getConnection(dataSource);
+          PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
+          try {
+            pss.setValues(ps);
+            return ps.executeUpdate();
+          } catch (SQLException e) {
+            throw new DataAccessException("Fail to exexute update", e);
+          } finally {
+            DataSourceUtils.release(ps);
+            DataSourceUtils.release(connection);
+          }
+        });
   }
 
   private <T> T aroundRead(@Nonnull final SqlParam<?> sqlParam, Supplier<T> supplier) {

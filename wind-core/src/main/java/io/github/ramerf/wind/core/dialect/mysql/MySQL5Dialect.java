@@ -18,6 +18,7 @@ public class MySQL5Dialect extends MySQLDialect {
     // registerColumnType(String.class, 65535, "varchar($l)");
   }
 
+  @Override
   protected String getEngineKeyword() {
     return "engine";
   }

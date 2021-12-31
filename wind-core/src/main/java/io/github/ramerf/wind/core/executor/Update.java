@@ -176,7 +176,7 @@ public final class Update<T> {
   }
 
   /**
-   * 批量创建.
+   * 批量创建,TODO WARN 填充主键 keyHolder.getKeyList().
    *
    * @param ts the ts
    * @param fields the fields
@@ -188,9 +188,13 @@ public final class Update<T> {
     }
     ts.forEach(
         t -> {
+          final Object id = idGenerator.nextId(t);
+          if (id != null) {
+            // 如果主键设置失败,不需要处理
+            BeanUtils.setValue(t, idField, id, e -> {});
+          }
           setCurrentTime(t, entityInfo.getCreateTimeField());
           setCurrentTime(t, entityInfo.getUpdateTimeField());
-          BeanUtils.setValue(t, idField, idGenerator.nextId(t), e -> {});
         });
     // 取第一条记录获取批量保存sql
     final T t = ts.get(0);

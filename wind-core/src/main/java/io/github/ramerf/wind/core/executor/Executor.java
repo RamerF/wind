@@ -131,18 +131,15 @@ public interface Executor {
    * @return the int
    * @throws DataAccessException the data access exception
    */
-  int update(@Nonnull final Class<?> clazz, String sql, @Nullable PreparedStatementSetter pss)
+  int update(@Nonnull final Class<?> clazz, String sql, @Nonnull PreparedStatementSetter pss)
       throws DataAccessException;
 
-  /**
-   * Batch update int [ ].
-   *
-   * @param clazz the clazz
-   * @param sql the sql
-   * @param pss the pss
-   * @return the int [ ]
-   * @throws DataAccessException the data access exception
-   */
+  /** 批量更新. */
+  int[] batchUpdate(
+      @Nonnull final Class<?> clazz, String sql, final BatchPreparedStatementSetter pss)
+      throws DataAccessException;
+
+  /** 批量创建,填充主键. */
   int[] batchUpdate(
       @Nonnull final Class<?> clazz, String sql, final BatchPreparedStatementSetter pss)
       throws DataAccessException;
