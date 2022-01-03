@@ -5,6 +5,7 @@ import io.github.ramerf.wind.core.annotation.TableIndexes.Index;
 import io.github.ramerf.wind.core.annotation.TableIndexes.IndexField;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.entity.pojo.Domain;
+import io.github.ramerf.wind.core.support.UUIDGenerator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -19,7 +20,9 @@ import org.springframework.data.domain.Sort.Direction;
  * @author ramer
  * @since 12/09/2020
  */
-@TableInfo(logicDelete = @LogicDelete(enable = true, fieldName = "deleted"))
+@TableInfo(
+    logicDelete = @LogicDelete(enable = true, fieldName = "deleted"),
+    idGenerator = UUIDGenerator.class)
 @TableIndexes({
   @Index(
       name = "idx_name",

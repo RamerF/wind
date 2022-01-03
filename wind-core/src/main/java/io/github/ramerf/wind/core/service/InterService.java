@@ -15,14 +15,6 @@ import java.io.Serializable;
 public interface InterService<T, ID extends Serializable> {
 
   /**
-   * 过滤某些属性可能包含的特殊字符.
-   *
-   * @param trans 原始对象
-   * @param filtered 过滤后的对象
-   */
-  default <E> void textFilter(E trans, E filtered) {}
-
-  /**
    * Gets query.
    *
    * @return the query

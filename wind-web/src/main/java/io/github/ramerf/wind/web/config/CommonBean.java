@@ -1,7 +1,5 @@
 package io.github.ramerf.wind.web.config;
 
-import io.github.ramerf.wind.core.config.RedisCacheConfiguration;
-import io.github.ramerf.wind.core.config.RedisConfiguration;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
@@ -9,14 +7,12 @@ import io.github.ramerf.wind.core.support.StringToEnumConverterFactory;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -29,7 +25,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Slf4j
 @Configuration("wind_web_common_bean")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
-@AutoConfigureAfter({RedisTemplate.class, RedisConfiguration.class, RedisCacheConfiguration.class})
 public class CommonBean {
 
   /**

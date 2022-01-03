@@ -18,6 +18,7 @@ package io.github.ramerf.wind.core.executor;
 
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.lang.Nullable;
 
@@ -65,7 +66,7 @@ public interface KeyHolder {
    * @return the Map of generated keys for a single row
    * @throws InvalidDataAccessApiUsageException if keys for multiple rows are encountered
    */
-  @Nullable
+  @Nonnull
   Map<String, Object> getKeys() throws InvalidDataAccessApiUsageException;
 
   /**

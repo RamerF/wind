@@ -7,7 +7,7 @@ package io.github.ramerf.wind.core.support;
  * @since 2020 /5/20
  */
 public class SnowflakeIdGenerator implements IdGenerator {
-  private final SnowflakeIdWorker snowflakeIdWorker = new SnowflakeIdWorker();
+  private final SnowflakeIdWorker snowflakeIdWorker = new SnowflakeIdWorker(1, 1);
 
   @Override
   public Object nextId(final Object obj) {

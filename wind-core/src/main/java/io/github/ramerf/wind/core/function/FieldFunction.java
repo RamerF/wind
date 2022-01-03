@@ -7,12 +7,11 @@ import java.lang.invoke.SerializedLambda;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 
 /**
  * 用于bean属性setter {@link SetterFunction}/getter {@link GetterFunction}方法 函数式接口
@@ -109,45 +108,5 @@ public interface FieldFunction extends Serializable {
     // if (this instanceof IConsumer) {}
 
     return EntityHelper.getColumn(this);
-  }
-
-  @Data
-  class CachedIConsumer {
-    private Field field;
-    private static final Map<Field, WeakReference<SetterFunction<?, ?>>> CONSUMER_MAP =
-        new ConcurrentHashMap<>(new WeakHashMap<>());
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static boolean invoke(final Field field, final Object t, final Object value) {
-      WeakReference<SetterFunction<?, ?>> reference = CONSUMER_MAP.get(field);
-      SetterFunction consumer;
-      if (reference != null && (consumer = reference.get()) != null) {
-        consumer.accept(t, value);
-        return true;
-      }
-      return false;
-    }
-
-    public static void put(final SetterFunction<?, ?> setterFunction) {
-      Field field = setterFunction.getField();
-      Class<?> clazz = field.getDeclaringClass();
-      Optional.ofNullable(CONSUMER_MAP.get(field))
-          .map(Reference::get)
-          .orElseGet(
-              () -> {
-                CONSUMER_MAP.put(field, new WeakReference<>(setterFunction));
-                return null;
-              });
-    }
-
-    public static void main(String[] args) throws NoSuchFieldException {
-      User user = new User();
-      SetterFunction<User, String> name = User::setName;
-      log.info("main:[{}]", user.getName());
-      //      CachedIConsumer.put(name);
-      Field field = User.class.getDeclaredField("name");
-      CachedIConsumer.invoke(field, user, "ramer");
-      log.info("main:[{}]", user.getName());
-    }
   }
 }

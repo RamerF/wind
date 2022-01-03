@@ -1,13 +1,12 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.*;
-import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
-import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -18,13 +17,12 @@ import java.sql.*;
 import java.time.*;
 import java.util.Date;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 
 import static java.util.stream.Collectors.toList;
 
@@ -57,11 +55,10 @@ public final class Update<T> {
   private final Class<T> clazz;
   private Condition<T, ?> condition;
   private Fields<T> fields;
+  private final IdGenerator idGenerator;
   private final EntityInfo entityInfo;
   private static Executor executor;
   private static Configuration configuration;
-  private static IdGenerator idGenerator;
-  private static Dialect dialect;
   private final Field idField;
 
   public Update(@Nonnull final Class<T> clazz) {
@@ -69,17 +66,12 @@ public final class Update<T> {
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
     this.idField = this.entityInfo.getIdColumn().getField();
     this.condition = LambdaCondition.of(clazz);
+    this.idGenerator = this.entityInfo.getIdGenerator();
   }
 
-  public static void initial(
-      final Executor executor,
-      final Configuration configuration,
-      final IdGenerator idGenerator,
-      final Dialect dialect) {
+  public static void initial(final Executor executor, final Configuration configuration) {
     Update.executor = executor;
     Update.configuration = configuration;
-    Update.idGenerator = idGenerator;
-    Update.dialect = dialect;
   }
 
   public static <T> Update<T> getInstance(final Class<T> clazz) {
@@ -94,8 +86,6 @@ public final class Update<T> {
   /**
    * 创建.
    *
-   * @param t the t
-   * @return the t
    * @throws DataAccessException 如果执行失败
    */
   public int create(@Nonnull final T t) throws DataAccessException {
@@ -105,17 +95,18 @@ public final class Update<T> {
   /**
    * 创建.
    *
-   * @param t the t
-   * @param fields the fields
    * @throws DataAccessException 如果执行失败
    */
   public int create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
-    final Object id = idGenerator.nextId(t);
-    if (id != null) {
-      // 如果主键设置失败,不需要处理
-      BeanUtils.setValue(t, idField, id, e -> {});
+    boolean returnPk = true;
+    final Object existId = BeanUtils.getValue(t, idField, null);
+    if (existId == null) {
+      final Object id = idGenerator.nextId(t);
+      if (id != null) {
+        returnPk = false;
+        BeanUtils.setValue(t, idField, id, null);
+      }
     }
-    // TODO POST 如果sql ddl 包含default这里就不需要设置
     setCurrentTime(t, entityInfo.getCreateTimeField());
     setCurrentTime(t, entityInfo.getUpdateTimeField());
     // 插入列
@@ -142,7 +133,6 @@ public final class Update<T> {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     final int update =
         executor.update(
-            clazz,
             connection -> {
               final PreparedStatement ps =
                   DataSourceUtils.preparedStatement(
@@ -152,16 +142,16 @@ public final class Update<T> {
             },
             keyHolder);
     // 写入数据库生成的主键
-    if (id == null) {
-      Object idValue = Objects.requireNonNull(keyHolder.getKeys()).get(dialect.getKeyHolderKey());
-      if (idValue instanceof BigInteger) {
-        idValue = ((BigInteger) idValue).longValue();
+    if (returnPk) {
+      // dialect.getKeyHolderKey()
+      Object returnId = keyHolder.getKeys().get(entityInfo.getIdColumn().getName());
+      if (returnId instanceof BigInteger) {
+        returnId = ((BigInteger) returnId).longValue();
       }
-      BeanUtils.setValue(t, idField, idValue, null);
+      if (returnId != null) {
+        BeanUtils.setValue(t, idField, returnId, null);
+      }
     }
-    /// if (update != 1 || BeanUtils.getValue(t, idField, null) == null) {
-    //   throw new CreateNoIdDataAccessException("No identity return");
-    // }
     return update;
   }
 
@@ -186,12 +176,16 @@ public final class Update<T> {
     if (CollectionUtils.isEmpty(ts)) {
       return Optional.empty();
     }
+    AtomicBoolean returnPk = new AtomicBoolean(true);
     ts.forEach(
         t -> {
-          final Object id = idGenerator.nextId(t);
-          if (id != null) {
-            // 如果主键设置失败,不需要处理
-            BeanUtils.setValue(t, idField, id, e -> {});
+          final Object idValue = BeanUtils.getValue(t, idField, null);
+          if (idValue == null) {
+            final Object id = idGenerator.nextId(t);
+            if (id != null) {
+              returnPk.set(false);
+              BeanUtils.setValue(t, idField, id, null);
+            }
           }
           setCurrentTime(t, entityInfo.getCreateTimeField());
           setCurrentTime(t, entityInfo.getUpdateTimeField());
@@ -211,7 +205,7 @@ public final class Update<T> {
         });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql = String.format(sql, entityInfo.getName(), columns, valueMarks);
-
+    KeyHolder keyHolder = new GeneratedKeyHolder();
     AtomicInteger createRow = new AtomicInteger();
     BatchExecUtil.batchExec(
         "create batch",
@@ -220,8 +214,9 @@ public final class Update<T> {
         execList -> {
           final int[] batchUpdate =
               executor.batchUpdate(
-                  clazz,
-                  execSql,
+                  connection ->
+                      DataSourceUtils.preparedStatement(
+                          connection, execSql, Statement.RETURN_GENERATED_KEYS),
                   new BatchPreparedStatementSetter() {
                     @Override
                     public void setValues(@Nonnull final PreparedStatement ps, final int i) {
@@ -236,8 +231,20 @@ public final class Update<T> {
                     public int getBatchSize() {
                       return execList.size();
                     }
-                  });
-
+                  },
+                  keyHolder);
+          final List<Map<String, Object>> list = keyHolder.getKeyList();
+          if (returnPk.get()) {
+            final String idName = entityInfo.getIdColumn().getName();
+            for (int i = 0; i < list.size(); i++) {
+              final Map<String, Object> columnValueMap = list.get(i);
+              Object idValue = columnValueMap.get(idName);
+              if (idValue instanceof BigInteger) {
+                idValue = ((BigInteger) idValue).longValue();
+              }
+              BeanUtils.setValue(ts.get(i), idField, idValue, null);
+            }
+          }
           /*
            * From java.sql.Statement#executeBatch().
            *
@@ -316,7 +323,6 @@ public final class Update<T> {
       log.debug("update:[{}]", execSql);
     }
     return executor.update(
-        clazz,
         execSql,
         ps -> {
           list.forEach(consumer -> consumer.accept(ps));
@@ -373,7 +379,6 @@ public final class Update<T> {
         execList -> {
           final int[] batchUpdate =
               executor.batchUpdate(
-                  clazz,
                   execSql,
                   new BatchPreparedStatementSetter() {
                     @Override
@@ -417,7 +422,6 @@ public final class Update<T> {
     if (!entityInfo.getLogicDeleteProp().isEnable()) {
       final String delSql = "delete from %s where %s";
       return executor.update(
-          clazz,
           String.format(delSql, entityInfo.getName(), condition.getString()),
           ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
     }
@@ -434,7 +438,6 @@ public final class Update<T> {
               entityInfo.getFieldColumnMap().get(updateTimeField).getName(),
               condition.getString());
       return executor.update(
-          clazz,
           updateString,
           ps -> {
             JdbcUtils.setObject(ps, 1, getCurrentTimeValue(updateTimeField));
@@ -449,7 +452,6 @@ public final class Update<T> {
               entityInfo.getLogicDeleteProp().isDeleted(),
               condition.getString());
       return executor.update(
-          clazz,
           updateString,
           ps -> condition.getValues(new AtomicInteger(1)).forEach(val -> val.accept(ps)));
     }
@@ -485,11 +487,7 @@ public final class Update<T> {
                 .collect(toList());
       }
     }
-    Object id = null;
-    try {
-      id = idField.get(t);
-    } catch (IllegalAccessException ignored) {
-    }
+    Object id = BeanUtils.getValue(t, idField, null);
     // 自增id,需要去掉
     if (id == null) {
       savingFields.remove(idField);

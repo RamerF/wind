@@ -14,7 +14,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.lang.Nullable;
 
 /**
@@ -110,38 +109,24 @@ public interface Executor {
   /**
    * Update int.
    *
-   * @param clazz the clazz
    * @param psc the psc
    * @param generatedKeyHolder the generated key holder
    * @return the int
    * @throws DataAccessException the data access exception
    */
-  int update(
-      @Nonnull final Class<?> clazz,
-      final PreparedStatementCreator psc,
-      final KeyHolder generatedKeyHolder)
+  int update(final PreparedStatementCreator psc, final KeyHolder generatedKeyHolder)
       throws DataAccessException;
 
-  /**
-   * Update int.
-   *
-   * @param clazz the clazz
-   * @param sql the sql
-   * @param pss the pss
-   * @return the int
-   * @throws DataAccessException the data access exception
-   */
-  int update(@Nonnull final Class<?> clazz, String sql, @Nonnull PreparedStatementSetter pss)
-      throws DataAccessException;
+  int update(String sql, @Nonnull PreparedStatementSetter pss) throws DataAccessException;
 
   /** 批量更新. */
-  int[] batchUpdate(
-      @Nonnull final Class<?> clazz, String sql, final BatchPreparedStatementSetter pss)
-      throws DataAccessException;
+  int[] batchUpdate(String sql, final BatchPreparedStatementSetter pss) throws DataAccessException;
 
   /** 批量创建,填充主键. */
   int[] batchUpdate(
-      @Nonnull final Class<?> clazz, String sql, final BatchPreparedStatementSetter pss)
+      PreparedStatementCreator psc,
+      final BatchPreparedStatementSetter pss,
+      final KeyHolder generatedKeyHolder)
       throws DataAccessException;
 
   JdbcTemplate getJdbcTemplate();

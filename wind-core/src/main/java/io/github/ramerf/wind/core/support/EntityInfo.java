@@ -6,6 +6,8 @@ import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
+import io.github.ramerf.wind.core.support.IdGenerator.VoidIdGenerator;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -24,7 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class EntityInfo {
   private Class<?> clazz;
-
+  /** 主键生成类. */
+  private IdGenerator idGenerator;
   /** 表名. */
   private String name;
 
@@ -86,18 +89,21 @@ public final class EntityInfo {
   public static EntityInfo of(
       @Nonnull final Class<?> clazz, final Configuration configuration, Dialect dialect) {
     EntityInfo entityInfo = new EntityInfo();
-    entityInfo.setLogicDeleteProp(
-        LogicDeleteProp.of(clazz.getAnnotation(TableInfo.class), configuration));
+    final TableInfo annotation = clazz.getAnnotation(TableInfo.class);
+    entityInfo.setLogicDeleteProp(LogicDeleteProp.of(annotation, configuration));
 
     entityInfo.mapToTable = EntityHelper.isMapToTable(clazz);
     entityInfo.dialect = dialect;
     entityInfo.setClazz(clazz);
     entityInfo.setName(EntityUtils.getTableName(clazz));
-    entityInfo.setComment(
-        Optional.ofNullable(clazz.getAnnotation(TableInfo.class))
-            .map(TableInfo::comment)
-            .orElse(null));
-
+    if (annotation == null || annotation.idGenerator().equals(VoidIdGenerator.class)) {
+      entityInfo.setIdGenerator(configuration.getIdGenerator());
+    } else {
+      entityInfo.setIdGenerator(BeanUtils.initial(annotation.idGenerator()));
+    }
+    if (annotation != null) {
+      entityInfo.setComment(annotation.comment());
+    }
     final List<Field> columnFields = EntityUtils.getAllColumnFields(clazz, null);
     Map<Field, EntityColumn> fieldColumnMap = new HashMap<>(20);
     Map<String, Field> columnFieldMap = new HashMap<>(20);

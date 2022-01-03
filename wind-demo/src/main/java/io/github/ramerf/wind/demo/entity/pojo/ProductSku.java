@@ -3,6 +3,7 @@ package io.github.ramerf.wind.demo.entity.pojo;
 import io.github.ramerf.wind.core.annotation.LogicDelete;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.entity.pojo.Domain;
+import io.github.ramerf.wind.core.support.UUIDGenerator;
 import javax.persistence.Id;
 import lombok.*;
 
@@ -10,7 +11,7 @@ import lombok.*;
  * @author ramer
  * @since 12/09/2020
  */
-@TableInfo(logicDelete = @LogicDelete(enable = false))
+@TableInfo(logicDelete = @LogicDelete(enable = false), idGenerator = UUIDGenerator.class)
 @Data
 @Builder
 @NoArgsConstructor

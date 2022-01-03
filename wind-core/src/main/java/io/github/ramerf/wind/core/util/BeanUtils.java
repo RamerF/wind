@@ -5,7 +5,6 @@ import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.FieldFunction;
 import java.beans.FeatureDescriptor;
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
@@ -49,14 +48,7 @@ public final class BeanUtils {
   private static final Map<FieldFunction, WeakReference<Field>> LAMBDA_FIELD_MAP =
       new ConcurrentHashMap<>();
 
-  /**
-   * Map转Bean.
-   *
-   * @param <R> the type parameter
-   * @param map the map
-   * @param clazz the clazz
-   * @return the r
-   */
+  /** Map转Bean. */
   public static <R> R mapToBean(Map<String, Object> map, Class<R> clazz) {
     final R r = initial(clazz);
     Stream.of(clazz.getMethods())
@@ -67,7 +59,9 @@ public final class BeanUtils {
               try {
                 f.setAccessible(true);
                 f.invoke(r, value);
-              } catch (Exception e) {
+              } catch (IllegalAccessException
+                  | IllegalArgumentException
+                  | InvocationTargetException e) {
                 log.info(
                     "mapToBean:跳过类型不匹配的字段[{} {}->{}]",
                     methodToProperty(f.getName()),
@@ -78,12 +72,7 @@ public final class BeanUtils {
     return r;
   }
 
-  /**
-   * 获取对象属性值为空的属性名.
-   *
-   * @param obj the obj
-   * @return the null prop
-   */
+  /** 获取对象属性值为空的属性名. */
   public static Set<String> getNullProp(@Nonnull final Object obj) {
     final BeanWrapperImpl wrapper = new BeanWrapperImpl(obj);
     return Stream.of(wrapper.getPropertyDescriptors())
@@ -92,12 +81,7 @@ public final class BeanUtils {
         .collect(Collectors.toSet());
   }
 
-  /**
-   * 获取对象属性值不为空的属性名.
-   *
-   * @param obj the obj
-   * @return the non null prop
-   */
+  /** 获取对象属性值不为空的属性名. */
   public static Set<String> getNonNullProp(Object obj) {
     final BeanWrapper wrapper = new BeanWrapperImpl(obj);
     return Stream.of(wrapper.getPropertyDescriptors())
@@ -107,12 +91,7 @@ public final class BeanUtils {
         .collect(Collectors.toSet());
   }
 
-  /**
-   * 获取对象的属性名.
-   *
-   * @param obj the obj
-   * @return the all prop
-   */
+  /** 获取对象的属性名. */
   public static List<String> getAllProp(@Nonnull final Object obj) {
     return Stream.of(new BeanWrapperImpl(obj).getPropertyDescriptors())
         .map(FeatureDescriptor::getName)
@@ -120,13 +99,7 @@ public final class BeanUtils {
         .collect(toList());
   }
 
-  /**
-   * 获取所有(包含父类)private属性.
-   *
-   * @param clazz the clazz
-   * @param container the container
-   * @return the list
-   */
+  /** 获取所有(包含父类)private属性. */
   public static List<Field> retrievePrivateFields(
       @Nonnull final Class<?> clazz, @Nonnull final Supplier<List<Field>> container) {
     return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
@@ -152,71 +125,28 @@ public final class BeanUtils {
     return fields;
   }
 
-  /**
-   * Gets write methods.
-   *
-   * @param clazz the clazz
-   * @return the write methods
-   */
-  public static List<Method> getWriteMethods(final Class<?> clazz) {
-    return Optional.ofNullable(WRITE_METHOD_MAP.get(clazz))
-        .map(Reference::get)
-        .orElseGet(
-            () -> {
-              final BeanWrapperImpl wrapper = new BeanWrapperImpl(clazz);
-              final List<Method> methods =
-                  Arrays.stream(wrapper.getPropertyDescriptors())
-                      .filter(o -> wrapper.isWritableProperty(o.getName()))
-                      .map(PropertyDescriptor::getWriteMethod)
-                      .collect(toList());
-              WRITE_METHOD_MAP.put(clazz, new WeakReference<>(methods));
-              return methods;
-            });
-  }
-
-  /**
-   * 实例化对象 .
-   *
-   * @param <T> the type parameter
-   * @param clazz the clazz
-   * @return the t
-   */
-  public static <T> T initial(final Class<T> clazz) {
+  /** 实例化对象. */
+  public static <T> T initial(final Class<T> clazz) throws CommonException {
     try {
       return clazz.newInstance();
     } catch (InstantiationException | IllegalAccessException e) {
-      log.warn("initial:[{}]", e.getMessage());
-      log.error(e.getMessage(), e);
+      throw new CommonException(
+          String.format("Cannot get instance for class[%s]", clazz.getSimpleName()), e);
     }
-    throw new CommonException(String.format("无法实例化对象[%s]", clazz.getSimpleName()));
   }
 
-  /**
-   * 实例化对象.
-   *
-   * @param <T> the type parameter
-   * @param classPath the class path
-   * @return the t
-   */
-  public static <T> T initial(final String classPath) {
+  /** 实例化对象. */
+  public static <T> T initial(final String classPath) throws CommonException {
     try {
       return initial(getClazz(classPath));
-    } catch (Exception e) {
-      log.warn("initial:[{}]", e.getMessage());
-      log.error(e.getMessage(), e);
+    } catch (CommonException e) {
+      throw new CommonException(String.format("Cannot initial class [%s]", classPath), e);
     }
-    throw new CommonException(String.format("Cannot initial object class [%s]", classPath));
   }
 
-  /**
-   * 通过类路径获取Class.
-   *
-   * @param <T> the type parameter
-   * @param classPath the class path
-   * @return the clazz
-   */
+  /** 通过类路径获取Class. */
   @SuppressWarnings("all")
-  public static <T> Class<T> getClazz(String classPath) {
+  public static <T> Class<T> getClazz(String classPath) throws CommonException {
     if (classPath.contains("/")) {
       classPath = classPath.replaceAll("/", ".");
     }
@@ -224,19 +154,12 @@ public final class BeanUtils {
       // 后期需要改成多个加载器,参考: org.apache.ibatis.io.ClassLoaderWrapper#classForName(java.lang.String,
       // java.lang.ClassLoader[])
       return (Class<T>) Class.forName(classPath);
-    } catch (Exception e) {
-      log.warn("initial:[{}]", e.getMessage());
-      log.error(e.getMessage(), e);
+    } catch (ClassNotFoundException e) {
+      throw new CommonException(String.format("Cannot load class[%s]", classPath), e);
     }
-    throw new CommonException(String.format("无法获取class[%s]", classPath));
   }
 
-  /**
-   * 通过方法名获取bean属性名.
-   *
-   * @param name the name
-   * @return the string
-   */
+  /** 通过方法名获取bean属性名. */
   public static String methodToProperty(String name) {
     final String is = "is";
     final String get = "get";
@@ -258,20 +181,13 @@ public final class BeanUtils {
     return name;
   }
 
-  /**
-   * 执行{@link Class#getField(String)},失败抛出 {@link IllegalArgumentException}.
-   *
-   * @param clazz the clazz
-   * @param name the field name
-   * @return the optional
-   */
   public static Field getDeclaredField(@Nonnull Class<?> clazz, final String name) {
     do {
       try {
         return clazz.getDeclaredField(name);
-      } catch (NoSuchFieldException ignored) {
+      } catch (NoSuchFieldException | SecurityException ignored) {
       }
-    } while ((clazz = clazz.getSuperclass()) != null);
+    } while ((clazz = clazz.getSuperclass()) != null && Object.class.equals(clazz));
     return null;
   }
 
@@ -369,18 +285,13 @@ public final class BeanUtils {
   }
 
   /**
-   * 对于 {@link Method#invoke(Object, Object...)}<br>
+   * {@link Method#invoke(Object, Object...)}<br>
    * 用法:
    *
    * <pre>
    *  BeanUtils.invoke(null, String.class.getMethods()[0], "string")
    *         .ifPresent(e -&gt; log.info(" BeanUtils.main:调用失败处理[{}]", e.getClass()));
    * </pre>
-   *
-   * @param obj the obj
-   * @param method the method
-   * @param value the value
-   * @return the optional
    */
   public static Optional<Exception> invoke(Object obj, Method method, Object... value) {
     try {
@@ -389,7 +300,7 @@ public final class BeanUtils {
       }
       method.invoke(obj, value);
       return Optional.empty();
-    } catch (Exception e) {
+    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       return Optional.of(e);
     }
   }
@@ -402,21 +313,23 @@ public final class BeanUtils {
    *  BeanUtils.invoke(obj, field, e -&gt; throw e);
    * </pre>
    *
-   * @param obj the obj
-   * @param field the field
-   * @param consumer 异常时的处理,默认返回null
-   * @return the optional
+   * @param consumer 异常时的处理,默认抛出异常
    */
   public static Object getValue(
-      final Object obj, final Field field, final Function<Exception, Object> consumer) {
+      final Object obj, final Field field, final Function<RuntimeException, Object> consumer) {
     try {
       if (!field.isAccessible()) {
         field.setAccessible(true);
       }
       return field.get(obj);
-    } catch (Exception e) {
+    } catch (IllegalArgumentException | IllegalAccessException e) {
       return Optional.ofNullable(consumer)
-          .map(ex -> ex.apply(e))
+          .map(
+              ex ->
+                  ex.apply(
+                      e instanceof IllegalAccessException
+                          ? new CommonException(e)
+                          : (IllegalArgumentException) e))
           .orElseGet(
               () -> {
                 log.warn(e.getMessage(), e);
@@ -433,21 +346,22 @@ public final class BeanUtils {
    *  BeanUtils.setValue(obj, field, value, e -&gt; throw e);
    * </pre>
    *
-   * @param obj the obj
-   * @param field the field
-   * @param value 参数
-   * @param consumer 异常时的处理,默认返回null
+   * @param consumer 异常时的处理,null时抛出异常
    */
   public static void setValue(
-      final Object obj, final Field field, final Object value, Consumer<Exception> consumer) {
+      final Object obj, final Field field, final Object value, Consumer<RuntimeException> consumer)
+      throws CommonException {
     try {
       if (!field.isAccessible()) {
         field.setAccessible(true);
       }
       field.set(obj, value);
-    } catch (Exception e) {
+    } catch (IllegalArgumentException | IllegalAccessException e) {
       if (consumer != null) {
-        consumer.accept(e);
+        consumer.accept(
+            e instanceof IllegalAccessException
+                ? new CommonException(e)
+                : (IllegalArgumentException) e);
       } else {
         throw new CommonException(e);
       }

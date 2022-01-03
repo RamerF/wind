@@ -17,6 +17,7 @@
 package io.github.ramerf.wind.core.executor;
 
 import java.util.*;
+import javax.annotation.Nonnull;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.lang.Nullable;
@@ -80,11 +81,11 @@ public class GeneratedKeyHolder implements KeyHolder {
     }
   }
 
+  @Nonnull
   @Override
-  @Nullable
   public Map<String, Object> getKeys() throws InvalidDataAccessApiUsageException {
     if (this.keyList.isEmpty()) {
-      return null;
+      return Collections.emptyMap();
     }
     if (this.keyList.size() > 1) {
       throw new InvalidDataAccessApiUsageException(

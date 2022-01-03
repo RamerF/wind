@@ -21,29 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
  */
 public interface UpdateService<T, ID extends Serializable> extends InterService<T, ID> {
 
-  /**
-   * 创建记录.
-   *
-   * @param e the e
-   * @return {@code id}
-   * @throws DataAccessException 如果执行失败
-   */
-  default <E> int create(@Nonnull final E e) throws DataAccessException {
-    return create(e, null);
+  /** 创建记录. */
+  default int create(@Nonnull final T t) throws DataAccessException {
+    return create(t, null);
   }
 
-  /**
-   * 创建记录.
-   *
-   * @param e the e
-   * @param fields the fields
-   * @return {@code id}
-   * @throws DataAccessException 如果执行失败
-   */
-  default <E> int create(@Nonnull final E e, final Fields<E> fields) throws DataAccessException {
-    textFilter(e, e);
+  /** 创建记录,仅保存指定字段. */
+  default int create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
     //noinspection unchecked
-    return getUpdate((Class<E>) e.getClass()).create(e, fields);
+    return getUpdate((Class<T>) t.getClass()).create(t, fields);
   }
 
   /**
@@ -69,13 +55,13 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @throws DataAccessException 如果执行失败
    */
   @Transactional(rollbackFor = Exception.class)
-  default <E> Optional<Integer> createBatch(@Nonnull final List<E> ts, final Fields<E> fields)
+  default Optional<Integer> createBatch(@Nonnull final List<T> ts, final Fields<T> fields)
       throws DataAccessException {
     if (ts.isEmpty()) {
       return Optional.empty();
     }
     //noinspection unchecked
-    return getUpdate((Class<E>) ts.get(0).getClass()).createBatch(ts, fields);
+    return getUpdate((Class<T>) ts.get(0).getClass()).createBatch(ts, fields);
   }
 
   /**
@@ -85,7 +71,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @return 实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  default <E> int update(@Nonnull final E t) throws DataAccessException {
+  default int update(@Nonnull final T t) throws DataAccessException {
     return update(t, null, null);
   }
 
@@ -96,8 +82,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  default <E> int update(@Nonnull final E object, final Cnd<E, ?, ?> cnd)
-      throws DataAccessException {
+  default int update(@Nonnull final T object, final Cnd<T, ?, ?> cnd) throws DataAccessException {
     return update(object, null, cnd);
   }
 
@@ -109,8 +94,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  default <E> int update(@Nonnull final E object, final Fields<E> fields)
-      throws DataAccessException {
+  default int update(@Nonnull final T object, final Fields<T> fields) throws DataAccessException {
     return update(object, fields, null);
   }
 
@@ -123,11 +107,11 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @return 实际受影响的行数 int
    * @throws DataAccessException 如果执行失败
    */
-  default <E> int update(@Nonnull final E object, final Fields<E> fields, final Cnd<E, ?, ?> cnd)
+  default int update(@Nonnull final T object, final Fields<T> fields, final Cnd<T, ?, ?> cnd)
       throws DataAccessException {
     if (cnd == null) {
       @SuppressWarnings("unchecked")
-      final Class<E> clazz = (Class<E>) object.getClass();
+      final Class<T> clazz = (Class<T>) object.getClass();
       return getUpdate(clazz).update(object, fields);
     }
     return getUpdate(cnd.getClazz()).where(cnd.getCondition()).update(object, fields);

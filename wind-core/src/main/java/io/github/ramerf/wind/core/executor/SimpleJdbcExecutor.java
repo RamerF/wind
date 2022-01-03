@@ -12,7 +12,6 @@ import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.KeyHolder;
 
 /**
  * The jdbc template executor.
@@ -205,13 +204,9 @@ public class SimpleJdbcExecutor implements Executor {
   }
 
   @Override
-  public int update(
-      @Nonnull final Class<?> clazz,
-      final PreparedStatementCreator psc,
-      final KeyHolder generatedKeyHolder)
+  public int update(final PreparedStatementCreator psc, final KeyHolder generatedKeyHolder)
       throws DataAccessException {
     return aroundWrite(
-        clazz,
         () -> {
           Connection connection = DataSourceUtils.getConnection(dataSource);
           PreparedStatement ps = psc.createPreparedStatement(connection);
@@ -236,11 +231,9 @@ public class SimpleJdbcExecutor implements Executor {
   }
 
   @Override
-  public int[] batchUpdate(
-      @Nonnull final Class<?> clazz, String sql, final BatchPreparedStatementSetter pss)
+  public int[] batchUpdate(String sql, final BatchPreparedStatementSetter pss)
       throws DataAccessException {
     return aroundWrite(
-        clazz,
         () -> {
           Connection connection = DataSourceUtils.getConnection(dataSource);
           PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
@@ -270,15 +263,56 @@ public class SimpleJdbcExecutor implements Executor {
   }
 
   @Override
+  public int[] batchUpdate(
+      final PreparedStatementCreator psc,
+      final BatchPreparedStatementSetter pss,
+      final KeyHolder generatedKeyHolder)
+      throws org.springframework.dao.DataAccessException {
+    Connection connection = DataSourceUtils.getConnection(dataSource);
+    PreparedStatement ps = psc.createPreparedStatement(connection);
+    ResultSet resultSet = null;
+    int batchSize = pss.getBatchSize();
+    try {
+      if (JdbcUtils.supportsBatchUpdates(connection)) {
+        for (int i = 0; i < batchSize; i++) {
+          pss.setValues(ps, i);
+          ps.addBatch();
+        }
+        // TODO WARN 批量创建，返回主键
+        final int[] rows = ps.executeBatch();
+        List<Map<String, Object>> generatedKeys = generatedKeyHolder.getKeyList();
+        generatedKeys.clear();
+        MapResultHandler resultHandler = new MapResultHandler();
+        resultSet = ps.getGeneratedKeys();
+        while (resultSet.next()) {
+          generatedKeys.add(resultHandler.handle(resultSet));
+        }
+        return rows;
+      } else {
+        int[] rowsAffectedArray = new int[batchSize];
+        for (int i = 0; i < batchSize; i++) {
+          pss.setValues(ps, i);
+          rowsAffectedArray[i] = ps.executeUpdate();
+        }
+        return rowsAffectedArray;
+      }
+    } catch (SQLException e) {
+      throw new DataAccessException("Fail to execute batch update", e);
+    } finally {
+      DataSourceUtils.release(resultSet);
+      DataSourceUtils.release(ps);
+      DataSourceUtils.release(connection);
+    }
+  }
+
+  @Override
   public JdbcTemplate getJdbcTemplate() {
     return null;
   }
 
   @Override
-  public int update(@Nonnull final Class<?> clazz, String sql, @Nonnull PreparedStatementSetter pss)
-      throws DataAccessException {
+  public int update(String sql, @Nonnull PreparedStatementSetter pss) throws DataAccessException {
     return aroundWrite(
-        clazz,
         () -> {
           Connection connection = DataSourceUtils.getConnection(dataSource);
           PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
@@ -295,6 +329,10 @@ public class SimpleJdbcExecutor implements Executor {
   }
 
   private <T> T aroundRead(@Nonnull final SqlParam<?> sqlParam, Supplier<T> supplier) {
+    return supplier.get();
+  }
+
+  private <T> T aroundWrite(Supplier<T> supplier) {
     return supplier.get();
   }
 

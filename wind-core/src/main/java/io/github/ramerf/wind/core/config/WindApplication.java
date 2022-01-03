@@ -7,7 +7,6 @@ import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.ioc.ApplicationContext;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
-import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
 import java.util.Set;
@@ -26,7 +25,6 @@ import org.springframework.beans.BeansException;
 public class WindApplication {
   private static final WindContext windContext = new WindContext();
   private static ApplicationContext applicationContext;
-  private static IdGenerator idGenerator = IdGenerator.AUTO_INCREMENT_ID_GENERATOR;
 
   private WindApplication() {}
 
@@ -41,10 +39,6 @@ public class WindApplication {
     }
   }
 
-  public static void setIdGenerator(final IdGenerator idGenerator) {
-    WindApplication.idGenerator = idGenerator;
-  }
-
   public void setApplicationContext(@Nonnull final ApplicationContext applicationContext)
       throws BeansException {
     WindApplication.applicationContext = applicationContext;
@@ -56,11 +50,7 @@ public class WindApplication {
     printBanner();
     AppContextInject.initital(applicationContext);
     // 初始化Query/Update
-    Update.initial(
-        windContext.getExecutor(),
-        windContext.getConfiguration(),
-        idGenerator,
-        windContext.getDbMetaData().getDialect());
+    Update.initial(windContext.getExecutor(), windContext.getConfiguration());
     Query.initial(windContext.getExecutor(), windContext.getConfiguration());
     // 初始化EntityUtils
     EntityUtils.initial(windContext);
