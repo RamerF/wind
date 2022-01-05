@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
  * @since 01/01/2022
  */
 @Slf4j
-public class FieldFunctionTest {
+public class CachedSetterFunctionsTest {
   @Test
   public void test() throws NoSuchFieldException {
     Foo foo = new Foo();

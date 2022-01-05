@@ -11,6 +11,7 @@ import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
 import java.util.Set;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -28,7 +29,11 @@ public class WindApplication {
 
   private WindApplication() {}
 
-  public static void run(final Configuration configuration, final DataSource dataSource) {
+  public static void run(
+      @Nullable Configuration configuration, @Nonnull final DataSource dataSource) {
+    if (configuration == null) {
+      configuration = new Configuration();
+    }
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, configuration.getDialect()));
     windContext.setConfiguration(configuration);
     windContext.setExecutor(new SimpleJdbcExecutor(dataSource));
