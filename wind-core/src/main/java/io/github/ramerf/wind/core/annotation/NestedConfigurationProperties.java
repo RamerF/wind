@@ -6,4 +6,4 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface NestConfigurationProperties {}
+public @interface NestedConfigurationProperties {}

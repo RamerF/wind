@@ -1,9 +1,10 @@
 package io.github.ramerf.wind.core.util;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,12 +67,7 @@ public class StringUtils {
     return String.valueOf(chars);
   }
 
-  /**
-   * 驼峰转下划线.
-   *
-   * @param camelString the camel string
-   * @return the string
-   */
+  /** 驼峰转下划线. */
   public static String camelToUnderline(final String camelString) {
     final char[] chars = camelString.toCharArray();
     StringBuilder stringBuilder = new StringBuilder();
@@ -87,6 +83,21 @@ public class StringUtils {
               stringBuilder.append(s.toLowerCase());
             });
     return stringBuilder.toString();
+  }
+
+  /** 短横线转驼峰. */
+  public static String dashToCamel(final String camelString) {
+    if (camelString == null || !camelString.contains("-")) {
+      return camelString;
+    }
+    StringBuffer buffer = new StringBuffer();
+    Matcher matcher = Pattern.compile("(-)([a-z])").matcher(camelString);
+    while (matcher.find()) {
+      matcher.appendReplacement(
+          buffer, matcher.group().replaceAll("-", "").toUpperCase(Locale.ENGLISH));
+    }
+    matcher.appendTail(buffer);
+    return buffer.toString();
   }
 
   /**
