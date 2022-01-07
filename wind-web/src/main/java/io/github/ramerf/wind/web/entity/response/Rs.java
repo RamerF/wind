@@ -40,36 +40,16 @@ public class Rs<T> implements Serializable {
 
   private Rs() {}
 
-  /**
-   * Of rs.
-   *
-   * @param <T> the type parameter
-   * @return the rs
-   */
   public static <T> Rs<T> of() {
     return new Rs<>();
   }
 
-  /**
-   * Of rs.
-   *
-   * @param <T> the type parameter
-   * @param data the data
-   * @return the rs
-   */
   public static <T> Rs<T> of(final T data) {
     Rs<T> rs = new Rs<>();
     rs.setData(data);
     return rs;
   }
 
-  /**
-   * Of rs.
-   *
-   * @param <T> the type parameter
-   * @param msg the msg
-   * @return the rs
-   */
   public static <T> Rs<T> of(final String msg) {
     Rs<T> rs = new Rs<>();
     rs.setMsg(msg);

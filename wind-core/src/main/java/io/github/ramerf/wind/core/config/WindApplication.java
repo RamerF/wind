@@ -53,7 +53,7 @@ public class WindApplication {
   private static void afterPropertiesSet() throws Exception {
     // 打印banner
     printBanner();
-    AppContextInject.initital(applicationContext);
+    AppContextInject.initial(applicationContext);
     // 初始化Query/Update
     Update.initial(windContext.getExecutor(), windContext.getConfiguration());
     Query.initial(windContext.getExecutor(), windContext.getConfiguration());
@@ -94,7 +94,7 @@ public class WindApplication {
     log.info("initEntityInfo:package[{}]", entityPackage);
     ApplicationContext applicationContext =
         new ApplicationContext(entityPackage + "," + WindVersion.class.getPackage().getName());
-    AppContextInject.initital(applicationContext);
+    AppContextInject.initial(applicationContext);
     Set<Class<?>> entities;
     try {
       entities = BeanUtils.scanClassesWithAnnotation(entityPackage, TableInfo.class);
