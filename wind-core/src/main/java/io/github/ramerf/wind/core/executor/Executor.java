@@ -7,14 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.jdbc.core.*;
-import org.springframework.lang.Nullable;
 
 /**
  * The jdbc executor.
@@ -128,8 +126,6 @@ public interface Executor {
       final BatchPreparedStatementSetter pss,
       final KeyHolder generatedKeyHolder)
       throws DataAccessException;
-
-  JdbcTemplate getJdbcTemplate();
 
   @Getter
   @Setter

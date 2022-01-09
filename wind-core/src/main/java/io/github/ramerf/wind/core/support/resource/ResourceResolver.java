@@ -1,7 +1,6 @@
-package io.github.ramerf.wind.core.ioc;
+package io.github.ramerf.wind.core.support.resource;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -108,6 +107,30 @@ public class ResourceResolver {
         }
       } else result.add(content);
     }
+  }
+
+  /** 分割线 */
+  protected Set<Resource> doFindPathMatchingFileResources(
+      Resource rootDirResource, String subPattern) throws IOException {
+    File rootDir;
+    try {
+      rootDir = rootDirResource.getFile().getAbsoluteFile();
+    } catch (FileNotFoundException ex) {
+      if (log.isInfoEnabled()) {
+        log.info(
+            "Cannot search for matching files underneath "
+                + rootDirResource
+                + " in the file system: "
+                + ex.getMessage());
+      }
+      return Collections.emptySet();
+    } catch (Exception ex) {
+      if (log.isWarnEnabled()) {
+        log.warn("Failed to resolve " + rootDirResource + " in the file system: " + ex);
+      }
+      return Collections.emptySet();
+    }
+    return doFindMatchingFileSystemResources(rootDir, subPattern);
   }
 
   public static void main(String[] args) {

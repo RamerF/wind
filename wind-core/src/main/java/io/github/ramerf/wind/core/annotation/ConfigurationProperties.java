@@ -12,9 +12,6 @@ public @interface ConfigurationProperties {
   /** Alia for {@link #value()} */
   String prefix() default "";
 
-  /** 忽略配置中无效/错误的值 */
+  /** 忽略配置中类型不匹配的值 */
   boolean ignoreInvalidValues() default false;
-
-  /** 忽略配置中的未知属性 */
-  boolean ignoreUnknownFields() default true;
 }

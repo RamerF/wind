@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.executor;
 
-import org.springframework.lang.Nullable;
+import javax.annotation.Nullable;
 
 public class DataAccessException extends RuntimeException {
   public DataAccessException(String message) {

@@ -4,7 +4,7 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.FieldFunction;
-import java.beans.FeatureDescriptor;
+import io.github.ramerf.wind.core.support.resource.*;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
@@ -17,18 +17,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.*;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.type.ClassMetadata;
-import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
-import org.springframework.util.ClassUtils;
 
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
-import static java.util.stream.Collectors.toList;
-import static org.springframework.util.StringUtils.tokenizeToStringArray;
+import static io.github.ramerf.wind.core.util.StringUtils.tokenizeToStringArray;
 
 /**
  * The type Bean utils.
@@ -70,33 +61,6 @@ public final class BeanUtils {
               }
             });
     return r;
-  }
-
-  /** 获取对象属性值为空的属性名. */
-  public static Set<String> getNullProp(@Nonnull final Object obj) {
-    final BeanWrapperImpl wrapper = new BeanWrapperImpl(obj);
-    return Stream.of(wrapper.getPropertyDescriptors())
-        .map(FeatureDescriptor::getName)
-        .filter(propertyName -> wrapper.getPropertyValue(propertyName) == null)
-        .collect(Collectors.toSet());
-  }
-
-  /** 获取对象属性值不为空的属性名. */
-  public static Set<String> getNonNullProp(Object obj) {
-    final BeanWrapper wrapper = new BeanWrapperImpl(obj);
-    return Stream.of(wrapper.getPropertyDescriptors())
-        .map(FeatureDescriptor::getName)
-        .filter(name -> wrapper.getPropertyValue(name) != null)
-        .filter(name -> !Objects.equals("class", name))
-        .collect(Collectors.toSet());
-  }
-
-  /** 获取对象的属性名. */
-  public static List<String> getAllProp(@Nonnull final Object obj) {
-    return Stream.of(new BeanWrapperImpl(obj).getPropertyDescriptors())
-        .map(FeatureDescriptor::getName)
-        .filter(o -> !Objects.equals("class", o))
-        .collect(toList());
   }
 
   /** 获取所有(包含父类)private属性. */
@@ -203,9 +167,7 @@ public final class BeanUtils {
   public static <T> Set<Class<? extends T>> scanClasses(
       String packagePatterns, Class<T> assignableType) throws IOException {
     Set<Class<? extends T>> classes = new HashSet<>();
-    String[] packagePatternArray =
-        tokenizeToStringArray(
-            packagePatterns, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
+    String[] packagePatternArray = StringUtils.tokenizeToStringArray(packagePatterns, ",; \t\n");
     for (String packagePattern : packagePatternArray) {
       Resource[] resources =
           new PathMatchingResourcePatternResolver()
@@ -241,9 +203,7 @@ public final class BeanUtils {
   public static <T> Set<Class<? extends T>> scanClassesWithAnnotation(
       String packagePatterns, Class<? extends Annotation> annotation) throws IOException {
     Set<Class<? extends T>> classes = new HashSet<>();
-    String[] packagePatternArray =
-        tokenizeToStringArray(
-            packagePatterns, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
+    String[] packagePatternArray = tokenizeToStringArray(packagePatterns, ",; \t\n");
     for (String packagePattern : packagePatternArray) {
       Resource[] resources =
           new PathMatchingResourcePatternResolver()

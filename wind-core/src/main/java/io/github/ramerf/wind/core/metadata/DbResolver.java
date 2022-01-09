@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.metadata;
 
 import io.github.ramerf.wind.core.metadata.TableIndexInformation.FlatTableIndexInformation;
+import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -8,7 +9,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.support.JdbcUtils;
 
 /**
  * 该类主要是简化数据库操作相关的try-catch.
@@ -89,7 +89,7 @@ public final class DbResolver {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
     } finally {
-      JdbcUtils.closeResultSet(resultSet);
+      DataSourceUtils.release(resultSet);
     }
     return new NameTableInformation();
   }
@@ -114,7 +114,7 @@ public final class DbResolver {
       log.warn("populateColumns:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
     } finally {
-      JdbcUtils.closeResultSet(resultSet);
+      DataSourceUtils.release(resultSet);
     }
   }
 
@@ -132,7 +132,7 @@ public final class DbResolver {
       log.warn("populateColumns:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
     } finally {
-      JdbcUtils.closeResultSet(resultSet);
+      DataSourceUtils.release(resultSet);
     }
   }
 

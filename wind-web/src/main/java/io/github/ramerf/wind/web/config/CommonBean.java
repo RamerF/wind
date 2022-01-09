@@ -3,7 +3,7 @@ package io.github.ramerf.wind.web.config;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
 import io.github.ramerf.wind.core.serializer.InterEnumSerializer;
 import io.github.ramerf.wind.core.serializer.JacksonEnumSerializer;
-import io.github.ramerf.wind.core.support.StringToEnumConverterFactory;
+import io.github.ramerf.wind.web.support.StringToEnumConverterFactory;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

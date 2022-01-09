@@ -3,20 +3,17 @@ package io.github.ramerf.wind.core.util;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
 
 /**
- * The type Environment util.
+ * // TODO WARN Environment
  *
  * @author ramer
  * @since 2019 /11/21
  */
 @Slf4j
-@Component
-public class EnvironmentUtil implements EnvironmentAware {
+public class EnvironmentUtil {
   private static Environment environment = null;
 
   /**
@@ -84,7 +81,7 @@ public class EnvironmentUtil implements EnvironmentAware {
     return env.toString().equalsIgnoreCase(environment.getProperty("spring.profiles.active"));
   }
 
-  @Override
+  // @Override
   public void setEnvironment(@Nonnull final Environment environment) throws BeansException {
     EnvironmentUtil.environment = environment;
   }

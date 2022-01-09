@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.validation;
+package io.github.ramerf.wind.web.validation;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;

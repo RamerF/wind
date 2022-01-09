@@ -16,8 +16,8 @@
 
 package io.github.ramerf.wind.core.ansi;
 
+import io.github.ramerf.wind.core.util.Asserts;
 import java.util.Locale;
-import org.springframework.util.Assert;
 
 /**
  * Generates ANSI encoded output, automatically attempting to detect if the terminal supports ANSI.
@@ -49,7 +49,7 @@ public abstract class AnsiOutput {
    * @param enabled if ANSI is enabled, disabled or detected
    */
   public static void setEnabled(Enabled enabled) {
-    Assert.notNull(enabled, "Enabled must not be null");
+    Asserts.notNull(enabled, "Enabled must not be null");
     AnsiOutput.enabled = enabled;
   }
 

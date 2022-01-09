@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.exception;
 
+import io.github.ramerf.wind.core.executor.DataAccessException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 
 /**
  * 不允许的数据库操作.

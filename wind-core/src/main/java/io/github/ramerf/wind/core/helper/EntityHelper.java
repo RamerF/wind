@@ -6,6 +6,7 @@ import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
 import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.TestLambda;
+import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.FieldFunction;
 import io.github.ramerf.wind.core.function.GetterFunction;
@@ -18,7 +19,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * The type Entity helper.
@@ -156,10 +156,11 @@ public class EntityHelper {
     // 先删除,再创建
     if (DdlAuto.CREATE.equals(ddlAuto)) {
       // Phase 1. delete
-      final JdbcTemplate jdbcTemplate = windContext.getExecutor().getJdbcTemplate();
+      final Executor executor = windContext.getExecutor();
       final String dropSql = "drop table if exists " + entityInfo.getName();
       log.info("ddlAuto:drop table[{}]", dropSql);
-      jdbcTemplate.execute(dropSql);
+      // TODO WARN 执行sql
+      // executor.execute(dropSql);
       // Phase 2. create
       TableExporter.of(windContext).createTable(entityInfo);
     } else if (DdlAuto.UPDATE.equals(ddlAuto)) {

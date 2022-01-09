@@ -1,0 +1,13 @@
+wind:
+  ddl-auto: update
+  # entity所在包路径,多个以,分割
+  entity-package: io.github.ramerf.wind.core.mysql
+  logic-delete-prop:
+    enable: true
+    deleted: false
+    field-name: deleted
+  data-source-config:
+    url: jdbc:mysql:///wind?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true&useSSL=false
+    username: root
+    password: root
+    driver-class-name: com.mysql.jdbc.Driver

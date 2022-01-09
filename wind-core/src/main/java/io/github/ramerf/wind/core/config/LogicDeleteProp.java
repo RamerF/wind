@@ -4,8 +4,7 @@ import io.github.ramerf.wind.core.annotation.LogicDelete;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import java.io.Serializable;
 import javax.annotation.Nonnull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -17,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Setter
 @Getter
+@ToString
 public class LogicDeleteProp {
   /** 是否开启逻辑删除. */
   private boolean enable = false;
@@ -43,7 +43,10 @@ public class LogicDeleteProp {
       final TableInfo tableInfo, @Nonnull final Configuration configuration) {
     LogicDelete logicDelete;
     // 如果fieldName为默认值XX_FIELD_NAME_XX,说明未指定该属性,使用全局配置
-    if (tableInfo == null || (logicDelete = tableInfo.logicDelete()).fieldName().equals("")) {
+    if (tableInfo == null
+        || (logicDelete = tableInfo.logicDelete())
+            .fieldName()
+            .equals(LogicDelete.DEFAULT_FIELD_NAME)) {
       return of(configuration);
     }
     LogicDeleteProp logicDeleteProp = new LogicDeleteProp();

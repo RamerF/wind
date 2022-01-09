@@ -11,10 +11,7 @@ public class YmlUtilTest {
   @Test
   public void test() {
     final AutoConfigConfiguration autoConfigConfiguration =
-        YmlUtil.getInstance()
-            .ignoreInvalidValues(false)
-            .ignoreUnknownFields(true)
-            .process(AutoConfigConfiguration.class, "application-mysql2.yml");
+        YmlUtil.process(AutoConfigConfiguration.class, "wind.yml");
     log.info("test:[{}]", autoConfigConfiguration);
   }
 }

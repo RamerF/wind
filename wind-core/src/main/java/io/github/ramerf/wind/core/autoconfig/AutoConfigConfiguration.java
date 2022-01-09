@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.autoconfig;
 
+import com.alibaba.druid.pool.DruidDataSource;
 import io.github.ramerf.wind.core.annotation.ConfigurationProperties;
 import io.github.ramerf.wind.core.annotation.NestedConfigurationProperties;
 import io.github.ramerf.wind.core.config.Configuration;
@@ -9,6 +10,7 @@ import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
+import javax.sql.DataSource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,10 +59,20 @@ public class AutoConfigConfiguration {
 
   @Data
   public static class DataSourceConfig {
+    /** 数据源提供者的全路径,默认使用{@link DruidDataSource} */
+    private Class<? extends DataSource> type = DruidDataSource.class;
+
     private String url;
     private String username;
     private String password;
     private String driverClassName;
+
+    public enum DataSourceType {
+      DBCP,
+      HIKARI,
+      DRUID,
+      ;
+    }
   }
 
   public Configuration getConfiguration() {

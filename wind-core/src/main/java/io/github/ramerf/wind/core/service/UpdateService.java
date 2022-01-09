@@ -3,13 +3,12 @@ package io.github.ramerf.wind.core.service;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.executor.DataAccessException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
 import java.util.*;
 import javax.annotation.Nonnull;
-import org.springframework.dao.DataAccessException;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 执行写数据.
@@ -40,7 +39,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  @Transactional(rollbackFor = Exception.class)
+  // @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> createBatch(final List<T> ts) throws DataAccessException {
     return getUpdate().createBatch(ts);
   }
@@ -54,7 +53,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  @Transactional(rollbackFor = Exception.class)
+  // @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> createBatch(@Nonnull final List<T> ts, final Fields<T> fields)
       throws DataAccessException {
     if (ts.isEmpty()) {
@@ -125,7 +124,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  @Transactional(rollbackFor = Exception.class)
+  // @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> updateBatch(final List<T> ts) throws DataAccessException {
     return updateBatch(ts, null);
   }
@@ -138,7 +137,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  @Transactional(rollbackFor = Exception.class)
+  // @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> updateBatch(final List<T> ts, final Fields<T> fields)
       throws DataAccessException {
     if (ts.isEmpty()) {

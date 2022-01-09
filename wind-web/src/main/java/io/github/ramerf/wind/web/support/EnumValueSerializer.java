@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.support;
+package io.github.ramerf.wind.web.support;
 
 import com.alibaba.fastjson.serializer.*;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;

@@ -11,6 +11,11 @@ import io.github.ramerf.wind.core.executor.DataAccessException;
 public class TooManyResultException extends DataAccessException {
   private final int count;
 
+  public TooManyResultException(final String message, final int count) {
+    super("message");
+    this.count = count;
+  }
+
   public TooManyResultException(final int count) {
     super("Too many result exception");
     this.count = count;

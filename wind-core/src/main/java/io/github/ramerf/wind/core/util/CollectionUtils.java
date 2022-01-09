@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import org.springframework.lang.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * The type Collection utils.

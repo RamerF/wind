@@ -11,7 +11,6 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * The jdbc template executor.
@@ -53,7 +52,7 @@ public class SimpleJdbcExecutor implements Executor {
             return null;
           }
           if (result.size() > 1) {
-            throw new TooManyResultException(result.size());
+            throw new TooManyResultException("fetch one", result.size());
           }
           return result.get(0);
         });
@@ -140,7 +139,7 @@ public class SimpleJdbcExecutor implements Executor {
             return null;
           }
           if (result.size() > 1) {
-            throw new TooManyResultException(result.size());
+            throw new TooManyResultException("query for object", result.size());
           }
           return result.get(0);
         });
@@ -267,7 +266,7 @@ public class SimpleJdbcExecutor implements Executor {
       final PreparedStatementCreator psc,
       final BatchPreparedStatementSetter pss,
       final KeyHolder generatedKeyHolder)
-      throws org.springframework.dao.DataAccessException {
+      throws DataAccessException {
     Connection connection = DataSourceUtils.getConnection(dataSource);
     PreparedStatement ps = psc.createPreparedStatement(connection);
     ResultSet resultSet = null;
@@ -303,11 +302,6 @@ public class SimpleJdbcExecutor implements Executor {
       DataSourceUtils.release(ps);
       DataSourceUtils.release(connection);
     }
-  }
-
-  @Override
-  public JdbcTemplate getJdbcTemplate() {
-    return null;
   }
 
   @Override

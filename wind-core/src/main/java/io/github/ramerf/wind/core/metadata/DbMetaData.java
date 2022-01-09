@@ -1,13 +1,13 @@
 package io.github.ramerf.wind.core.metadata;
 
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.Collection;
 import javax.sql.DataSource;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.support.JdbcUtils;
 
 import static io.github.ramerf.wind.core.metadata.DbResolver.getConnection;
 import static io.github.ramerf.wind.core.metadata.DbResolver.getMetaData;
@@ -37,7 +37,7 @@ public class DbMetaData {
     this.tableInformations = DbResolver.getTables(databaseMetaData, catalog, schema);
     this.dialect =
         dialectName != null ? Dialect.getInstance(dialectName) : Dialect.getInstance(dataSource);
-    JdbcUtils.closeConnection(connection);
+    DataSourceUtils.release(connection);
   }
 
   /** 该方法返回一个单例. */

@@ -21,11 +21,13 @@ public @interface LogicDelete {
    *
    * <p>在一个风雨交加的白天,我悄悄修复了这个bug
    */
-  String fieldName() default "XX_FIELD_NAME_XX";
+  String fieldName() default DEFAULT_FIELD_NAME;
 
   /** 逻辑已删除值. */
   boolean deleted() default true;
 
   /** 逻辑未删除值. */
   boolean notDelete() default false;
+
+  String DEFAULT_FIELD_NAME = "XX_FIELD_NAME_XX";
 }

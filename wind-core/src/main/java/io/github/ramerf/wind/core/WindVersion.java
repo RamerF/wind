@@ -16,10 +16,8 @@
 
 package io.github.ramerf.wind.core;
 
-import org.springframework.boot.SpringBootVersion;
-
 /**
- * Copy from {@link SpringBootVersion}.<br>
+ * Copy from {@link org.springframework.boot.SpringBootVersion}.<br>
  * Class that exposes the Spring Boot version. Fetches the "Implementation-Version" manifest
  * attribute from the jar file.
  *

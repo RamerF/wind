@@ -16,25 +16,12 @@ import org.yaml.snakeyaml.reader.UnicodeReader;
 
 @Slf4j
 public final class YmlUtil {
-  /** 忽略配置中的未知属性 */
-  private boolean ignoreUnknownFields;
-  /** 忽略配置中无效/错误的值 */
-  private boolean ignoreInvalidValues;
-
   private YmlUtil() {}
 
-  public static YmlUtil getInstance() {
-    return new YmlUtil();
-  }
-
-  public YmlUtil ignoreUnknownFields(final boolean ignoreUnknownFields) {
-    this.ignoreUnknownFields = ignoreUnknownFields;
-    return this;
-  }
-
-  public YmlUtil ignoreInvalidValues(final boolean ignoreInvalidValues) {
-    this.ignoreInvalidValues = ignoreInvalidValues;
-    return this;
+  /** @see #process(Class, String, boolean) */
+  public static <T> T process(final Class<T> clazz, final String resourcePath)
+      throws CommonException {
+    return process(clazz, resourcePath, true);
   }
 
   /**
@@ -42,10 +29,13 @@ public final class YmlUtil {
    *
    * @param clazz 需要填充的对象,必须包含默认构造器
    * @param resourcePath 类路径的相对路径,如 application.yml
+   * @param ignoreInvalidValues 忽略配置中无效/错误的值
    * @return 如果{@code clazz}未包含注解{@link ConfigurationProperties},返回默认实例
    * @throws CommonException 文件读取失败时抛出.
    */
-  public <T> T process(final Class<T> clazz, final String resourcePath) throws CommonException {
+  public static <T> T process(
+      final Class<T> clazz, final String resourcePath, final boolean ignoreInvalidValues)
+      throws CommonException {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     URL url =
         (classLoader == null ? YmlUtil.class.getClassLoader() : classLoader)
@@ -65,7 +55,7 @@ public final class YmlUtil {
       for (final Field field : fields) {
         final String key = prefix.concat(".").concat(field.getName());
         final Object value = configMap.get(key);
-        retrieveSetFields(obj, field, value, key, configMap);
+        retrieveSetFields(obj, field, value, key, configMap, ignoreInvalidValues);
       }
       return obj;
     } catch (IOException e) {
@@ -79,7 +69,8 @@ public final class YmlUtil {
       final Field field,
       final Object value,
       final String prefix,
-      final Map<String, Object> configMap) {
+      final Map<String, Object> configMap,
+      final boolean ignoreInvalidValues) {
     // 引用属性
     final Class<?> fieldType = field.getType();
     // 枚举使用name
@@ -90,25 +81,63 @@ public final class YmlUtil {
       final Object[] enumConstants = fieldType.getEnumConstants();
       for (final Object enumConstant : enumConstants) {
         if (((Enum<?>) enumConstant).name().equalsIgnoreCase(value.toString())) {
-          BeanUtils.setValue(obj, field, enumConstant, null);
+          setValue(obj, field, enumConstant, ignoreInvalidValues);
+          return;
         }
       }
-      return;
+      if (ignoreInvalidValues) {
+        log.warn("Invalid enum value:{} for {}", value, fieldType);
+        return;
+      }
+      throw new IllegalArgumentException("Invalid enum value " + value + " for " + fieldType);
     }
     if (fieldType.getClassLoader() != null
         && field.getAnnotation(NestedConfigurationProperties.class) != null) {
       final Object nestObj = BeanUtils.initial(fieldType);
-      BeanUtils.setValue(obj, field, nestObj, null);
+      setValue(obj, field, nestObj, ignoreInvalidValues);
       @SuppressWarnings("DuplicatedCode")
       final List<Field> nestFields = BeanUtils.retrievePrivateFields(fieldType, ArrayList::new);
       for (final Field nestField : nestFields) {
         final String key = prefix.concat(".").concat(nestField.getName());
         final Object nestValue = configMap.get(key);
-        retrieveSetFields(nestObj, nestField, nestValue, key, configMap);
+        retrieveSetFields(nestObj, nestField, nestValue, key, configMap, ignoreInvalidValues);
       }
     } else if (value != null) {
-      BeanUtils.setValue(obj, field, value, null);
+      setValue(obj, field, value, ignoreInvalidValues);
     }
+  }
+
+  private static void setValue(
+      final Object obj, final Field field, final Object value, final boolean ignoreInvalidValues) {
+    Object val;
+    Class<?> clazz = field.getType();
+    try {
+      if (value == null) {
+        val = null;
+      } else if (value.getClass().equals(clazz)) {
+        val = value;
+      } else if (clazz.equals(String.class)) {
+        val = String.valueOf(value);
+      } else if (clazz.equals(short.class) || clazz.equals(Short.class)) {
+        val = Short.valueOf(value.toString());
+      } else if (clazz.equals(int.class) || clazz.equals(Integer.class)) {
+        val = Integer.valueOf(value.toString());
+      } else if (clazz.equals(long.class) || clazz.equals(Long.class)) {
+        val = Long.valueOf(value.toString());
+      } else if (clazz.equals(float.class) || clazz.equals(Float.class)) {
+        val = Float.valueOf(value.toString());
+      } else if (clazz.equals(double.class) || clazz.equals(Double.class)) {
+        val = Double.valueOf(value.toString());
+      } else if (clazz.equals(boolean.class) || clazz.equals(Boolean.class)) {
+        val = Boolean.valueOf(value.toString());
+      } else val = value;
+    } catch (Exception e) {
+      log.warn("Could not set value for field {}", field);
+      if (ignoreInvalidValues) {
+        val = null;
+      } else throw e;
+    }
+    BeanUtils.setValue(obj, field, val, ignoreInvalidValues ? e -> {} : null);
   }
 
   @Nonnull

@@ -76,7 +76,8 @@ public class TableExporter {
         }
       }
       log.info("createTable:[\n{}\n]", sql);
-      windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
+      // TODO WARN 执行sql
+      // windContext.getExecutor().execute(sql.toString());
     }
     // 索引
     {
@@ -88,7 +89,8 @@ public class TableExporter {
           sql.append(sqlDefinition).append(";\n");
         }
         log.info("createTable:index[{}]", sql);
-        windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
+        // TODO WARN 执行sql
+        // windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
       }
     }
   }
@@ -123,7 +125,8 @@ public class TableExporter {
       sql.append(";\n\t").append(columnComment);
     }
     log.info("updateTable:[\n{}\n]", sql);
-    windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
+    // TODO WARN 执行sql
+    // windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
   }
 
   /** 获取需要更新的列. */

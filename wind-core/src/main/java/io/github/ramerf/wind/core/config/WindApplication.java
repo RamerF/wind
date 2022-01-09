@@ -3,6 +3,9 @@ package io.github.ramerf.wind.core.config;
 import io.github.ramerf.wind.core.WindVersion;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.ansi.*;
+import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration;
+import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration.DataSourceConfig;
+import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.ioc.ApplicationContext;
@@ -14,7 +17,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
 
 /**
  * TODO WARN 初始化框架.
@@ -29,7 +31,23 @@ public class WindApplication {
 
   private WindApplication() {}
 
-  public static void run(
+  public static void refresh(final String config) {
+    final AutoConfigConfiguration autoConfigConfiguration =
+        YmlUtil.process(AutoConfigConfiguration.class, config);
+    final Configuration configuration = autoConfigConfiguration.getConfiguration();
+    final DataSourceConfig dataSourceConfig = autoConfigConfiguration.getDataSourceConfig();
+    final String driverClassName = dataSourceConfig.getDriverClassName();
+    if (StringUtils.isEmpty(driverClassName)) {
+      throw new CommonException("Need to specify driverClassName in dataSourceConfig");
+    }
+    final Class<Object> driverClass = BeanUtils.getClazz(driverClassName);
+    // if (Datasou) {
+    //
+    // }
+    final Object initial = BeanUtils.initial(driverClassName);
+  }
+
+  public static void refresh(
       @Nullable Configuration configuration, @Nonnull final DataSource dataSource) {
     if (configuration == null) {
       configuration = new Configuration();
@@ -44,8 +62,7 @@ public class WindApplication {
     }
   }
 
-  public void setApplicationContext(@Nonnull final ApplicationContext applicationContext)
-      throws BeansException {
+  public void setApplicationContext(@Nonnull final ApplicationContext applicationContext) {
     WindApplication.applicationContext = applicationContext;
   }
 
