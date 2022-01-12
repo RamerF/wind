@@ -4,7 +4,6 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.FieldFunction;
-import io.github.ramerf.wind.core.support.resource.*;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
@@ -17,6 +16,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.type.ClassMetadata;
+import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
+import org.springframework.util.ClassUtils;
 
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 import static io.github.ramerf.wind.core.util.StringUtils.tokenizeToStringArray;
@@ -175,7 +181,7 @@ public final class BeanUtils {
                   ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
                       .concat(ClassUtils.convertClassNameToResourcePath(packagePattern))
                       .concat("/**/*.class"));
-      for (Resource resource : resources) {
+      for (org.springframework.core.io.Resource resource : resources) {
         try {
           ClassMetadata classMetadata =
               new CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
