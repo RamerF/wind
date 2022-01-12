@@ -1,10 +1,11 @@
 package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
+import io.github.ramerf.wind.core.asm.ClassMetaData;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.function.FieldFunction;
-import java.io.IOException;
+import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -15,6 +16,8 @@ import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import jdk.internal.org.objectweb.asm.ClassReader;
+import jdk.internal.org.objectweb.asm.tree.ClassNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.core.io.Resource;
@@ -121,8 +124,6 @@ public final class BeanUtils {
       classPath = classPath.replaceAll("/", ".");
     }
     try {
-      // 后期需要改成多个加载器,参考: org.apache.ibatis.io.ClassLoaderWrapper#classForName(java.lang.String,
-      // java.lang.ClassLoader[])
       return (Class<T>) Class.forName(classPath);
     } catch (ClassNotFoundException e) {
       throw new CommonException(String.format("Cannot load class[%s]", classPath), e);
@@ -416,10 +417,19 @@ public final class BeanUtils {
         .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
     log.info("main:[{}]", retrievePrivateFields(Ts.class, ArrayList::new));
     log.info("main:[{}]", getDeclaredField(Ts.class, "name"));
+
+    InputStream inputStream =
+        new FileInputStream(
+            "E:/workspace/wind/wind-core/target/classes/io/github/ramerf/wind/core/util/BeanUtils$Ts.class");
+    ClassReader classReader = new ClassReader(inputStream);
+    ClassNode classNode = new ClassNode();
+    classReader.accept(classNode, ClassReader.SKIP_DEBUG);
+    final ClassMetaData data = new ClassMetaData(classNode);
+    log.info("main:[{}]", data);
   }
 }
 
-/** The type Ts. */
+/** 测试类. */
 class Ts {
   @TableColumn(updatable = false)
   private long id;
