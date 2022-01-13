@@ -7,13 +7,13 @@ import java.util.stream.Collectors;
 import jdk.internal.org.objectweb.asm.tree.AnnotationNode;
 import jdk.internal.org.objectweb.asm.tree.ClassNode;
 
-public class ClassMetaData {
+public class ClassMetadata {
   /** 注解类全限定名 */
   private final List<String> annotations;
 
   private final String name;
 
-  public ClassMetaData(final ClassNode classNode) {
+  public ClassMetadata(final ClassNode classNode) {
     final String name = classNode.name.replace("/", ".");
     final List<AnnotationNode> annotations = classNode.visibleAnnotations;
     this.name = name;

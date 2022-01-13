@@ -121,8 +121,8 @@ public class WindApplication {
             entityPackage);
       }
     } catch (IOException e) {
-      entities = null;
       log.warn("initEntityInfo:fail to init entity info[{}]", e.getMessage());
+      return;
     }
     if (entities != null) {
       entities.forEach(EntityHelper::initEntity);

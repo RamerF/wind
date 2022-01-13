@@ -1,11 +1,11 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.annotation.TableColumn;
-import io.github.ramerf.wind.core.asm.ClassMetaData;
-import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.asm.ClassMetadata;
 import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.NotImplementedException;
 import io.github.ramerf.wind.core.function.FieldFunction;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -21,14 +21,8 @@ import jdk.internal.org.objectweb.asm.tree.ClassNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.type.ClassMetadata;
-import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
-import org.springframework.util.ClassUtils;
 
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
-import static io.github.ramerf.wind.core.util.StringUtils.tokenizeToStringArray;
 
 /**
  * The type Bean utils.
@@ -176,19 +170,22 @@ public final class BeanUtils {
     Set<Class<? extends T>> classes = new HashSet<>();
     String[] packagePatternArray = StringUtils.tokenizeToStringArray(packagePatterns, ",; \t\n");
     for (String packagePattern : packagePatternArray) {
-      Resource[] resources =
-          new PathMatchingResourcePatternResolver()
-              .getResources(
-                  ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
-                      .concat(ClassUtils.convertClassNameToResourcePath(packagePattern))
-                      .concat("/**/*.class"));
-      for (org.springframework.core.io.Resource resource : resources) {
+      ResourceUtils.getFiles(
+          "classpath*:" //
+              .concat(StringUtils.convertToResourcePath(packagePattern))
+              .concat("/**/*.class"));
+      Resource[] resources = new Resource[0];
+      for (Resource resource : resources) {
         try {
-          ClassMetadata classMetadata =
-              new CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
-          Class<T> clazz = BeanUtils.getClazz(classMetadata.getClassName());
+          InputStream inputStream = resource.getInputStream();
+          ClassReader classReader = new ClassReader(inputStream);
+          ClassNode classNode = new ClassNode();
+          classReader.accept(classNode, ClassReader.SKIP_DEBUG);
+          final ClassMetadata classMetadata = new ClassMetadata(classNode);
+          Class<?> clazz = classMetadata.getCurrentClass();
           if (assignableType == null || assignableType.isAssignableFrom(clazz)) {
-            classes.add(clazz);
+            //noinspection unchecked
+            classes.add((Class<? extends T>) clazz);
           }
         } catch (Throwable e) {
           log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", resource, e.toString());
@@ -208,30 +205,34 @@ public final class BeanUtils {
    * @throws IOException the IOException
    */
   public static <T> Set<Class<? extends T>> scanClassesWithAnnotation(
-      String packagePatterns, Class<? extends Annotation> annotation) throws IOException {
-    Set<Class<? extends T>> classes = new HashSet<>();
-    String[] packagePatternArray = tokenizeToStringArray(packagePatterns, ",; \t\n");
-    for (String packagePattern : packagePatternArray) {
-      Resource[] resources =
-          new PathMatchingResourcePatternResolver()
-              .getResources(
-                  ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
-                      .concat(ClassUtils.convertClassNameToResourcePath(packagePattern))
-                      .concat("/**/*.class"));
-      for (Resource resource : resources) {
-        try {
-          ClassMetadata classMetadata =
-              new CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
-          Class<T> clazz = BeanUtils.getClazz(classMetadata.getClassName());
-          if (annotation == null || clazz.isAnnotationPresent(annotation)) {
-            classes.add(clazz);
-          }
-        } catch (Throwable e) {
-          log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", resource, e.toString());
-        }
-      }
-    }
-    return classes;
+      String packagePatterns, Class<? extends Annotation> annotation) throws IOException
+        //   Set<Class<? extends T>> classes = new HashSet<>();
+        //   String[] packagePatternArray = tokenizeToStringArray(packagePatterns, ",; \t\n");
+        //   for (String packagePattern : packagePatternArray) {
+        //     Resource[] resources =
+        //         new PathMatchingResourcePatternResolver()
+        //             .getResources(
+        //                 ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
+        //                     .concat(ClassUtils.convertClassNameToResourcePath(packagePattern))
+        //                     .concat("/**/*.class"));
+        //     for (Resource resource : resources) {
+        //       try {
+        //         ClassMetadata classMetadata =
+        //             new
+        // CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
+        //         Class<T> clazz = BeanUtils.getClazz(classMetadata.getClassName());
+        //         if (annotation == null || clazz.isAnnotationPresent(annotation)) {
+        //           classes.add(clazz);
+        //         }
+        //       } catch (Throwable e) {
+        //         log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", resource,
+        // e.toString());
+        //       }
+        //     }
+        //   }
+        //   return classes;
+      {
+    throw new NotImplementedException("scanClassesWithAnnotation");
   }
 
   /** 获取类所有方法,包括父类 */
@@ -401,44 +402,4 @@ public final class BeanUtils {
     }
     return clazz;
   }
-
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   * @throws Exception the exception
-   */
-  public static void main(String[] args) throws Exception {
-    BeanUtils.scanClasses("io.github.ramerf", Condition.class)
-        .forEach(o -> log.info("main:[{}]", o));
-
-    invoke(null, String.class.getMethods()[0], "string");
-    invoke(null, String.class.getMethods()[0], "string")
-        .ifPresent(e -> log.info("main:调用失败处理[{}]", e.getClass()));
-    log.info("main:[{}]", retrievePrivateFields(Ts.class, ArrayList::new));
-    log.info("main:[{}]", getDeclaredField(Ts.class, "name"));
-
-    InputStream inputStream =
-        new FileInputStream(
-            "E:/workspace/wind/wind-core/target/classes/io/github/ramerf/wind/core/util/BeanUtils$Ts.class");
-    ClassReader classReader = new ClassReader(inputStream);
-    ClassNode classNode = new ClassNode();
-    classReader.accept(classNode, ClassReader.SKIP_DEBUG);
-    final ClassMetaData data = new ClassMetaData(classNode);
-    log.info("main:[{}]", data);
-  }
-}
-
-/** 测试类. */
-class Ts {
-  @TableColumn(updatable = false)
-  private long id;
-
-  @TableColumn(name = "alia")
-  private String name;
-
-  @TableColumn(insertable = false)
-  private String db;
-
-  private transient String idName;
 }

@@ -18,6 +18,10 @@ package io.github.ramerf.wind.core.util;
 
 import javax.annotation.Nullable;
 
+/**
+ * @since 2022.01.13
+ * @author ramer
+ */
 public final class Asserts {
   public static void notNull(final Object object, String message) {
     if (object == null) {

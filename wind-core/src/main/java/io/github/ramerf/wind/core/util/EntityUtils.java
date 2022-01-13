@@ -369,8 +369,4 @@ public final class EntityUtils {
     // return ((AdvisedSupport) advised.get(aopProxy)).getTargetSource().getTarget();
     throw new NotImplementedException("getJdkDynamicProxyTargetObject");
   }
-
-  public static void main(String[] args) {
-    getAllColumnFields(Ts.class).forEach(o -> System.out.println(o.getName()));
-  }
 }
