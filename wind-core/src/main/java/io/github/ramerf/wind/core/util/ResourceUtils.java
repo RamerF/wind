@@ -69,7 +69,7 @@ public class ResourceUtils {
     return result;
   }
 
-  private static Set<File> doFindAllClassPathFiles(String path, final Set<File> result)
+  private static void doFindAllClassPathFiles(String path, final Set<File> result)
       throws IOException {
     ClassLoader cl = getClassLoader();
     Enumeration<URL> resourceUrls =
@@ -82,10 +82,18 @@ public class ResourceUtils {
       }
       final File file = new File(url.getFile());
       if (file.exists()) {
-        result.add(file);
+        if (file.isDirectory() && file.canRead()) {
+          final File[] files = file.listFiles();
+          if (files != null) {
+            for (File subFile : files) {
+              doFindAllClassPathFiles(subFile.getPath(), result);
+            }
+          }
+        } else {
+          result.add(file);
+        }
       }
     }
-    return result;
   }
 
   /** 获取资源的根路径 */

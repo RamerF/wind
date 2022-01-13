@@ -4,8 +4,7 @@ import io.github.ramerf.wind.core.asm.ClassMetadata;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.exception.NotImplementedException;
 import io.github.ramerf.wind.core.function.FieldFunction;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -20,7 +19,6 @@ import jdk.internal.org.objectweb.asm.ClassReader;
 import jdk.internal.org.objectweb.asm.tree.ClassNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.core.io.Resource;
 
 import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
 
@@ -170,15 +168,14 @@ public final class BeanUtils {
     Set<Class<? extends T>> classes = new HashSet<>();
     String[] packagePatternArray = StringUtils.tokenizeToStringArray(packagePatterns, ",; \t\n");
     for (String packagePattern : packagePatternArray) {
-      ResourceUtils.getFiles(
-          "classpath*:" //
-              .concat(StringUtils.convertToResourcePath(packagePattern))
-              .concat("/**/*.class"));
-      Resource[] resources = new Resource[0];
-      for (Resource resource : resources) {
+      final Set<File> files =
+          ResourceUtils.getFiles(
+              "classpath*:" //
+                  .concat(StringUtils.convertToResourcePath(packagePattern))
+                  .concat("/**/*.class"));
+      for (File file : files) {
         try {
-          InputStream inputStream = resource.getInputStream();
-          ClassReader classReader = new ClassReader(inputStream);
+          ClassReader classReader = new ClassReader(new FileInputStream(file));
           ClassNode classNode = new ClassNode();
           classReader.accept(classNode, ClassReader.SKIP_DEBUG);
           final ClassMetadata classMetadata = new ClassMetadata(classNode);
@@ -188,7 +185,7 @@ public final class BeanUtils {
             classes.add((Class<? extends T>) clazz);
           }
         } catch (Throwable e) {
-          log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", resource, e.toString());
+          log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", file, e.toString());
         }
       }
     }
