@@ -18,7 +18,7 @@
         <druid.version>1.1.22</druid.version>
         <wind.version>4.0.7</wind.version>
         <lombok.version>1.18.20</lombok.version>
-        <postgresql.version>42.2.23</postgresql.version>
+        <postgresql.version>42.2.25</postgresql.version>
     </properties>
     <dependencies>
         <dependency>
