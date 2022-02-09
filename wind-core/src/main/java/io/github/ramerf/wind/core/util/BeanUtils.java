@@ -155,12 +155,12 @@ public final class BeanUtils {
   }
 
   /**
-   * 获取指定包下,指定接口/类的子类.
+   * 获取指定包下,指定接口/类的子类,不包含自身.
    *
    * @param <T> the type parameter
    * @param packagePatterns 支持多个包名分隔符: ",; \t\n"
    * @param assignableType 父接口/类
-   * @return 所有子类 set
+   * @return 所有子类,不包含自身assignableType
    * @throws IOException the IOException
    */
   public static <T> Set<Class<? extends T>> scanClasses(
@@ -180,7 +180,8 @@ public final class BeanUtils {
           classReader.accept(classNode, ClassReader.SKIP_DEBUG);
           final ClassMetadata classMetadata = new ClassMetadata(classNode);
           Class<?> clazz = classMetadata.getCurrentClass();
-          if (assignableType == null || assignableType.isAssignableFrom(clazz)) {
+          if (!clazz.equals(assignableType)
+              && (assignableType == null || assignableType.isAssignableFrom(clazz))) {
             //noinspection unchecked
             classes.add((Class<? extends T>) clazz);
           }

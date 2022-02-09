@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import java.io.IOException;
 import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ public class BeanUtilsTest {
   @Test
   @DisplayName("获取指定包下,指定接口/类的子类")
   public void testScanClasses() throws IOException {
-    BeanUtils.scanClasses("io.github.ramerf", Condition.class).forEach(System.out::println);
+    BeanUtils.scanClasses("io.github.ramerf", ITypeHandler.class).forEach(System.out::println);
   }
 
   @Test

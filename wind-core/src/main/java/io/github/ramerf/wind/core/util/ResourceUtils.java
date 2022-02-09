@@ -35,24 +35,8 @@ public class ResourceUtils {
   private static Set<File> findPathMatchingFiles(String locationPattern) throws IOException {
     String rootDirPath = getRootDir(locationPattern);
     String subPattern = locationPattern.substring(rootDirPath.length());
-    Set<File> rootDirResources = getFiles(rootDirPath);
-    Set<File> result = new LinkedHashSet<>(16);
-    for (File file : rootDirResources) {
-      // rootDirResource = resolveRootDirResource(rootDirResource);
-      // URL rootDirUrl = rootDirResource.getURL();
-      // if (equinoxResolveMethod != null && rootDirUrl.getProtocol().startsWith("bundle")) {
-      //   URL resolvedUrl =
-      //       (URL) ReflectionUtils.invokeMethod(equinoxResolveMethod, null, rootDirUrl);
-      //   if (resolvedUrl != null) {
-      //     rootDirUrl = resolvedUrl;
-      //   }
-      //   rootDirResource = new UrlResource(rootDirUrl);
-      // }
-      // result.addAll(doFindPathMatchingFileResources(rootDirResource, subPattern));
-    }
-    if (log.isDebugEnabled()) {
-      log.debug("Resolved location pattern [" + locationPattern + "] to resources " + result);
-    }
+    Set<File> result = getFiles(rootDirPath);
+    log.debug("Resolved location pattern [{}] to resources", locationPattern);
     return result;
   }
 
@@ -63,9 +47,7 @@ public class ResourceUtils {
     }
     Set<File> result = new LinkedHashSet<>(16);
     doFindAllClassPathFiles(path, result);
-    if (log.isDebugEnabled()) {
-      log.debug("Resolved classpath location [" + location + "] to resources " + result);
-    }
+    log.debug("Resolved classpath location [{}] to resources", location);
     return result;
   }
 
@@ -76,22 +58,26 @@ public class ResourceUtils {
         (cl != null ? cl.getResources(path) : ClassLoader.getSystemResources(path));
     while (resourceUrls.hasMoreElements()) {
       URL url = resourceUrls.nextElement();
-      log.info("doFindAllClassPathFiles:[{}]", url.getPath());
       if (!"file".equals(url.getProtocol())) {
         continue;
       }
+      log.debug("doFindAllClassPathFiles:[{},{}]", path, url.getPath());
       final File file = new File(url.getFile());
-      if (file.exists()) {
-        if (file.isDirectory() && file.canRead()) {
-          final File[] files = file.listFiles();
-          if (files != null) {
-            for (File subFile : files) {
-              doFindAllClassPathFiles(subFile.getPath(), result);
-            }
+      retrieveFiles(file, result);
+    }
+  }
+
+  public static void retrieveFiles(final File file, final Set<File> result) {
+    if (file.exists()) {
+      if (file.isDirectory() && file.canRead()) {
+        final File[] subFiles = file.listFiles();
+        if (subFiles != null) {
+          for (File subFile : subFiles) {
+            retrieveFiles(subFile, result);
           }
-        } else {
-          result.add(file);
         }
+      } else {
+        result.add(file);
       }
     }
   }
