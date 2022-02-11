@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.*;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
@@ -136,7 +137,7 @@ public class StringUtils {
     return (str != null && !str.isEmpty() && containsText(str));
   }
 
-  private static boolean containsText(final CharSequence str) {
+  private static boolean containsText(@Nonnull final CharSequence str) {
     int strLen = str.length();
     for (int i = 0; i < strLen; i++) {
       if (!Character.isWhitespace(str.charAt(i))) {
@@ -147,16 +148,6 @@ public class StringUtils {
   }
 
   /**
-   * 检测是否有长度,仅仅包含空白字符的字符串也会返回true.
-   *
-   * @param str the {@code String} to check (may be {@code null})
-   * @return {@code true} if the {@code String} is not {@code null} and has length
-   */
-  public static boolean hasLength(final String str) {
-    return (str != null && !str.isEmpty());
-  }
-
-  /**
    * 去除前后空白字符(空白字符定义 {@link Character#isWhitespace(char)}).
    *
    * @param str the {@code String} to check
@@ -164,7 +155,7 @@ public class StringUtils {
    * @see java.lang.Character#isWhitespace
    */
   public static String trimWhitespace(String str) {
-    if (!hasLength(str)) {
+    if (isEmpty(str)) {
       return str;
     }
     int beginIndex = 0;
@@ -186,7 +177,7 @@ public class StringUtils {
    * @see java.lang.Character#isWhitespace
    */
   public static String trimAllWhitespace(final String str) {
-    if (!hasLength(str)) {
+    if (isEmpty(str)) {
       return str;
     }
     int len = str.length();
@@ -250,7 +241,7 @@ public class StringUtils {
     log.info("main:split[{}]", split(",Upper,case,", ",", Function.identity()));
     log.info("main:splitToLong[{}]", splitToLong("1,2", ","));
     log.info("main:hasText[{}]", hasText(" "));
-    log.info("main:hasLength[{}]", hasLength(" "));
+    log.info("main:isEmpty[{}]", isEmpty(" "));
     log.info("main:trimAllWhitespace[{}]", trimWhitespace(" Q W E "));
     log.info("main:camelToUnderline[{}]", camelToUnderline("bigId"));
     log.info("main:camelToUnderline[{}]", camelToUnderline("bigDecimal_Id"));

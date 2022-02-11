@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.handler;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.exception.ReflectiveInvokeException;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -84,21 +85,20 @@ public class BeanResultHandler<E> extends AbstractResultHandler<E> {
       final Object finalValue =
           TypeHandlerHelper.toJavaValue(
               ValueType.of(value, field.getGenericType(), field),
-              BeanUtils.getValue(obj, field, null),
+              BeanUtils.getFieldValue(obj, field),
               field);
-      BeanUtils.setValue(
-          obj,
-          field,
-          finalValue,
-          exception ->
-              log.warn(
-                  "handle:跳过类型不匹配的字段[fieldName:{},paramType:{},valueType:{}]",
-                  field.getName(),
-                  field.getType().getSimpleName(),
-                  Optional.ofNullable(finalValue)
-                      .map(Object::getClass)
-                      .map(Class::getSimpleName)
-                      .orElse(null)));
+      try {
+        BeanUtils.setFieldValue(obj, field, finalValue);
+      } catch (ReflectiveInvokeException e) {
+        log.warn(
+            "handle:跳过类型不匹配的字段[fieldName:{},paramType:{},valueType:{}]",
+            field.getName(),
+            field.getType().getSimpleName(),
+            Optional.ofNullable(finalValue)
+                .map(Object::getClass)
+                .map(Class::getSimpleName)
+                .orElse(null));
+      }
     }
     return obj;
   }
@@ -121,8 +121,9 @@ public class BeanResultHandler<E> extends AbstractResultHandler<E> {
     final Object mappingObj = BeanUtils.initial(paramType);
     final Field referenceField = mappingInfo.getTargetField();
     referenceField.setAccessible(true);
-    BeanUtils.setValue(mappingObj, referenceField, map.get(mappingInfo.getJoinColumn()), null);
-    BeanUtils.setValue(obj, field, mappingObj, null);
+    BeanUtils.setFieldValueIgnoreException(
+        mappingObj, referenceField, map.get(mappingInfo.getJoinColumn()));
+    BeanUtils.setFieldValueIgnoreException(obj, field, mappingObj);
   }
 
   @EqualsAndHashCode

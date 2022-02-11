@@ -39,11 +39,14 @@ public enum MappingType {
     public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
       final Field joinField = mappingInfo.getJoinField();
       final Class<T> targetClazz = mappingInfo.getTargetClazz();
-      final Object relationValue = BeanUtils.getValue(poJo, joinField, null);
-      return Query.getInstance(targetClazz)
-          .select(null)
-          .where(StringCondition.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue))
-          .fetchOne(targetClazz);
+      final Object relationValue = BeanUtils.getFieldValueIgnoreException(poJo, joinField);
+      return relationValue == null
+          ? null
+          : Query.getInstance(targetClazz)
+              .select(null)
+              .where(
+                  StringCondition.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue))
+              .fetchOne(targetClazz);
     }
 
     @Override
@@ -98,13 +101,17 @@ public enum MappingType {
     @Override
     public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
       final Class<E> targetClazz = mappingInfo.getTargetClazz();
-      final Object relationValue = BeanUtils.getValue(poJo, mappingInfo.getJoinField(), null);
+      final Object relationValue =
+          BeanUtils.getFieldValueIgnoreException(poJo, mappingInfo.getJoinField());
       final Object mapping =
-          Query.getInstance(targetClazz)
-              .select(null)
-              .where(
-                  StringCondition.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue))
-              .fetchAll(targetClazz);
+          relationValue == null
+              ? null
+              : Query.getInstance(targetClazz)
+                  .select(null)
+                  .where(
+                      StringCondition.of(targetClazz)
+                          .eq(mappingInfo.getTargetColumn(), relationValue))
+                  .fetchAll(targetClazz);
       return (T) mapping;
     }
 
@@ -179,11 +186,14 @@ public enum MappingType {
     public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
       final Field joinField = mappingInfo.getJoinField();
       final Class<T> targetClazz = mappingInfo.getTargetClazz();
-      final Object relationValue = BeanUtils.getValue(poJo, joinField, null);
-      return Query.getInstance(targetClazz)
-          .select(null)
-          .where(StringCondition.of(targetClazz).eq(mappingInfo.getTargetField(), relationValue))
-          .fetchOne(targetClazz);
+      final Object relationValue = BeanUtils.getFieldValueIgnoreException(poJo, joinField);
+      return relationValue == null
+          ? null
+          : Query.getInstance(targetClazz)
+              .select(null)
+              .where(
+                  StringCondition.of(targetClazz).eq(mappingInfo.getTargetField(), relationValue))
+              .fetchOne(targetClazz);
     }
 
     @Override

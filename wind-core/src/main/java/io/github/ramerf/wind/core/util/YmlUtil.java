@@ -51,7 +51,7 @@ public final class YmlUtil {
       }
       final String prefix = getPrefix(annotation);
       final T obj = BeanUtils.initial(clazz);
-      final List<Field> fields = BeanUtils.retrievePrivateFields(clazz, ArrayList::new);
+      final List<Field> fields = BeanUtils.retrievePrivateFields(clazz);
       for (final Field field : fields) {
         final String key = prefix.concat(".").concat(field.getName());
         final Object value = configMap.get(key);
@@ -96,7 +96,7 @@ public final class YmlUtil {
       final Object nestObj = BeanUtils.initial(fieldType);
       setValue(obj, field, nestObj, ignoreInvalidValues);
       @SuppressWarnings("DuplicatedCode")
-      final List<Field> nestFields = BeanUtils.retrievePrivateFields(fieldType, ArrayList::new);
+      final List<Field> nestFields = BeanUtils.retrievePrivateFields(fieldType);
       for (final Field nestField : nestFields) {
         final String key = prefix.concat(".").concat(nestField.getName());
         final Object nestValue = configMap.get(key);
@@ -137,7 +137,11 @@ public final class YmlUtil {
         val = null;
       } else throw e;
     }
-    BeanUtils.setValue(obj, field, val, ignoreInvalidValues ? e -> {} : null);
+    if (ignoreInvalidValues) {
+      BeanUtils.setFieldValueIgnoreException(obj, field, val);
+    } else {
+      BeanUtils.setFieldValue(obj, field, val);
+    }
   }
 
   @Nonnull

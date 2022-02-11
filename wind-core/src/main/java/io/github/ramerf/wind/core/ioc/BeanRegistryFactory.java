@@ -79,7 +79,7 @@ public class BeanRegistryFactory {
       }
       // 持有当前方法的对象
       Object ownObj = applicationContext.getBean(definitionMethod.getDeclaringClass());
-      BeanUtils.invoke(ownObj, definitionMethod);
+      BeanUtils.invokeMethod(ownObj, definitionMethod);
     }
     // TODO WARN 执行bean依赖字段(@Resource)注入
 

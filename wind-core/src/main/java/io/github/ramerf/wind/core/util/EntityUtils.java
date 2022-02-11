@@ -53,8 +53,7 @@ public final class EntityUtils {
   public static List<Field> getAllColumnFields(
       @Nonnull final Class<?> obj, @Nullable SqlStatementType sqlStatementType) {
     Stream<Field> stream =
-        BeanUtils.retrievePrivateFields(obj, ArrayList::new).stream()
-            .filter(EntityUtils::filterColumnField);
+        BeanUtils.retrievePrivateFields(obj).stream().filter(EntityUtils::filterColumnField);
     if (sqlStatementType != null) {
       final EntityInfo entityInfo = EntityHelper.getEntityInfo(obj);
       final Map<Field, EntityColumn> fieldColumnMap = entityInfo.getFieldColumnMap();
@@ -120,7 +119,7 @@ public final class EntityUtils {
       }
     }
     final List<Field> fields =
-        stream.filter(field -> BeanUtils.getValue(t, field, null) != null).collect(toList());
+        stream.filter(field -> BeanUtils.getFieldValue(t, field) != null).collect(toList());
     if (log.isTraceEnabled()) {
       log.debug("getNonNullColumnFields:[{}]", fields);
     }

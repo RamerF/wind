@@ -11,10 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SimpleException extends CommonException {
 
-  public SimpleException() {
-    super();
-  }
-
   public SimpleException(final String message) {
     super(message);
   }

@@ -11,10 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CommonException extends RuntimeException {
 
-  public CommonException() {
-    super();
-  }
-
   public CommonException(final String message) {
     super(message);
   }

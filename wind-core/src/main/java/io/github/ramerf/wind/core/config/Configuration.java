@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
-import lombok.*;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,6 +44,9 @@ public class Configuration {
 
   /** 全局id生成器,默认自增,实体可以单独指定{@link TableInfo#idGenerator()} */
   private IdGenerator idGenerator = IdGenerator.AUTO_INCREMENT_ID_GENERATOR;
+
+  /** jdbc环境配置.数据源,事务 */
+  private JdbcEnvironment jdbcEnvironment;
 
   public enum DdlAuto {
     /** Create ddl auto. */

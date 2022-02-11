@@ -92,7 +92,7 @@ public class Domain<T, ID extends Serializable> {
   @SuppressWarnings("unchecked")
   public int delete() throws DataAccessException {
     final Field idField = EntityHelper.getEntityIdField(this.getClass());
-    return genericService().delete((ID) BeanUtils.getValue(this, idField, null));
+    return genericService().delete((ID) BeanUtils.getFieldValue(this, idField));
   }
 
   /**

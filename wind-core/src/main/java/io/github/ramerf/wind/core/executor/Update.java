@@ -98,12 +98,12 @@ public final class Update<T> {
    */
   public int create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
     boolean returnPk = true;
-    final Object existId = BeanUtils.getValue(t, idField, null);
+    final Object existId = BeanUtils.getFieldValue(t, idField);
     if (existId == null) {
       final Object id = idGenerator.nextId(t);
       if (id != null) {
         returnPk = false;
-        BeanUtils.setValue(t, idField, id, null);
+        BeanUtils.setFieldValue(t, idField, id);
       }
     }
     setCurrentTime(t, entityInfo.getCreateTimeField());
@@ -122,7 +122,7 @@ public final class Update<T> {
               final String column = EntityUtils.fieldToColumn(field);
               columns.append(columns.length() > 0 ? ",".concat(column) : column);
               valueMarks.append(valueMarks.length() > 0 ? ",?" : "?");
-              getArgsValueSetConsumer(index, field, BeanUtils.getValue(t, field, null), list);
+              getArgsValueSetConsumer(index, field, BeanUtils.getFieldValue(t, field), list);
             });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql = String.format(sql, entityInfo.getName(), columns, valueMarks);
@@ -148,7 +148,7 @@ public final class Update<T> {
         returnId = ((BigInteger) returnId).longValue();
       }
       if (returnId != null) {
-        BeanUtils.setValue(t, idField, returnId, null);
+        BeanUtils.setFieldValue(t, idField, returnId);
       }
     }
     return update;
@@ -178,12 +178,12 @@ public final class Update<T> {
     AtomicBoolean returnPk = new AtomicBoolean(true);
     ts.forEach(
         t -> {
-          final Object idValue = BeanUtils.getValue(t, idField, null);
+          final Object idValue = BeanUtils.getFieldValue(t, idField);
           if (idValue == null) {
             final Object id = idGenerator.nextId(t);
             if (id != null) {
               returnPk.set(false);
-              BeanUtils.setValue(t, idField, id, null);
+              BeanUtils.setFieldValue(t, idField, id);
             }
           }
           setCurrentTime(t, entityInfo.getCreateTimeField());
@@ -223,7 +223,7 @@ public final class Update<T> {
                       final T obj = execList.get(i);
                       savingFields.forEach(
                           field ->
-                              setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
+                              setArgsValue(index, field, BeanUtils.getFieldValue(obj, field), ps));
                     }
 
                     @Override
@@ -241,7 +241,7 @@ public final class Update<T> {
               if (idValue instanceof BigInteger) {
                 idValue = ((BigInteger) idValue).longValue();
               }
-              BeanUtils.setValue(ts.get(i), idField, idValue, null);
+              BeanUtils.setFieldValue(ts.get(i), idField, idValue);
             }
           }
           /*
@@ -308,11 +308,11 @@ public final class Update<T> {
             field -> {
               final String column = EntityUtils.fieldToColumn(field);
               setBuilder.append(String.format(setBuilder.length() > 0 ? ",%s=?" : "%s=?", column));
-              getArgsValueSetConsumer(index, field, BeanUtils.getValue(t, field, null), list);
+              getArgsValueSetConsumer(index, field, BeanUtils.getFieldValue(t, field), list);
             });
     // 没有条件时,默认根据id更新
     if (condition.isEmpty()) {
-      this.condition.eq(idField, BeanUtils.getValue(t, idField, null));
+      this.condition.eq(idField, BeanUtils.getFieldValue(t, idField));
     }
     this.condition.appendLogicNotDelete();
     final String sql = "UPDATE %s SET %s WHERE %s";
@@ -387,9 +387,9 @@ public final class Update<T> {
                       setCurrentTime(obj, entityInfo.getUpdateTimeField());
                       savingFields.forEach(
                           field ->
-                              setArgsValue(index, field, BeanUtils.getValue(obj, field, null), ps));
+                              setArgsValue(index, field, BeanUtils.getFieldValue(obj, field), ps));
                       LambdaCondition.of(clazz)
-                          .eq(idField, BeanUtils.getValue(obj, idField, null))
+                          .eq(idField, BeanUtils.getFieldValue(obj, idField))
                           .getValues(index)
                           .forEach(val -> val.accept(ps));
                     }
@@ -486,7 +486,7 @@ public final class Update<T> {
                 .collect(toList());
       }
     }
-    Object id = BeanUtils.getValue(t, idField, null);
+    Object id = BeanUtils.getFieldValue(t, idField);
     // 自增id,需要去掉
     if (id == null) {
       savingFields.remove(idField);
@@ -499,15 +499,15 @@ public final class Update<T> {
     if (field == null) {
       return;
     }
-    final Object val = BeanUtils.getValue(t, field, null);
+    final Object val = BeanUtils.getFieldValue(t, field);
     final Class<?> type = field.getType();
     if (val == null) {
-      BeanUtils.setValue(t, field, getCurrentTimeValue(field), null);
+      BeanUtils.setFieldValue(t, field, getCurrentTimeValue(field));
       return;
     }
     // 如果是基本类型int,long,默认值为0,此时也需要赋值
     if ((type.equals(int.class) || type.equals(long.class)) && (long) val == 0) {
-      BeanUtils.setValue(t, field, getCurrentTimeValue(field), null);
+      BeanUtils.setFieldValue(t, field, getCurrentTimeValue(field));
     }
   }
 

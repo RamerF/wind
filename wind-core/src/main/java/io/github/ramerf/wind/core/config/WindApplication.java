@@ -5,25 +5,22 @@ import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.ansi.*;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration.DataSourceConfig;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.ClassInstantiationException;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.ioc.ApplicationContext;
+import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
+import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
+import java.util.Properties;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * TODO WARN 初始化框架.
- *
- * @author ramer
- * @since 2020.3.28
- */
 @Slf4j
 public class WindApplication {
   private static final WindContext windContext = new WindContext();
@@ -31,27 +28,41 @@ public class WindApplication {
 
   private WindApplication() {}
 
-  public static void refresh(final String config) {
+  /** 通过指定配置文件启动. */
+  public static void refresh(final String configPath) {
     final AutoConfigConfiguration autoConfigConfiguration =
-        YmlUtil.process(AutoConfigConfiguration.class, config);
+        YmlUtil.process(AutoConfigConfiguration.class, configPath);
     final Configuration configuration = autoConfigConfiguration.getConfiguration();
     final DataSourceConfig dataSourceConfig = autoConfigConfiguration.getDataSourceConfig();
     final String driverClassName = dataSourceConfig.getDriverClassName();
-    if (StringUtils.isEmpty(driverClassName)) {
-      throw new CommonException("Need to specify driverClassName in dataSourceConfig");
+    Asserts.hasText(driverClassName, "Need to specify driverClassName in dataSourceConfig");
+    final DataSource dataSource;
+    try {
+      dataSource = BeanUtils.initial(driverClassName);
+    } catch (ClassInstantiationException e) {
+      throw new IllegalStateException("Cannot initial class " + driverClassName);
     }
-    final Class<Object> driverClass = BeanUtils.getClazz(driverClassName);
-    // if (Datasou) {
-    //
-    // }
-    final Object initial = BeanUtils.initial(driverClassName);
+    // TODO WARN 可配置
+    TransactionFactory transactionFactory = new JdbcTransactionFactory();
+    configuration.setJdbcEnvironment(new JdbcEnvironment(transactionFactory, dataSource));
+    refresh(configuration);
+  }
+
+  public static void refresh(@Nonnull final DataSource dataSource) {
+    refresh(new JdbcTransactionFactory(), dataSource);
   }
 
   public static void refresh(
-      @Nullable Configuration configuration, @Nonnull final DataSource dataSource) {
-    if (configuration == null) {
-      configuration = new Configuration();
-    }
+      @Nonnull final TransactionFactory transactionFactory, @Nonnull final DataSource dataSource) {
+    Configuration configuration = new Configuration();
+    configuration.setJdbcEnvironment(new JdbcEnvironment(transactionFactory, dataSource));
+    refresh(configuration);
+  }
+
+  public static void refresh(@Nonnull Configuration configuration) {
+    final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
+    Asserts.notNull(jdbcEnvironment, "需要指定数据源");
+    final DataSource dataSource = jdbcEnvironment.getDataSource();
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, configuration.getDialect()));
     windContext.setConfiguration(configuration);
     windContext.setExecutor(new SimpleJdbcExecutor(dataSource));
@@ -66,6 +77,12 @@ public class WindApplication {
     WindApplication.applicationContext = applicationContext;
   }
 
+  private TransactionFactory getTransactionFactory(@Nullable final String type, Properties props) {
+    TransactionFactory factory = BeanUtils.initial(type);
+    factory.setProperties(props);
+    return factory;
+  }
+
   @SuppressWarnings("RedundantThrows")
   private static void afterPropertiesSet() throws Exception {
     // 打印banner
@@ -78,7 +95,7 @@ public class WindApplication {
     EntityUtils.initial(windContext);
     // 初始化实体信息
     EntityHelper.initital(windContext);
-    initEntityInfo(WindVersion.class, windContext.getConfiguration());
+    initEntityInfo(windContext.getConfiguration());
     // TODO WARN 发布初始化完成事件
     //   publisher.publishEvent(new InitFinishEvent(windContext));
   }
@@ -100,13 +117,13 @@ public class WindApplication {
             AnsiStyle.FAINT));
   }
 
-  private static void initEntityInfo(final Class<?> bootClass, final Configuration configuration) {
+  private static void initEntityInfo(final Configuration configuration) {
     String scanBasePackages;
     String entityPackage;
     if (StringUtils.nonEmpty(configuration.getEntityPackage())) {
       entityPackage = configuration.getEntityPackage();
     } else {
-      entityPackage = bootClass.getPackage().getName();
+      entityPackage = WindVersion.class.getPackage().getName();
     }
     log.info("initEntityInfo:package[{}]", entityPackage);
     ApplicationContext applicationContext =

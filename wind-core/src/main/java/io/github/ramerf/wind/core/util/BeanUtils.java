@@ -1,9 +1,7 @@
 package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.asm.ClassMetadata;
-import io.github.ramerf.wind.core.exception.CommonException;
-import io.github.ramerf.wind.core.exception.NotImplementedException;
-import io.github.ramerf.wind.core.function.FieldFunction;
+import io.github.ramerf.wind.core.exception.*;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
@@ -11,118 +9,81 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import jdk.internal.org.objectweb.asm.ClassReader;
 import jdk.internal.org.objectweb.asm.tree.ClassNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 
-import static io.github.ramerf.wind.core.util.StringUtils.camelToUnderline;
-
 /**
  * The type Bean utils.
  *
+ * @since 2022.02.09
  * @author ramer
- * @since 2019 /12/26
  */
 @Slf4j
 public final class BeanUtils {
-  /** 对象所有(包含父类)私有字段. */
-  private static final Map<Class<?>, WeakReference<List<Field>>> PRIVATE_FIELDS_MAP =
-      new ConcurrentHashMap<>();
-  /** 对象的写入方法. */
-  private static final Map<Class<?>, WeakReference<List<Method>>> WRITE_METHOD_MAP =
-      new ConcurrentHashMap<>();
-  /** lambda和对应的Field. */
-  private static final Map<FieldFunction, WeakReference<Field>> LAMBDA_FIELD_MAP =
+  private static final Map<Class<?>, WeakReference<Collection<Field>>> PRIVATE_FIELDS_MAP =
       new ConcurrentHashMap<>();
 
-  /** Map转Bean. */
-  public static <R> R mapToBean(Map<String, Object> map, Class<R> clazz) {
-    final R r = initial(clazz);
-    Stream.of(clazz.getMethods())
-        .filter(o -> o.getName().startsWith("set") && o.getParameterTypes().length == 1)
-        .forEach(
-            f -> {
-              final Object value = map.get(camelToUnderline(methodToProperty(f.getName())));
-              try {
-                f.setAccessible(true);
-                f.invoke(r, value);
-              } catch (IllegalAccessException
-                  | IllegalArgumentException
-                  | InvocationTargetException e) {
-                log.info(
-                    "mapToBean:跳过类型不匹配的字段[{} {}->{}]",
-                    methodToProperty(f.getName()),
-                    f.getParameterTypes()[0].getSimpleName(),
-                    value.getClass().getSimpleName());
-              }
-            });
-    return r;
+  public static ArrayList<Field> retrievePrivateFields(@Nonnull final Class<?> clazz) {
+    ArrayList<Field> container = new ArrayList<>();
+    return retrievePrivateFields(clazz, container);
   }
 
-  /** 获取所有(包含父类)private属性. */
-  public static List<Field> retrievePrivateFields(
-      @Nonnull final Class<?> clazz, @Nonnull final Supplier<List<Field>> container) {
+  public static <T extends Collection<Field>> T retrievePrivateFields(
+      @Nonnull final Class<?> clazz, @Nonnull final T container) {
+    //noinspection unchecked
     return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
         .map(Reference::get)
+        .map(t -> (T) t)
         .orElseGet(
             () -> {
-              final List<Field> list = getPrivateFields(clazz, container.get());
-              PRIVATE_FIELDS_MAP.put(clazz, new WeakReference<>(list));
-              return list;
+              final T collection = getPrivateFields(clazz, container);
+              PRIVATE_FIELDS_MAP.put(clazz, new WeakReference<>(collection));
+              return collection;
             });
   }
 
-  private static List<Field> getPrivateFields(
-      @Nonnull Class<?> clazz, @Nonnull final List<Field> fields) {
+  private static <T extends Collection<Field>> T getPrivateFields(
+      @Nonnull Class<?> clazz, @Nonnull final T containers) {
     do {
       for (final Field superField : clazz.getDeclaredFields()) {
         // 同名覆盖只保留子类字段
-        if (fields.stream().noneMatch(o -> o.getName().equals(superField.getName()))) {
-          fields.add(superField);
+        if (containers.stream().noneMatch(o -> o.getName().equals(superField.getName()))) {
+          containers.add(superField);
         }
       }
     } while ((clazz = clazz.getSuperclass()) != null);
-    return fields;
+    return containers;
   }
 
-  /** 实例化对象. */
-  public static <T> T initial(final Class<T> clazz) throws CommonException {
+  public static <T> T initial(final Class<T> clazz) throws ClassInstantiationException {
     try {
       return clazz.newInstance();
     } catch (InstantiationException | IllegalAccessException e) {
-      throw new CommonException(
+      throw new ClassInstantiationException(
           String.format("Cannot get instance for class[%s]", clazz.getSimpleName()), e);
     }
   }
 
-  /** 实例化对象. */
-  public static <T> T initial(final String classPath) throws CommonException {
-    try {
-      return initial(getClazz(classPath));
-    } catch (CommonException e) {
-      throw new CommonException(String.format("Cannot initial class [%s]", classPath), e);
-    }
+  public static <T> T initial(final String classPath) throws ClassInstantiationException {
+    return initial(getClazz(classPath));
   }
 
-  /** 通过类路径获取Class. */
   @SuppressWarnings("all")
-  public static <T> Class<T> getClazz(String classPath) throws CommonException {
+  public static <T> Class<T> getClazz(String classPath) throws ClassInstantiationException {
     if (classPath.contains("/")) {
       classPath = classPath.replaceAll("/", ".");
     }
     try {
       return (Class<T>) Class.forName(classPath);
     } catch (ClassNotFoundException e) {
-      throw new CommonException(String.format("Cannot load class[%s]", classPath), e);
+      throw new ClassInstantiationException(String.format("Cannot load class[%s]", classPath), e);
     }
   }
 
-  /** 通过方法名获取bean属性名. */
   public static String methodToProperty(String name) {
     final String is = "is";
     final String get = "get";
@@ -154,15 +115,6 @@ public final class BeanUtils {
     return null;
   }
 
-  /**
-   * 获取指定包下,指定接口/类的子类,不包含自身.
-   *
-   * @param <T> the type parameter
-   * @param packagePatterns 支持多个包名分隔符: ",; \t\n"
-   * @param assignableType 父接口/类
-   * @return 所有子类,不包含自身assignableType
-   * @throws IOException the IOException
-   */
   public static <T> Set<Class<? extends T>> scanClasses(
       String packagePatterns, Class<T> assignableType) throws IOException {
     Set<Class<? extends T>> classes = new HashSet<>();
@@ -193,15 +145,6 @@ public final class BeanUtils {
     return classes;
   }
 
-  /**
-   * 获取指定包下,指定接口/类的子类.
-   *
-   * @param <T> the type parameter
-   * @param packagePatterns 支持多个包名分隔符: ",; \t\n"
-   * @param annotation 父接口/类
-   * @return 所有子类 set
-   * @throws IOException the IOException
-   */
   public static <T> Set<Class<? extends T>> scanClassesWithAnnotation(
       String packagePatterns, Class<? extends Annotation> annotation) throws IOException
         //   Set<Class<? extends T>> classes = new HashSet<>();
@@ -233,7 +176,6 @@ public final class BeanUtils {
     throw new NotImplementedException("scanClassesWithAnnotation");
   }
 
-  /** 获取类所有方法,包括父类 */
   public static Set<Method> retrieveMethods(@Nonnull Class<?> clazz) {
     Set<Method> methods = new HashSet<>();
     do {
@@ -242,7 +184,6 @@ public final class BeanUtils {
     return methods;
   }
 
-  /** 获取指定类中包含指定注解的方法 */
   public static Set<Method> scanMethodsWithAnnotation(
       final Class<?> clazz, final Class<? extends Annotation> annotationClass) throws IOException {
     return retrieveMethods(clazz).stream()
@@ -251,90 +192,96 @@ public final class BeanUtils {
   }
 
   /**
-   * {@link Method#invoke(Object, Object...)}<br>
-   * 用法:
+   * 调用指定方法.
    *
-   * <pre>
-   *  BeanUtils.invoke(null, String.class.getMethods()[0], "string")
-   *         .ifPresent(e -&gt; log.info(" BeanUtils.main:调用失败处理[{}]", e.getClass()));
-   * </pre>
+   * @throws ReflectiveInvokeException 包装实际异常
+   * @see #invokeMethodIgnoreException(Object, Method, Object...)
    */
-  public static Optional<Exception> invoke(Object obj, Method method, Object... value) {
+  public static Object invokeMethod(final Object obj, Method method, Object... value)
+      throws ReflectiveInvokeException {
     try {
       if (!method.isAccessible()) {
         method.setAccessible(true);
       }
-      method.invoke(obj, value);
-      return Optional.empty();
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      return Optional.of(e);
+      return method.invoke(obj, value);
+    } catch (IllegalAccessException
+        | IllegalArgumentException
+        | InvocationTargetException
+        | NullPointerException e) {
+      throw new ReflectiveInvokeException(e);
+    }
+  }
+
+  /** 调用指定方法,忽略错误. */
+  public static Object invokeMethodIgnoreException(
+      final Object obj, Method method, Object... value) {
+    try {
+      return invokeMethod(obj, method, value);
+    } catch (ReflectiveInvokeException e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+      return null;
     }
   }
 
   /**
-   * 对于 {@link Field#get(Object)}<br>
-   * 用法:
+   * 获取字段的值.
    *
-   * <pre>
-   *  BeanUtils.invoke(obj, field, e -&gt; throw e);
-   * </pre>
-   *
-   * @param consumer 异常时的处理,默认抛出异常
+   * @throws ReflectiveInvokeException 包装实际异常
+   * @see #getFieldValueIgnoreException(Object, Field)
    */
-  public static Object getValue(
-      final Object obj, final Field field, final Function<RuntimeException, Object> consumer) {
+  public static Object getFieldValue(final Object obj, final Field field)
+      throws ReflectiveInvokeException {
     try {
       if (!field.isAccessible()) {
         field.setAccessible(true);
       }
       return field.get(obj);
     } catch (IllegalArgumentException | IllegalAccessException e) {
-      return Optional.ofNullable(consumer)
-          .map(
-              ex ->
-                  ex.apply(
-                      e instanceof IllegalAccessException
-                          ? new CommonException(e)
-                          : (IllegalArgumentException) e))
-          .orElseGet(
-              () -> {
-                log.warn(e.getMessage(), e);
-                return null;
-              });
+      throw new ReflectiveInvokeException(e);
+    }
+  }
+
+  /** 获取字段的值,忽略错误. */
+  public static Object getFieldValueIgnoreException(final Object obj, final Field field) {
+    try {
+      return getFieldValue(obj, field);
+    } catch (ReflectiveInvokeException e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+      return null;
     }
   }
 
   /**
-   * 对于 {@link Field#set(Object, Object)}}<br>
-   * 用法:
+   * 设置字段的值.
    *
-   * <pre>
-   *  BeanUtils.setValue(obj, field, value, e -&gt; throw e);
-   * </pre>
-   *
-   * @param consumer 异常时的处理,null时抛出异常
+   * @throws ReflectiveInvokeException 包装实际异常
+   * @see #setFieldValueIgnoreException(Object, Field, Object)
    */
-  public static void setValue(
-      final Object obj, final Field field, final Object value, Consumer<RuntimeException> consumer)
-      throws CommonException {
+  public static void setFieldValue(final Object obj, final Field field, final Object value)
+      throws ReflectiveInvokeException {
     try {
       if (!field.isAccessible()) {
         field.setAccessible(true);
       }
       field.set(obj, value);
     } catch (IllegalArgumentException | IllegalAccessException e) {
-      if (consumer != null) {
-        consumer.accept(
-            e instanceof IllegalAccessException
-                ? new CommonException(e)
-                : (IllegalArgumentException) e);
-      } else {
-        throw new CommonException(e);
-      }
+      throw new ReflectiveInvokeException(e);
     }
   }
 
-  /** 基本类型零值. */
+  /** 设置字段的值,忽略错误. */
+  public static void setFieldValueIgnoreException(
+      final Object obj, final Field field, final Object value) {
+    try {
+      setFieldValue(obj, field, value);
+    } catch (ReflectiveInvokeException e) {
+      log.warn(e.getMessage());
+      log.error(e.getMessage(), e);
+    }
+  }
+
   public static Object getPrimitiveDefaultValue(final Class<?> clazz) {
     if (byte.class.equals(clazz)) {
       return 0;
@@ -363,18 +310,11 @@ public final class BeanUtils {
     throw new CommonException("无法获取默认值:" + clazz);
   }
 
-  /** Call {@link org.springframework.beans.BeanUtils#copyProperties(Object, Object, String...)} */
   public static void copyProperties(Object source, Object target, String... ignoreProperties)
       throws BeansException {
     org.springframework.beans.BeanUtils.copyProperties(source, target, ignoreProperties);
   }
 
-  /**
-   * 获取一个 Type 类型实际对应的Class
-   *
-   * @param type 类型
-   * @return 与Type类型实际对应的Class
-   */
   @SuppressWarnings("rawtypes")
   public static Class<?> getTypeClass(Type type) {
     Class<?> clazz = null;
