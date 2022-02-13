@@ -18,14 +18,8 @@ package io.github.ramerf.wind.core.executor;
 
 import java.sql.PreparedStatement;
 
-/** 复制于: {@link org.springframework.jdbc.core.PreparedStatementSetter} */
 @FunctionalInterface
 public interface PreparedStatementSetter {
 
-  /**
-   * Set parameter values on the given PreparedStatement.
-   *
-   * @param ps the PreparedStatement to invoke setter methods on
-   */
   void setValues(PreparedStatement ps);
 }

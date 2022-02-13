@@ -2,15 +2,12 @@ package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.exception.ReflectiveInvokeException;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -47,11 +44,7 @@ public class BeanUtilsTest {
   }
 
   @Test
-  public void testGetDeclaredField() throws Exception {
+  public void testGetDeclaredField() {
     log.info("[{}]", BeanUtils.getDeclaredField(Ts.class, "name"));
-    final SqlSession sqlSession =
-        SqlSessionManager.newInstance(new FileInputStream("")).openSession();
-    sqlSession.getMapper(Object.class);
-    sqlSession.commit();
   }
 }

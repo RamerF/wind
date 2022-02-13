@@ -8,7 +8,10 @@ import javax.sql.DataSource;
 public interface TransactionFactory {
   default void setProperties(Properties props) {}
 
-  Transaction newTransaction(Connection var1);
+  Transaction newTransaction(Connection connection);
 
-  Transaction newTransaction(DataSource var1, TransactionIsolationLevel var2, boolean var3);
+  Transaction newTransaction(
+      DataSource dataSource,
+      TransactionIsolationLevel transactionIsolationLevel,
+      boolean autoCommit);
 }

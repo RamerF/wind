@@ -18,14 +18,7 @@ package io.github.ramerf.wind.core.executor;
 
 import java.sql.*;
 
-/** 复制于: {@link org.springframework.jdbc.core.PreparedStatementCreator} */
 @FunctionalInterface
 public interface PreparedStatementCreator {
-  /**
-   * Create a statement in this connection. Allows implementations to use PreparedStatements.
-   *
-   * @param con Connection to use to create statement
-   * @return a prepared statement
-   */
   PreparedStatement createPreparedStatement(Connection con);
 }

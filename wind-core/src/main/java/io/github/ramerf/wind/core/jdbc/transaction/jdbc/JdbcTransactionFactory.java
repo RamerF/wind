@@ -9,12 +9,16 @@ import javax.sql.DataSource;
 public class JdbcTransactionFactory implements TransactionFactory {
   public JdbcTransactionFactory() {}
 
-  public Transaction newTransaction(Connection conn) {
-    return new JdbcTransaction(conn);
+  @Override
+  public Transaction newTransaction(Connection connection) {
+    return new JdbcTransaction(connection);
   }
 
+  @Override
   public Transaction newTransaction(
-      DataSource ds, TransactionIsolationLevel level, boolean autoCommit) {
-    return new JdbcTransaction(ds, level, autoCommit);
+      DataSource dataSource,
+      TransactionIsolationLevel transactionIsolationLevel,
+      boolean autoCommit) {
+    return new JdbcTransaction(dataSource, transactionIsolationLevel, autoCommit);
   }
 }

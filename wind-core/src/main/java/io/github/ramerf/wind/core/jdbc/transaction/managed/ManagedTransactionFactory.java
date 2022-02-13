@@ -12,6 +12,7 @@ public class ManagedTransactionFactory implements TransactionFactory {
 
   public ManagedTransactionFactory() {}
 
+  @Override
   public void setProperties(Properties props) {
     if (props != null) {
       String closeConnectionProperty = props.getProperty("closeConnection");
@@ -21,12 +22,16 @@ public class ManagedTransactionFactory implements TransactionFactory {
     }
   }
 
-  public Transaction newTransaction(Connection conn) {
-    return new ManagedTransaction(conn, this.closeConnection);
+  @Override
+  public Transaction newTransaction(Connection connection) {
+    return new ManagedTransaction(connection, this.closeConnection);
   }
 
+  @Override
   public Transaction newTransaction(
-      DataSource ds, TransactionIsolationLevel level, boolean autoCommit) {
-    return new ManagedTransaction(ds, level, this.closeConnection);
+      DataSource dataSource,
+      TransactionIsolationLevel transactionIsolationLevel,
+      boolean autoCommit) {
+    return new ManagedTransaction(dataSource, transactionIsolationLevel, this.closeConnection);
   }
 }
