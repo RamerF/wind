@@ -25,8 +25,8 @@ public class BeanUtilsTest {
   }
 
   @Test
-  @DisplayName("获取指定包下,指定接口/类的子类")
-  public void testInvoke() throws NoSuchMethodException {
+  @DisplayName("反射调用方法")
+  public void testInvokeMethod() throws NoSuchMethodException {
     final Method method = String.class.getMethod("equals", Object.class);
     assertEquals(true, BeanUtils.invokeMethod("string", method, "string"), "调用方法");
     assertThrows(
@@ -36,6 +36,7 @@ public class BeanUtilsTest {
   }
 
   @Test
+  @DisplayName("获取私有字段")
   public void testRetrievePrivateFields() {
     final ArrayList<Field> fields = BeanUtils.retrievePrivateFields(Ts.class);
     log.info("[{}]", fields);
@@ -44,6 +45,7 @@ public class BeanUtilsTest {
   }
 
   @Test
+  @DisplayName("获取公开方法")
   public void testGetDeclaredField() {
     log.info("[{}]", BeanUtils.getDeclaredField(Ts.class, "name"));
   }

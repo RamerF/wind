@@ -146,34 +146,33 @@ public final class BeanUtils {
   }
 
   public static <T> Set<Class<? extends T>> scanClassesWithAnnotation(
-      String packagePatterns, Class<? extends Annotation> annotation) throws IOException
-        //   Set<Class<? extends T>> classes = new HashSet<>();
-        //   String[] packagePatternArray = tokenizeToStringArray(packagePatterns, ",; \t\n");
-        //   for (String packagePattern : packagePatternArray) {
-        //     Resource[] resources =
-        //         new PathMatchingResourcePatternResolver()
-        //             .getResources(
-        //                 ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
-        //                     .concat(ClassUtils.convertClassNameToResourcePath(packagePattern))
-        //                     .concat("/**/*.class"));
-        //     for (Resource resource : resources) {
-        //       try {
-        //         ClassMetadata classMetadata =
-        //             new
-        // CachingMetadataReaderFactory().getMetadataReader(resource).getClassMetadata();
-        //         Class<T> clazz = BeanUtils.getClazz(classMetadata.getClassName());
-        //         if (annotation == null || clazz.isAnnotationPresent(annotation)) {
-        //           classes.add(clazz);
-        //         }
-        //       } catch (Throwable e) {
-        //         log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", resource,
-        // e.toString());
-        //       }
-        //     }
-        //   }
-        //   return classes;
-      {
-    throw new NotImplementedException("scanClassesWithAnnotation");
+      String packagePatterns, Class<? extends Annotation> annotation) throws IOException {
+    Set<Class<? extends T>> classes = new HashSet<>();
+    String[] packagePatternArray = StringUtils.tokenizeToStringArray(packagePatterns, ",; \t\n");
+    for (String packagePattern : packagePatternArray) {
+      final Set<File> files =
+          ResourceUtils.getFiles(
+              "classpath*:"
+                  .concat(StringUtils.convertToResourcePath(packagePattern))
+                  .concat("/**/*.class"));
+      for (File file : files) {
+        try {
+          ClassReader classReader = new ClassReader(new FileInputStream(file));
+          ClassNode classNode = new ClassNode();
+          classReader.accept(classNode, ClassReader.SKIP_DEBUG);
+          final ClassMetadata classMetadata = new ClassMetadata(classNode);
+          Class<?> clazz = classMetadata.getCurrentClass();
+          if (clazz.isAnnotationPresent(annotation)) {
+            //noinspection unchecked
+            classes.add((Class<? extends T>) clazz);
+          }
+        } catch (Throwable e) {
+          log.warn("Cannot load the[resource:{},CausedBy:{}]", file, e.toString());
+          e.printStackTrace();
+        }
+      }
+    }
+    return classes;
   }
 
   public static Set<Method> retrieveMethods(@Nonnull Class<?> clazz) {

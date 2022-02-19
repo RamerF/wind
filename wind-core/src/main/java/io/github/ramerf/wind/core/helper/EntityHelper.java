@@ -2,8 +2,8 @@ package io.github.ramerf.wind.core.helper;
 
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
+import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.executor.Executor;
@@ -33,7 +33,7 @@ public class EntityHelper {
 
   private static WindContext windContext;
 
-  public static void initital(final WindContext windContext) {
+  public static void initial(final WindContext windContext) {
     EntityHelper.windContext = windContext;
   }
 

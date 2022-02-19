@@ -19,7 +19,7 @@ public class ApplicationContext {
   final Map<Class<?>, List<BeanDefinition>> TYPE_BEANS_MAP = new ConcurrentHashMap<>();
 
   public ApplicationContext(final String beanPath) {
-    BeanRegistryFactory.registry(beanPath, this);
+    // BeanRegistryFactory.registry(beanPath, this);
     // Phase 1. 保存所有class
     // Phase 2. class转为BeanDefinition保存
     // Phase 3. sort + poopulateBean

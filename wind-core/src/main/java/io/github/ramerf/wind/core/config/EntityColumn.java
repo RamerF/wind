@@ -247,7 +247,8 @@ public class EntityColumn {
             || Short.class.equals(type))) {
       return entityColumn.columnDefinition;
     }
-    final IdGenerator idGenerator = AppContextInject.getBean(IdGenerator.class);
+    final IdGenerator idGenerator =
+        WindApplication.getWindContext().getConfiguration().getIdGenerator();
     Object id = 1L;
     try {
       id = idGenerator.nextId(null);

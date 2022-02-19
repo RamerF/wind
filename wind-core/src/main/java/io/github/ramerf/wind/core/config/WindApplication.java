@@ -29,7 +29,7 @@ public class WindApplication {
   private WindApplication() {}
 
   /** 通过指定配置文件启动. */
-  public static void refresh(final String configPath) {
+  public static void run(final String configPath) {
     final AutoConfigConfiguration autoConfigConfiguration =
         YmlUtil.process(AutoConfigConfiguration.class, configPath);
     final Configuration configuration = autoConfigConfiguration.getConfiguration();
@@ -45,21 +45,21 @@ public class WindApplication {
     // TODO WARN 可配置
     TransactionFactory transactionFactory = new JdbcTransactionFactory();
     configuration.setJdbcEnvironment(new JdbcEnvironment(transactionFactory, dataSource));
-    refresh(configuration);
+    run(configuration);
   }
 
-  public static void refresh(@Nonnull final DataSource dataSource) {
-    refresh(new JdbcTransactionFactory(), dataSource);
+  public static void run(@Nonnull final DataSource dataSource) {
+    run(new JdbcTransactionFactory(), dataSource);
   }
 
-  public static void refresh(
+  public static void run(
       @Nonnull final TransactionFactory transactionFactory, @Nonnull final DataSource dataSource) {
     Configuration configuration = new Configuration();
     configuration.setJdbcEnvironment(new JdbcEnvironment(transactionFactory, dataSource));
-    refresh(configuration);
+    run(configuration);
   }
 
-  public static void refresh(@Nonnull Configuration configuration) {
+  public static void run(@Nonnull Configuration configuration) {
     final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
     Asserts.notNull(jdbcEnvironment, "需要指定数据源");
     final DataSource dataSource = jdbcEnvironment.getDataSource();
@@ -77,6 +77,10 @@ public class WindApplication {
     WindApplication.applicationContext = applicationContext;
   }
 
+  public static WindContext getWindContext() {
+    return windContext;
+  }
+
   private TransactionFactory getTransactionFactory(@Nullable final String type, Properties props) {
     TransactionFactory factory = BeanUtils.initial(type);
     factory.setProperties(props);
@@ -87,14 +91,13 @@ public class WindApplication {
   private static void afterPropertiesSet() throws Exception {
     // 打印banner
     printBanner();
-    AppContextInject.initial(applicationContext);
     // 初始化Query/Update
     Update.initial(windContext.getExecutor(), windContext.getConfiguration());
     Query.initial(windContext.getExecutor(), windContext.getConfiguration());
     // 初始化EntityUtils
     EntityUtils.initial(windContext);
     // 初始化实体信息
-    EntityHelper.initital(windContext);
+    EntityHelper.initial(windContext);
     initEntityInfo(windContext.getConfiguration());
     // TODO WARN 发布初始化完成事件
     //   publisher.publishEvent(new InitFinishEvent(windContext));
@@ -128,7 +131,6 @@ public class WindApplication {
     log.info("initEntityInfo:package[{}]", entityPackage);
     ApplicationContext applicationContext =
         new ApplicationContext(entityPackage + "," + WindVersion.class.getPackage().getName());
-    AppContextInject.initial(applicationContext);
     Set<Class<?>> entities;
     try {
       entities = BeanUtils.scanClassesWithAnnotation(entityPackage, TableInfo.class);
@@ -141,7 +143,7 @@ public class WindApplication {
       log.warn("initEntityInfo:fail to init entity info[{}]", e.getMessage());
       return;
     }
-    if (entities != null) {
+    if (!entities.isEmpty()) {
       entities.forEach(EntityHelper::initEntity);
       EntityHelper.initEntityMapping();
     }

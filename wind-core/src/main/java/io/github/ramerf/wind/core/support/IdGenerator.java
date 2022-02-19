@@ -24,6 +24,7 @@ public interface IdGenerator {
    */
   Object nextId(final Object obj);
 
+  /** 自增id生成器. */
   class AutoIncrementIdGenerator implements IdGenerator {
 
     @Override
@@ -32,6 +33,7 @@ public interface IdGenerator {
     }
   }
 
+  /** 空id生成器,表示未指定. */
   class VoidIdGenerator implements IdGenerator {
     private static final VoidIdGenerator INSTANCE = new VoidIdGenerator();
 

@@ -104,9 +104,6 @@ public interface FieldFunction extends Serializable {
    * @return the column
    */
   default String getColumn() {
-    // TODO WARN 可以在这里保存对象的IConsumer，避免反射调用取值
-    // if (this instanceof IConsumer) {}
-
     return EntityHelper.getColumn(this);
   }
 }
