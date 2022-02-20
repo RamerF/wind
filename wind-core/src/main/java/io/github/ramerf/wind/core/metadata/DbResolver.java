@@ -89,7 +89,7 @@ public final class DbResolver {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
     } finally {
-      DataSourceUtils.release(resultSet);
+      DataSourceUtils.close(resultSet);
     }
     return new NameTableInformation();
   }
@@ -114,7 +114,7 @@ public final class DbResolver {
       log.warn("populateColumns:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
     } finally {
-      DataSourceUtils.release(resultSet);
+      DataSourceUtils.close(resultSet);
     }
   }
 
@@ -132,7 +132,7 @@ public final class DbResolver {
       log.warn("populateColumns:[{}]", e.getMessage());
       log.error(e.getMessage(), e);
     } finally {
-      DataSourceUtils.release(resultSet);
+      DataSourceUtils.close(resultSet);
     }
   }
 

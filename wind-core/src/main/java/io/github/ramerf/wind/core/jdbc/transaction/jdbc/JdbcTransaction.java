@@ -1,8 +1,10 @@
 package io.github.ramerf.wind.core.jdbc.transaction.jdbc;
 
+import io.github.ramerf.wind.core.executor.DataAccessException;
 import io.github.ramerf.wind.core.jdbc.session.TransactionIsolationLevel;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionException;
+import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.sql.DataSource;
@@ -26,42 +28,42 @@ public class JdbcTransaction implements Transaction {
     this.connection = connection;
   }
 
-  public Connection getConnection() throws SQLException {
+  @Override
+  public Connection getConnection() throws DataAccessException {
     if (this.connection == null) {
       this.openConnection();
     }
-
     return this.connection;
   }
 
-  public void commit() throws SQLException {
-    if (this.connection != null && !this.connection.getAutoCommit()) {
+  @Override
+  public void commit() throws DataAccessException {
+    if (this.connection != null && !DataSourceUtils.getAutoCommit(this.connection)) {
       if (log.isDebugEnabled()) {
         log.debug("Committing JDBC Connection [" + this.connection + "]");
       }
-
-      this.connection.commit();
+      DataSourceUtils.commit(this.connection);
     }
   }
 
-  public void rollback() throws SQLException {
-    if (this.connection != null && !this.connection.getAutoCommit()) {
+  @Override
+  public void rollback() throws DataAccessException {
+    if (this.connection != null && !DataSourceUtils.getAutoCommit(this.connection)) {
       if (log.isDebugEnabled()) {
         log.debug("Rolling back JDBC Connection [" + this.connection + "]");
       }
-
-      this.connection.rollback();
+      DataSourceUtils.rollback(this.connection);
     }
   }
 
-  public void close() throws SQLException {
+  @Override
+  public void close() throws DataAccessException {
     if (this.connection != null) {
       this.resetAutoCommit();
       if (log.isDebugEnabled()) {
         log.debug("Closing JDBC Connection [" + this.connection + "]");
       }
-
-      this.connection.close();
+      DataSourceUtils.close(this.connection);
     }
   }
 
@@ -76,17 +78,15 @@ public class JdbcTransaction implements Transaction {
                   + this.connection
                   + "]");
         }
-
         this.connection.setAutoCommit(desiredAutoCommit);
       }
-
-    } catch (SQLException var3) {
+    } catch (SQLException e) {
       throw new TransactionException(
           "Error configuring AutoCommit.  Your driver may not support getAutoCommit() or setAutoCommit(). Requested setting: "
               + desiredAutoCommit
               + ".  Cause: "
-              + var3,
-          var3);
+              + e,
+          e);
     }
   }
 
@@ -96,31 +96,33 @@ public class JdbcTransaction implements Transaction {
         if (log.isDebugEnabled()) {
           log.debug("Resetting autocommit to true on JDBC Connection [" + this.connection + "]");
         }
-
         this.connection.setAutoCommit(true);
       }
-    } catch (SQLException var2) {
+    } catch (SQLException e) {
       if (log.isDebugEnabled()) {
-        log.debug(
-            "Error resetting autocommit to true before closing the connection.  Cause: " + var2);
+        log.debug("Error resetting autocommit to true before closing the connection.  Cause: " + e);
       }
     }
   }
 
-  protected void openConnection() throws SQLException {
+  protected void openConnection() throws DataAccessException {
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
-
-    this.connection = this.dataSource.getConnection();
+    this.connection = DataSourceUtils.getConnection(this.dataSource);
     if (this.level != null) {
-      this.connection.setTransactionIsolation(this.level.getLevel());
+      try {
+        //noinspection MagicConstant
+        this.connection.setTransactionIsolation(this.level.getLevel());
+      } catch (SQLException e) {
+        log.warn("The Connection not support to set TransactionIsolation", e);
+      }
     }
-
     this.setDesiredAutoCommit(this.autoCommit);
   }
 
-  public Integer getTimeout() throws SQLException {
+  @Override
+  public Integer getTimeout() throws DataAccessException {
     return null;
   }
 }

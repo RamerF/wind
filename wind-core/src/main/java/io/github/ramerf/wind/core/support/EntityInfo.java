@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.support;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.support.IdGenerator.VoidIdGenerator;
@@ -69,9 +68,6 @@ public final class EntityInfo {
 
   /** 关联对象. */
   private List<MappingInfo> mappingInfos = new ArrayList<>();
-
-  /** TODO WARN 保存字段的写入方法，更新时可以避免使用反射. */
-  private Map<Field, SetterFunction<?, ?>> writeMethods;
 
   private Dialect dialect;
 

@@ -1,14 +1,15 @@
 package io.github.ramerf.wind.core.executor;
 
+import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.exception.TooManyResultException;
 import io.github.ramerf.wind.core.handler.*;
+import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import io.github.ramerf.wind.core.util.*;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 
@@ -20,13 +21,10 @@ import org.springframework.data.domain.*;
  */
 @Slf4j
 @SuppressWarnings("DuplicatedCode")
-public class SimpleJdbcExecutor implements Executor {
-  private DataSource dataSource;
+public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
 
-  public SimpleJdbcExecutor() {}
-
-  public SimpleJdbcExecutor(DataSource dataSource) {
-    this.dataSource = dataSource;
+  public SimpleJdbcExecutor(final Configuration configuration, final Transaction transaction) {
+    super(configuration, transaction);
   }
 
   @Override
@@ -175,7 +173,7 @@ public class SimpleJdbcExecutor implements Executor {
       final PreparedStatementSetter pss,
       final ResultHandler<T> resultHandler)
       throws DataAccessException {
-    Connection connection = DataSourceUtils.getConnection(dataSource);
+    Connection connection = transaction.getConnection();
     PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sqlParam.sql);
     if (pss != null) {
       pss.setValues(ps);
@@ -184,7 +182,7 @@ public class SimpleJdbcExecutor implements Executor {
     try {
       resultSet = ps.executeQuery();
     } catch (SQLException e) {
-      DataSourceUtils.release(connection);
+      DataSourceUtils.releaseConnection(connection);
       throw new DataAccessException("Fail to execute query:" + sqlParam.sql, e);
     }
     List<T> ts = new ArrayList<>();
@@ -195,9 +193,9 @@ public class SimpleJdbcExecutor implements Executor {
     } catch (SQLException e) {
       throw new DataAccessException("Fail to handle resultSet:" + sqlParam.sql, e);
     } finally {
-      DataSourceUtils.release(resultSet);
-      DataSourceUtils.release(ps);
-      DataSourceUtils.release(connection);
+      DataSourceUtils.close(resultSet);
+      DataSourceUtils.close(ps);
+      DataSourceUtils.releaseConnection(connection);
     }
     return ts;
   }
@@ -207,7 +205,7 @@ public class SimpleJdbcExecutor implements Executor {
       throws DataAccessException {
     return aroundWrite(
         () -> {
-          Connection connection = DataSourceUtils.getConnection(dataSource);
+          Connection connection = transaction.getConnection();
           PreparedStatement ps = psc.createPreparedStatement(connection);
           try {
             List<Map<String, Object>> generatedKeys = generatedKeyHolder.getKeyList();
@@ -223,8 +221,8 @@ public class SimpleJdbcExecutor implements Executor {
           } catch (SQLException e) {
             throw new DataAccessException("Fail to exexute update", e);
           } finally {
-            DataSourceUtils.release(ps);
-            DataSourceUtils.release(connection);
+            DataSourceUtils.close(ps);
+            DataSourceUtils.releaseConnection(connection);
           }
         });
   }
@@ -234,7 +232,7 @@ public class SimpleJdbcExecutor implements Executor {
       throws DataAccessException {
     return aroundWrite(
         () -> {
-          Connection connection = DataSourceUtils.getConnection(dataSource);
+          Connection connection = transaction.getConnection();
           PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
           int batchSize = pss.getBatchSize();
           try {
@@ -255,8 +253,8 @@ public class SimpleJdbcExecutor implements Executor {
           } catch (SQLException e) {
             throw new DataAccessException("Fail to execute batch update", e);
           } finally {
-            DataSourceUtils.release(ps);
-            DataSourceUtils.release(connection);
+            DataSourceUtils.close(ps);
+            DataSourceUtils.releaseConnection(connection);
           }
         });
   }
@@ -267,7 +265,7 @@ public class SimpleJdbcExecutor implements Executor {
       final BatchPreparedStatementSetter pss,
       final KeyHolder generatedKeyHolder)
       throws DataAccessException {
-    Connection connection = DataSourceUtils.getConnection(dataSource);
+    Connection connection = transaction.getConnection();
     PreparedStatement ps = psc.createPreparedStatement(connection);
     ResultSet resultSet = null;
     int batchSize = pss.getBatchSize();
@@ -298,9 +296,9 @@ public class SimpleJdbcExecutor implements Executor {
     } catch (SQLException e) {
       throw new DataAccessException("Fail to execute batch update", e);
     } finally {
-      DataSourceUtils.release(resultSet);
-      DataSourceUtils.release(ps);
-      DataSourceUtils.release(connection);
+      DataSourceUtils.close(resultSet);
+      DataSourceUtils.close(ps);
+      DataSourceUtils.releaseConnection(connection);
     }
   }
 
@@ -308,7 +306,7 @@ public class SimpleJdbcExecutor implements Executor {
   public int update(String sql, @Nonnull PreparedStatementSetter pss) throws DataAccessException {
     return aroundWrite(
         () -> {
-          Connection connection = DataSourceUtils.getConnection(dataSource);
+          Connection connection = transaction.getConnection();
           PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
           try {
             pss.setValues(ps);
@@ -316,8 +314,8 @@ public class SimpleJdbcExecutor implements Executor {
           } catch (SQLException e) {
             throw new DataAccessException("Fail to exexute update", e);
           } finally {
-            DataSourceUtils.release(ps);
-            DataSourceUtils.release(connection);
+            DataSourceUtils.close(ps);
+            DataSourceUtils.releaseConnection(connection);
           }
         });
   }

@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.handler.ResultHandler;
+import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -126,6 +127,18 @@ public interface Executor {
       final BatchPreparedStatementSetter pss,
       final KeyHolder generatedKeyHolder)
       throws DataAccessException;
+
+  Transaction getTransaction();
+
+  void close(boolean forceRollback);
+
+  boolean isClosed();
+
+  void commit(boolean required) throws DataAccessException;
+
+  void rollback(boolean required) throws DataAccessException;
+
+  void setExecutorWrapper(Executor wrapper);
 
   @Getter
   @Setter

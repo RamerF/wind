@@ -2,13 +2,17 @@ package io.github.ramerf.wind.core.exporter;
 
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.metadata.TableColumnInformation;
 import io.github.ramerf.wind.core.metadata.TableInformation;
 import io.github.ramerf.wind.core.support.EntityInfo;
+import io.github.ramerf.wind.core.util.DataSourceUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class TableExporter {
+  private Executor executor;
   private final WindContext windContext;
   private final Dialect dialect;
 
@@ -28,10 +33,32 @@ public class TableExporter {
   }
 
   public static TableExporter of(WindContext windContext) {
-    return new TableExporter(windContext);
+    final Configuration configuration = windContext.getConfiguration();
+    final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
+    final DataSource dataSource = jdbcEnvironment.getDataSource();
+
+    final TableExporter tableExporter = new TableExporter(windContext);
+    tableExporter.executor =
+        new SimpleJdbcExecutor(
+            configuration,
+            jdbcEnvironment
+                .getTransactionFactory()
+                .newTransaction(DataSourceUtils.getConnection(dataSource)));
+    return tableExporter;
   }
 
+  /** 先删除,再创建. */
   public void createTable(@Nonnull final EntityInfo entityInfo) {
+    // 删除已存在的表
+    {
+      final String dropSql = "drop table if exists " + entityInfo.getName();
+      log.info("ddlAuto:drop table[{}]", dropSql);
+      try {
+        executor.update(dropSql, ps -> {});
+      } catch (DataAccessException e) {
+        log.warn("Fail to drop table:" + entityInfo.getName(), e);
+      }
+    }
     // 列信息
     {
       final List<EntityColumn> columns = entityInfo.getEntityColumns();
@@ -40,6 +67,7 @@ public class TableExporter {
       final String columnDefinition =
           columns.stream()
               .filter(EntityColumn::isSupported)
+              .sorted(Comparator.comparing(EntityColumn::isPrimaryKey))
               .map(column -> column.getColumnDdl(dialect))
               .collect(Collectors.joining(",\n\t"));
       sql.append(columnDefinition).append(",\n\t");
@@ -63,7 +91,7 @@ public class TableExporter {
                 .filter(column -> StringUtils.nonEmpty(column.getComment()))
                 .map(comment -> comment.getComment(entityInfo.getName(), dialect))
                 .collect(Collectors.joining(";\n\t"));
-        log.debug("createTable:columnComment[\n{}\n]", columnComment);
+        log.debug("createTable:columnComment[\n\t{}\n]", columnComment);
         sql.append(";\n\t").append(columnComment);
         if (StringUtils.nonEmpty(entityComment)) {
           final String tableComment =
@@ -76,8 +104,11 @@ public class TableExporter {
         }
       }
       log.info("createTable:[\n{}\n]", sql);
-      // TODO WARN 执行sql
-      // windContext.getExecutor().execute(sql.toString());
+      try {
+        executor.update(sql.toString(), ps -> {});
+      } catch (DataAccessException e) {
+        log.warn("Fail to create table:" + entityInfo.getName(), e);
+      }
     }
     // 索引
     {
@@ -89,12 +120,16 @@ public class TableExporter {
           sql.append(sqlDefinition).append(";\n");
         }
         log.info("createTable:index[{}]", sql);
-        // TODO WARN 执行sql
-        // windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
+        try {
+          executor.update(sql.toString(), ps -> {});
+        } catch (DataAccessException e) {
+          log.warn("Fail to create index of table:" + entityInfo.getName(), e);
+        }
       }
     }
   }
 
+  /** 仅新增列，不支持更新列定义 */
   public void updateTable(@Nonnull final EntityInfo entityInfo) {
     final TableInformation tableInformation =
         windContext.getDbMetaData().getTableInformation(entityInfo.getName());
@@ -125,8 +160,11 @@ public class TableExporter {
       sql.append(";\n\t").append(columnComment);
     }
     log.info("updateTable:[\n{}\n]", sql);
-    // TODO WARN 执行sql
-    // windContext.getExecutor().getJdbcTemplate().execute(sql.toString());
+    try {
+      executor.update(sql.toString(), ps -> {});
+    } catch (DataAccessException e) {
+      log.warn("Fail to execute ddl of table:" + entityInfo.getName() + ", sql:" + sql, e);
+    }
   }
 
   /** 获取需要更新的列. */

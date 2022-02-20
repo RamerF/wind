@@ -6,7 +6,6 @@ import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
 import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.WindContext;
 import io.github.ramerf.wind.core.entity.TestLambda;
-import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.FieldFunction;
 import io.github.ramerf.wind.core.function.GetterFunction;
@@ -153,18 +152,9 @@ public class EntityHelper {
     if (!entityInfo.isMapToTable()) {
       return;
     }
-    // 先删除,再创建
     if (DdlAuto.CREATE.equals(ddlAuto)) {
-      // Phase 1. delete
-      final Executor executor = windContext.getExecutor();
-      final String dropSql = "drop table if exists " + entityInfo.getName();
-      log.info("ddlAuto:drop table[{}]", dropSql);
-      // TODO WARN 执行sql
-      // executor.execute(dropSql);
-      // Phase 2. create
       TableExporter.of(windContext).createTable(entityInfo);
     } else if (DdlAuto.UPDATE.equals(ddlAuto)) {
-      // 仅新增列，不支持更新列定义
       TableExporter.of(windContext).updateTable(entityInfo);
     }
   }

@@ -54,8 +54,7 @@ public class Query<T> {
   private static Configuration configuration;
   private final Class<T> clazz;
 
-  public static void initial(final Executor executor, final Configuration configuration) {
-    Query.executor = executor;
+  public static void initial(final Configuration configuration) {
     Query.configuration = configuration;
   }
 

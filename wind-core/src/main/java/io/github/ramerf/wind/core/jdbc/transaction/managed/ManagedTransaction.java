@@ -1,7 +1,9 @@
 package io.github.ramerf.wind.core.jdbc.transaction.managed;
 
+import io.github.ramerf.wind.core.executor.DataAccessException;
 import io.github.ramerf.wind.core.jdbc.session.TransactionIsolationLevel;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
+import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.sql.DataSource;
@@ -26,40 +28,48 @@ public class ManagedTransaction implements Transaction {
     this.closeConnection = closeConnection;
   }
 
-  public Connection getConnection() throws SQLException {
+  @Override
+  public Connection getConnection() throws DataAccessException {
     if (this.connection == null) {
       this.openConnection();
     }
-
     return this.connection;
   }
 
-  public void commit() throws SQLException {}
+  @Override
+  public void commit() throws DataAccessException {}
 
-  public void rollback() throws SQLException {}
+  @Override
+  public void rollback() throws DataAccessException {}
 
-  public void close() throws SQLException {
+  @Override
+  public void close() throws DataAccessException {
     if (this.closeConnection && this.connection != null) {
       if (log.isDebugEnabled()) {
         log.debug("Closing JDBC Connection [" + this.connection + "]");
       }
-
-      this.connection.close();
+      DataSourceUtils.close(this.connection);
     }
   }
 
-  protected void openConnection() throws SQLException {
+  protected void openConnection() throws DataAccessException {
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
 
-    this.connection = this.dataSource.getConnection();
+    this.connection = DataSourceUtils.getConnection(this.dataSource);
     if (this.level != null) {
-      this.connection.setTransactionIsolation(this.level.getLevel());
+      try {
+        //noinspection MagicConstant
+        this.connection.setTransactionIsolation(this.level.getLevel());
+      } catch (SQLException e) {
+        log.warn("The Connection not support to set TransactionIsolation", e);
+      }
     }
   }
 
-  public Integer getTimeout() throws SQLException {
+  @Override
+  public Integer getTimeout() throws DataAccessException {
     return null;
   }
 }

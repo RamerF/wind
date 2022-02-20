@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.event.InitFinishEvent;
-import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
 import lombok.Data;
 
@@ -30,6 +29,4 @@ public class WindContext {
   private DbMetaData dbMetaData;
 
   private Configuration configuration;
-
-  private Executor executor;
 }

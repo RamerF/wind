@@ -6,7 +6,8 @@ import io.github.ramerf.wind.core.ansi.*;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration.DataSourceConfig;
 import io.github.ramerf.wind.core.exception.ClassInstantiationException;
-import io.github.ramerf.wind.core.executor.*;
+import io.github.ramerf.wind.core.executor.Query;
+import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.ioc.ApplicationContext;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
@@ -65,7 +66,6 @@ public class WindApplication {
     final DataSource dataSource = jdbcEnvironment.getDataSource();
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, configuration.getDialect()));
     windContext.setConfiguration(configuration);
-    windContext.setExecutor(new SimpleJdbcExecutor(dataSource));
     try {
       afterPropertiesSet();
     } catch (Exception e) {
@@ -92,8 +92,8 @@ public class WindApplication {
     // 打印banner
     printBanner();
     // 初始化Query/Update
-    Update.initial(windContext.getExecutor(), windContext.getConfiguration());
-    Query.initial(windContext.getExecutor(), windContext.getConfiguration());
+    Update.initial(windContext.getConfiguration());
+    Query.initial(windContext.getConfiguration());
     // 初始化EntityUtils
     EntityUtils.initial(windContext);
     // 初始化实体信息

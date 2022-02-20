@@ -23,7 +23,7 @@ public class JdbcUtils {
     try {
       ps.setObject(index, value);
     } catch (SQLException e) {
-      DataSourceUtils.release(ps);
+      DataSourceUtils.close(ps);
       throw new DataAccessException(
           String.format("Fail to set value [index:%s,value:%s]", index, value));
     }

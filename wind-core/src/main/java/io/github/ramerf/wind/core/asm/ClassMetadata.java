@@ -1,11 +1,11 @@
 package io.github.ramerf.wind.core.asm;
 
+import io.github.ramerf.wind.core.asm.tree.AnnotationNode;
+import io.github.ramerf.wind.core.asm.tree.ClassNode;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Collectors;
-import jdk.internal.org.objectweb.asm.tree.AnnotationNode;
-import jdk.internal.org.objectweb.asm.tree.ClassNode;
 
 public class ClassMetadata {
   /** 注解类全限定名 */
@@ -21,8 +21,8 @@ public class ClassMetadata {
         annotations == null
             ? Collections.emptyList()
             : annotations.stream()
-                .map(o -> AsmType.getType(o.desc))
-                .map(AsmType::getClassName)
+                .map(o -> Type.getType(o.desc))
+                .map(Type::getClassName)
                 .collect(Collectors.toList());
   }
 

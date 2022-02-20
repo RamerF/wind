@@ -1,6 +1,8 @@
 package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.asm.ClassMetadata;
+import io.github.ramerf.wind.core.asm.ClassReader;
+import io.github.ramerf.wind.core.asm.tree.ClassNode;
 import io.github.ramerf.wind.core.exception.*;
 import java.io.*;
 import java.lang.annotation.Annotation;
@@ -11,8 +13,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import jdk.internal.org.objectweb.asm.ClassReader;
-import jdk.internal.org.objectweb.asm.tree.ClassNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 

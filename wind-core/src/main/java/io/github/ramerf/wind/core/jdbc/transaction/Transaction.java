@@ -1,16 +1,16 @@
 package io.github.ramerf.wind.core.jdbc.transaction;
 
+import io.github.ramerf.wind.core.executor.DataAccessException;
 import java.sql.Connection;
-import java.sql.SQLException;
 
 public interface Transaction {
-  Connection getConnection() throws SQLException;
+  Connection getConnection() throws DataAccessException;
 
-  void commit() throws SQLException;
+  void commit() throws DataAccessException;
 
-  void rollback() throws SQLException;
+  void rollback() throws DataAccessException;
 
-  void close() throws SQLException;
+  void close() throws DataAccessException;
 
-  Integer getTimeout() throws SQLException;
+  Integer getTimeout() throws DataAccessException;
 }

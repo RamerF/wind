@@ -37,7 +37,7 @@ public class DbMetaData {
     this.tableInformations = DbResolver.getTables(databaseMetaData, catalog, schema);
     this.dialect =
         dialectName != null ? Dialect.getInstance(dialectName) : Dialect.getInstance(dataSource);
-    DataSourceUtils.release(connection);
+    DataSourceUtils.releaseConnection(connection);
   }
 
   /** 该方法返回一个单例. */

@@ -68,8 +68,7 @@ public final class Update<T> {
     this.idGenerator = this.entityInfo.getIdGenerator();
   }
 
-  public static void initial(final Executor executor, final Configuration configuration) {
-    Update.executor = executor;
+  public static void initial(final Configuration configuration) {
     Update.configuration = configuration;
   }
 
