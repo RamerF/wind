@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
@@ -56,16 +57,27 @@ public final class Update<T> {
   private Fields<T> fields;
   private final IdGenerator idGenerator;
   private final EntityInfo entityInfo;
-  private static Executor executor;
+  private final Executor executor;
   private static Configuration configuration;
   private final Field idField;
 
   public Update(@Nonnull final Class<T> clazz) {
+    this(clazz, true);
+  }
+
+  public Update(@Nonnull final Class<T> clazz, final boolean autoCommit) {
     this.clazz = clazz;
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
     this.idField = this.entityInfo.getIdColumn().getField();
     this.condition = LambdaCondition.of(clazz);
     this.idGenerator = this.entityInfo.getIdGenerator();
+    final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
+    this.executor =
+        new SimpleJdbcExecutor(
+            configuration,
+            jdbcEnvironment
+                .getTransactionFactory()
+                .newTransaction(jdbcEnvironment.getDataSource(), autoCommit));
   }
 
   public static void initial(final Configuration configuration) {
@@ -74,6 +86,18 @@ public final class Update<T> {
 
   public static <T> Update<T> getInstance(final Class<T> clazz) {
     return new Update<>(clazz);
+  }
+
+  public static <T> Update<T> getInstance(final Class<T> clazz, final boolean autoCommit) {
+    return new Update<>(clazz, autoCommit);
+  }
+
+  public void setAutoCommit(final boolean autoCommit) {
+    this.executor.getTransaction().setAutoCommit(autoCommit);
+  }
+
+  public void commit() {
+    this.executor.getTransaction().commit();
   }
 
   public Update<T> where(@Nonnull final Condition<T, ?> condition) {

@@ -298,7 +298,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
     } finally {
       DataSourceUtils.close(resultSet);
       DataSourceUtils.close(ps);
-      DataSourceUtils.releaseConnection(connection);
+      transaction.releaseConnection();
     }
   }
 
@@ -315,7 +315,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
             throw new DataAccessException("Fail to exexute update", e);
           } finally {
             DataSourceUtils.close(ps);
-            DataSourceUtils.releaseConnection(connection);
+            transaction.releaseConnection();
           }
         });
   }

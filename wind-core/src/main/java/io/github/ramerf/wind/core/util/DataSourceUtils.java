@@ -84,12 +84,16 @@ public class DataSourceUtils {
   }
 
   public static void close(Connection connection) throws DataAccessException {
+    try {
+      doClose(connection);
+    } catch (SQLException e) {
+      throw new DataAccessException("Failed to Release JDBC Connection", e);
+    }
+  }
+
+  public static void doClose(Connection connection) throws SQLException {
     if (connection != null) {
-      try {
-        connection.close();
-      } catch (SQLException e) {
-        throw new DataAccessException("Failed to Release JDBC Connection", e);
-      }
+      connection.close();
     }
   }
 

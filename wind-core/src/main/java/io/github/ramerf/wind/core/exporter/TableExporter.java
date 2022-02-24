@@ -6,7 +6,6 @@ import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.metadata.TableColumnInformation;
 import io.github.ramerf.wind.core.metadata.TableInformation;
 import io.github.ramerf.wind.core.support.EntityInfo;
-import io.github.ramerf.wind.core.util.DataSourceUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.Comparator;
 import java.util.List;
@@ -40,10 +39,7 @@ public class TableExporter {
     final TableExporter tableExporter = new TableExporter(windContext);
     tableExporter.executor =
         new SimpleJdbcExecutor(
-            configuration,
-            jdbcEnvironment
-                .getTransactionFactory()
-                .newTransaction(DataSourceUtils.getConnection(dataSource)));
+            configuration, jdbcEnvironment.getTransactionFactory().newTransaction(dataSource));
     return tableExporter;
   }
 

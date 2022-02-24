@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.handler.ResultHandlerUtil;
@@ -50,7 +51,7 @@ public class Query<T> {
   private Condition<?, ?> condition;
   private Pageable pageable;
 
-  private static Executor executor;
+  private Executor executor;
   private static Configuration configuration;
   private final Class<T> clazz;
 
@@ -60,6 +61,13 @@ public class Query<T> {
 
   public Query(final Class<T> clazz) {
     this.clazz = clazz;
+    final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
+    this.executor =
+        new SimpleJdbcExecutor(
+            configuration,
+            jdbcEnvironment
+                .getTransactionFactory()
+                .newTransaction(jdbcEnvironment.getDataSource()));
   }
 
   /**
@@ -175,7 +183,7 @@ public class Query<T> {
       if (log.isDebugEnabled()) {
         log.debug("fetchOne:[{}]", sql);
       }
-      return executor.fetchOne(
+      return query.executor.fetchOne(
           new SqlParam<T>()
               .setSql(sql)
               .setClazz(clazz)
@@ -206,7 +214,7 @@ public class Query<T> {
       if (log.isDebugEnabled()) {
         log.debug("fetchAll:[{}]", sql);
       }
-      return executor.fetchAll(
+      return query.executor.fetchAll(
           new SqlParam<T>()
               .setSql(sql)
               .setClazz(clazz)
@@ -237,7 +245,7 @@ public class Query<T> {
       if (log.isDebugEnabled()) {
         log.debug("fetchPage:[{}]", sql);
       }
-      return executor.fetchPage(
+      return query.executor.fetchPage(
           new SqlParam<T>()
               .setSql(sql)
               .setClazz(clazz)
@@ -258,7 +266,7 @@ public class Query<T> {
           conditionClause.contains(GROUP_BY.operator())
               ? "select sum(b.a) from (select 1 a from %s%s) b"
               : "select count(1) from %s%s";
-      return executor.fetchCount(
+      return query.executor.fetchCount(
           new SqlParam<T>()
               .setSql(String.format(sql, getTableName(), conditionClause))
               .setClazz(Long.class)

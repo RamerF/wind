@@ -1,8 +1,10 @@
 package io.github.ramerf.wind.core.jdbc.transaction.managed;
 
 import io.github.ramerf.wind.core.executor.DataAccessException;
+import io.github.ramerf.wind.core.jdbc.TransactionSynchronizationManager;
 import io.github.ramerf.wind.core.jdbc.session.TransactionIsolationLevel;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
+import io.github.ramerf.wind.core.jdbc.transaction.TransactionException;
 import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -11,21 +13,24 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManagedTransaction implements Transaction {
-  private DataSource dataSource;
+  private final DataSource dataSource;
   private TransactionIsolationLevel level;
   private Connection connection;
-  private final boolean closeConnection;
+  private boolean autoCommit = true;
 
-  public ManagedTransaction(Connection connection, boolean closeConnection) {
-    this.connection = connection;
-    this.closeConnection = closeConnection;
+  public ManagedTransaction(DataSource dataSource) {
+    this.dataSource = dataSource;
   }
 
-  public ManagedTransaction(
-      DataSource ds, TransactionIsolationLevel level, boolean closeConnection) {
+  public ManagedTransaction(DataSource dataSource, boolean autoCommit) {
+    this.dataSource = dataSource;
+    this.autoCommit = autoCommit;
+  }
+
+  public ManagedTransaction(DataSource ds, TransactionIsolationLevel level, boolean autoCommit) {
     this.dataSource = ds;
     this.level = level;
-    this.closeConnection = closeConnection;
+    this.autoCommit = autoCommit;
   }
 
   @Override
@@ -37,6 +42,11 @@ public class ManagedTransaction implements Transaction {
   }
 
   @Override
+  public void releaseConnection() {
+    TransactionSynchronizationManager.releaseConnection(this.connection, this.dataSource);
+  }
+
+  @Override
   public void commit() throws DataAccessException {}
 
   @Override
@@ -44,11 +54,35 @@ public class ManagedTransaction implements Transaction {
 
   @Override
   public void close() throws DataAccessException {
-    if (this.closeConnection && this.connection != null) {
+    if (this.connection != null) {
       if (log.isDebugEnabled()) {
         log.debug("Closing JDBC Connection [" + this.connection + "]");
       }
       DataSourceUtils.close(this.connection);
+    }
+  }
+
+  @Override
+  public void setAutoCommit(final boolean desiredAutoCommit) {
+    try {
+      if (this.connection.getAutoCommit() != desiredAutoCommit) {
+        if (log.isDebugEnabled()) {
+          log.debug(
+              "Setting autocommit to "
+                  + desiredAutoCommit
+                  + " on JDBC Connection ["
+                  + this.connection
+                  + "]");
+        }
+        this.connection.setAutoCommit(desiredAutoCommit);
+      }
+    } catch (SQLException e) {
+      throw new TransactionException(
+          "Error configuring AutoCommit.  Your driver may not support getAutoCommit() or setAutoCommit(). Requested setting: "
+              + desiredAutoCommit
+              + ".  Cause: "
+              + e,
+          e);
     }
   }
 

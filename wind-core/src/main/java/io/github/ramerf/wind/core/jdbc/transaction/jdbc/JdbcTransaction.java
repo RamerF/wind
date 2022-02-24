@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.jdbc.transaction.jdbc;
 
 import io.github.ramerf.wind.core.executor.DataAccessException;
+import io.github.ramerf.wind.core.jdbc.TransactionSynchronizationManager;
 import io.github.ramerf.wind.core.jdbc.session.TransactionIsolationLevel;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionException;
@@ -18,14 +19,20 @@ public class JdbcTransaction implements Transaction {
   protected boolean autoCommit;
 
   public JdbcTransaction(
-      DataSource ds, TransactionIsolationLevel desiredLevel, boolean desiredAutoCommit) {
+      DataSource ds, TransactionIsolationLevel desiredLevel, boolean autoCommit) {
     this.dataSource = ds;
     this.level = desiredLevel;
-    this.autoCommit = desiredAutoCommit;
+    this.autoCommit = autoCommit;
   }
 
-  public JdbcTransaction(Connection connection) {
-    this.connection = connection;
+  public JdbcTransaction(DataSource dataSource) {
+    this.dataSource = dataSource;
+    this.autoCommit = true;
+  }
+
+  public JdbcTransaction(DataSource dataSource, boolean autoCommit) {
+    this.dataSource = dataSource;
+    this.autoCommit = autoCommit;
   }
 
   @Override
@@ -34,6 +41,11 @@ public class JdbcTransaction implements Transaction {
       this.openConnection();
     }
     return this.connection;
+  }
+
+  @Override
+  public void releaseConnection() {
+    TransactionSynchronizationManager.releaseConnection(this.connection, this.dataSource);
   }
 
   @Override
@@ -67,9 +79,11 @@ public class JdbcTransaction implements Transaction {
     }
   }
 
-  protected void setDesiredAutoCommit(boolean desiredAutoCommit) {
+  @Override
+  public void setAutoCommit(boolean desiredAutoCommit) {
     try {
-      if (this.connection.getAutoCommit() != desiredAutoCommit) {
+      final Connection connection = this.getConnection();
+      if (connection.getAutoCommit() != desiredAutoCommit) {
         if (log.isDebugEnabled()) {
           log.debug(
               "Setting autocommit to "
@@ -109,7 +123,7 @@ public class JdbcTransaction implements Transaction {
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
-    this.connection = DataSourceUtils.getConnection(this.dataSource);
+    this.connection = TransactionSynchronizationManager.getConnection(this.dataSource);
     if (this.level != null) {
       try {
         //noinspection MagicConstant
@@ -118,7 +132,7 @@ public class JdbcTransaction implements Transaction {
         log.warn("The Connection not support to set TransactionIsolation", e);
       }
     }
-    this.setDesiredAutoCommit(this.autoCommit);
+    this.setAutoCommit(this.autoCommit);
   }
 
   @Override

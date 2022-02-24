@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.event.InitFinishEvent;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
 import lombok.Data;
 
