@@ -8,6 +8,7 @@ import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -92,12 +93,8 @@ public final class Update<T> {
     return new Update<>(clazz, autoCommit);
   }
 
-  public void setAutoCommit(final boolean autoCommit) {
-    this.executor.getTransaction().setAutoCommit(autoCommit);
-  }
-
-  public void commit() {
-    this.executor.getTransaction().commit();
+  public Transaction getTransaction() {
+    return this.executor.getTransaction();
   }
 
   public Update<T> where(@Nonnull final Condition<T, ?> condition) {

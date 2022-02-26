@@ -1,10 +1,10 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.executor.logging.Log;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import java.sql.SQLException;
 import java.sql.Statement;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.statement.StatementUtil;
 
 /**
@@ -13,12 +13,12 @@ import org.apache.ibatis.executor.statement.StatementUtil;
  * @since 2022.02.20
  * @author ramer
  */
-@Slf4j
 public abstract class BaseExecutor implements Executor {
   protected Transaction transaction;
   protected Executor wrapper;
   protected Configuration configuration;
   private boolean closed;
+  protected Log log;
 
   protected BaseExecutor(Configuration configuration, Transaction transaction) {
     this.transaction = transaction;

@@ -97,6 +97,17 @@ public class DataSourceUtils {
     }
   }
 
+  public static boolean isClosed(Connection connection) {
+    if (connection == null) {
+      return true;
+    }
+    try {
+      return connection.isClosed();
+    } catch (SQLException e) {
+      return true;
+    }
+  }
+
   public static void close(PreparedStatement preparedStatement) {
     if (preparedStatement != null) {
       try {

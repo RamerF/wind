@@ -20,7 +20,7 @@ public class TransactionSynchronizationManager {
     ConnectionHolder connectionHolder = holderMap.get(dataSource);
     if (connectionHolder != null) {
       Connection connection = connectionHolder.getConnection();
-      if (connection == null) {
+      if (connection == null || DataSourceUtils.isClosed(connection)) {
         connectionHolder.setConnection(connection = DataSourceUtils.getConnection(dataSource));
       }
       connectionHolder.requestConnection();

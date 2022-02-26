@@ -2,6 +2,8 @@ package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.exception.TooManyResultException;
+import io.github.ramerf.wind.core.executor.logging.ConnectionLogger;
+import io.github.ramerf.wind.core.executor.logging.SimpleLog;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import io.github.ramerf.wind.core.util.*;
@@ -10,7 +12,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 
 /**
@@ -19,12 +20,12 @@ import org.springframework.data.domain.*;
  * @author ramer
  * @since 2020/5/19
  */
-@Slf4j
 @SuppressWarnings("DuplicatedCode")
 public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
 
   public SimpleJdbcExecutor(final Configuration configuration, final Transaction transaction) {
     super(configuration, transaction);
+    this.log = new SimpleLog(SimpleJdbcExecutor.class);
   }
 
   @Override
@@ -173,7 +174,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
       final PreparedStatementSetter pss,
       final ResultHandler<T> resultHandler)
       throws DataAccessException {
-    Connection connection = transaction.getConnection();
+    Connection connection = getConnection();
     PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sqlParam.sql);
     if (pss != null) {
       pss.setValues(ps);
@@ -182,6 +183,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
     try {
       resultSet = ps.executeQuery();
     } catch (SQLException e) {
+      DataSourceUtils.close(ps);
       DataSourceUtils.releaseConnection(connection);
       throw new DataAccessException("Fail to execute query:" + sqlParam.sql, e);
     }
@@ -195,7 +197,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
     } finally {
       DataSourceUtils.close(resultSet);
       DataSourceUtils.close(ps);
-      DataSourceUtils.releaseConnection(connection);
+      transaction.releaseConnection();
     }
     return ts;
   }
@@ -205,7 +207,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
       throws DataAccessException {
     return aroundWrite(
         () -> {
-          Connection connection = transaction.getConnection();
+          Connection connection = getConnection();
           PreparedStatement ps = psc.createPreparedStatement(connection);
           try {
             List<Map<String, Object>> generatedKeys = generatedKeyHolder.getKeyList();
@@ -222,7 +224,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
             throw new DataAccessException("Fail to exexute update", e);
           } finally {
             DataSourceUtils.close(ps);
-            DataSourceUtils.releaseConnection(connection);
+            transaction.releaseConnection();
           }
         });
   }
@@ -232,7 +234,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
       throws DataAccessException {
     return aroundWrite(
         () -> {
-          Connection connection = transaction.getConnection();
+          Connection connection = getConnection();
           PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
           int batchSize = pss.getBatchSize();
           try {
@@ -254,7 +256,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
             throw new DataAccessException("Fail to execute batch update", e);
           } finally {
             DataSourceUtils.close(ps);
-            DataSourceUtils.releaseConnection(connection);
+            transaction.releaseConnection();
           }
         });
   }
@@ -265,7 +267,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
       final BatchPreparedStatementSetter pss,
       final KeyHolder generatedKeyHolder)
       throws DataAccessException {
-    Connection connection = transaction.getConnection();
+    Connection connection = getConnection();
     PreparedStatement ps = psc.createPreparedStatement(connection);
     ResultSet resultSet = null;
     int batchSize = pss.getBatchSize();
@@ -302,11 +304,20 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
     }
   }
 
+  private Connection getConnection() {
+    final Connection connection = transaction.getConnection();
+    if (log.isDebugEnabled()) {
+      return ConnectionLogger.newInstance(connection, log, 1);
+    } else {
+      return connection;
+    }
+  }
+
   @Override
   public int update(String sql, @Nonnull PreparedStatementSetter pss) throws DataAccessException {
     return aroundWrite(
         () -> {
-          Connection connection = transaction.getConnection();
+          Connection connection = getConnection();
           PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
           try {
             pss.setValues(ps);

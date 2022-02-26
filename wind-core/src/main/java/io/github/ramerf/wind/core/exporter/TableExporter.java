@@ -63,7 +63,7 @@ public class TableExporter {
       final String columnDefinition =
           columns.stream()
               .filter(EntityColumn::isSupported)
-              .sorted(Comparator.comparing(EntityColumn::isPrimaryKey))
+              .sorted(Comparator.comparing(EntityColumn::isPrimaryKey).reversed())
               .map(column -> column.getColumnDdl(dialect))
               .collect(Collectors.joining(",\n\t"));
       sql.append(columnDefinition).append(",\n\t");

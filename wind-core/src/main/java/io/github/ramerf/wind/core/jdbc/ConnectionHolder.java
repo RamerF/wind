@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.jdbc;
 
+import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.Connection;
 import javax.annotation.Nonnull;
 import lombok.Getter;
@@ -25,6 +26,7 @@ public class ConnectionHolder {
   public void releaseConnection() {
     this.referenceCount--;
     if (referenceCount < 0) {
+      DataSourceUtils.close(connection);
       this.connection = null;
       this.referenceCount = 0;
     }

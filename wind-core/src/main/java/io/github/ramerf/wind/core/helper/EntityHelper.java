@@ -135,7 +135,8 @@ public class EntityHelper {
 
   private static EntityInfo initEntityIfNeeded(final String fullPath) {
     final Class<?> clazz = BeanUtils.getClazz(fullPath);
-    synchronized (EntityHelper.class) {
+    //noinspection SynchronizationOnLocalVariableOrMethodParameter
+    synchronized (fullPath) {
       final EntityInfo entityInfo = CLAZZ_ENTITY_MAP.get(clazz);
       if (entityInfo == null || CollectionUtils.isEmpty(entityInfo.getFieldColumnMap())) {
         initEntity(clazz);
