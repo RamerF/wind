@@ -2,27 +2,21 @@ package io.github.ramerf.wind.core.mysql;
 
 import io.github.ramerf.wind.core.condition.Cnds;
 import io.github.ramerf.wind.core.condition.Fields;
-import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.WindApplication;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
-import io.github.ramerf.wind.core.util.StringUtils;
-import java.io.*;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.transaction.annotation.Transactional;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.reader.UnicodeReader;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.*;
@@ -64,86 +58,9 @@ public class BaseServiceTest {
 
   @BeforeEach
   public void before() {
-    try {
-      Yaml yaml = new Yaml();
-      URL url = BaseServiceTest.class.getClassLoader().getResource("application-mysql.yml");
-      if (url != null) {
-        // 获取test.yaml文件中的配置数据，然后转换为obj，
-        Object obj = yaml.load(new FileInputStream(url.getFile()));
-        System.out.println(obj);
-        // 也可以将值转换为Map
-        final FileInputStream inputStream = new FileInputStream(url.getFile());
-        Configuration configuration = new Configuration();
-        final Map<String, Object> map2 = yamlHandler(new FileInputStream[] {inputStream});
-        System.out.println(map2);
-        // 通过map我们取值就可以了.
-
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    WindApplication.run("application-mysql.yml");
     foo.setId(id);
     service = GenericService.with(Foo.class, Long.class);
-  }
-
-  /** 单个yaml文件处理 */
-  public static Map<String, Object> yamlHandler(@Nonnull InputStream[] resources)
-      throws IOException {
-    Map<String, Object> result = new LinkedHashMap<>();
-    Yaml yaml = new Yaml();
-    Iterator<InputStream> iterator = Arrays.stream(resources).iterator();
-    while (iterator.hasNext()) {
-      InputStream resource = iterator.next();
-      UnicodeReader reader = new UnicodeReader(resource);
-      Object object = yaml.load(reader);
-      // 这里只是简单处理，需要多个方式可以自己添加
-      if (object instanceof Map) {
-        Map map = (Map) object;
-        buildFlattenedMap(result, map, null);
-      }
-      reader.close();
-    }
-    return result;
-  }
-
-  /** 这部分代码来至springboot源码部分对yaml的解析 YamlProcessor.java buildFlattenedMap方法 */
-  private static void buildFlattenedMap(
-      Map<String, Object> result, Map<String, Object> source, @Nullable String path) {
-    // 循环读取原数据
-    source.forEach(
-        (key, value) -> {
-          // 如果存在路径进行拼接
-          if (StringUtils.hasText(path)) {
-            if (key.startsWith("[")) {
-              key = path + key;
-            } else {
-              key = path + '.' + key;
-            }
-          }
-          // 数据类型匹配
-          if (value instanceof String) {
-            result.put(key, value);
-          } else if (value instanceof Map) {
-            // 如果是map,就继续读取
-            Map<String, Object> map = (Map) value;
-            buildFlattenedMap(result, map, key);
-          } else if (value instanceof Collection) {
-            Collection<Object> collection = (Collection) value;
-            if (collection.isEmpty()) {
-              result.put(key, "");
-            } else {
-              int count = 0;
-              Iterator var7 = collection.iterator();
-              while (var7.hasNext()) {
-                Object object = var7.next();
-                buildFlattenedMap(
-                    result, Collections.singletonMap("[" + count++ + "]", object), key);
-              }
-            }
-          } else {
-            result.put(key, value != null ? value : "");
-          }
-        });
   }
 
   @Test
@@ -162,14 +79,20 @@ public class BaseServiceTest {
             .groupBy(Foo::getName)
             // 排序
             .orderBy(Foo::getId, Direction.DESC);
-    log.info("testCnds:[{}]", cnds.getString());
+    assertEquals("id>? and name is not null group by name", cnds.getString(), "Cnds getString");
     final Fields<Foo> fields =
         Fields.of(Foo.class)
             // 查询指定列
             .include(Foo::getId)
-            .include(Foo::getName);
-    log.info(
-        "testCnds:[include:{},exlucde:{}]", fields.getIncludeFields(), fields.getExcludeFields());
+            .include(Foo::getName)
+            .exclude(Foo::getType)
+            .exclude(Foo::getUpdateTime);
+    final String includes =
+        fields.getIncludeFields().stream().map(Field::getName).collect(Collectors.joining(", "));
+    assertEquals("id, name", includes, "Cnds includes");
+    final String excludes =
+        fields.getExcludeFields().stream().map(Field::getName).collect(Collectors.joining(", "));
+    assertEquals("type, updateTime", excludes, "Cnds excludes");
   }
 
   @Test
@@ -233,7 +156,6 @@ public class BaseServiceTest {
   @Test
   @Order(2)
   @DisplayName("单个创建")
-  @Transactional(rollbackFor = Exception.class)
   public void testCreate() {
     foo.setId(null);
     assertTrue(service.create(foo) > 0);

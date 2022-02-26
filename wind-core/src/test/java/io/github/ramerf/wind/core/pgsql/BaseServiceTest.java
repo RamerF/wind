@@ -1,6 +1,8 @@
 package io.github.ramerf.wind.core.pgsql;
 
-import io.github.ramerf.wind.core.condition.*;
+import io.github.ramerf.wind.core.condition.Cnds;
+import io.github.ramerf.wind.core.condition.Fields;
+import io.github.ramerf.wind.core.config.WindApplication;
 import io.github.ramerf.wind.core.pgsql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import java.math.BigDecimal;
@@ -11,14 +13,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import static java.util.stream.Collectors.toList;
@@ -31,11 +27,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 2020.8.29
  */
 @Slf4j
-@Rollback
-@Sql("classpath:db-pgsql.sql")
-@ExtendWith(SpringExtension.class)
-@ActiveProfiles("pgsql")
-@SpringBootTest(classes = PgsqlApplication.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Pgsql 测试")
 public class BaseServiceTest {
@@ -55,7 +46,7 @@ public class BaseServiceTest {
             .intArr(new Integer[] {1, 4, 7})
             .longList(Arrays.asList(2L, 4L, 6L))
             .longArr(new Long[] {1L, 3L, 5L})
-            // .stringList(Arrays.asList("3", "a", "6", "b"))
+            .stringList(Arrays.asList("3", "a", "6", "b"))
             .stringArr(new String[] {"2", "a", "b"})
             .column("non_match_column")
             .bitSet(BitSet.valueOf(new byte[] {0x11, 0x0, 0x1, 0x1, 0x0}))
@@ -66,6 +57,7 @@ public class BaseServiceTest {
 
   @BeforeEach
   public void before() {
+    WindApplication.run("application-pgsql.yml");
     foo.setId(id);
     service = GenericService.with(Foo.class, Long.class);
   }

@@ -9,17 +9,17 @@ import lombok.extern.slf4j.Slf4j;
  * @author ramer
  */
 @Slf4j
-public class CommonException extends RuntimeException {
+public class WindException extends RuntimeException {
 
-  public CommonException(final String message) {
+  public WindException(final String message) {
     super(message);
   }
 
-  public CommonException(final String message, final Throwable cause) {
+  public WindException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  public CommonException(final Throwable cause) {
+  public WindException(final Throwable cause) {
     super(cause);
   }
 }

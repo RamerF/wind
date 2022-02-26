@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.entity.TestLambda;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.function.*;
 import java.lang.invoke.SerializedLambda;
 import java.lang.ref.WeakReference;
@@ -66,7 +66,7 @@ public final class LambdaUtils {
    */
   public static SerializedLambda serializedLambda(FieldFunction fieldFunction) {
     if (!fieldFunction.getClass().isSynthetic()) {
-      throw new CommonException("不支持非lambda表达式");
+      throw new WindException("不支持非lambda表达式");
     }
     return Optional.ofNullable(LAMBDA_MAP.get(fieldFunction.getClass()))
         .map(WeakReference::get)
@@ -85,7 +85,7 @@ public final class LambdaUtils {
       LAMBDA_MAP.put(clazz, new WeakReference<>(serializedLambda));
       return serializedLambda;
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new CommonException(e);
+      throw new WindException(e);
     }
   }
 

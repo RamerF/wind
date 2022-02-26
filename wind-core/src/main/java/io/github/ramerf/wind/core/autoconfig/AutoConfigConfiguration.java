@@ -1,17 +1,21 @@
 package io.github.ramerf.wind.core.autoconfig;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import io.github.ramerf.wind.core.annotation.ConfigurationProperties;
 import io.github.ramerf.wind.core.annotation.NestedConfigurationProperties;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
+import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
+import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
-import javax.sql.DataSource;
+import io.github.ramerf.wind.core.util.YmlUtil.After;
+import io.github.ramerf.wind.core.util.YmlUtil.YmlAfter;
+import java.util.Map;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -55,23 +59,27 @@ public class AutoConfigConfiguration {
   /** 全局id生成器,类全路径,默认自增 {@link IdGenerator#AUTO_INCREMENT_ID_GENERATOR } */
   private String idGenerator;
 
-  @NestedConfigurationProperties private DataSourceConfig dataSourceConfig;
+  @NestedConfigurationProperties private DataSourceConfig dataSource;
 
   @Data
   public static class DataSourceConfig {
-    /** 数据源提供者的全路径,默认使用{@link DruidDataSource} */
-    private Class<? extends DataSource> type = DruidDataSource.class;
+    /** 事务工厂. */
+    private Class<? extends TransactionFactory> transactionFactory = JdbcTransactionFactory.class;
 
-    private String url;
-    private String username;
-    private String password;
-    private String driverClassName;
+    /** 定义数据源属性,根据不同的数据源使用不同的属性 */
+    @Getter private Map<String, String> properties;
 
+    /** 默认支持的数据源. */
     public enum DataSourceType {
       DBCP,
       HIKARI,
       DRUID,
-      ;
+      OTHER;
+    }
+
+    @After
+    public void after(YmlAfter ymlAfter) {
+      this.properties = ymlAfter.getProperties();
     }
   }
 
@@ -90,7 +98,7 @@ public class AutoConfigConfiguration {
       try {
         final IdGenerator idGenerator = BeanUtils.initial(this.idGenerator);
         configuration.setIdGenerator(idGenerator);
-      } catch (CommonException e) {
+      } catch (WindException e) {
         log.error(String.format("Cannot initial idGenerator [%s]", idGenerator), e.getCause());
         throw e;
       }

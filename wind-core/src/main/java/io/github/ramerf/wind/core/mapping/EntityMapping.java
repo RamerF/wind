@@ -47,7 +47,7 @@ public class EntityMapping {
   public static void initial(final EntityInfo entityInfo) {
     final Class<?> clazz = entityInfo.getClazz();
     final List<MappingInfo> mappingInfos =
-        BeanUtils.retrievePrivateFields(clazz).stream()
+        BeanUtils.retrieveDeclaredFields(clazz).stream()
             .filter(MappingInfo::isValidMapping)
             .map(MappingType::getMappingInfo)
             .collect(toList());

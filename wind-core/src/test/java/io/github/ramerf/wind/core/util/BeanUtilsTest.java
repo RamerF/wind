@@ -38,10 +38,10 @@ public class BeanUtilsTest {
   @Test
   @DisplayName("获取私有字段")
   public void testRetrievePrivateFields() {
-    final ArrayList<Field> fields = BeanUtils.retrievePrivateFields(Ts.class);
+    final ArrayList<Field> fields = BeanUtils.retrieveDeclaredFields(Ts.class);
     log.info("[{}]", fields);
     final HashSet<Field> container = new HashSet<>();
-    log.info("[{}]", BeanUtils.retrievePrivateFields(Ts.class, container));
+    log.info("[{}]", BeanUtils.retrieveDeclaredFields(Ts.class, container));
   }
 
   @Test

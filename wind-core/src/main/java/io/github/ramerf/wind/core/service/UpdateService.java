@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.Configuration;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.executor.DataAccessException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.util.CollectionUtils;
@@ -153,7 +153,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @return 实际受影响的行数
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
-   * @see CommonException
+   * @see WindException
    */
   default int delete(final ID id) throws DataAccessException {
     final LambdaCondition<T> condition = LambdaCondition.of(getPoJoClass());

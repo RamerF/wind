@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.dialect.identity;
 
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import java.lang.reflect.Type;
 import org.springframework.data.mapping.MappingException;
 
@@ -26,5 +26,5 @@ public interface IdentityColumnSupport {
    * @return The appropriate DDL fragment.
    * @throws MappingException If IDENTITY generation is not supported.
    */
-  String getIdentityColumnString(Type type) throws CommonException;
+  String getIdentityColumnString(Type type) throws WindException;
 }

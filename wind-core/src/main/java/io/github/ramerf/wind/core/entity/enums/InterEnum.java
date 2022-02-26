@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.entity.enums;
 
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.exception.InvalidEnumException;
 import io.github.ramerf.wind.core.util.InterEnumUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -55,10 +55,10 @@ public interface InterEnum<V> extends Serializable {
    * @param value 枚举值
    * @param clazz the clazz
    * @return 枚举实例 e
-   * @throws CommonException the common exception
+   * @throws WindException the common exception
    */
   static <V, E extends InterEnum<V>> E of(final V value, Class<E> clazz, Supplier<String> message)
-      throws CommonException {
+      throws WindException {
     E e = InterEnumUtils.of(value, clazz);
     if (e == null) {
       throw new InvalidEnumException(

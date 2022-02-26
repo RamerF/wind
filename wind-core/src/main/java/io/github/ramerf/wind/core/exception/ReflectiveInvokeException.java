@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ramer
  */
 @Slf4j
-public class ReflectiveInvokeException extends RuntimeException {
+public class ReflectiveInvokeException extends WindException {
 
   public ReflectiveInvokeException(final String message) {
     super(message);

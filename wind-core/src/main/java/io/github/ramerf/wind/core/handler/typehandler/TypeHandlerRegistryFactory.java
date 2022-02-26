@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.BeanUtils;
@@ -35,7 +35,6 @@ public class TypeHandlerRegistryFactory {
       BeanUtils.scanClasses(
               TypeHandlerRegistryFactory.class.getPackage().getName(), ITypeHandler.class)
           .stream()
-          .peek(clazz -> log.debug("registerDefaultTypeHandlers:[{}]", clazz.getName()))
           .filter(clazz -> !clazz.equals(ITypeHandler.class))
           // 跳过类型处理器
           .filter(clazz -> !clazz.isAnnotationPresent(Skip.class))
@@ -43,6 +42,7 @@ public class TypeHandlerRegistryFactory {
           .forEach(
               typeHandler -> {
                 typeHandlerMap.put(typeHandler.getClass(), typeHandler);
+                log.debug("registerDefaultTypeHandlers:[{}]", typeHandler.getClass().getName());
                 addTypeHandlers(typeHandler);
               });
     } catch (IOException e) {
@@ -75,7 +75,7 @@ public class TypeHandlerRegistryFactory {
         typeHandler = clazz.newInstance();
         typeHandlerMap.put(clazz, typeHandler);
       } catch (InstantiationException | IllegalAccessException e) {
-        throw new CommonException("Need default constructor for typeHandler" + clazz, e);
+        throw new WindException("Need default constructor for typeHandler" + clazz, e);
       }
     }
     return typeHandler;

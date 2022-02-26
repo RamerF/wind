@@ -51,7 +51,7 @@ public class Query<T> {
   private Condition<?, ?> condition;
   private Pageable pageable;
 
-  private Executor executor;
+  private final Executor executor;
   private static Configuration configuration;
   private final Class<T> clazz;
 
@@ -180,7 +180,7 @@ public class Query<T> {
               getQueryString(this.query.fields),
               getTableName(),
               conditionClause.concat(orderByClause).concat(limitClause));
-      if (log.isDebugEnabled()) {
+      if (log.isTraceEnabled()) {
         log.debug("fetchOne:[{}]", sql);
       }
       return query.executor.fetchOne(
@@ -211,7 +211,7 @@ public class Query<T> {
               getQueryString(this.query.fields),
               getTableName(),
               conditionClause.concat(orderByClause).concat(limitClause));
-      if (log.isDebugEnabled()) {
+      if (log.isTraceEnabled()) {
         log.debug("fetchAll:[{}]", sql);
       }
       return query.executor.fetchAll(
@@ -242,7 +242,7 @@ public class Query<T> {
               getQueryString(this.query.fields),
               getTableName(),
               conditionClause.concat(orderByClause).concat(limitClause));
-      if (log.isDebugEnabled()) {
+      if (log.isTraceEnabled()) {
         log.debug("fetchPage:[{}]", sql);
       }
       return query.executor.fetchPage(

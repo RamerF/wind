@@ -6,7 +6,7 @@ package io.github.ramerf.wind.core.exception;
  * @since 2021.01.31
  * @author ramer
  */
-public class NotImplementedException extends RuntimeException {
+public class NotImplementedException extends WindException {
 
   public NotImplementedException(String method) {
     super(method);

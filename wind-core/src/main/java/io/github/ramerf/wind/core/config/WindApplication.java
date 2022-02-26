@@ -5,7 +5,7 @@ import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.ansi.*;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration.DataSourceConfig;
-import io.github.ramerf.wind.core.exception.ClassInstantiationException;
+import io.github.ramerf.wind.core.autoconfig.jdbc.DataSourceConfigurationFactory;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -34,18 +34,12 @@ public class WindApplication {
     final AutoConfigConfiguration autoConfigConfiguration =
         YmlUtil.process(AutoConfigConfiguration.class, configPath);
     final Configuration configuration = autoConfigConfiguration.getConfiguration();
-    final DataSourceConfig dataSourceConfig = autoConfigConfiguration.getDataSourceConfig();
-    final String driverClassName = dataSourceConfig.getDriverClassName();
-    Asserts.hasText(driverClassName, "Need to specify driverClassName in dataSourceConfig");
-    final DataSource dataSource;
-    try {
-      dataSource = BeanUtils.initial(driverClassName);
-    } catch (ClassInstantiationException e) {
-      throw new IllegalStateException("Cannot initial class " + driverClassName);
-    }
-    // TODO WARN 可配置
-    TransactionFactory transactionFactory = new JdbcTransactionFactory();
-    configuration.setJdbcEnvironment(new JdbcEnvironment(transactionFactory, dataSource));
+    final DataSourceConfig dataSourceConfig = autoConfigConfiguration.getDataSource();
+    final JdbcEnvironment jdbcEnvironment =
+        new JdbcEnvironment(
+            BeanUtils.initial(dataSourceConfig.getTransactionFactory()),
+            DataSourceConfigurationFactory.getDataSource(dataSourceConfig));
+    configuration.setJdbcEnvironment(jdbcEnvironment);
     run(configuration);
   }
 
@@ -94,10 +88,10 @@ public class WindApplication {
     // 初始化Query/Update
     Update.initial(windContext.getConfiguration());
     Query.initial(windContext.getConfiguration());
-    // 初始化EntityUtils
+    // 初始化实体解析类
     EntityUtils.initial(windContext);
-    // 初始化实体信息
     EntityHelper.initial(windContext);
+    // 解析实体元数据
     initEntityInfo(windContext.getConfiguration());
     // TODO WARN 发布初始化完成事件
     //   publisher.publishEvent(new InitFinishEvent(windContext));

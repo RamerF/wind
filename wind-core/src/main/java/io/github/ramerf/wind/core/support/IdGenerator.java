@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.support;
 
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 
 /**
  * id生成策略.
@@ -41,7 +41,7 @@ public interface IdGenerator {
 
     @Override
     public Object nextId(Object obj) {
-      throw new CommonException("Void id generator");
+      throw new WindException("Void id generator");
     }
   }
 }

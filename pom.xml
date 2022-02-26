@@ -11,7 +11,6 @@
     <version>4.0.7</version>
     <modules>
         <module>wind-core</module>
-        <module>wind-web</module>
     </modules>
     <url>http://maven.apache.org</url>
     <description>springboot web at once.</description>
@@ -52,13 +51,6 @@
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>javax.persistence-api</artifactId>
-        </dependency>
-        <!-- Spring Boot test-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-            <version>2.0.8.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

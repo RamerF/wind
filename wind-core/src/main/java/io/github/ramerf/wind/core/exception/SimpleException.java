@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ramer
  */
 @Slf4j
-public class SimpleException extends CommonException {
+public class SimpleException extends WindException {
 
   public SimpleException(final String message) {
     super(message);

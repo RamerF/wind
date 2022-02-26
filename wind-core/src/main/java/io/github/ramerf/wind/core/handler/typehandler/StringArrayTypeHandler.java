@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
@@ -23,7 +23,7 @@ public class StringArrayTypeHandler implements ITypeHandler<String[], String[]> 
     try {
       return ps.getConnection().createArrayOf(getJdbcType(field), javaVal);
     } catch (SQLException e) {
-      throw new CommonException(e);
+      throw new WindException(e);
     }
   }
 

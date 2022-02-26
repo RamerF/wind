@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.reflect.Field;
 import java.sql.*;
@@ -25,7 +25,7 @@ public class CollectionIntegerArrayTypeHandler
       final Connection connection = ps.getConnection();
       return connection.createArrayOf(getJdbcType(field), javaVal.toArray());
     } catch (SQLException e) {
-      throw new CommonException(e);
+      throw new WindException(e);
     }
   }
 

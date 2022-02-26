@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.BitSet;
@@ -24,7 +24,7 @@ public class BitSetBlobTypeHandler implements ITypeHandler<BitSet, byte[]> {
       blob.setBytes(1, javaVal.toByteArray());
       return blob;
     } catch (SQLException e) {
-      throw new CommonException(e);
+      throw new WindException(e);
     }
   }
 

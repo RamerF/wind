@@ -2,14 +2,17 @@ package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.annotation.ConfigurationProperties;
 import io.github.ramerf.wind.core.annotation.NestedConfigurationProperties;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import java.io.*;
+import java.lang.annotation.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.reader.UnicodeReader;
@@ -20,7 +23,7 @@ public final class YmlUtil {
 
   /** @see #process(Class, String, boolean) */
   public static <T> T process(final Class<T> clazz, final String resourcePath)
-      throws CommonException {
+      throws WindException {
     return process(clazz, resourcePath, true);
   }
 
@@ -31,17 +34,17 @@ public final class YmlUtil {
    * @param resourcePath 类路径的相对路径,如 application.yml
    * @param ignoreInvalidValues 忽略配置中无效/错误的值
    * @return 如果{@code clazz}未包含注解{@link ConfigurationProperties},返回默认实例
-   * @throws CommonException 文件读取失败时抛出.
+   * @throws WindException 文件读取失败时抛出.
    */
   public static <T> T process(
       final Class<T> clazz, final String resourcePath, final boolean ignoreInvalidValues)
-      throws CommonException {
+      throws WindException {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     URL url =
         (classLoader == null ? YmlUtil.class.getClassLoader() : classLoader)
             .getResource(resourcePath);
     if (url == null) {
-      throw new CommonException("Could not get resource from " + resourcePath);
+      throw new WindException("Could not get resource from " + resourcePath);
     }
     try (final FileInputStream inputStream = new FileInputStream(url.getFile())) {
       final Map<String, Object> configMap = yamlHandler(new FileInputStream[] {inputStream});
@@ -51,15 +54,16 @@ public final class YmlUtil {
       }
       final String prefix = getPrefix(annotation);
       final T obj = BeanUtils.initial(clazz);
-      final List<Field> fields = BeanUtils.retrievePrivateFields(clazz);
+      final List<Field> fields = BeanUtils.retrieveDeclaredFields(clazz);
       for (final Field field : fields) {
         final String key = prefix.concat(".").concat(field.getName());
         final Object value = configMap.get(key);
         retrieveSetFields(obj, field, value, key, configMap, ignoreInvalidValues);
       }
+      afterClass(obj, configMap, prefix);
       return obj;
     } catch (IOException e) {
-      throw new CommonException(e);
+      throw new WindException(e);
     }
   }
 
@@ -96,12 +100,13 @@ public final class YmlUtil {
       final Object nestObj = BeanUtils.initial(fieldType);
       setValue(obj, field, nestObj, ignoreInvalidValues);
       @SuppressWarnings("DuplicatedCode")
-      final List<Field> nestFields = BeanUtils.retrievePrivateFields(fieldType);
+      final List<Field> nestFields = BeanUtils.retrieveDeclaredFields(fieldType);
       for (final Field nestField : nestFields) {
         final String key = prefix.concat(".").concat(nestField.getName());
         final Object nestValue = configMap.get(key);
         retrieveSetFields(nestObj, nestField, nestValue, key, configMap, ignoreInvalidValues);
       }
+      afterClass(nestObj, configMap, prefix);
     } else if (value != null) {
       setValue(obj, field, value, ignoreInvalidValues);
     }
@@ -110,26 +115,28 @@ public final class YmlUtil {
   private static void setValue(
       final Object obj, final Field field, final Object value, final boolean ignoreInvalidValues) {
     Object val;
-    Class<?> clazz = field.getType();
+    Class<?> fieldType = field.getType();
     try {
       if (value == null) {
         val = null;
-      } else if (value.getClass().equals(clazz)) {
+      } else if (value.getClass().equals(fieldType)) {
         val = value;
-      } else if (clazz.equals(String.class)) {
+      } else if (fieldType.equals(String.class)) {
         val = String.valueOf(value);
-      } else if (clazz.equals(short.class) || clazz.equals(Short.class)) {
+      } else if (fieldType.equals(short.class) || fieldType.equals(Short.class)) {
         val = Short.valueOf(value.toString());
-      } else if (clazz.equals(int.class) || clazz.equals(Integer.class)) {
+      } else if (fieldType.equals(int.class) || fieldType.equals(Integer.class)) {
         val = Integer.valueOf(value.toString());
-      } else if (clazz.equals(long.class) || clazz.equals(Long.class)) {
+      } else if (fieldType.equals(long.class) || fieldType.equals(Long.class)) {
         val = Long.valueOf(value.toString());
-      } else if (clazz.equals(float.class) || clazz.equals(Float.class)) {
+      } else if (fieldType.equals(float.class) || fieldType.equals(Float.class)) {
         val = Float.valueOf(value.toString());
-      } else if (clazz.equals(double.class) || clazz.equals(Double.class)) {
+      } else if (fieldType.equals(double.class) || fieldType.equals(Double.class)) {
         val = Double.valueOf(value.toString());
-      } else if (clazz.equals(boolean.class) || clazz.equals(Boolean.class)) {
+      } else if (fieldType.equals(boolean.class) || fieldType.equals(Boolean.class)) {
         val = Boolean.valueOf(value.toString());
+      } else if (fieldType.equals(Class.class)) {
+        val = BeanUtils.getClazz(value.toString());
       } else val = value;
     } catch (Exception e) {
       log.warn("Could not set value for field {}", field);
@@ -206,5 +213,43 @@ public final class YmlUtil {
         result.put(key, value != null ? value : "");
       }
     }
+  }
+
+  private static void afterClass(
+      final Object object, final Map<String, Object> properties, final String prefix) {
+    try {
+      final Set<Method> methods =
+          BeanUtils.scanMethodsWithAnnotation(object.getClass(), After.class);
+      YmlAfter ymlAfter = new YmlAfter();
+      Map<String, String> map = new LinkedHashMap<>();
+      // 去除key前缀
+      if (!methods.isEmpty()) {
+        properties.forEach(
+            (k, v) -> {
+              if (v != null && k.startsWith(prefix) && k.length() > prefix.length()) {
+                map.put(k.substring(prefix.length() + 1), v.toString());
+              }
+            });
+      }
+      ymlAfter.properties = map;
+      ymlAfter.object = object;
+      methods.forEach(method -> BeanUtils.invokeMethodIgnoreException(object, method, ymlAfter));
+    } catch (IOException e) {
+      log.warn("Fail to write yml properties to object {}:[{}]", object.getClass(), e.getMessage());
+    }
+  }
+
+  /** 标记的方法在当前类的值赋值完成后调用,入参为{@link YmlAfter} */
+  @Target({ElementType.METHOD})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Documented
+  public @interface After {}
+
+  public static class YmlAfter {
+    /** 当前类对应的所有yml属性. */
+    @Getter private Map<String, String> properties;
+
+    /** 当前对象 */
+    @Getter private Object object;
   }
 }

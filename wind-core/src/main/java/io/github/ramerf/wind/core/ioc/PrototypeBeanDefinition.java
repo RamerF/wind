@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.ioc;
 
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 
 /**
  * @author ramer
@@ -9,6 +9,6 @@ import io.github.ramerf.wind.core.exception.CommonException;
 public class PrototypeBeanDefinition extends AbstractBeanDefinition {
   @Override
   public <T> T get() {
-    throw new CommonException("Not Implement.");
+    throw new WindException("Not Implement.");
   }
 }

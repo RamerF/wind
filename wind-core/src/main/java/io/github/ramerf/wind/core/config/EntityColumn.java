@@ -4,7 +4,7 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -211,7 +211,7 @@ public class EntityColumn {
           }
         }
       } while (!interfaceDeque.isEmpty() && maxDepth > 0);
-      throw new CommonException("could not reference generic type for: " + field.getType());
+      throw new WindException("could not reference generic type for: " + field.getType());
     }
     return this.type;
   }

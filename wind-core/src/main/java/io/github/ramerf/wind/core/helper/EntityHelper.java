@@ -47,8 +47,19 @@ public class EntityHelper {
         EntityInfo.of(
             clazz, windContext.getConfiguration(), windContext.getDbMetaData().getDialect());
     CLAZZ_ENTITY_MAP.put(clazz, entityInfo);
-    // 这里进行表定义更新
-    ddlAuto(entityInfo);
+    // 表定义更新
+    final DdlAuto ddlAuto = windContext.getConfiguration().getDdlAuto();
+    if (ddlAuto == null || DdlAuto.NONE.equals(ddlAuto)) {
+      return;
+    }
+    if (!entityInfo.isMapToTable()) {
+      return;
+    }
+    if (DdlAuto.CREATE.equals(ddlAuto)) {
+      TableExporter.of(windContext).createTable(entityInfo);
+    } else if (DdlAuto.UPDATE.equals(ddlAuto)) {
+      TableExporter.of(windContext).updateTable(entityInfo);
+    }
   }
 
   /** 初始化关系映射. */
@@ -143,21 +154,6 @@ public class EntityHelper {
       }
     }
     return CLAZZ_ENTITY_MAP.get(clazz);
-  }
-
-  private static void ddlAuto(final EntityInfo entityInfo) {
-    final DdlAuto ddlAuto = windContext.getConfiguration().getDdlAuto();
-    if (ddlAuto == null || DdlAuto.NONE.equals(ddlAuto)) {
-      return;
-    }
-    if (!entityInfo.isMapToTable()) {
-      return;
-    }
-    if (DdlAuto.CREATE.equals(ddlAuto)) {
-      TableExporter.of(windContext).createTable(entityInfo);
-    } else if (DdlAuto.UPDATE.equals(ddlAuto)) {
-      TableExporter.of(windContext).updateTable(entityInfo);
-    }
   }
 
   /**

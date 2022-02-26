@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.ioc;
 
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -20,7 +20,7 @@ public class BeanRegistryFactory {
     try {
       classes = BeanUtils.scanClassesWithAnnotation(path, Bean.class);
     } catch (IOException e) {
-      throw new CommonException("Cannot search for class underneath directory " + path);
+      throw new WindException("Cannot search for class underneath directory " + path);
     }
     for (Class<?> clazz : classes) {
       // 包含Bean注解的类,调用默认构造器初始化
@@ -47,7 +47,7 @@ public class BeanRegistryFactory {
       try {
         methodsWithAnnotation = BeanUtils.scanMethodsWithAnnotation(clazz, Bean.class);
       } catch (IOException e) {
-        throw new CommonException(
+        throw new WindException(
             "Cannot search for method with annotation Bean for class " + clazz);
       }
       for (Method method : methodsWithAnnotation) {

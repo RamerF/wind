@@ -1,10 +1,12 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.config.*;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.config.EntityColumn;
+import io.github.ramerf.wind.core.config.LogicDeleteProp;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
-import io.github.ramerf.wind.core.helper.*;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
+import io.github.ramerf.wind.core.helper.EntityHelper;
+import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -16,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import lombok.*;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.*;
@@ -102,7 +104,7 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
                       try {
                         final int index = startIndex.getAndIncrement();
                         final Object jdbcValue = TypeHandlerHelper.toJdbcValue(valueType, ps);
-                        if (log.isDebugEnabled()) {
+                        if (log.isTraceEnabled()) {
                           log.debug(
                               "params:[index:{},originValue:{},value:{}]",
                               index,
@@ -111,7 +113,7 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
                         }
                         ps.setObject(index, jdbcValue);
                       } catch (SQLException e) {
-                        throw new CommonException(e);
+                        throw new WindException(e);
                       }
                     })
         .collect(toCollection(LinkedList::new));

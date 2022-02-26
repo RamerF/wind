@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.entity.pojo;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.executor.DataAccessException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.service.GenericService;
@@ -87,7 +87,7 @@ public class Domain<T, ID extends Serializable> {
    * @return 实际受影响的行数
    * @throws DataAccessException 如果执行失败
    * @see DataAccessException
-   * @see CommonException
+   * @see WindException
    */
   @SuppressWarnings("unchecked")
   public int delete() throws DataAccessException {

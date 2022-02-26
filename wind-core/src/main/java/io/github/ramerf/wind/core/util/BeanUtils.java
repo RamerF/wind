@@ -27,12 +27,12 @@ public final class BeanUtils {
   private static final Map<Class<?>, WeakReference<Collection<Field>>> PRIVATE_FIELDS_MAP =
       new ConcurrentHashMap<>();
 
-  public static ArrayList<Field> retrievePrivateFields(@Nonnull final Class<?> clazz) {
+  public static ArrayList<Field> retrieveDeclaredFields(@Nonnull final Class<?> clazz) {
     ArrayList<Field> container = new ArrayList<>();
-    return retrievePrivateFields(clazz, container);
+    return retrieveDeclaredFields(clazz, container);
   }
 
-  public static <T extends Collection<Field>> T retrievePrivateFields(
+  public static <T extends Collection<Field>> T retrieveDeclaredFields(
       @Nonnull final Class<?> clazz, @Nonnull final T container) {
     //noinspection unchecked
     return Optional.ofNullable(PRIVATE_FIELDS_MAP.get(clazz))
@@ -40,13 +40,13 @@ public final class BeanUtils {
         .map(t -> (T) t)
         .orElseGet(
             () -> {
-              final T collection = getPrivateFields(clazz, container);
+              final T collection = getDeclaredFields(clazz, container);
               PRIVATE_FIELDS_MAP.put(clazz, new WeakReference<>(collection));
               return collection;
             });
   }
 
-  private static <T extends Collection<Field>> T getPrivateFields(
+  private static <T extends Collection<Field>> T getDeclaredFields(
       @Nonnull Class<?> clazz, @Nonnull final T containers) {
     do {
       for (final Field superField : clazz.getDeclaredFields()) {
@@ -306,7 +306,7 @@ public final class BeanUtils {
     if (boolean.class.equals(clazz)) {
       return false;
     }
-    throw new CommonException("无法获取默认值:" + clazz);
+    throw new WindException("无法获取默认值:" + clazz);
   }
 
   public static void copyProperties(Object source, Object target, String... ignoreProperties)

@@ -9,14 +9,16 @@ import lombok.extern.slf4j.Slf4j;
  * @author ramer
  */
 @Slf4j
-public class InvalidEnumException extends RuntimeException {
+public class InvalidEnumException extends WindException {
   private final Object value;
 
   public InvalidEnumException(final String value) {
+    super(value);
     this.value = value;
   }
 
   public InvalidEnumException(final int value) {
+    super(value + "");
     this.value = value;
   }
 

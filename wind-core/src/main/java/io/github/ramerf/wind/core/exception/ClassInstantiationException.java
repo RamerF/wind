@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ramer
  */
 @Slf4j
-public class ClassInstantiationException extends RuntimeException {
+public class ClassInstantiationException extends WindException {
 
   public ClassInstantiationException(final String message) {
     super(message);

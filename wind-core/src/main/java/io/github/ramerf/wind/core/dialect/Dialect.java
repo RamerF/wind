@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.dialect;
 
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupportImpl;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -94,9 +94,9 @@ public abstract class Dialect {
    * Get an instance of the dialect specified by the current <tt>System</tt> properties.
    *
    * @return The specified Dialect
-   * @throws CommonException If no dialect was specified, or if it could not be instantiated.
+   * @throws WindException If no dialect was specified, or if it could not be instantiated.
    */
-  public static Dialect getInstance(final String dialect) throws CommonException {
+  public static Dialect getInstance(final String dialect) throws WindException {
     if (dialect != null) {
       return (Dialect) BeanUtils.initial(dialect);
     }
@@ -113,7 +113,7 @@ public abstract class Dialect {
     } catch (SQLException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
-      throw new CommonException(e);
+      throw new WindException(e);
     }
 
     for (DatabaseEnum database : DatabaseEnum.values()) {
@@ -145,12 +145,12 @@ public abstract class Dialect {
    *
    * @param type The type key
    * @return the database type name
-   * @throws CommonException If no mapping was specified for that type.
+   * @throws WindException If no mapping was specified for that type.
    */
-  public String getTypeName(Type type) throws CommonException {
+  public String getTypeName(Type type) throws WindException {
     final String result = typeNames.get(type);
     if (result == null) {
-      throw new CommonException("No default type mapping for (java.sql.Types) " + type);
+      throw new WindException("No default type mapping for (java.sql.Types) " + type);
     }
     return result;
   }
@@ -164,19 +164,19 @@ public abstract class Dialect {
    * @param precision The datatype precision
    * @param scale The datatype scale
    * @return the database type name
-   * @throws CommonException If no mapping was specified for that type.
+   * @throws WindException If no mapping was specified for that type.
    */
   public String getTypeName(Type type, long length, int precision, int scale)
-      throws CommonException {
+      throws WindException {
     if (!isSupportJavaType(type)) {
-      throw new CommonException("Not supported type " + type.getTypeName());
+      throw new WindException("Not supported type " + type.getTypeName());
     }
     final String result =
         notSupportedLengthType(type)
             ? typeNames.get(type)
             : typeNames.get(type, length, precision, scale);
     if (result == null) {
-      throw new CommonException(
+      throw new WindException(
           String.format("No sql type mapping for java type: %s, length: %s", type, length));
     }
     return result;
@@ -267,7 +267,7 @@ public abstract class Dialect {
 
   public String getCommonOnTableString(
       String category, String schema, String table, String comment) {
-    throw new CommonException("Not implemented");
+    throw new WindException("Not implemented");
   }
 
   public String getCommentOnColumnString(

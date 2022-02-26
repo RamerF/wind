@@ -3,8 +3,8 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.JdbcEnvironment;
-import io.github.ramerf.wind.core.exception.CommonException;
 import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.helper.EntityHelper;
@@ -146,7 +146,7 @@ public final class Update<T> {
             });
     final String sql = "INSERT INTO %s(%s) VALUES(%s)";
     final String execSql = String.format(sql, entityInfo.getName(), columns, valueMarks);
-    if (log.isDebugEnabled()) {
+    if (log.isTraceEnabled()) {
       log.debug("create:[{}]", execSql);
     }
     KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -338,7 +338,7 @@ public final class Update<T> {
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder, condition.getString());
-    if (log.isDebugEnabled()) {
+    if (log.isTraceEnabled()) {
       log.debug("update:[{}]", execSql);
     }
     return executor.update(
@@ -570,13 +570,13 @@ public final class Update<T> {
           try {
             final Object value =
                 TypeHandlerHelper.toJdbcValue(ValueType.of(originValue, field), ps);
-            if (log.isDebugEnabled()) {
+            if (log.isTraceEnabled()) {
               log.debug(
                   "params:[index:{},originValue:{},value:{}]", index.get(), originValue, value);
             }
             ps.setObject(index.getAndIncrement(), value);
           } catch (SQLException e) {
-            throw new CommonException(e);
+            throw new WindException(e);
           }
         };
     list.add(function);
@@ -593,15 +593,13 @@ public final class Update<T> {
   private void setArgsValue(
       AtomicInteger index, Field field, Object originValue, PreparedStatement ps) {
     final Object value = TypeHandlerHelper.toJdbcValue(ValueType.of(originValue, field), ps);
-    if (log.isDebugEnabled()) {
+    if (log.isTraceEnabled()) {
       log.debug("params:[index:{},originValue:{},value:{}]", index.get(), originValue, value);
     }
     try {
       ps.setObject(index.getAndIncrement(), value);
     } catch (SQLException e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
-      throw new CommonException(e.getMessage(), e);
+      throw new WindException(e);
     }
   }
 }

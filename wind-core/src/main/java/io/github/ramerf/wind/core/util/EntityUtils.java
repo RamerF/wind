@@ -4,7 +4,7 @@ import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.exception.CommonException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.exception.NotImplementedException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
@@ -53,7 +53,7 @@ public final class EntityUtils {
   public static List<Field> getAllColumnFields(
       @Nonnull final Class<?> obj, @Nullable SqlStatementType sqlStatementType) {
     Stream<Field> stream =
-        BeanUtils.retrievePrivateFields(obj).stream().filter(EntityUtils::filterColumnField);
+        BeanUtils.retrieveDeclaredFields(obj).stream().filter(EntityUtils::filterColumnField);
     if (sqlStatementType != null) {
       final EntityInfo entityInfo = EntityHelper.getEntityInfo(obj);
       final Map<Field, EntityColumn> fieldColumnMap = entityInfo.getFieldColumnMap();
@@ -305,7 +305,7 @@ public final class EntityUtils {
         try {
           classes = (Class<T>) Class.forName(arguments[0].getTypeName());
         } catch (ClassNotFoundException ignored) {
-          throw new CommonException("cannot get service bound type poJo.");
+          throw new WindException("cannot get service bound type poJo.");
         }
         SERVICE_POJO_MAP.put(serviceClazz, new WeakReference<>(classes));
         return classes;
@@ -315,7 +315,7 @@ public final class EntityUtils {
     try {
       cls = (Class<S>) BeanUtils.getTypeClass(baseServiceTypes[0]);
     } catch (ClassCastException e) {
-      throw new CommonException("cannot get service bound type poJo.");
+      throw new WindException("cannot get service bound type poJo.");
     }
     return getPoJoClass(cls);
   }
