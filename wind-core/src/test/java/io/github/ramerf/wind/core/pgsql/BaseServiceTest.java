@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.pgsql;
 import io.github.ramerf.wind.core.condition.Cnds;
 import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.config.WindApplication;
+import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.pgsql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import java.math.BigDecimal;
@@ -13,7 +14,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,13 +56,23 @@ public class BaseServiceTest {
   }
 
   @BeforeEach
-  public void before() {
+  public void beforeEach() {
     WindApplication.run("application-pgsql.yml");
     foo.setId(id);
     service = GenericService.with(Foo.class, Long.class);
+    if (service.getOne(foo.getId()) == null) {
+      service.create(foo);
+    }
+  }
+
+  @AfterEach
+  public void afterEach() {
+    final Update<Foo> update = Update.getInstance(Foo.class);
+    update.getExecutor().update("delete from foo where id=" + id, ps -> {});
   }
 
   @Test
+  @Order(10)
   @DisplayName("条件构造工具类")
   public void testCnds() {
     final Cnds<Foo> cnds =
@@ -89,6 +99,7 @@ public class BaseServiceTest {
   }
 
   @Test
+  @Order(5)
   @DisplayName("统计")
   public void testCount() {
     final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L);
@@ -96,6 +107,7 @@ public class BaseServiceTest {
   }
 
   @Test
+  @Order(6)
   @DisplayName("查询单个")
   public void testGetOne() {
     // 通过id查询
@@ -122,6 +134,7 @@ public class BaseServiceTest {
   }
 
   @Test
+  @Order(7)
   @DisplayName("查询列表")
   public void testList() {
     // 通过id列表查询
@@ -145,6 +158,7 @@ public class BaseServiceTest {
   }
 
   @Test
+  @Order(8)
   @DisplayName("查询分页")
   public void testPage() {
     final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L).limit(1, 10).orderBy(Foo::getName);
@@ -155,7 +169,7 @@ public class BaseServiceTest {
   }
 
   @Test
-  @Order(2)
+  @Order(1)
   @DisplayName("单个创建")
   @Transactional(rollbackFor = Exception.class)
   public void testCreate() {
@@ -170,10 +184,10 @@ public class BaseServiceTest {
   }
 
   @Test
+  @Order(2)
   @DisplayName("批量创建")
   @Transactional(rollbackFor = Exception.class)
   public void testCreateBatch() {
-    foo.setId(null);
     final List<Foo> list =
         LongStream.range(1, 101)
             .mapToObj(
@@ -187,21 +201,11 @@ public class BaseServiceTest {
                         .build())
             .collect(toList());
     long start = System.currentTimeMillis();
-    assertFalse(
-        service
-            .createBatch(
-                list,
-                Fields.of(Foo.class)
-                    .include(
-                        Foo::getName,
-                        Foo::getTextString,
-                        Foo::getBigText,
-                        Foo::getType,
-                        Foo::getColumn))
-            .isPresent());
+    assertFalse(service.createBatch(list).isPresent());
   }
 
   @Test
+  @Order(3)
   @DisplayName("单个更新")
   @Transactional(rollbackFor = Exception.class)
   public void testUpdate() {
@@ -221,6 +225,7 @@ public class BaseServiceTest {
   }
 
   @Test
+  @Order(4)
   @DisplayName("批量更新")
   @Transactional(rollbackFor = Exception.class)
   public void testUpdateBatch() {
@@ -242,12 +247,12 @@ public class BaseServiceTest {
   }
 
   @Test
-  @Order(20)
+  @Order(10)
   @DisplayName("删除")
   @Transactional(rollbackFor = Exception.class)
   public void testDelete() {
     // 通过id删除
-    assertEquals(service.delete(id), 1);
+    assertEquals(1, service.delete(id));
     // 通过id列表删除
     assertTrue(service.delete(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
     // 条件删除
@@ -255,14 +260,13 @@ public class BaseServiceTest {
   }
 
   @Test
-  @Order(21)
+  @Order(9)
   @DisplayName("域对象Domain")
   @Transactional(rollbackFor = Exception.class)
   public void testDomain() {
     // 需要对象继承Domain: public class Foo extends Domain<Foo, Long>
     foo.setId(null);
     assertTrue(foo.create() > 0);
-    foo.setId(id);
     assertTrue(foo.update(Fields.of(Foo.class).include(Foo::getName)) > 0);
     assertTrue(foo.delete(Cnds.of(Foo.class).eq(Foo::setId, id)) > 0);
   }

@@ -97,6 +97,10 @@ public final class Update<T> {
     return this.executor.getTransaction();
   }
 
+  public Executor getExecutor() {
+    return this.executor;
+  }
+
   public Update<T> where(@Nonnull final Condition<T, ?> condition) {
     this.condition = condition;
     return this;
@@ -410,6 +414,7 @@ public final class Update<T> {
                               setArgsValue(index, field, BeanUtils.getFieldValue(obj, field), ps));
                       LambdaCondition.of(clazz)
                           .eq(idField, BeanUtils.getFieldValue(obj, idField))
+                          .appendLogicNotDelete()
                           .getValues(index)
                           .forEach(val -> val.accept(ps));
                     }

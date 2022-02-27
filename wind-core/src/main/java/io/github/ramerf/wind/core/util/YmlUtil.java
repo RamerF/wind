@@ -139,7 +139,7 @@ public final class YmlUtil {
         val = BeanUtils.getClazz(value.toString());
       } else val = value;
     } catch (Exception e) {
-      log.warn("Could not set value for field {}", field);
+      log.warn("Could not set value for field {},{}", field, e.getMessage());
       if (ignoreInvalidValues) {
         val = null;
       } else throw e;

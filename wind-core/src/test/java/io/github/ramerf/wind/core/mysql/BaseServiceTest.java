@@ -185,18 +185,7 @@ public class BaseServiceTest {
                         .build())
             .collect(toList());
     long start = System.currentTimeMillis();
-    assertFalse(
-        service
-            .createBatch(
-                list,
-                Fields.of(Foo.class)
-                    .include(
-                        Foo::getName,
-                        Foo::getTextString,
-                        Foo::getBigText,
-                        Foo::getType,
-                        Foo::getColumn))
-            .isPresent());
+    assertFalse(service.createBatch(list).isPresent());
   }
 
   @Test
