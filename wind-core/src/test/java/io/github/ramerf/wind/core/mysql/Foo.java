@@ -2,8 +2,8 @@ package io.github.ramerf.wind.core.mysql;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.condition.Fields;
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
-import io.github.ramerf.wind.core.entity.pojo.Domain;
+import io.github.ramerf.wind.core.domain.InterEnum;
+import io.github.ramerf.wind.core.domain.Domain;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.*;
 import java.math.BigDecimal;

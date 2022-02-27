@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.serializer;
 
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.domain.InterEnum;
 
 /**
  * 定义枚举的序列化,自定义序列化实现该类即可.

@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.WindVersion;
+import io.github.ramerf.wind.WindVersion;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.ansi.*;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration;

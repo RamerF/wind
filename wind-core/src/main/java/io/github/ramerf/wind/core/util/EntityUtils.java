@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.util;
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.domain.InterEnum;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.exception.NotImplementedException;
 import io.github.ramerf.wind.core.helper.EntityHelper;

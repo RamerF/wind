@@ -1,8 +1,7 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.exception.WindException;
-import io.github.ramerf.wind.core.function.*;
+import io.github.ramerf.wind.core.function.FieldFunction;
 import java.lang.invoke.SerializedLambda;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
@@ -87,17 +86,5 @@ public final class LambdaUtils {
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
       throw new WindException(e);
     }
-  }
-
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   */
-  public static void main(String[] args) {
-    GetterFunction<TestLambda, Long> getterFunction = TestLambda::getId;
-    SetterFunction<TestLambda, Long> setterFunction = TestLambda::setId;
-    log.info("main:getMethodName[{}]", getMethodName(getterFunction));
-    log.info("main:getActualTypePath:[{}]" + getImplClassFullPath(setterFunction));
   }
 }

@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.core.dialect.identity;
 
+import io.github.ramerf.wind.core.exception.MappingException;
 import io.github.ramerf.wind.core.exception.WindException;
 import java.lang.reflect.Type;
-import org.springframework.data.mapping.MappingException;
 
 /**
  * Represents a support for the Dialect identity key generation

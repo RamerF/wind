@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.domain.InterEnum;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;

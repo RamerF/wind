@@ -4,13 +4,13 @@ import io.github.ramerf.wind.core.annotation.TableIndexes;
 import io.github.ramerf.wind.core.annotation.TableIndexes.Index;
 import io.github.ramerf.wind.core.annotation.TableIndexes.IndexField;
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.exception.SimpleException;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.data.domain.Sort.Direction;
 
 /**
  * 表索引信息.

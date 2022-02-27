@@ -31,7 +31,6 @@ package io.github.ramerf.wind.core.asm;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import org.springframework.asm.Opcodes;
 
 /**
  * A Java field or method type. This class can be used to make it easier to

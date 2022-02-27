@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.config;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.domain.InterEnum;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;

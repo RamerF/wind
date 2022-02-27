@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.JdbcEnvironment;
+import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.handler.ResultHandlerUtil;
@@ -16,8 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.GROUP_BY;
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.WHERE;
@@ -49,7 +48,7 @@ public class Query<T> {
   private Fields<T> fields;
 
   private Condition<?, ?> condition;
-  private Pageable pageable;
+  private PageRequest pageRequest;
 
   private final Executor executor;
   private static Configuration configuration;
@@ -145,8 +144,8 @@ public class Query<T> {
      * <li><code>cnds.limit(1);</code>
      * <li><code>cnds.limit(1, 10).orderBy(Foo::setId);</code>
      */
-    public QueryExecutor<T> pageable(final Pages pages) {
-      query.pageable = pages == null ? null : pages.getPageable();
+    public QueryExecutor<T> pageable(final PageRequest pageRequest) {
+      query.pageRequest = pageRequest;
       return this;
     }
 
@@ -252,7 +251,7 @@ public class Query<T> {
               .setCondition(query.condition)
               .setStartIndex(new AtomicInteger(1)),
           fetchCount(query.clazz),
-          query.pageable);
+          query.pageRequest);
     }
 
     /**
@@ -315,19 +314,19 @@ public class Query<T> {
     }
 
     private String getOrderByClause() {
-      if (query.pageable == null) return "";
+      if (query.pageRequest == null) return "";
       String orderBy =
-          query.pageable.getSort().stream()
+          query.pageRequest.getSort().stream()
               .map(s -> s.getProperty().concat(" ").concat(s.getDirection().name()))
               .collect(Collectors.joining(","));
       return orderBy.isEmpty() ? "" : " order by " + orderBy;
     }
 
     private String getLimitClause() {
-      return query.pageable == null
+      return query.pageRequest == null
           ? ""
           : String.format(
-              " limit %s offset %s", query.pageable.getPageSize(), query.pageable.getOffset());
+              " limit %s offset %s", query.pageRequest.getPage(), query.pageRequest.getOffset());
     }
   }
 }

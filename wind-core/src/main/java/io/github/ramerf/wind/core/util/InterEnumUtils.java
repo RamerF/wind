@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.domain.InterEnum;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.*;

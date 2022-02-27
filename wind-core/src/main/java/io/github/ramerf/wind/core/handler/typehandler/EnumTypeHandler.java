@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.domain.InterEnum;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import javax.annotation.Nonnull;

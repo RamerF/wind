@@ -1,7 +1,9 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.condition.PageRequest;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
+import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import java.util.List;
@@ -12,8 +14,6 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 /**
  * The jdbc executor.
@@ -59,11 +59,11 @@ public interface Executor {
    * @param <R> the type parameter
    * @param sqlParam the sql param
    * @param total the total
-   * @param pageable the pageable
+   * @param pageRequest the pageRequest
    * @return the page
    * @throws DataAccessException the data access exception
    */
-  <T, R> Page<R> fetchPage(@Nonnull SqlParam<T> sqlParam, long total, Pageable pageable)
+  <T, R> Page<R> fetchPage(@Nonnull SqlParam<T> sqlParam, long total, PageRequest pageRequest)
       throws DataAccessException;
 
   /**

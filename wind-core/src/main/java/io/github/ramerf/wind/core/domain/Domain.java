@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.entity.pojo;
+package io.github.ramerf.wind.core.domain;
 
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.exception.WindException;

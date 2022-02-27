@@ -1,9 +1,9 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.function.GetterFunction;
 import javax.annotation.Nonnull;
 import lombok.*;
-import org.springframework.data.domain.Sort.Direction;
 
 /**
  * 排序规则.示例: <code>OrderBy.of(Foo::getCreateTime, Direction.DESC).asc(Foo::getUpdateTime)</code>

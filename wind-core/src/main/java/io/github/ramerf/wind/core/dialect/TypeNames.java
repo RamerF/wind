@@ -6,9 +6,9 @@
  */
 package io.github.ramerf.wind.core.dialect;
 
+import io.github.ramerf.wind.core.exception.MappingException;
 import java.lang.reflect.Type;
 import java.util.*;
-import org.springframework.data.mapping.MappingException;
 
 /**
  * <b>Reference: {@code org.hibernate.dialect.TypeNames}.</b>

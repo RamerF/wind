@@ -19,4 +19,10 @@ public final class Asserts {
       throw new IllegalArgumentException(message);
     }
   }
+
+  public static void isTrue(@Nullable Boolean condition, final String message) {
+    if (condition != null && condition) {
+      throw new IllegalArgumentException(message);
+    }
+  }
 }

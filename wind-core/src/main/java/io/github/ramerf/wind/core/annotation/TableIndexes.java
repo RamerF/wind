@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.annotation;
 
+import io.github.ramerf.wind.core.domain.Sort.Direction;
 import java.lang.annotation.*;
-import org.springframework.data.domain.Sort.Direction;
 
 /**
  * 表索引信息.

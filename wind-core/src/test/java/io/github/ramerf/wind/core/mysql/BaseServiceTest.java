@@ -3,6 +3,8 @@ package io.github.ramerf.wind.core.mysql;
 import io.github.ramerf.wind.core.condition.Cnds;
 import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.config.WindApplication;
+import io.github.ramerf.wind.core.domain.Sort.Direction;
+import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import java.lang.reflect.Field;
@@ -15,7 +17,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.transaction.annotation.Transactional;
 
 import static java.util.stream.Collectors.toList;
@@ -57,10 +58,19 @@ public class BaseServiceTest {
   }
 
   @BeforeEach
-  public void before() {
-    WindApplication.run("application-mysql.yml");
+  public void beforeEach() {
+    WindApplication.run("mysql.yml");
     foo.setId(id);
     service = GenericService.with(Foo.class, Long.class);
+    if (service.getOne(foo.getId()) == null) {
+      service.create(foo);
+    }
+  }
+
+  @AfterEach
+  public void afterEach() {
+    final Update<Foo> update = Update.getInstance(Foo.class);
+    update.getExecutor().update("delete from foo where id=" + id, ps -> {});
   }
 
   @Test

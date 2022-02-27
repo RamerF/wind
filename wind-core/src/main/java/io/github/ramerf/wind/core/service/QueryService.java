@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.condition.*;
+import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
@@ -9,8 +10,6 @@ import java.io.Serializable;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 public interface QueryService<T, ID extends Serializable> extends InterService<T, ID> {
 
@@ -137,9 +136,9 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
       @Nonnull final Cnd<E, ?, ?> cnd,
       @Nullable final Fields<E> fields,
       @Nonnull final Class<R> respClazz) {
-    final Pages pageable = cnd.getPages();
+    final PageRequest pageable = cnd.getPages();
     if (pageable == null) {
-      return new PageImpl<>(Collections.emptyList());
+      return new Page<>(Collections.emptyList());
     }
     return getQuery(cnd.getClazz())
         .select(fields)

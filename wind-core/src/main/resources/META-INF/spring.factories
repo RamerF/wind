@@ -1,5 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.github.ramerf.wind.core.config.RedisConfiguration,\
-io.github.ramerf.wind.core.config.RedisCacheConfiguration,\
-io.github.ramerf.wind.core.config.CommonBean,\
-io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper

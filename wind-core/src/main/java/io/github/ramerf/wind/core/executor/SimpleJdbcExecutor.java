@@ -1,18 +1,20 @@
 package io.github.ramerf.wind.core.executor;
 
+import io.github.ramerf.wind.core.condition.PageRequest;
 import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.exception.TooManyResultException;
 import io.github.ramerf.wind.core.executor.logging.ConnectionLogger;
 import io.github.ramerf.wind.core.executor.logging.SimpleLog;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
-import io.github.ramerf.wind.core.util.*;
+import io.github.ramerf.wind.core.util.DataSourceUtils;
+import io.github.ramerf.wind.core.util.JdbcUtils;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import org.springframework.data.domain.*;
 
 /**
  * The jdbc template executor.
@@ -71,7 +73,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
 
   @Override
   public <T, R> Page<R> fetchPage(
-      @Nonnull final SqlParam<T> sqlParam, final long total, final Pageable page)
+      @Nonnull final SqlParam<T> sqlParam, final long total, final PageRequest page)
       throws DataAccessException {
     return aroundRead(
         sqlParam,
@@ -89,12 +91,13 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
                               .getValues(sqlParam.startIndex)
                               .forEach(o -> o.accept(ps)),
                       ResultHandlerUtil.getResultHandler(clazz));
-          final Pageable pageable = page == null ? PageRequest.of(0, Integer.MAX_VALUE) : page;
+          final PageRequest pageRequest =
+              page == null ? PageRequest.of(0, Integer.MAX_VALUE) : page;
           // 从0开始
-          final int currentPage = pageable.getPageNumber();
+          final int currentPage = pageRequest.getPage();
           // 每页大小
-          final int pageSize = pageable.getPageSize();
-          return PageUtils.toPage(list, total, currentPage, pageSize, pageable.getSort());
+          final int pageSize = pageRequest.getSize();
+          return new Page<>(currentPage, pageSize, total, list, pageRequest.getSort());
         });
   }
 

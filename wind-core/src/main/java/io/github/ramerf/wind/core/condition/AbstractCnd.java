@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.domain.Sort.Direction;
+import io.github.ramerf.wind.core.domain.Sort.Order;
 import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.function.GetterFunction;
 import java.lang.reflect.Field;
@@ -9,8 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.Order;
 
 /**
  * The type Abstract cnd.
@@ -80,8 +80,8 @@ public abstract class AbstractCnd<
 
   @Override
   @Nullable
-  public Pages getPages() {
-    return Pages.of(page, size, orders);
+  public PageRequest getPages() {
+    return PageRequest.of(page, size, orders);
   }
 
   @Override

@@ -1,7 +1,7 @@
-package io.github.ramerf.wind.core.entity.enums;
+package io.github.ramerf.wind.core.domain;
 
-import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.exception.InvalidEnumException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.util.InterEnumUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.Serializable;

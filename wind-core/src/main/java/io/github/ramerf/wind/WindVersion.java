@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.ramerf.wind.core;
+package io.github.ramerf.wind;
 
 /**
  * Copy from {@link org.springframework.boot.SpringBootVersion}.<br>

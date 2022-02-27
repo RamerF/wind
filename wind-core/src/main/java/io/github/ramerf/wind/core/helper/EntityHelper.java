@@ -5,10 +5,8 @@ import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
 import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.config.WindContext;
-import io.github.ramerf.wind.core.entity.TestLambda;
 import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.FieldFunction;
-import io.github.ramerf.wind.core.function.GetterFunction;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.*;
@@ -163,10 +161,5 @@ public class EntityHelper {
    */
   public static boolean isMapToTable(final Class<?> clazz) {
     return clazz != null && clazz.isAnnotationPresent(TableInfo.class);
-  }
-
-  public static void main(String[] args) {
-    GetterFunction<TestLambda, String> function = TestLambda::getName;
-    log.info("main:[{}]", getColumn(function));
   }
 }

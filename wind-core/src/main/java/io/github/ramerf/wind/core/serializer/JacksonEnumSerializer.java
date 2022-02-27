@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.domain.InterEnum;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 

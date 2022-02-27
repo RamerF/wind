@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.handler;
 
-import io.github.ramerf.wind.core.entity.enums.InterEnum;
+import io.github.ramerf.wind.core.domain.InterEnum;
 import java.sql.*;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
