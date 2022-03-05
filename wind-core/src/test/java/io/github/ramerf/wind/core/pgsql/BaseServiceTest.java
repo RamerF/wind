@@ -1,12 +1,13 @@
 package io.github.ramerf.wind.core.pgsql;
 
-import io.github.ramerf.wind.core.condition.Cnds;
-import io.github.ramerf.wind.core.condition.Fields;
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.config.WindApplication;
+import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.pgsql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -16,6 +17,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -86,15 +88,26 @@ public class BaseServiceTest {
             // 分组
             .groupBy(Foo::getName)
             // 排序
-            .orderBy(Foo::getId, Direction.DESC);
-    log.info("testCnds:[{}]", cnds.getString());
+            .orderBy(Foo::getCreateTime)
+            .orderBy(Foo::getId, Direction.ASC);
+    // 条件组
+    LambdaConditionGroup<Foo> group = LambdaConditionGroup.of(Foo.class);
+    group.orLike(Foo::setName, "name").orLike(Foo::setTextString, "name");
+    cnds.and(group);
+
     final Fields<Foo> fields =
         Fields.of(Foo.class)
             // 查询指定列
             .include(Foo::getId)
-            .include(Foo::getName);
-    log.info(
-        "testCnds:[include:{},exlucde:{}]", fields.getIncludeFields(), fields.getExcludeFields());
+            .include(Foo::getName)
+            .exclude(Foo::getType)
+            .exclude(Foo::getUpdateTime);
+    final String includes =
+        fields.getIncludeFields().stream().map(Field::getName).collect(joining(","));
+    assertEquals("id,name", includes, "Cnds includes");
+    final String excludes =
+        fields.getExcludeFields().stream().map(Field::getName).collect(joining(","));
+    assertEquals("type,updateTime", excludes, "Cnds excludes");
   }
 
   @Test
@@ -115,21 +128,16 @@ public class BaseServiceTest {
     assertNotNull(service.getOne(Cnds.of(Foo.class).eq(Foo::setId, id)));
     // 条件查询指定列
     final Cnds<Foo> cnds = Cnds.of(Foo.class).eq(Foo::setId, id);
-    final Fields<Foo> queryColumn = Fields.of(Foo.class).include(Foo::getName).include(Foo::getId);
-    assertNotNull(service.getOne(cnds, queryColumn));
-    // 条件查询排序
-    assertNotNull(service.getOne(Cnds.of(Foo.class).limit(1).orderBy(Foo::getId, Direction.DESC)));
-    // 返回任意对象
+    final Fields<Foo> fields = Fields.of(Foo.class).include(Foo::getName).include(Foo::getId);
+    assertNotNull(service.getOne(cnds, fields));
+    // 指定返回对象
     assertNotNull(
         service.getOne(
             Cnds.of(Foo.class).eq(Foo::setId, id),
             Fields.of(Foo.class).include(Foo::getId),
-            io.github.ramerf.wind.core.mysql.BaseServiceTest.IdNameResponse.class));
+            IdNameResponse.class));
     // 自定义sql
-    assertNotNull(
-        service.fetchOneBySql(
-            "select id,name from foo limit 1",
-            io.github.ramerf.wind.core.mysql.BaseServiceTest.IdNameResponse.class));
+    assertNotNull(service.fetchOneBySql("select id,name from foo limit 1", IdNameResponse.class));
   }
 
   @Test
@@ -142,29 +150,30 @@ public class BaseServiceTest {
     // 条件查询
     assertNotNull(service.list(cnds));
     // 查询指定列
-    final Fields<Foo> queryColumn = Fields.of(Foo.class).include(Foo::getName).include(Foo::getId);
-    assertNotNull(
-        service.list(
-            cnds,
-            queryColumn,
-            io.github.ramerf.wind.core.mysql.BaseServiceTest.IdNameResponse.class));
+    final Fields<Foo> fields = Fields.of(Foo.class).include(Foo::getId).include(Foo::getName);
+    assertNotNull(service.list(cnds, fields, IdNameResponse.class));
     // 查询指定页
     cnds.limit(1, 10).orderBy(Foo::getId, Direction.DESC);
     assertNotNull(service.list(cnds));
     // 指定返回对象
-    assertNotNull(
-        service.list(cnds, io.github.ramerf.wind.core.mysql.BaseServiceTest.IdNameResponse.class));
+    assertNotNull(service.list(cnds, fields, IdNameResponse.class));
   }
 
   @Test
   @Order(8)
   @DisplayName("查询分页")
   public void testPage() {
-    final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L).limit(1, 10).orderBy(Foo::getName);
+    final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L).limit(1, 5).orderBy(Foo::getName);
     assertNotNull(service.page(cnds));
     // 指定列
-    assertNotNull(
-        service.page(cnds, Fields.of(Foo.class).include(Foo::getId).include(Foo::getName)));
+    final Fields<Foo> fields = Fields.of(Foo.class).include(Foo::getId).include(Foo::getName);
+    final Page<Foo> page = service.page(cnds, fields);
+    final long count = service.count(cnds);
+    assertEquals((int) Math.ceil((double) count / (double) 5), page.getTotalPages(), "总页数");
+    assertEquals(1, page.getPageNumber(), "当前页码");
+    assertEquals(5, page.getSize(), "每页大小");
+    assertEquals(page.getTotalElements(), count, "总记录数");
+    assertFalse(page.isLast(), "是否最后一页");
   }
 
   @Test
@@ -172,13 +181,15 @@ public class BaseServiceTest {
   @DisplayName("单个创建")
   public void testCreate() {
     foo.setId(null);
-    assertTrue(service.create(foo) > 0);
+    service.create(foo);
+    assertNotNull(foo.getId());
     // 保存指定字段
     final Fields<Foo> fields =
         Fields.of(Foo.class).include(Foo::getAge, Foo::isString, Foo::isNumber);
     // 排除指定字段
     // fields.exclude(Foo::getAge)
-    assertTrue(service.create(foo, fields) > 0);
+    service.create(foo, fields);
+    assertNotNull(foo.getId());
   }
 
   @Test
@@ -197,16 +208,16 @@ public class BaseServiceTest {
                         .column("non_match_column")
                         .build())
             .collect(toList());
-    long start = System.currentTimeMillis();
     assertFalse(service.createBatch(list).isPresent());
+    assertNotNull(list.get(0).getId());
   }
 
   @Test
   @Order(3)
   @DisplayName("单个更新")
   public void testUpdate() {
+    foo.setName(LocalDateTime.now() + "");
     assertEquals(service.update(foo), 1);
-    foo.setName("<" + LocalDateTime.now() + ">");
     // 指定属性
     assertEquals(service.update(foo, Fields.of(Foo.class).include(Foo::getName)), 1);
     // 条件更新
@@ -230,7 +241,7 @@ public class BaseServiceTest {
                 i ->
                     Foo.builder()
                         .id(i)
-                        .name("test" + i * i)
+                        .name(LocalDateTime.now() + "")
                         .textString("text" + i)
                         .bigDecimal(BigDecimal.valueOf(100 + i))
                         .type(Foo.Type.SPORT)
@@ -248,9 +259,9 @@ public class BaseServiceTest {
     // 通过id删除
     assertEquals(1, service.delete(id));
     // 通过id列表删除
-    // assertTrue(service.delete(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
+    assertTrue(service.delete(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
     // 条件删除
-    // assertEquals(service.delete(Cnds.of(Foo.class).eq(Foo::setId, id)), 1);
+    assertEquals(service.delete(Cnds.of(Foo.class).eq(Foo::setId, id)), 1);
   }
 
   @Test

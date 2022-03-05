@@ -47,11 +47,8 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
   /** 占位符对应的值. */
   @Getter protected final List<ValueType> valueTypes = new LinkedList<>();
 
-  private static final char[] alphabets =
-      new char[] {
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-        's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-      };
+  /** 是否拼接逻辑删除条件. */
+  private boolean hasAppendNotDeleteCondition = false;
 
   protected AbstractCondition() {}
 
@@ -167,13 +164,16 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
 
   @Override
   public final synchronized CONDITION appendLogicNotDelete() {
+    if (hasAppendNotDeleteCondition) {
+      //noinspection unchecked
+      return (CONDITION) this;
+    }
+    hasAppendNotDeleteCondition = true;
     EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
     final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
     final EntityColumn logicDeletePropColumn = entityInfo.getLogicDeletePropColumn();
     // 启用逻辑删除且当前未包含该条件(这个有必要?)
-    if (logicDeleteProp.isEnable()
-        && conditionSql.stream()
-            .noneMatch(condition -> condition.matches(logicDeletePropColumn.getName() + "[ ]+="))) {
+    if (logicDeleteProp.isEnable()) {
       final Field logicDeleteField = logicDeletePropColumn.getField();
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")

@@ -1,56 +1,52 @@
-package io.github.ramerf.wind.core.condition;
+package io.github.ramerf.wind.core.domain;
 
-import io.github.ramerf.wind.core.domain.Sort;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.domain.Sort.Order;
-import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.function.GetterFunction;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
+import lombok.NonNull;
 
 /**
- * 排序规则.示例: <code>Pages.of(1, 10).asc(Foo::getUpdateTime)</code>
+ * 排序规则.示例: <code>PageRequest.of(1, 10).asc(Foo::getUpdateTime)</code>
  *
  * @author ramer
  * @since 2020 /1/5
  */
-public class PageRequest {
+public class PageRequest implements Pageable {
+  /** 排序规则. */
   private Sort sort = Sort.unsorted();
-  private int page;
+  /** 当前页,从1开始. */
+  private int page = 1;
+  /** 每页大小. */
   private int size;
-  /** The Orders. */
-  // List<Order> orders = new LinkedList<>();
-
-  public static final PageRequest UNPAGED = new PageRequest();
 
   private PageRequest() {}
 
-  /** size小于1时抛出{@link SimpleException}异常 */
+  @NonNull
   public static <T> PageRequest of(final int size) {
     return of(1, size, Collections.emptyList());
   }
 
-  /**
-   *
-   * <li>当且仅当page和size为0时,返回null.
-   * <li>page或size小于1时抛出{@link SimpleException}异常
-   */
+  @NonNull
   public static <T> PageRequest of(final int page, final int size) {
     return of(page, size, Collections.emptyList());
   }
 
+  @NonNull
   public static <T> PageRequest of(
       final int page, final int size, @Nonnull final List<Order> orders) {
     return of(page, size, Sort.by(orders));
   }
 
+  @NonNull
   public static <T> PageRequest of(final int page, final int size, Sort sort) {
-    if (page == 0 && size == 0) {
-      return null;
+    if (page < 1) {
+      throw new IllegalArgumentException("Page index must not be less than 1!");
     }
-    if (page < 1 || size < 1) {
-      throw new SimpleException("page,size不能小于1");
+    if (size < 1) {
+      throw new IllegalArgumentException("Page size must not be less than 1!");
     }
     final PageRequest pageRequest = new PageRequest();
     pageRequest.page = page;
@@ -89,18 +85,34 @@ public class PageRequest {
     return this;
   }
 
-  public int getPage() {
+  @Override
+  public int getPageNumber() {
     return page;
   }
 
-  public int getSize() {
+  @Override
+  public int getPageSize() {
     return size;
   }
 
+  @Override
   public long getOffset() {
-    return (long) page * (long) size;
+    return (long) (page - 1) * (long) size;
   }
 
+  @Override
+  public Pageable next() {
+    return PageRequest.of(getPageNumber() + 1, getPageSize(), getSort());
+  }
+
+  @Override
+  public Pageable previous() {
+    return getPageNumber() == 1
+        ? this
+        : PageRequest.of(getPageNumber() - 1, getPageSize(), getSort());
+  }
+
+  @Override
   public Sort getSort() {
     return sort;
   }

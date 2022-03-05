@@ -13,10 +13,10 @@
  */
 package io.github.ramerf.wind.core.executor.logging;
 
+import io.github.ramerf.wind.core.reflect.ExceptionUtil;
 import java.lang.reflect.*;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import org.apache.ibatis.reflection.ExceptionUtil;
 
 /**
  * Statement proxy to add logging.

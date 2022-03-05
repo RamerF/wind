@@ -2,9 +2,9 @@ package io.github.ramerf.wind.core.autoconfig;
 
 import io.github.ramerf.wind.core.annotation.ConfigurationProperties;
 import io.github.ramerf.wind.core.annotation.NestedConfigurationProperties;
-import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.autoconfig.jdbc.DataSourceConfigurationFactory;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
-import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 读取文件自动配置{@link Configuration}.
  *
- * @since 2020 /1/14
+ * @since 2022.03.05
  * @author ramer
  */
 @Data
@@ -35,17 +35,8 @@ public class AutoConfigConfiguration {
   /** entity所在包路径,多个以,分割.<br> */
   private String entityPackage = "";
 
-  /** 枚举所在包路径,多个以,分割.<br> */
-  private String enumPackage = "";
-
-  /** 是否自定义枚举反序列化.设置为true时,可能需要编写枚举反序列化代码. */
-  private boolean customEnumDeserializer = false;
-
   /** 批量操作时,每次处理的大小. */
-  private int batchSize = 150;
-
-  /** 是否启用默认mvc配置. */
-  private boolean enableWebMvcConfigurer = true;
+  private int batchSize = 500;
 
   /** 表更新模式. */
   private DdlAuto ddlAuto = DdlAuto.NONE;
@@ -87,10 +78,7 @@ public class AutoConfigConfiguration {
     Configuration configuration = new Configuration();
     configuration.setLogicDeleteProp(logicDeleteProp);
     configuration.setEntityPackage(entityPackage);
-    configuration.setEnumPackage(enumPackage);
-    configuration.setCustomEnumDeserializer(customEnumDeserializer);
     configuration.setBatchSize(batchSize);
-    configuration.setEnableWebMvcConfigurer(enableWebMvcConfigurer);
     configuration.setDdlAuto(ddlAuto);
     configuration.setDialect(dialect);
     configuration.setWriteNullProp(writeNullProp);
@@ -103,6 +91,10 @@ public class AutoConfigConfiguration {
         throw e;
       }
     }
+    configuration.setJdbcEnvironment(
+        new JdbcEnvironment(
+            BeanUtils.initial(dataSource.getTransactionFactory()),
+            DataSourceConfigurationFactory.getDataSource(dataSource)));
     return configuration;
   }
 }

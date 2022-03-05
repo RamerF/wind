@@ -66,7 +66,9 @@ public class BeanResultHandler<E> extends AbstractResultHandler<E> {
                     return f;
                   });
       if (field == null) {
-        log.warn("No field found for column: " + column);
+        if (log.isDebugEnabled()) {
+          log.warn("No field found for column: " + column);
+        }
         continue;
       }
       Object value = rs.getObject(index);
@@ -131,5 +133,10 @@ public class BeanResultHandler<E> extends AbstractResultHandler<E> {
   private static class ClazzColumn {
     private final Class<?> clazz;
     private final String column;
+
+    @Override
+    public String toString() {
+      return column;
+    }
   }
 }

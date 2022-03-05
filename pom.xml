@@ -13,7 +13,7 @@
         <module>wind-core</module>
     </modules>
     <url>http://maven.apache.org</url>
-    <description>springboot web at once.</description>
+    <description>Another orm in choice.</description>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>

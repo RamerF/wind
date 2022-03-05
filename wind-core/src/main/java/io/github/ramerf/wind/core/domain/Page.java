@@ -1,6 +1,8 @@
 package io.github.ramerf.wind.core.domain;
 
-import java.util.List;
+import io.github.ramerf.wind.core.util.Asserts;
+import java.util.*;
+import javax.annotation.Nonnull;
 
 /**
  * 分页对象.
@@ -9,41 +11,92 @@ import java.util.List;
  * @since 2022.02.27
  */
 public class Page<T> {
-  /** 页号,从0开始 */
-  private int page;
-  /** 每页数量. */
-  private int size;
+  private Pageable pageable;
+  private final List<T> content = new ArrayList<>();
   /** 总记录数. */
   private long total;
-  /** 当前页列表数据. */
-  private List<T> content;
+
+  private Page() {}
+
+  public static <T> Page<T> of(@Nonnull final List<T> content) {
+    return of(content, Pageable.unpaged());
+  }
+
+  public static <T> Page<T> of(@Nonnull final List<T> content, final Pageable pageable) {
+    return of(content, pageable, 0);
+  }
+
+  public static <T> Page<T> of(
+      @Nonnull final List<T> content, @Nonnull final Pageable pageable, final long total) {
+    Asserts.notNull(content, "Content must not be null!");
+    Asserts.notNull(pageable, "Pageable must not be null!");
+    Page<T> page = new Page<>();
+    page.content.addAll(content);
+    page.pageable = pageable;
+    page.total =
+        Optional.of(pageable)
+            .filter(it -> !content.isEmpty()) //
+            .filter(it -> it.getOffset() + it.getPageSize() > total) //
+            .map(it -> it.getOffset() + content.size()) //
+            .orElse(total);
+    return page;
+  }
+
+  /** 总页数. */
+  public int getTotalPages() {
+    return getSize() == 0 ? 1 : (int) Math.ceil((double) total / (double) getSize());
+  }
+
+  /** 总记录数. */
+  public long getTotalElements() {
+    return total;
+  }
+
+  /** 每页数量. */
+  public int getSize() {
+    return pageable.isPaged() ? pageable.getPageSize() : 0;
+  }
+
+  /** 当前页号,首页为1. */
+  public int getPageNumber() {
+    return pageable.isPaged() ? pageable.getPageNumber() : 1;
+  }
+
+  /** 当前页记录数. */
+  public int getNumberOfElements() {
+    return content.size();
+  }
+
+  /** 当前页记录列表. */
+  public List<T> getContent() {
+    return content;
+  }
+
   /** 排序规则. */
-  private Sort sort = Sort.unsorted();
-
-  public Page() {}
-
-  public Page(final List<T> content) {
-    this.content = content;
-    this.total = null == content ? 0 : content.size();
-    this.page = 0;
-    this.size = (int) this.total;
+  public Sort getSort() {
+    return pageable.getSort();
   }
 
-  public Page(final int page, final int size, final int total, final List<T> content) {
-    this(page, size, total, content, Sort.unsorted());
+  /** 是否还有上一页. */
+  public boolean hasPrevious() {
+    return getPageNumber() > 1;
   }
 
-  public Page(final int page, final int size, final long total, final List<T> content, Sort sort) {
-    if (page < 0) {
-      throw new IllegalArgumentException("Page number must not be less than zero!");
-    }
-    if (size < 1) {
-      throw new IllegalArgumentException("Page size must not be less than one!");
-    }
-    this.page = page;
-    this.size = size;
+  /** 是否还有下一页. */
+  public boolean hasNext() {
+    return getPageNumber() < getTotalPages();
+  }
+
+  /** 是否最后一页. */
+  public boolean isLast() {
+    return !hasNext();
+  }
+
+  public void setPageable(final Pageable pageable) {
+    this.pageable = pageable;
+  }
+
+  public void setTotal(final long total) {
     this.total = total;
-    this.content = content;
-    this.sort = sort;
   }
 }

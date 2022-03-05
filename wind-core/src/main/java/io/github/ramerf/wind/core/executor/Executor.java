@@ -1,9 +1,9 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.Condition;
-import io.github.ramerf.wind.core.condition.PageRequest;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.domain.Page;
+import io.github.ramerf.wind.core.domain.Pageable;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import java.util.List;
@@ -59,11 +59,11 @@ public interface Executor {
    * @param <R> the type parameter
    * @param sqlParam the sql param
    * @param total the total
-   * @param pageRequest the pageRequest
+   * @param pageable the pageable
    * @return the page
    * @throws DataAccessException the data access exception
    */
-  <T, R> Page<R> fetchPage(@Nonnull SqlParam<T> sqlParam, long total, PageRequest pageRequest)
+  <T, R> Page<R> fetchPage(@Nonnull SqlParam<T> sqlParam, Pageable pageable, final long total)
       throws DataAccessException;
 
   /**

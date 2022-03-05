@@ -2,8 +2,8 @@ package io.github.ramerf.wind.core.mysql;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.condition.Fields;
-import io.github.ramerf.wind.core.domain.InterEnum;
 import io.github.ramerf.wind.core.domain.Domain;
+import io.github.ramerf.wind.core.domain.InterEnum;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.*;
 import java.math.BigDecimal;
@@ -80,6 +80,9 @@ public class Foo extends Domain<Foo, Long> {
   @CreateTimestamp private LocalDateTime createTime;
   @UpdateTimestamp private LocalDateTime updateTime;
 
+  @OneToOne private FooSub fooSub;
+  private String fooSubName;
+
   public enum Type implements InterEnum<Integer> {
     /** 类别 */
     PHONE(0, "手机"),
@@ -126,5 +129,11 @@ public class Foo extends Domain<Foo, Long> {
     public String desc() {
       return this.desc;
     }
+  }
+
+  @TableInfo
+  public static class FooSub extends Domain<FooSub, String> {
+    @Id private String name;
+    @CreateTimestamp private LocalDateTime createTime;
   }
 }

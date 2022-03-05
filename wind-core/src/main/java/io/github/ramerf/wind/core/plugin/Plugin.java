@@ -1,9 +1,8 @@
 package io.github.ramerf.wind.core.plugin;
 
+import io.github.ramerf.wind.core.reflect.ExceptionUtil;
 import java.lang.reflect.*;
 import java.util.*;
-import org.apache.ibatis.plugin.Intercepts;
-import org.apache.ibatis.reflection.ExceptionUtil;
 
 public class Plugin implements InvocationHandler {
 
@@ -42,7 +41,6 @@ public class Plugin implements InvocationHandler {
   }
 
   private static Map<Class<?>, Set<Method>> getSignatureMap(Interceptor interceptor) {
-    Intercepts interceptsAnnotation = interceptor.getClass().getAnnotation(Intercepts.class);
     return null;
   }
 

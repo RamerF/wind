@@ -4,22 +4,10 @@ import io.github.ramerf.wind.core.metadata.DbMetaData;
 import lombok.Data;
 
 /**
- * wind上下文.包含配置信息,管理的entity信息,wind初始化完成后会发布{@link InitFinishEvent}事件,可以通过监听事件获得该对象.如:
- * <pre>
- * {@code
+ * wind上下文.包含配置信息,管理的entity信息.
  *
- *  @Slf4j
- *  @Component
- *  public class InitFinishEventListener implements ApplicationListener<InitFinishEvent> {
- *    @Override
- *    public void onApplicationEvent(final InitFinishEvent event) {
- *      log.info("InitFinishEventListener:[source:{},data:{}]", event.getSource(), event.getData()); }
- *    }
- *  }
- *
+ * @since 2022.03.05
  * @author ramer
- * @since 22/08/2020
- * @see InitFinishEvent
  */
 @Data
 public class WindContext {

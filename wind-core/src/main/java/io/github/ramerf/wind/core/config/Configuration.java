@@ -1,13 +1,17 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.executor.Executor;
+import io.github.ramerf.wind.core.executor.SimpleJdbcExecutor;
+import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
+import io.github.ramerf.wind.core.plugin.Interceptor;
+import io.github.ramerf.wind.core.plugin.InterceptorChain;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.plugin.InterceptorChain;
 
 /**
- * The type Configuration.
+ * wind配置.
  *
  * @since 2020/1/14
  * @author ramer
@@ -22,17 +26,8 @@ public class Configuration {
   /** entity所在包路径,多个以,分割.<br> */
   protected String entityPackage = "";
 
-  /** 枚举所在包路径,多个以,分割.<br> */
-  protected String enumPackage = "";
-
-  /** 是否自定义枚举反序列化.设置为true时,可能需要编写枚举反序列化代码. */
-  protected boolean customEnumDeserializer = false;
-
   /** 批量操作时,每次处理的大小. */
-  protected int batchSize = 150;
-
-  /** 是否启用默认mvc配置. */
-  protected boolean enableWebMvcConfigurer = true;
+  protected int batchSize = 500;
 
   /** 表更新模式. */
   protected DdlAuto ddlAuto = DdlAuto.NONE;
@@ -49,7 +44,17 @@ public class Configuration {
   /** jdbc环境配置.数据源,事务 */
   protected JdbcEnvironment jdbcEnvironment;
 
+  /** 拦截器 */
   protected final InterceptorChain interceptorChain = new InterceptorChain();
+
+  public void addInterceptor(Interceptor interceptor) {
+    interceptorChain.addInterceptor(interceptor);
+  }
+
+  public Executor newExecutor(Transaction transaction) {
+    Executor executor = new SimpleJdbcExecutor(this, transaction);
+    return (Executor) interceptorChain.pluginAll(executor);
+  }
 
   public enum DdlAuto {
     /** Create ddl auto. */

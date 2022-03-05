@@ -115,7 +115,7 @@ public class TableExporter {
           String sqlDefinition = entityIndex.getSqlDefinition(dialect);
           sql.append(sqlDefinition).append(";\n");
         }
-        log.info("createTable:index[{}]", sql);
+        log.info("createTable:index[\n{}]", sql);
         try {
           executor.update(sql.toString(), ps -> {});
         } catch (DataAccessException e) {

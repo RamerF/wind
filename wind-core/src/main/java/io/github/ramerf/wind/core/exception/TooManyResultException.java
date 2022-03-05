@@ -12,7 +12,7 @@ public class TooManyResultException extends DataAccessException {
   private final int count;
 
   public TooManyResultException(final String message, final int count) {
-    super("message");
+    super("Too Many Result");
     this.count = count;
   }
 

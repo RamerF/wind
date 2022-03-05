@@ -19,12 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressWarnings("unused")
 public class StringUtils {
-  private static final String FOLDER_SEPARATOR = "/";
-  private static final String WINDOWS_FOLDER_SEPARATOR = "\\";
-  private static final char PATH_SEPARATOR = '/';
-  private static final String TOP_PATH = "..";
-  private static final String CURRENT_PATH = ".";
-  private static final char PACKAGE_SEPARATOR = '.';
 
   /**
    * 字符串为null或者长度为0.
@@ -229,12 +223,6 @@ public class StringUtils {
     return tokens.toArray(new String[0]);
   }
 
-  /** 转换为资源路径 */
-  public static String convertToResourcePath(final String path) {
-    Asserts.notNull(path, "path must not be null");
-    return path.replace(PACKAGE_SEPARATOR, PATH_SEPARATOR);
-  }
-
   public static void main(String[] args) {
     log.info("main:firstUppercase[{}]", firstUppercase("firstUppercase"));
     log.info("main:firstLowercase[{}]", firstLowercase("Uppercase"));
@@ -245,5 +233,6 @@ public class StringUtils {
     log.info("main:trimAllWhitespace[{}]", trimWhitespace(" Q W E "));
     log.info("main:camelToUnderline[{}]", camelToUnderline("bigId"));
     log.info("main:camelToUnderline[{}]", camelToUnderline("bigDecimal_Id"));
+
   }
 }

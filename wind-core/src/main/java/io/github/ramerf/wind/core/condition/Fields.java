@@ -12,8 +12,8 @@ import javax.annotation.Nonnull;
  * @since 10/07/2021
  */
 public class Fields<T> {
-  private final Set<Field> includes = new HashSet<>();
-  private final Set<Field> excludes = new HashSet<>();
+  private final Set<Field> includes = new LinkedHashSet<>();
+  private final Set<Field> excludes = new LinkedHashSet<>();
 
   private Fields() {}
 

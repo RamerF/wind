@@ -4,28 +4,22 @@ import io.github.ramerf.wind.WindVersion;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.ansi.*;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration;
-import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration.DataSourceConfig;
-import io.github.ramerf.wind.core.autoconfig.jdbc.DataSourceConfigurationFactory;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.helper.EntityHelper;
-import io.github.ramerf.wind.core.ioc.ApplicationContext;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
-import java.util.Properties;
 import java.util.Set;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WindApplication {
   private static final WindContext windContext = new WindContext();
-  private static ApplicationContext applicationContext;
 
   private WindApplication() {}
 
@@ -33,14 +27,7 @@ public class WindApplication {
   public static void run(final String configPath) {
     final AutoConfigConfiguration autoConfigConfiguration =
         YmlUtil.process(AutoConfigConfiguration.class, configPath);
-    final Configuration configuration = autoConfigConfiguration.getConfiguration();
-    final DataSourceConfig dataSourceConfig = autoConfigConfiguration.getDataSource();
-    final JdbcEnvironment jdbcEnvironment =
-        new JdbcEnvironment(
-            BeanUtils.initial(dataSourceConfig.getTransactionFactory()),
-            DataSourceConfigurationFactory.getDataSource(dataSourceConfig));
-    configuration.setJdbcEnvironment(jdbcEnvironment);
-    run(configuration);
+    run(autoConfigConfiguration.getConfiguration());
   }
 
   public static void run(@Nonnull final DataSource dataSource) {
@@ -61,40 +48,23 @@ public class WindApplication {
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, configuration.getDialect()));
     windContext.setConfiguration(configuration);
     try {
-      afterPropertiesSet();
+      // 打印banner
+      printBanner();
+      // 初始化Query/Update
+      Update.initial(windContext);
+      Query.initial(windContext);
+      // 初始化实体解析类
+      EntityUtils.initial(windContext);
+      EntityHelper.initial(windContext);
+      // 解析实体元数据
+      initEntityInfo(windContext.getConfiguration());
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
-  public void setApplicationContext(@Nonnull final ApplicationContext applicationContext) {
-    WindApplication.applicationContext = applicationContext;
-  }
-
   public static WindContext getWindContext() {
     return windContext;
-  }
-
-  private TransactionFactory getTransactionFactory(@Nullable final String type, Properties props) {
-    TransactionFactory factory = BeanUtils.initial(type);
-    factory.setProperties(props);
-    return factory;
-  }
-
-  @SuppressWarnings("RedundantThrows")
-  private static void afterPropertiesSet() throws Exception {
-    // 打印banner
-    printBanner();
-    // 初始化Query/Update
-    Update.initial(windContext.getConfiguration());
-    Query.initial(windContext.getConfiguration());
-    // 初始化实体解析类
-    EntityUtils.initial(windContext);
-    EntityHelper.initial(windContext);
-    // 解析实体元数据
-    initEntityInfo(windContext.getConfiguration());
-    // TODO WARN 发布初始化完成事件
-    //   publisher.publishEvent(new InitFinishEvent(windContext));
   }
 
   private static void printBanner() {
@@ -123,8 +93,6 @@ public class WindApplication {
       entityPackage = WindVersion.class.getPackage().getName();
     }
     log.info("initEntityInfo:package[{}]", entityPackage);
-    ApplicationContext applicationContext =
-        new ApplicationContext(entityPackage + "," + WindVersion.class.getPackage().getName());
     Set<Class<?>> entities;
     try {
       entities = BeanUtils.scanClassesWithAnnotation(entityPackage, TableInfo.class);

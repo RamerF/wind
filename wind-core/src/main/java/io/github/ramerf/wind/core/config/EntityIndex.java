@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.core.annotation.TableIndexes;
-import io.github.ramerf.wind.core.annotation.TableIndexes.Index;
-import io.github.ramerf.wind.core.annotation.TableIndexes.IndexField;
+import io.github.ramerf.wind.core.annotation.TableIndex;
+import io.github.ramerf.wind.core.annotation.TableIndex.Index;
+import io.github.ramerf.wind.core.annotation.TableIndex.IndexField;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.exception.SimpleException;
@@ -45,7 +45,7 @@ public class EntityIndex {
       final String tableName,
       Set<EntityColumn> entityColumns,
       Dialect dialect) {
-    final TableIndexes annotation = clazz.getAnnotation(TableIndexes.class);
+    final TableIndex annotation = clazz.getAnnotation(TableIndex.class);
     if (annotation == null) {
       return Collections.emptyList();
     }

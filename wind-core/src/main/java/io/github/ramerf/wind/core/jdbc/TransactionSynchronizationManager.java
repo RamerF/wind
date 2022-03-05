@@ -7,14 +7,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
-import org.springframework.lang.Nullable;
 
 public class TransactionSynchronizationManager {
   private static final ThreadLocal<Map<DataSource, ConnectionHolder>> DATASOURCE_CONNECTION_HOLDER =
       ThreadLocal.withInitial(HashMap::new);
 
-  public static Connection getConnection(final DataSource dataSource) {
+  public static ConnectionHolder getConnection(final DataSource dataSource) {
     Asserts.notNull(dataSource, "No DataSource specified");
     final Map<DataSource, ConnectionHolder> holderMap = DATASOURCE_CONNECTION_HOLDER.get();
     ConnectionHolder connectionHolder = holderMap.get(dataSource);
@@ -24,13 +24,13 @@ public class TransactionSynchronizationManager {
         connectionHolder.setConnection(connection = DataSourceUtils.getConnection(dataSource));
       }
       connectionHolder.requestConnection();
-      return connection;
+      return connectionHolder;
     }
     final Connection connection = DataSourceUtils.getConnection(dataSource);
     connectionHolder = new ConnectionHolder(connection);
     holderMap.put(dataSource, connectionHolder);
     connectionHolder.requestConnection();
-    return connection;
+    return connectionHolder;
   }
 
   public static void releaseConnection(

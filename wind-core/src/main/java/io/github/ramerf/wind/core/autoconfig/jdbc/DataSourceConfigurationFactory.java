@@ -29,7 +29,7 @@ public class DataSourceConfigurationFactory {
   public static DataSource getDataSource(final DataSourceConfig config) {
     final Map<String, String> map = config.getProperties();
     if (map.isEmpty()) {
-      throw new DataSourceException("Datasource not defined");
+      throw new DataSourceException("DataSource not defined");
     }
     final String firstKey = map.keySet().stream().filter(o -> o.contains(".")).findAny().orElse("");
     final DataSourceType type = getDataSourceType(firstKey);

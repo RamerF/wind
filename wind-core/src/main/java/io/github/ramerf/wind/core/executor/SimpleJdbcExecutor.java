@@ -1,8 +1,8 @@
 package io.github.ramerf.wind.core.executor;
 
-import io.github.ramerf.wind.core.condition.PageRequest;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.domain.Page;
+import io.github.ramerf.wind.core.domain.Pageable;
 import io.github.ramerf.wind.core.exception.TooManyResultException;
 import io.github.ramerf.wind.core.executor.logging.ConnectionLogger;
 import io.github.ramerf.wind.core.executor.logging.SimpleLog;
@@ -73,16 +73,16 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
 
   @Override
   public <T, R> Page<R> fetchPage(
-      @Nonnull final SqlParam<T> sqlParam, final long total, final PageRequest page)
+      @Nonnull final SqlParam<T> sqlParam, final Pageable pageable, final long total)
       throws DataAccessException {
     return aroundRead(
         sqlParam,
         () -> {
           @SuppressWarnings("unchecked")
           Class<R> clazz = (Class<R>) sqlParam.clazz;
-          final List<R> list =
+          final List<R> content =
               total < 1
-                  ? null
+                  ? Collections.emptyList()
                   : query(
                       sqlParam,
                       ps ->
@@ -91,13 +91,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
                               .getValues(sqlParam.startIndex)
                               .forEach(o -> o.accept(ps)),
                       ResultHandlerUtil.getResultHandler(clazz));
-          final PageRequest pageRequest =
-              page == null ? PageRequest.of(0, Integer.MAX_VALUE) : page;
-          // 从0开始
-          final int currentPage = pageRequest.getPage();
-          // 每页大小
-          final int pageSize = pageRequest.getSize();
-          return new Page<>(currentPage, pageSize, total, list, pageRequest.getSort());
+          return Page.of(content, pageable == null ? Pageable.unpaged() : pageable, total);
         });
   }
 
@@ -280,7 +274,6 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
           pss.setValues(ps, i);
           ps.addBatch();
         }
-        // TODO WARN 批量创建，返回主键
         final int[] rows = ps.executeBatch();
         List<Map<String, Object>> generatedKeys = generatedKeyHolder.getKeyList();
         generatedKeys.clear();

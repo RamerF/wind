@@ -1,9 +1,12 @@
 package io.github.ramerf.wind.core.pgsql;
 
 import io.github.ramerf.wind.core.annotation.*;
+import io.github.ramerf.wind.core.annotation.TableIndex.Index;
+import io.github.ramerf.wind.core.annotation.TableIndex.IndexField;
 import io.github.ramerf.wind.core.condition.Fields;
-import io.github.ramerf.wind.core.domain.InterEnum;
 import io.github.ramerf.wind.core.domain.Domain;
+import io.github.ramerf.wind.core.domain.InterEnum;
+import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.*;
 import java.math.BigDecimal;
@@ -20,6 +23,17 @@ import lombok.*;
     name = "foo",
     comment = "测试表",
     logicDelete = @LogicDelete(enable = true, fieldName = "hasDeleted"))
+@TableIndex({
+  @Index(
+      name = "idx_foo_name",
+      indexFields = {@IndexField(field = "name")}),
+  @Index(
+      name = "idx_foo_name_age",
+      indexFields = {
+        @IndexField(field = "name"),
+        @IndexField(field = "age", direction = Direction.DESC)
+      })
+})
 @Data
 @Builder
 @NoArgsConstructor
@@ -100,6 +114,9 @@ public class Foo extends Domain<Foo, Long> {
   @CreateTimestamp private LocalDateTime createTime;
   @UpdateTimestamp private LocalDateTime updateTime;
 
+  @OneToOne private FooSub fooSub;
+  private String fooSubNames;
+
   public enum Type implements InterEnum<Integer> {
     /** 商品类别 */
     PHONE(0, "手机"),
@@ -146,5 +163,11 @@ public class Foo extends Domain<Foo, Long> {
     public String desc() {
       return this.desc;
     }
+  }
+
+  @TableInfo
+  public static class FooSub extends Domain<io.github.ramerf.wind.core.mysql.Foo.FooSub, String> {
+    @Id private String name;
+    @CreateTimestamp private LocalDateTime createTime;
   }
 }

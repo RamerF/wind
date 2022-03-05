@@ -13,9 +13,9 @@
  */
 package io.github.ramerf.wind.core.executor.logging;
 
+import io.github.ramerf.wind.core.reflect.ExceptionUtil;
 import java.lang.reflect.*;
 import java.sql.*;
-import org.apache.ibatis.reflection.ExceptionUtil;
 
 /**
  * Connection proxy to add logging.

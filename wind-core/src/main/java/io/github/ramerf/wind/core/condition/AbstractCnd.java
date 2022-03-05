@@ -1,8 +1,9 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.domain.PageRequest;
+import io.github.ramerf.wind.core.domain.Pageable;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.domain.Sort.Order;
-import io.github.ramerf.wind.core.exception.SimpleException;
 import io.github.ramerf.wind.core.function.GetterFunction;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
@@ -10,7 +11,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * The type Abstract cnd.
@@ -26,36 +26,33 @@ public abstract class AbstractCnd<
         CND extends AbstractCnd<POJO, CND, CONDITION>,
         CONDITION extends Condition<POJO, CONDITION>>
     implements Cnd<POJO, CND, CONDITION>, Condition<POJO, CND> {
+  /** 从1开始 */
   protected int page;
-  protected int size;
-  private final List<Order> orders = new LinkedList<>();
 
-  /**
-   * 限制获取记录数.<br>
-   *
-   * @throws SimpleException 当size小于1时
-   */
-  public CND limit(final int size) throws SimpleException {
+  protected int size;
+
+  private final List<Order> orders = new LinkedList<>();
+  protected final Class<POJO> clazz;
+
+  protected AbstractCnd(final Class<POJO> clazz) {
+    this.clazz = clazz;
+  }
+
+  @Nonnull
+  @Override
+  public Class<POJO> getClazz() {
+    return clazz;
+  }
+
+  /** 从第一页开始,限制获取记录数. */
+  public CND limit(final int size) {
     return limit(1, size);
   }
 
-  /**
-   * 分页参数.<br>
-   * <li>当page,size同时为0时,表示不分页
-   * <li>当page或size小于1时,抛出{@link SimpleException}异常
-   *
-   * @param page 从1开始
-   * @param size the size
-   * @return the u
-   * @throws SimpleException 当page或size小于1且不同时为0时
-   */
-  public CND limit(final int page, final int size) throws SimpleException {
-    if (page == 0 && size == 0) {
-      //noinspection unchecked
-      return (CND) this;
-    }
+  /** 分页参数.page 从1开始 */
+  public CND limit(final int page, final int size) {
     if (page < 1 || size < 1) {
-      throw new SimpleException("page,size不能小于1");
+      throw new IllegalArgumentException("page,size不能小于1");
     }
     this.page = page;
     this.size = size;
@@ -78,10 +75,10 @@ public abstract class AbstractCnd<
     return (CND) this;
   }
 
+  @Nonnull
   @Override
-  @Nullable
-  public PageRequest getPages() {
-    return PageRequest.of(page, size, orders);
+  public Pageable getPageRequest() {
+    return page > 0 && size > 0 ? PageRequest.of(page, size, orders) : Pageable.unpaged();
   }
 
   @Override

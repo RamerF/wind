@@ -1,8 +1,7 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.Configuration;
-import io.github.ramerf.wind.core.config.JdbcEnvironment;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
@@ -59,6 +58,7 @@ public final class Update<T> {
   private final IdGenerator idGenerator;
   private final EntityInfo entityInfo;
   private final Executor executor;
+  private static WindContext windContext;
   private static Configuration configuration;
   private final Field idField;
 
@@ -72,17 +72,18 @@ public final class Update<T> {
     this.idField = this.entityInfo.getIdColumn().getField();
     this.condition = LambdaCondition.of(clazz);
     this.idGenerator = this.entityInfo.getIdGenerator();
+    final Configuration configuration = windContext.getConfiguration();
     final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
     this.executor =
-        new SimpleJdbcExecutor(
-            configuration,
+        configuration.newExecutor(
             jdbcEnvironment
                 .getTransactionFactory()
-                .newTransaction(jdbcEnvironment.getDataSource(), autoCommit));
+                .newTransaction(jdbcEnvironment.getDataSource()));
   }
 
-  public static void initial(final Configuration configuration) {
-    Update.configuration = configuration;
+  public static void initial(final WindContext windContext) {
+    Update.windContext = windContext;
+    Update.configuration = windContext.getConfiguration();
   }
 
   public static <T> Update<T> getInstance(final Class<T> clazz) {
@@ -166,8 +167,7 @@ public final class Update<T> {
             keyHolder);
     // 写入数据库生成的主键
     if (returnPk) {
-      // dialect.getKeyHolderKey()
-      Object returnId = keyHolder.getKeys().get(entityInfo.getIdColumn().getName());
+      Object returnId = keyHolder.getKeys().get(getKeyHolderKey());
       if (returnId instanceof BigInteger) {
         returnId = ((BigInteger) returnId).longValue();
       }
@@ -258,10 +258,10 @@ public final class Update<T> {
                   keyHolder);
           final List<Map<String, Object>> list = keyHolder.getKeyList();
           if (returnPk.get()) {
-            final String idName = entityInfo.getIdColumn().getName();
+            final String keyHolderKey = getKeyHolderKey();
             for (int i = 0; i < list.size(); i++) {
               final Map<String, Object> columnValueMap = list.get(i);
-              Object idValue = columnValueMap.get(idName);
+              Object idValue = columnValueMap.get(keyHolderKey);
               if (idValue instanceof BigInteger) {
                 idValue = ((BigInteger) idValue).longValue();
               }
@@ -304,6 +304,11 @@ public final class Update<T> {
               Arrays.stream(batchUpdate).filter(o -> o >= 0 || o == -2).map(o -> 1).sum());
         });
     return createRow.get() == ts.size() ? Optional.empty() : Optional.of(createRow.get());
+  }
+
+  private String getKeyHolderKey() {
+    final String keyHolderKey = windContext.getDbMetaData().getDialect().getKeyHolderKey();
+    return keyHolderKey != null ? keyHolderKey : entityInfo.getIdColumn().getName();
   }
 
   /**
@@ -424,8 +429,7 @@ public final class Update<T> {
                       return execList.size();
                     }
                   });
-          updateRow.getAndAdd(
-              Arrays.stream(batchUpdate).filter(o -> o >= 0 || o == -2).map(o -> 1).sum());
+          updateRow.getAndAdd(Arrays.stream(batchUpdate).filter(o -> o > 0).map(o -> 1).sum());
         });
     return updateRow.get() == ts.size() ? Optional.empty() : Optional.of(updateRow.get());
   }

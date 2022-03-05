@@ -18,6 +18,8 @@ public class ResourceUtils {
   public static final String JAR_URL_PREFIX = "jar:";
   public static final String FILE_URL_PREFIX = "file:";
   public static final String JAR_URL_SEPARATOR = "!/";
+  private static final char PATH_SEPARATOR = '/';
+  private static final char PACKAGE_SEPARATOR = '.';
 
   public static Set<File> getFiles(String locationPattern) throws IOException {
     Asserts.notNull(locationPattern, "Location pattern must not be null");
@@ -103,5 +105,11 @@ public class ResourceUtils {
   public static ClassLoader getClassLoader() {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     return classLoader == null ? ResourceUtils.class.getClassLoader() : classLoader;
+  }
+
+  /** 转换为资源路径 */
+  public static String convertToResourcePath(final String path) {
+    Asserts.notNull(path, "path must not be null");
+    return path.replace(PACKAGE_SEPARATOR, PATH_SEPARATOR);
   }
 }

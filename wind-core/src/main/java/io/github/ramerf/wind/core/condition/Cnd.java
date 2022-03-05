@@ -1,5 +1,8 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.domain.Pageable;
+import javax.annotation.Nonnull;
+
 /**
  * The interface Cnd.
  *
@@ -11,9 +14,12 @@ package io.github.ramerf.wind.core.condition;
  */
 public interface Cnd<
     POJO, CND extends Condition<POJO, CND>, CONDITION extends Condition<POJO, CONDITION>> {
+  @Nonnull
   Class<POJO> getClazz();
 
-  PageRequest getPages();
+  @Nonnull
+  Pageable getPageRequest();
 
+  @Nonnull
   CONDITION getCondition();
 }

@@ -22,22 +22,15 @@ import static java.util.stream.Collectors.toList;
  */
 @Data
 public class EntityMapping {
-  /** {@link Collections#singletonList(Object)}. */
   private static Map<Class<?>, List<MappingInfo>> ENTITY_MAPPING = new ConcurrentHashMap<>();
+
+  public static List<MappingInfo> get(final Class<?> clazz) {
+    return ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
+  }
 
   public static Optional<MappingInfo> get(@Nonnull Class<?> clazz, final Field field) {
     final List<MappingInfo> infos = ENTITY_MAPPING.get(getCglibProxyTarget(clazz));
     return infos.stream().filter(o -> o.field.equals(field)).findFirst();
-  }
-
-  public static void put(@Nonnull Class<?> clazz, @Nonnull final MappingInfo mappingInfo) {
-    ENTITY_MAPPING.merge(
-        clazz,
-        Collections.singletonList(mappingInfo),
-        (old, newVal) -> {
-          old.addAll(newVal);
-          return old;
-        });
   }
 
   public static void put(@Nonnull Class<?> clazz, @Nonnull final List<MappingInfo> mappingInfos) {

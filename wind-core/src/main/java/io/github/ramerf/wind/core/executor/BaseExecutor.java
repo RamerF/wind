@@ -5,7 +5,6 @@ import io.github.ramerf.wind.core.executor.logging.Log;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.apache.ibatis.executor.statement.StatementUtil;
 
 /**
  * The type Base executor.
@@ -83,15 +82,22 @@ public abstract class BaseExecutor implements Executor {
    * @throws SQLException if a database access error occurs, this method is called on a closed
    *     <code>Statement</code>
    * @since 3.4.0
-   * @see StatementUtil#applyTransactionTimeout(Statement, Integer, Integer)
    */
   protected void applyTransactionTimeout(Statement statement) throws SQLException {
-    StatementUtil.applyTransactionTimeout(
-        statement, statement.getQueryTimeout(), transaction.getTimeout());
+    final int queryTimeout = statement.getQueryTimeout();
+    final Integer transactionTimeout = transaction.getTimeout();
+    if (transactionTimeout == null) {
+      return;
+    }
+    if (queryTimeout == 0 || transactionTimeout < queryTimeout) {
+      statement.setQueryTimeout(transactionTimeout);
+    }
   }
 
   @Override
   public void setExecutorWrapper(Executor wrapper) {
     this.wrapper = wrapper;
   }
+
+
 }

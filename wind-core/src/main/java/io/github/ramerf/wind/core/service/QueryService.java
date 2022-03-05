@@ -5,6 +5,8 @@ import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
+import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
+import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
 import java.util.*;
@@ -13,7 +15,7 @@ import javax.annotation.Nullable;
 
 public interface QueryService<T, ID extends Serializable> extends InterService<T, ID> {
 
-  default <E> long count(@Nullable final Cnd<E, ?, ?> cnd) {
+  default long count(@Nullable final Cnd<T, ?, ?> cnd) {
     if (cnd == null) {
       Class<T> clazz = getPoJoClass();
       return getQuery(clazz).select(null).where(LambdaCondition.of(clazz)).fetchCount(clazz);
@@ -39,28 +41,28 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
         fields);
   }
 
-  /** 获取单个任意对象. */
-  default <E> E getOne(final Cnd<E, ?, ?> cnd) {
+  /** 获取单个对象. */
+  default T getOne(final Cnd<T, ?, ?> cnd) {
     return getOne(cnd, null, cnd.getClazz());
   }
 
-  /** 获取单个任意对象,指定字段. */
-  default <E> E getOne(final Cnd<E, ?, ?> cnd, final Fields<E> fields) {
+  /** 获取单个对象,指定字段. */
+  default T getOne(final Cnd<T, ?, ?> cnd, final Fields<T> fields) {
     return getOne(cnd, fields, cnd.getClazz());
   }
 
-  /** 获取单个任意对象,返回指定对象. */
-  default <E, R> R getOne(final Cnd<E, ?, ?> cnd, @Nonnull final Class<R> respClazz) {
+  /** 获取单个对象,返回指定对象. */
+  default <R> R getOne(final Cnd<T, ?, ?> cnd, @Nonnull final Class<R> respClazz) {
     return getOne(cnd, null, respClazz);
   }
 
-  /** 获取单个任意对象,指定字段,返回指定对象. */
-  default <E, R> R getOne(
-      final Cnd<E, ?, ?> cnd, @Nullable final Fields<E> fields, @Nonnull final Class<R> respClazz) {
+  /** 获取单个对象,指定字段,返回指定对象. */
+  default <R> R getOne(
+      final Cnd<T, ?, ?> cnd, @Nullable final Fields<T> fields, @Nonnull final Class<R> respClazz) {
     return getQuery(cnd.getClazz())
         .select(fields)
         .where(cnd.getCondition())
-        .pageable(cnd.getPages())
+        .pageable(cnd.getPageRequest())
         .fetchOne(respClazz);
   }
 
@@ -83,77 +85,84 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
         .fetchAll(clazz);
   }
 
-  /** 列表查询任意对象. */
-  default <E> List<E> list(@Nonnull final Cnd<E, ?, ?> cnd) {
+  /** 列表查询对象. */
+  default List<T> list(@Nonnull final Cnd<T, ?, ?> cnd) {
     return list(cnd, cnd.getClazz());
   }
 
-  /** 列表查询任意对象,指定字段. */
-  default <E> List<E> list(@Nonnull final Cnd<E, ?, ?> cnd, @Nullable final Fields<E> fields) {
+  /** 列表查询对象,指定字段. */
+  default List<T> list(@Nonnull final Cnd<T, ?, ?> cnd, @Nullable final Fields<T> fields) {
     return list(cnd, fields, cnd.getClazz());
   }
 
-  /** 列表查询任意对象,返回指定对象. */
-  default <E, R> List<R> list(@Nonnull final Cnd<E, ?, ?> cnd, @Nonnull final Class<R> respClazz) {
+  /** 列表查询对象,返回指定对象. */
+  default <R> List<R> list(@Nonnull final Cnd<T, ?, ?> cnd, @Nonnull final Class<R> respClazz) {
     return list(cnd, null, respClazz);
   }
 
-  /** 列表查询任意对象,指定字段,返回指定对象. */
-  default <E, R> List<R> list(
-      @Nonnull final Cnd<E, ?, ?> cnd, final Fields<E> fields, @Nonnull final Class<R> respClazz) {
+  /** 列表查询对象,指定字段,返回指定对象. */
+  default <R> List<R> list(
+      @Nonnull final Cnd<T, ?, ?> cnd, final Fields<T> fields, @Nonnull final Class<R> respClazz) {
     return getQuery(cnd.getClazz())
         .select(fields)
         .where(cnd.getCondition())
-        .pageable(cnd.getPages())
+        .pageable(cnd.getPageRequest())
         .fetchAll(respClazz);
   }
 
-  /** 分页查询任意对象. */
-  default <E> Page<E> page(@Nonnull final Cnd<E, ?, ?> cnd) {
+  /** 分页查询对象. */
+  default Page<T> page(@Nonnull final Cnd<T, ?, ?> cnd) {
     return page(cnd, null, cnd.getClazz());
   }
 
-  /** 分页查询任意对象,指定字段. */
-  default <E> Page<E> page(@Nonnull final Cnd<E, ?, ?> cnd, @Nullable final Fields<E> fields) {
+  /** 分页查询对象,指定字段. */
+  default Page<T> page(@Nonnull final Cnd<T, ?, ?> cnd, @Nullable final Fields<T> fields) {
     return page(cnd, fields, cnd.getClazz());
   }
 
   /**
-   * 分页查询任意对象,返回指定对象.
+   * 分页查询对象,返回指定对象.
    *
    * @param respClazz 返回对象
    */
-  default <E, R> Page<R> page(@Nonnull final Cnd<E, ?, ?> cnd, @Nonnull final Class<R> respClazz) {
+  default <R> Page<R> page(@Nonnull final Cnd<T, ?, ?> cnd, @Nonnull final Class<R> respClazz) {
     return page(cnd, null, respClazz);
   }
 
   /**
-   * 分页查询任意对象,指定字段,返回指定对象.
+   * 分页查询对象,指定字段,返回指定对象.
    *
    * @param respClazz 返回对象
    */
-  default <E, R> Page<R> page(
-      @Nonnull final Cnd<E, ?, ?> cnd,
-      @Nullable final Fields<E> fields,
+  default <R> Page<R> page(
+      @Nonnull final Cnd<T, ?, ?> cnd,
+      @Nullable final Fields<T> fields,
       @Nonnull final Class<R> respClazz) {
-    final PageRequest pageable = cnd.getPages();
-    if (pageable == null) {
-      return new Page<>(Collections.emptyList());
-    }
     return getQuery(cnd.getClazz())
         .select(fields)
         .where(cnd.getCondition())
-        .pageable(cnd.getPages())
+        .pageable(cnd.getPageRequest())
         .fetchPage(respClazz);
   }
 
-  /** 查询关联对象. */
-  default <E, R> void populateMapping(@Nonnull E t, SetterFunction<E, R> setter) {
+  /** 查询所有关联对象. */
+  default <R> T populateMapping(@Nonnull T obj) {
+    final List<MappingInfo> mappingInfos = EntityMapping.get(obj.getClass());
+    mappingInfos.forEach(
+        mappingInfo ->
+            BeanUtils.setFieldValueIgnoreException(
+                obj, mappingInfo.getField(), mappingInfo.getMappingObject(obj)));
+    return obj;
+  }
+
+  /** 查询指定的关联对象. */
+  default <R> T populateMapping(@Nonnull T obj, SetterFunction<T, R> setter) {
     setter.accept(
-        t,
-        EntityMapping.get(t.getClass(), setter.getField())
-            .<R>map(mappingInfo -> mappingInfo.getMappingObject(t))
+        obj,
+        EntityMapping.get(obj.getClass(), setter.getField())
+            .<R>map(mappingInfo -> mappingInfo.getMappingObject(obj))
             .orElse(null));
+    return obj;
   }
 
   /** 自定义sql查询clazz表. */

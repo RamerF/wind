@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.function.GetterFunction;
+import io.github.ramerf.wind.core.function.SetterFunction;
 import java.util.Collection;
 import javax.annotation.Nonnull;
 import lombok.Getter;
@@ -12,10 +12,11 @@ import lombok.Getter;
  */
 public class Cnds<T> extends AbstractCnd<T, Cnds<T>, LambdaCondition<T>>
     implements ILambdaCondition<T, Cnds<T>> {
-  @Getter private Class<T> clazz;
   @Getter private LambdaCondition<T> condition;
 
-  private Cnds() {}
+  private Cnds(final Class<T> clazz) {
+    super(clazz);
+  }
 
   /**
    * Of cnds.
@@ -26,16 +27,14 @@ public class Cnds<T> extends AbstractCnd<T, Cnds<T>, LambdaCondition<T>>
    */
   @Nonnull
   public static <T> Cnds<T> of(final Class<T> clazz) {
-    final Cnds<T> cnds = new Cnds<>();
-    cnds.clazz = clazz;
+    final Cnds<T> cnds = new Cnds<>(clazz);
     cnds.condition = LambdaCondition.of(clazz);
     return cnds;
   }
 
   public static <T> Cnds<T> of(
       @Nonnull final Class<T> clazz, @Nonnull final LambdaCondition<T> condition) {
-    final Cnds<T> cnds = new Cnds<>();
-    cnds.clazz = clazz;
+    final Cnds<T> cnds = new Cnds<>(clazz);
     cnds.condition = condition;
     return cnds;
   }

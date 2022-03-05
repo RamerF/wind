@@ -4,8 +4,8 @@ import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.domain.InterEnum;
-import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.exception.NotImplementedException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.service.BaseService;
@@ -190,9 +190,6 @@ public final class EntityUtils {
 
   /**
    * 获取对象属性对应的数据库列名.<br>
-   * <li>普通字段:默认值为{@link TableColumn#name()};如果前者为空,值为<br>
-   *     {@link StringUtils#camelToUnderline(String)},{@link Field#getName()}
-   * <li>N对1关联字段:
    *
    * @param field the field
    * @param depth 是否解析关联对象
@@ -226,7 +223,7 @@ public final class EntityUtils {
         return null;
       }
     }
-    // 手动指定关联列名
+    // 手动指定关联字段名
     if (!"".equals(joinFieldStr)) {
       final Field joinField = BeanUtils.getDeclaredField(fieldType, joinFieldStr);
       if (joinField == null) {

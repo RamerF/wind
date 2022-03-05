@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
 
 /**
  * The type Bean utils.
@@ -123,7 +122,7 @@ public final class BeanUtils {
       final Set<File> files =
           ResourceUtils.getFiles(
               "classpath*:" //
-                  .concat(StringUtils.convertToResourcePath(packagePattern))
+                  .concat(ResourceUtils.convertToResourcePath(packagePattern))
                   .concat("/**/*.class"));
       for (File file : files) {
         try {
@@ -153,7 +152,7 @@ public final class BeanUtils {
       final Set<File> files =
           ResourceUtils.getFiles(
               "classpath*:"
-                  .concat(StringUtils.convertToResourcePath(packagePattern))
+                  .concat(ResourceUtils.convertToResourcePath(packagePattern))
                   .concat("/**/*.class"));
       for (File file : files) {
         try {
@@ -307,11 +306,6 @@ public final class BeanUtils {
       return false;
     }
     throw new WindException("无法获取默认值:" + clazz);
-  }
-
-  public static void copyProperties(Object source, Object target, String... ignoreProperties)
-      throws BeansException {
-    org.springframework.beans.BeanUtils.copyProperties(source, target, ignoreProperties);
   }
 
   @SuppressWarnings("rawtypes")

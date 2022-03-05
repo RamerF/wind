@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ramer
  */
 @Slf4j
-public class Domain<T, ID extends Serializable> {
+public abstract class Domain<T extends Domain<T, ID>, ID extends Serializable> {
   /**
    * 创建记录.
    *

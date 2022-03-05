@@ -12,7 +12,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface TableIndexes {
+public @interface TableIndex {
   Index[] value();
 
   @interface Index {
@@ -28,7 +28,7 @@ public @interface TableIndexes {
 
   @interface IndexField {
 
-    /** java字段名. */
+    /** java属性名. */
     String field();
 
     int length() default -1;

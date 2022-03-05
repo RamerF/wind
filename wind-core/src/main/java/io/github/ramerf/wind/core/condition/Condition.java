@@ -28,7 +28,7 @@ public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
    */
   List<Consumer<PreparedStatement>> getValues(final AtomicInteger startIndex);
 
-  /** 获取所有原始值(未经过转换器转换的值),生成缓存key时会用到. */
+  /** 获取所有原始值(未经过转换器转换的值). */
   List<Object> getOriginValues();
 
   /**

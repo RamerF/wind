@@ -17,8 +17,6 @@ import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.apache.ibatis.builder.SqlSourceBuilder;
-import org.apache.ibatis.reflection.ArrayUtil;
 
 /**
  * Base class for proxies to do logging.
@@ -91,7 +89,34 @@ public abstract class BaseJdbcLogger {
   protected String objectValueString(Object value) {
     if (value instanceof Array) {
       try {
-        return ArrayUtil.toString(((Array) value).getArray());
+        final Object obj = ((Array) value).getArray();
+        if (obj == null) {
+          return "null";
+        }
+        final Class<?> clazz = obj.getClass();
+        if (!clazz.isArray()) {
+          return obj.toString();
+        }
+        final Class<?> componentType = obj.getClass().getComponentType();
+        if (long.class.equals(componentType)) {
+          return Arrays.toString((long[]) obj);
+        } else if (int.class.equals(componentType)) {
+          return Arrays.toString((int[]) obj);
+        } else if (short.class.equals(componentType)) {
+          return Arrays.toString((short[]) obj);
+        } else if (char.class.equals(componentType)) {
+          return Arrays.toString((char[]) obj);
+        } else if (byte.class.equals(componentType)) {
+          return Arrays.toString((byte[]) obj);
+        } else if (boolean.class.equals(componentType)) {
+          return Arrays.toString((boolean[]) obj);
+        } else if (float.class.equals(componentType)) {
+          return Arrays.toString((float[]) obj);
+        } else if (double.class.equals(componentType)) {
+          return Arrays.toString((double[]) obj);
+        } else {
+          return Arrays.toString((Object[]) obj);
+        }
       } catch (SQLException e) {
         return value.toString();
       }
@@ -110,7 +135,17 @@ public abstract class BaseJdbcLogger {
   }
 
   protected String removeExtraWhitespace(String original) {
-    return SqlSourceBuilder.removeExtraWhitespaces(original);
+    StringTokenizer tokenizer = new StringTokenizer(original);
+    StringBuilder builder = new StringBuilder();
+    boolean hasMoreTokens = tokenizer.hasMoreTokens();
+    while (hasMoreTokens) {
+      builder.append(tokenizer.nextToken());
+      hasMoreTokens = tokenizer.hasMoreTokens();
+      if (hasMoreTokens) {
+        builder.append(' ');
+      }
+    }
+    return builder.toString();
   }
 
   protected boolean isDebugEnabled() {

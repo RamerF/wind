@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.jdbc.transaction.jdbc;
 
 import io.github.ramerf.wind.core.executor.DataAccessException;
+import io.github.ramerf.wind.core.jdbc.ConnectionHolder;
 import io.github.ramerf.wind.core.jdbc.TransactionSynchronizationManager;
 import io.github.ramerf.wind.core.jdbc.session.TransactionIsolationLevel;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
@@ -13,8 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JdbcTransaction implements Transaction {
-  protected Connection connection;
   protected DataSource dataSource;
+  protected Connection connection;
+  protected ConnectionHolder connectionHolder;
   protected TransactionIsolationLevel level;
   protected boolean autoCommit;
 
@@ -39,8 +41,9 @@ public class JdbcTransaction implements Transaction {
   public Connection getConnection() throws DataAccessException {
     if (this.connection == null) {
       this.openConnection();
+      return this.connectionHolder.getConnection();
     }
-    return this.connection;
+    return this.connectionHolder.requestConnection();
   }
 
   @Override
@@ -82,8 +85,7 @@ public class JdbcTransaction implements Transaction {
   @Override
   public void setAutoCommit(boolean desiredAutoCommit) {
     try {
-      final Connection connection = this.getConnection();
-      if (connection.getAutoCommit() != desiredAutoCommit) {
+      if (this.connection.getAutoCommit() != desiredAutoCommit) {
         if (log.isDebugEnabled()) {
           log.debug(
               "Setting autocommit to "
@@ -123,7 +125,10 @@ public class JdbcTransaction implements Transaction {
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
-    this.connection = TransactionSynchronizationManager.getConnection(this.dataSource);
+    final ConnectionHolder connectionHolder =
+        TransactionSynchronizationManager.getConnection(this.dataSource);
+    this.connection = connectionHolder.getConnection();
+    this.connectionHolder = connectionHolder;
     if (this.level != null) {
       try {
         //noinspection MagicConstant

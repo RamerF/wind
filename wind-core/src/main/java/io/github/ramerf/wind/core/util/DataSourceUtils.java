@@ -2,9 +2,9 @@ package io.github.ramerf.wind.core.util;
 
 import io.github.ramerf.wind.core.executor.DataAccessException;
 import java.sql.*;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.Nullable;
 
 /**
  * @author ramer

@@ -25,7 +25,7 @@ public class SqlHelper {
   }
 
   /**
-   * 将值转换成Sql字符串,仅用于<code>RedisCache</code> key前缀生成.
+   * 将值转换成Sql字符串.
    *
    * @param value the value
    * @return the string
@@ -47,26 +47,14 @@ public class SqlHelper {
       //     LocalDateTime.ofInstant(((Date) value).toInstant(), Constant.DEFAULT_ZONE).toString());
       return QUOTE_FORMAT.format(((Date) value).toInstant().toString());
     }
-    if (List.class.isAssignableFrom(value.getClass())) {
-      // 数组拼接为: '{name1,name2}' 或使用函数 string_to_array('name1,name2', ',')
-      // 目前不支持多数据库,考虑到兼容性,不使用函数
+    if (Collection.class.isAssignableFrom(value.getClass())) {
       return QUOTE_FORMAT.format(
           BRACE_FORMAT.format(
-              ((List<?>) value)
+              ((Collection<?>) value)
                   .stream()
-                      .map(Object::toString)
+                      .map(SqlHelper::toSqlString)
                       .reduce((a, b) -> String.join(COMMA.operator(), a, b))
                       .orElse(value.toString())));
-    }
-    if (value instanceof Collection) {
-      // 不知道当时写这个是干什么的 0_0
-      return ((Collection<?>) value)
-          .stream()
-              .map(SqlHelper::toSqlString)
-              .filter(Objects::nonNull)
-              .map(Object::toString)
-              .reduce((a, b) -> String.join(COMMA.operator(), a, b))
-              .orElse(value.toString());
     }
     if (value.getClass().isArray()) {
       if (value instanceof String[]) {

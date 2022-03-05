@@ -1,10 +1,11 @@
 package io.github.ramerf.wind.core.executor;
 
-import io.github.ramerf.wind.core.condition.*;
+import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
-import io.github.ramerf.wind.core.config.Configuration;
-import io.github.ramerf.wind.core.config.JdbcEnvironment;
+import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.domain.Page;
+import io.github.ramerf.wind.core.domain.Pageable;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.handler.ResultHandlerUtil;
@@ -48,22 +49,25 @@ public class Query<T> {
   private Fields<T> fields;
 
   private Condition<?, ?> condition;
-  private PageRequest pageRequest;
+  private Pageable pageable = Pageable.unpaged();
 
   private final Executor executor;
+  // TODO WARN 如果要支持多数据源这里要改下
+  private static WindContext windContext;
   private static Configuration configuration;
   private final Class<T> clazz;
 
-  public static void initial(final Configuration configuration) {
-    Query.configuration = configuration;
+  public static void initial(final WindContext windContext) {
+    Query.windContext = windContext;
+    Query.configuration = windContext.getConfiguration();
   }
 
   public Query(final Class<T> clazz) {
     this.clazz = clazz;
+    EntityHelper.getEntityInfo(clazz);
     final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
     this.executor =
-        new SimpleJdbcExecutor(
-            configuration,
+        configuration.newExecutor(
             jdbcEnvironment
                 .getTransactionFactory()
                 .newTransaction(jdbcEnvironment.getDataSource()));
@@ -139,13 +143,14 @@ public class Query<T> {
 
     /**
      * 指定分页和排序.示例:<br>
-     * <li><code>Pages.of(1);</code><br>
-     * <li><code>Pages.of(1, 10).desc(Foo::setId);</code><br>
+     * <li><code>PageRequest.of(1);</code>
+     * <li><code>PageRequest.of(1, 10).desc(Foo::setId);</code>
      * <li><code>cnds.limit(1);</code>
      * <li><code>cnds.limit(1, 10).orderBy(Foo::setId);</code>
+     * <li><code>Pageable.unpaged();</code>
      */
-    public QueryExecutor<T> pageable(final PageRequest pageRequest) {
-      query.pageRequest = pageRequest;
+    public QueryExecutor<T> pageable(@Nonnull final Pageable pageRequest) {
+      query.pageable = pageRequest;
       return this;
     }
 
@@ -250,8 +255,8 @@ public class Query<T> {
               .setClazz(clazz)
               .setCondition(query.condition)
               .setStartIndex(new AtomicInteger(1)),
-          fetchCount(query.clazz),
-          query.pageRequest);
+          query.pageable,
+          fetchCount(query.clazz));
     }
 
     /**
@@ -314,19 +319,19 @@ public class Query<T> {
     }
 
     private String getOrderByClause() {
-      if (query.pageRequest == null) return "";
+      if (query.pageable == null) return "";
       String orderBy =
-          query.pageRequest.getSort().stream()
+          query.pageable.getSort().stream()
               .map(s -> s.getProperty().concat(" ").concat(s.getDirection().name()))
               .collect(Collectors.joining(","));
       return orderBy.isEmpty() ? "" : " order by " + orderBy;
     }
 
     private String getLimitClause() {
-      return query.pageRequest == null
-          ? ""
-          : String.format(
-              " limit %s offset %s", query.pageRequest.getPage(), query.pageRequest.getOffset());
+      return query.pageable.isPaged()
+          ? String.format(
+              " limit %s offset %s", query.pageable.getPageSize(), query.pageable.getOffset())
+          : "";
     }
   }
 }

@@ -6,8 +6,10 @@ wind:
     enable: true
     deleted: false
     field-name: deleted
-  data-source-config:
-    url: jdbc:mysql:///wind?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true&useSSL=false
-    username: root
-    password: root
-    driver-class-name: com.mysql.jdbc.Driver
+  data-source:
+    transaction-factory: io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory
+    druid:
+      url: jdbc:postgresql://localhost:5432/wind_refactor?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true
+      username: postgres
+      password: 123456
+      driver-class-name: org.postgresql.Driver

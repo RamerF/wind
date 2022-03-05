@@ -166,8 +166,7 @@ public abstract class Dialect {
    * @return the database type name
    * @throws WindException If no mapping was specified for that type.
    */
-  public String getTypeName(Type type, long length, int precision, int scale)
-      throws WindException {
+  public String getTypeName(Type type, long length, int precision, int scale) throws WindException {
     if (!isSupportJavaType(type)) {
       throw new WindException("Not supported type " + type.getTypeName());
     }
@@ -294,5 +293,6 @@ public abstract class Dialect {
     return "";
   }
 
+  /** 返回主键时,持有主键的列名.返回null表示使用表的主键列名. */
   public abstract String getKeyHolderKey();
 }

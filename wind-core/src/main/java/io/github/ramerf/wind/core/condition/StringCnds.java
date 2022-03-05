@@ -10,22 +10,21 @@ import lombok.Getter;
  */
 public class StringCnds<T> extends AbstractCnd<T, StringCnds<T>, StringCondition<T>>
     implements IStringCondition<T, StringCnds<T>> {
-  @Getter private Class<T> clazz;
   @Getter private StringCondition<T> condition;
 
-  private StringCnds() {}
+  private StringCnds(final Class<T> clazz) {
+    super(clazz);
+  }
 
   public static <T> StringCnds<T> of(final Class<T> clazz) {
-    final StringCnds<T> cnds = new StringCnds<>();
-    cnds.clazz = clazz;
+    final StringCnds<T> cnds = new StringCnds<>(clazz);
     cnds.condition = StringCondition.of(clazz);
     return cnds;
   }
 
   public static <T> StringCnds<T> of(
       @Nonnull final Class<T> clazz, @Nonnull final StringCondition<T> condition) {
-    final StringCnds<T> cnds = new StringCnds<>();
-    cnds.clazz = clazz;
+    final StringCnds<T> cnds = new StringCnds<>(clazz);
     cnds.condition = condition;
     return cnds;
   }

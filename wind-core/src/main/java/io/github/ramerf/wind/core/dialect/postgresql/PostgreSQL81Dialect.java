@@ -122,6 +122,6 @@ public class PostgreSQL81Dialect extends Dialect {
 
   @Override
   public String getKeyHolderKey() {
-    return "id";
+    return null;
   }
 }
