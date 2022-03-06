@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 import static java.util.stream.Collectors.toList;
@@ -50,10 +51,9 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 @SuppressWarnings("unused")
-public final class Update<T> {
+public class Update<T> {
 
   private final Class<T> clazz;
-  private Condition<T, ?> condition;
   private Fields<T> fields;
   private final IdGenerator idGenerator;
   private final EntityInfo entityInfo;
@@ -70,12 +70,12 @@ public final class Update<T> {
     this.clazz = clazz;
     this.entityInfo = EntityHelper.getEntityInfo(clazz);
     this.idField = this.entityInfo.getIdColumn().getField();
-    this.condition = LambdaCondition.of(clazz);
     this.idGenerator = this.entityInfo.getIdGenerator();
     final Configuration configuration = windContext.getConfiguration();
     final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
     this.executor =
-        configuration.newExecutor(
+        new SimpleJdbcExecutor(
+            configuration,
             jdbcEnvironment
                 .getTransactionFactory()
                 .newTransaction(jdbcEnvironment.getDataSource()));
@@ -86,12 +86,20 @@ public final class Update<T> {
     Update.configuration = windContext.getConfiguration();
   }
 
+  @SuppressWarnings("unchecked")
   public static <T> Update<T> getInstance(final Class<T> clazz) {
-    return new Update<>(clazz);
+    final Update<T> update = new Update<>(clazz);
+    return (Update<T>)
+        configuration.getInterceptorChain().pluginAll(update, clazz, new Object[] {clazz});
   }
 
+  @SuppressWarnings("unchecked")
   public static <T> Update<T> getInstance(final Class<T> clazz, final boolean autoCommit) {
-    return new Update<>(clazz, autoCommit);
+    final Update<T> update = new Update<>(clazz, autoCommit);
+    return (Update<T>)
+        configuration
+            .getInterceptorChain()
+            .pluginAll(update, clazz, new Object[] {clazz, autoCommit});
   }
 
   public Transaction getTransaction() {
@@ -100,11 +108,6 @@ public final class Update<T> {
 
   public Executor getExecutor() {
     return this.executor;
-  }
-
-  public Update<T> where(@Nonnull final Condition<T, ?> condition) {
-    this.condition = condition;
-    return this;
   }
 
   /**
@@ -322,12 +325,26 @@ public final class Update<T> {
   }
 
   /**
+   * 更新,默认根据id更新且不更新值为null的列.
+   *
+   * @param t the t
+   * @return 受影响记录数
+   */
+  public int update(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
+    return update(t, fields, LambdaCondition.of(clazz));
+  }
+
+  /**
    * 更新,默认根据id更新.
    *
    * @param fields 当排除不为空时,忽略全局是否写入空配置
    * @return 受影响记录数
    */
-  public int update(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
+  public int update(
+      @Nonnull final T t,
+      @Nullable final Fields<T> fields,
+      @Nonnull final Condition<T, ?> condition)
+      throws DataAccessException {
     setCurrentTime(t, entityInfo.getUpdateTimeField());
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
@@ -341,9 +358,9 @@ public final class Update<T> {
             });
     // 没有条件时,默认根据id更新
     if (condition.isEmpty()) {
-      this.condition.eq(idField, BeanUtils.getFieldValue(t, idField));
+      condition.eq(idField, BeanUtils.getFieldValue(t, idField));
     }
-    this.condition.appendLogicNotDelete();
+    condition.appendLogicNotDelete();
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder, condition.getString());
@@ -392,9 +409,10 @@ public final class Update<T> {
             setBuilder.append(
                 String.format(
                     setBuilder.length() > 0 ? ",%s=?" : "%s=?", EntityUtils.fieldToColumn(field))));
+    LambdaCondition<T> condition = LambdaCondition.of(clazz);
     // 保证占位符对应
-    this.condition.eq(idField, null);
-    this.condition.appendLogicNotDelete();
+    condition.eq(idField, null);
+    condition.appendLogicNotDelete();
     final String sql = "UPDATE %s SET %s WHERE %s";
     final String execSql =
         String.format(sql, entityInfo.getName(), setBuilder, condition.getString());
@@ -440,12 +458,12 @@ public final class Update<T> {
    * @return 删除记录数 int
    * @throws DataAccessException 如果执行失败
    */
-  public int delete() throws DataAccessException {
+  public int delete(@Nonnull final Condition<T, ?> condition) throws DataAccessException {
     // 不包含删除条件,抛异常
     if (condition.isEmpty()) {
       throw new NotAllowedDataAccessException("Must contain delete condition");
     }
-    this.condition.appendLogicNotDelete();
+    condition.appendLogicNotDelete();
     // 如果不支持逻辑删除
     if (!entityInfo.getLogicDeleteProp().isEnable()) {
       final String delSql = "delete from %s where %s";

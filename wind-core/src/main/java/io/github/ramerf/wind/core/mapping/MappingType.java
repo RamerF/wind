@@ -87,8 +87,7 @@ public enum MappingType {
       if (joinField == null) {
         throw new IllegalArgumentException(
             String.format(
-                "Error to parse %s,could not found join field %s in %s",
-                field, joinFieldStr, clazz));
+                "Error to parse %s,required field [%s] in %s", field, joinFieldStr, clazz));
       }
       mappingInfo.setJoinColumn(
           EntityHelper.getEntityIdField(targetClazz).getName()

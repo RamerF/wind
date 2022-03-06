@@ -1,9 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.executor.Executor;
-import io.github.ramerf.wind.core.executor.SimpleJdbcExecutor;
-import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import io.github.ramerf.wind.core.plugin.Interceptor;
 import io.github.ramerf.wind.core.plugin.InterceptorChain;
 import io.github.ramerf.wind.core.support.IdGenerator;
@@ -23,8 +20,11 @@ public class Configuration {
   /** 逻辑删除配置. */
   protected LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
 
-  /** entity所在包路径,多个以,分割.<br> */
+  /** entity所在包路径,多个以,分割. */
   protected String entityPackage = "";
+
+  /** 拦截器所在包路径,多个以,分割. */
+  protected String interceptorPackage = "";
 
   /** 批量操作时,每次处理的大小. */
   protected int batchSize = 500;
@@ -47,13 +47,9 @@ public class Configuration {
   /** 拦截器 */
   protected final InterceptorChain interceptorChain = new InterceptorChain();
 
+  /** 添加拦截器. */
   public void addInterceptor(Interceptor interceptor) {
     interceptorChain.addInterceptor(interceptor);
-  }
-
-  public Executor newExecutor(Transaction transaction) {
-    Executor executor = new SimpleJdbcExecutor(this, transaction);
-    return (Executor) interceptorChain.pluginAll(executor);
   }
 
   public enum DdlAuto {

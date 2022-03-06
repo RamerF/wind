@@ -1,0 +1,56 @@
+package io.github.ramerf.wind.core.plugin;
+
+import io.github.ramerf.wind.core.executor.Query;
+import io.github.ramerf.wind.core.executor.Update;
+import io.github.ramerf.wind.core.util.BeanUtils;
+import java.lang.reflect.Proxy;
+import java.util.*;
+import net.sf.cglib.proxy.Enhancer;
+
+public class Plugins {
+  public static final Set<String> UPDATE_METHODS;
+  public static final Set<String> QUERY_METHODS;
+
+  static {
+    Set<String> updateMethods = new HashSet<>();
+    updateMethods.add("create");
+    updateMethods.add("createBatch");
+    updateMethods.add("update");
+    updateMethods.add("updateBatch");
+    updateMethods.add("delete");
+    UPDATE_METHODS = Collections.unmodifiableSet(updateMethods);
+
+    Set<String> queryMethods = new HashSet<>();
+    queryMethods.add("fetchOne");
+    queryMethods.add("fetchAll");
+    queryMethods.add("fetchPage");
+    queryMethods.add("fetchCount");
+    queryMethods.add("fetchOneBySql");
+    queryMethods.add("fetchListBySql");
+    queryMethods.add("countBySql");
+    QUERY_METHODS = Collections.unmodifiableSet(queryMethods);
+  }
+
+  public static Object wrap(Object target, Interceptor interceptor, final Object[] args) {
+    Class<?> clazz = target.getClass();
+    Class<?>[] interfaces = BeanUtils.getAllInterfaces(clazz);
+    if (interfaces.length > 0) {
+      return Proxy.newProxyInstance(
+          clazz.getClassLoader(), interfaces, new PluginJdkProxy(target, interceptor));
+    } else if (Query.class.isAssignableFrom(clazz) || Update.class.isAssignableFrom(clazz)) {
+      Enhancer enhancer = new Enhancer();
+      // 继承被代理类
+      enhancer.setSuperclass(target.getClass());
+      // 设置回调
+      enhancer.setCallback(new PluginCglibProxy(target, interceptor));
+      if (Query.class.isAssignableFrom(clazz)) {
+        target = enhancer.create(new Class[] {Class.class}, args);
+      } else
+        target =
+            args.length == 1
+                ? enhancer.create(new Class[] {Class.class}, args)
+                : enhancer.create(new Class[] {Class.class, boolean.class}, args);
+    }
+    return target;
+  }
+}

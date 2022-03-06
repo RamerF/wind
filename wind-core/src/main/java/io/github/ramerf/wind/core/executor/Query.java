@@ -67,7 +67,8 @@ public class Query<T> {
     EntityHelper.getEntityInfo(clazz);
     final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
     this.executor =
-        configuration.newExecutor(
+        new SimpleJdbcExecutor(
+            configuration,
             jdbcEnvironment
                 .getTransactionFactory()
                 .newTransaction(jdbcEnvironment.getDataSource()));
@@ -78,8 +79,11 @@ public class Query<T> {
    *
    * @return the instance
    */
+  @SuppressWarnings("unchecked")
   public static <T> Query<T> getInstance(final Class<T> clazz) {
-    return new Query<>(clazz);
+    final Query<T> query = new Query<>(clazz);
+    return (Query<T>)
+        configuration.getInterceptorChain().pluginAll(query, clazz, new Object[] {clazz});
   }
 
   /** 指定查询列. */

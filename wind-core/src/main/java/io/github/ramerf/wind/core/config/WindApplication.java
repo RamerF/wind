@@ -4,12 +4,15 @@ import io.github.ramerf.wind.WindVersion;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.ansi.*;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration;
+import io.github.ramerf.wind.core.exception.ClassInstantiationException;
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
+import io.github.ramerf.wind.core.plugin.Interceptor;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
 import java.util.Set;
@@ -47,24 +50,42 @@ public class WindApplication {
     final DataSource dataSource = jdbcEnvironment.getDataSource();
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, configuration.getDialect()));
     windContext.setConfiguration(configuration);
-    try {
-      // 打印banner
-      printBanner();
-      // 初始化Query/Update
-      Update.initial(windContext);
-      Query.initial(windContext);
-      // 初始化实体解析类
-      EntityUtils.initial(windContext);
-      EntityHelper.initial(windContext);
-      // 解析实体元数据
-      initEntityInfo(windContext.getConfiguration());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    // 设置拦截器
+    populateInterceptors(configuration);
+    // 打印banner
+    printBanner();
+    // 初始化Query/Update
+    Update.initial(windContext);
+    Query.initial(windContext);
+    // 初始化实体解析类
+    EntityUtils.initial(windContext);
+    EntityHelper.initial(windContext);
+    // 解析实体元数据
+    initEntityInfo(windContext.getConfiguration());
   }
 
   public static WindContext getWindContext() {
     return windContext;
+  }
+
+  private static void populateInterceptors(final Configuration configuration) {
+    final String interceptorPackage = configuration.getInterceptorPackage();
+    if (StringUtils.nonEmpty(interceptorPackage)) {
+      try {
+        final Set<Class<? extends Interceptor>> classes =
+            BeanUtils.scanClasses(interceptorPackage, Interceptor.class);
+        for (Class<? extends Interceptor> clazz : classes) {
+          try {
+            configuration.addInterceptor(BeanUtils.initial(clazz));
+          } catch (ClassInstantiationException e) {
+            throw new WindException(
+                "Fail to initial interceptor:" + clazz + ",require no arg constructor", e);
+          }
+        }
+      } catch (IOException e) {
+        log.warn("Fail to populate interceptors:" + interceptorPackage, e);
+      }
+    }
   }
 
   private static void printBanner() {
@@ -85,7 +106,6 @@ public class WindApplication {
   }
 
   private static void initEntityInfo(final Configuration configuration) {
-    String scanBasePackages;
     String entityPackage;
     if (StringUtils.nonEmpty(configuration.getEntityPackage())) {
       entityPackage = configuration.getEntityPackage();
@@ -102,7 +122,7 @@ public class WindApplication {
             entityPackage);
       }
     } catch (IOException e) {
-      log.warn("initEntityInfo:fail to init entity info[{}]", e.getMessage());
+      log.warn("Fail to init entity info:" + entityPackage, e);
       return;
     }
     if (!entities.isEmpty()) {

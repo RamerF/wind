@@ -35,14 +35,14 @@ public class AutoConfigConfiguration {
   /** entity所在包路径,多个以,分割.<br> */
   private String entityPackage = "";
 
+  /** 拦截器所在包路径,多个以,分割. */
+  protected String interceptorPackage = "";
+
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 500;
 
   /** 表更新模式. */
   private DdlAuto ddlAuto = DdlAuto.NONE;
-
-  /** 数据库方言全路径. */
-  private String dialect;
 
   /** 新增/更新时写入值为null的属性,默认写入所有字段. */
   private boolean writeNullProp = true;
@@ -56,6 +56,9 @@ public class AutoConfigConfiguration {
   public static class DataSourceConfig {
     /** 事务工厂. */
     private Class<? extends TransactionFactory> transactionFactory = JdbcTransactionFactory.class;
+
+    /** 数据库方言全路径. */
+    private String dialect;
 
     /** 定义数据源属性,根据不同的数据源使用不同的属性 */
     @Getter private Map<String, String> properties;
@@ -78,9 +81,10 @@ public class AutoConfigConfiguration {
     Configuration configuration = new Configuration();
     configuration.setLogicDeleteProp(logicDeleteProp);
     configuration.setEntityPackage(entityPackage);
+    configuration.setInterceptorPackage(interceptorPackage);
     configuration.setBatchSize(batchSize);
     configuration.setDdlAuto(ddlAuto);
-    configuration.setDialect(dialect);
+    configuration.setDialect(dataSource.getDialect());
     configuration.setWriteNullProp(writeNullProp);
     if (StringUtils.hasText(idGenerator)) {
       try {

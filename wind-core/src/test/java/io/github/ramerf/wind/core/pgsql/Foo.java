@@ -115,7 +115,7 @@ public class Foo extends Domain<Foo, Long> {
   @UpdateTimestamp private LocalDateTime updateTime;
 
   @OneToOne private FooSub fooSub;
-  private String fooSubNames;
+  private String fooSubName;
 
   public enum Type implements InterEnum<Integer> {
     /** 商品类别 */

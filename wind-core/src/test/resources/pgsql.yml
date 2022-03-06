@@ -3,10 +3,12 @@ wind:
   ddl-auto: update
   # entity所在包路径,多个以,分割
   entity-package: io.github.ramerf.wind.core.pgsql
+  # 拦截器所在包路径,多个以,分割
+  interceptor-package: io.github.ramerf.wind.core.pgsql
   data-source:
     transaction-factory: io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory
     druid:
-      url: jdbc:postgresql://localhost:5432/wind_refactor?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true
+      url: jdbc:postgresql://localhost:5432/wind?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true
       username: postgres
       password: 123456
       driver-class-name: org.postgresql.Driver

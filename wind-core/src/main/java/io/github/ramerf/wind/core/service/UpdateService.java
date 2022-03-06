@@ -113,7 +113,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
       final Class<T> clazz = (Class<T>) object.getClass();
       return getUpdate(clazz).update(object, fields);
     }
-    return getUpdate(cnd.getClazz()).where(cnd.getCondition()).update(object, fields);
+    return getUpdate(cnd.getClazz()).update(object, fields, cnd.getCondition());
   }
 
   /**
@@ -157,9 +157,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    */
   default int delete(final ID id) throws DataAccessException {
     final LambdaCondition<T> condition = LambdaCondition.of(getPoJoClass());
-    return getUpdate()
-        .where(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id))
-        .delete();
+    return getUpdate().delete(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id));
   }
 
   /**
@@ -176,7 +174,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
     }
     final LambdaCondition<T> condition = LambdaCondition.of(getPoJoClass());
     condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids);
-    final int affectRow = getUpdate().where(condition).delete();
+    final int affectRow = getUpdate().delete(condition);
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);
   }
 
@@ -192,6 +190,6 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @see DataAccessException
    */
   default int delete(@Nonnull Condition<T, ?> condition) throws DataAccessException {
-    return getUpdate().where(condition).delete();
+    return getUpdate().delete(condition);
   }
 }

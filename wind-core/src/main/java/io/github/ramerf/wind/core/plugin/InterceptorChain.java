@@ -6,9 +6,11 @@ public class InterceptorChain {
 
   private final List<Interceptor> interceptors = new ArrayList<>();
 
-  public Object pluginAll(Object target) {
+  public Object pluginAll(Object target, final Class<?> clazz, final Object[] args) {
     for (Interceptor interceptor : interceptors) {
-      target = interceptor.plugin(target);
+      if (interceptor.supports(clazz)) {
+        target = interceptor.plugin(target, args);
+      }
     }
     return target;
   }

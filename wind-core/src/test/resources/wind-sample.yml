@@ -1,15 +1,33 @@
 wind:
-  ddl-auto: update
   # entity所在包路径,多个以,分割
-  entity-package: io.github.ramerf.wind.core.mysql
+  entity-package: io.github.ramerf.wind.core.pgsql
+  # 拦截器所在包路径,多个以,分割
+  interceptor-package: io.github.ramerf.wind.core.pgsql
+  # 批量操作时,每次处理的大小
+  batch-size: 500
+  # 自动建表
+  ddl-auto: update
+  # 新增/更新时写入值为null的属性,默认写入所有字段.
+  write-null-prop: true
+  # 全局id生成器,类全路径
+  id-generator: io.github.ramerf.wind.core.support.IdGenerator$AutoIncrementIdGenerator
+  # 逻辑删除
   logic-delete-prop:
+    # 是否开启逻辑删除
     enable: true
-    deleted: false
+    # 逻辑已删除值
+    deleted: true
+    # 逻辑未删除值
+    not-deleted: false
+    # 逻辑删除字段
     field-name: deleted
   data-source:
+    # 数据库方言全路径
+    dialect: io.github.ramerf.wind.core.dialect.postgresql.PostgreSQL95Dialect
     transaction-factory: io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory
+    # 数据源类型,支持 dbcp,hikari,druid
     druid:
-      url: jdbc:postgresql://localhost:5432/wind_refactor?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true
+      url: jdbc:postgresql://localhost:5432/wind?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true
       username: postgres
       password: 123456
       driver-class-name: org.postgresql.Driver

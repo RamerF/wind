@@ -6,6 +6,8 @@ import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.executor.Update;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
+import io.github.ramerf.wind.core.plugin.Interceptor;
+import io.github.ramerf.wind.core.plugin.Invocation;
 import io.github.ramerf.wind.core.service.GenericService;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -284,5 +286,23 @@ public class BaseServiceTest {
   public static class IdNameResponse {
     private Long id;
     private String name;
+  }
+
+  /** 自定义拦截器. */
+  public static class FooInterceptor implements Interceptor {
+    @Override
+    public boolean supports(final Class<?> clazz) {
+      return Foo.class.isAssignableFrom(clazz);
+    }
+
+    @Override
+    public Object intercept(final Invocation invocation) throws Throwable {
+      log.info("intercept:[{}]", "---------Foo Interceptor---------");
+      log.info("intercept:[{}]", invocation.getTarget());
+      log.info("intercept:[{}]", invocation.getMethod());
+      log.info("intercept:[{}]", invocation.getArgs());
+      log.info("intercept:[{}]", invocation.getExecType());
+      return invocation.proceed();
+    }
   }
 }

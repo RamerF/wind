@@ -333,4 +333,14 @@ public final class BeanUtils {
     }
     return clazz;
   }
+
+  /** 获取所有接口. */
+  public static Class<?>[] getAllInterfaces(Class<?> type) {
+    Set<Class<?>> interfaces = new HashSet<>();
+    while (type != null) {
+      interfaces.addAll(Arrays.asList(type.getInterfaces()));
+      type = type.getSuperclass();
+    }
+    return interfaces.toArray(new Class<?>[0]);
+  }
 }
