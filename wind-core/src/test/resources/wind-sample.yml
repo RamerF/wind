@@ -25,9 +25,21 @@ wind:
     # 数据库方言全路径
     dialect: io.github.ramerf.wind.core.dialect.postgresql.PostgreSQL95Dialect
     transaction-factory: io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory
-    # 数据源类型,支持 dbcp,hikari,druid
+    # 数据源连接池类型,支持 dbcp,hikari,druid
     druid:
       url: jdbc:postgresql://localhost:5432/wind?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&reWriteBatchedInserts=true
       username: postgres
       password: 123456
       driver-class-name: org.postgresql.Driver
+    # 动态数据源定义
+#    dynamic-data-source:
+#      数据源名称-1:
+#        url:
+#        username:
+#        password:
+#        driver-class-name:
+#      数据源名称-2:
+#        url:
+#        username:
+#        password:
+#        driver-class-name:

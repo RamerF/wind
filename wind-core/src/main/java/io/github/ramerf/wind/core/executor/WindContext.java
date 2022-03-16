@@ -1,6 +1,6 @@
-package io.github.ramerf.wind.core.config;
+package io.github.ramerf.wind.core.executor;
 
-import io.github.ramerf.wind.core.metadata.DbMetaData;
+import io.github.ramerf.wind.core.config.Configuration;
 import lombok.Data;
 
 /**
@@ -12,8 +12,6 @@ import lombok.Data;
 @Data
 public class WindContext {
   WindContext() {}
-
-  private DbMetaData dbMetaData;
 
   private Configuration configuration;
 }

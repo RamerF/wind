@@ -9,6 +9,7 @@ import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,12 +19,9 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   default long count(@Nullable final Cnd<T, ?, ?> cnd) {
     if (cnd == null) {
       Class<T> clazz = getPoJoClass();
-      return getQuery(clazz).select(null).where(LambdaCondition.of(clazz)).fetchCount(clazz);
+      return getQuery(clazz).fetchCount(LambdaCondition.of(clazz), clazz);
     }
-    return getQuery(cnd.getClazz())
-        .select(null)
-        .where(cnd.getCondition())
-        .fetchCount(cnd.getClazz());
+    return getQuery(cnd.getClazz()).fetchCount(cnd.getCondition(), cnd.getClazz());
   }
 
   /** 通过id获取对象. */
@@ -59,11 +57,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   /** 获取单个对象,指定字段,返回指定对象. */
   default <R> R getOne(
       final Cnd<T, ?, ?> cnd, @Nullable final Fields<T> fields, @Nonnull final Class<R> respClazz) {
-    return getQuery(cnd.getClazz())
-        .select(fields)
-        .where(cnd.getCondition())
-        .pageable(cnd.getPageRequest())
-        .fetchOne(respClazz);
+    return getQuery(cnd.getClazz()).fetchOne(cnd.getCondition(), fields, respClazz);
   }
 
   /** 通过id集合查询列表. */
@@ -77,12 +71,9 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
       return Collections.emptyList();
     }
     final Class<T> clazz = getPoJoClass();
-    return getQuery()
-        .select(fields)
-        .where(
-            LambdaCondition.of(clazz)
-                .in(EntityHelper.getEntityInfo(clazz).getIdColumn().getField(), ids))
-        .fetchAll(clazz);
+    final Field id = EntityHelper.getEntityInfo(clazz).getIdColumn().getField();
+    final LambdaCondition<T> condition = LambdaCondition.of(clazz).in(id, ids);
+    return getQuery().fetchAll(condition, fields, clazz);
   }
 
   /** 列表查询对象. */
@@ -104,10 +95,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   default <R> List<R> list(
       @Nonnull final Cnd<T, ?, ?> cnd, final Fields<T> fields, @Nonnull final Class<R> respClazz) {
     return getQuery(cnd.getClazz())
-        .select(fields)
-        .where(cnd.getCondition())
-        .pageable(cnd.getPageRequest())
-        .fetchAll(respClazz);
+        .fetchAll(cnd.getCondition(), cnd.getPageRequest(), fields, respClazz);
   }
 
   /** 分页查询对象. */
@@ -139,10 +127,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
       @Nullable final Fields<T> fields,
       @Nonnull final Class<R> respClazz) {
     return getQuery(cnd.getClazz())
-        .select(fields)
-        .where(cnd.getCondition())
-        .pageable(cnd.getPageRequest())
-        .fetchPage(respClazz);
+        .fetchPage(cnd.getCondition(), cnd.getPageRequest(), fields, respClazz);
   }
 
   /** 查询所有关联对象. */

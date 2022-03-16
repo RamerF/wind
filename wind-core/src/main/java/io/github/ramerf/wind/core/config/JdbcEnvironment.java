@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
+import io.github.ramerf.wind.core.metadata.DbMetaData;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.Getter;
 public final class JdbcEnvironment {
   @Getter private final TransactionFactory transactionFactory;
   @Getter private final DataSource dataSource;
+  private DbMetaData dbMetaData;
 
   public JdbcEnvironment(
       @Nonnull final TransactionFactory transactionFactory, @Nonnull final DataSource dataSource) {

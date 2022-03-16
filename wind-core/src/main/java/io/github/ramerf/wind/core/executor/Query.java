@@ -3,9 +3,9 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
-import io.github.ramerf.wind.core.config.*;
-import io.github.ramerf.wind.core.domain.Page;
-import io.github.ramerf.wind.core.domain.Pageable;
+import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.JdbcEnvironment;
+import io.github.ramerf.wind.core.domain.*;
 import io.github.ramerf.wind.core.executor.Executor.SqlParam;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.handler.ResultHandlerUtil;
@@ -45,24 +45,14 @@ import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.WHERE;
  * @since 2019/12/28
  */
 @Slf4j
-public class Query<T> {
-  private Fields<T> fields;
-
-  private Condition<?, ?> condition;
-  private Pageable pageable = Pageable.unpaged();
-
+public class Query<T> implements Dao {
   private final Executor executor;
   // TODO WARN 如果要支持多数据源这里要改下
-  private static WindContext windContext;
-  private static Configuration configuration;
+  private final Configuration configuration;
   private final Class<T> clazz;
 
-  public static void initial(final WindContext windContext) {
-    Query.windContext = windContext;
-    Query.configuration = windContext.getConfiguration();
-  }
-
-  public Query(final Class<T> clazz) {
+  public Query(final Configuration configuration, final Class<T> clazz) {
+    this.configuration = configuration;
     this.clazz = clazz;
     EntityHelper.getEntityInfo(clazz);
     final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
@@ -80,16 +70,13 @@ public class Query<T> {
    * @return the instance
    */
   @SuppressWarnings("unchecked")
-  public static <T> Query<T> getInstance(final Class<T> clazz) {
-    final Query<T> query = new Query<>(clazz);
+  public static <T> Query<T> getInstance(
+      @Nonnull final Configuration configuration, @Nonnull final Class<T> clazz) {
+    final Query<T> query = new Query<>(configuration, clazz);
     return (Query<T>)
-        configuration.getInterceptorChain().pluginAll(query, clazz, new Object[] {clazz});
-  }
-
-  /** 指定查询列. */
-  public final QueryWhere<T> select(final Fields<T> fields) {
-    this.fields = fields;
-    return new QueryWhere<>(this);
+        configuration
+            .getInterceptorChain()
+            .pluginAll(query, clazz, new Object[] {configuration, clazz});
   }
 
   /** 自定义sql查询单个. */
@@ -123,219 +110,215 @@ public class Query<T> {
         .orElseGet(() -> (Long) BeanUtils.getPrimitiveDefaultValue(long.class));
   }
 
-  public static class QueryWhere<T> {
-    private final Query<T> query;
-
-    QueryWhere(final Query<T> query) {
-      this.query = query;
-    }
-
-    /** 指定查询条件. */
-    public QueryExecutor<T> where(@Nonnull final Condition<?, ?> condition) {
-      // 拼接逻辑删除
-      query.condition = condition.appendLogicNotDelete();
-      return new QueryExecutor<>(this.query);
-    }
+  /** 查询单条记录. */
+  public T fetchOne(@Nonnull final Condition<?, ?> condition) {
+    return fetchOne(condition, null);
   }
 
-  public static class QueryExecutor<T> {
-    private final Query<T> query;
+  /** 查询单条记录. */
+  public T fetchOne(@Nonnull final Condition<?, ?> condition, final Fields<T> fields) {
+    return fetchOne(condition, null, clazz);
+  }
 
-    QueryExecutor(final Query<T> query) {
-      this.query = query;
+  /** 查询单条记录. */
+  public <R> R fetchOne(
+      @Nonnull final Condition<?, ?> condition, final Fields<T> fields, final Class<R> clazz) {
+    return fetchOne(condition, null, clazz, null);
+  }
+
+  /** 查询单条记录. */
+  public <R> R fetchOne(
+      @Nonnull final Condition<?, ?> condition,
+      final Fields<T> fields,
+      final Class<R> clazz,
+      final ResultHandler<R> resultHandler) {
+    final String orderByClause = getOrderByClause(null);
+    final String conditionClause = getConditionClause(condition);
+    final String limitClause = getLimitClause(null);
+
+    final String templateSql = "select %s from %s%s";
+    final String sql =
+        String.format(
+            templateSql,
+            getQueryString(fields),
+            getTableName(),
+            conditionClause.concat(orderByClause).concat(limitClause));
+    if (log.isTraceEnabled()) {
+      log.debug("fetchOne:[{}]", sql);
     }
+    return executor.fetchOne(
+        new SqlParam<T>()
+            .setSql(sql)
+            .setClazz(clazz == null ? this.clazz : clazz)
+            .setCondition(condition)
+            .setStartIndex(new AtomicInteger(1)),
+        resultHandler);
+  }
 
-    /**
-     * 指定分页和排序.示例:<br>
-     * <li><code>PageRequest.of(1);</code>
-     * <li><code>PageRequest.of(1, 10).desc(Foo::setId);</code>
-     * <li><code>cnds.limit(1);</code>
-     * <li><code>cnds.limit(1, 10).orderBy(Foo::setId);</code>
-     * <li><code>Pageable.unpaged();</code>
-     */
-    public QueryExecutor<T> pageable(@Nonnull final Pageable pageRequest) {
-      query.pageable = pageRequest;
-      return this;
+  /** 查询列表. */
+  public List<T> fetchAll(@Nonnull final Condition<T, ?> condition) {
+    return fetchAll(condition, null);
+  }
+
+  /** 查询列表. */
+  public List<T> fetchAll(@Nonnull final Condition<T, ?> condition, final Fields<T> fields) {
+    return fetchAll(condition, fields, null);
+  }
+
+  /** 查询列表,返回指定对象. */
+  public <R> List<R> fetchAll(
+      @Nonnull final Condition<T, ?> condition, final Fields<T> fields, final Class<R> clazz) {
+    return fetchAll(condition, null, fields, clazz);
+  }
+
+  /** 查询列表,查询指定页,返回指定对象. */
+  public <R> List<R> fetchAll(
+      @Nonnull final Condition<T, ?> condition,
+      final Pageable pageable,
+      final Fields<T> fields,
+      final Class<R> clazz) {
+    final String orderByClause = getOrderByClause(pageable);
+    final String conditionClause = getConditionClause(condition);
+    final String limitClause = getLimitClause(pageable);
+
+    final String templateSql = "select %s from %s%s";
+    final String sql =
+        String.format(
+            templateSql,
+            getQueryString(fields),
+            getTableName(),
+            conditionClause.concat(orderByClause).concat(limitClause));
+    if (log.isTraceEnabled()) {
+      log.debug("fetchAll:[{}]", sql);
     }
+    return executor.fetchAll(
+        new SqlParam<T>()
+            .setSql(sql)
+            .setClazz(clazz == null ? this.clazz : clazz)
+            .setCondition(condition)
+            .setStartIndex(new AtomicInteger(1)),
+        clazz);
+  }
 
-    /**
-     * 查询单条记录.
-     *
-     * @param <R> the type parameter
-     * @param clazz the clazz
-     * @return the r
-     */
-    public <R> R fetchOne(final Class<R> clazz) {
-      return fetchOne(clazz, null);
+  /**
+   * 分页查询.
+   *
+   * @param pageable 指定分页和排序.示例:
+   *     <pre>
+   *     <li><code>PageRequest.of(1);</code>
+   *     <li><code>PageRequest.of(1, 10).desc(Foo::setId);</code>
+   *     <li><code>cnds.limit(1);</code>
+   *     <li><code>cnds.limit(1, 10).orderBy(Foo::setId);</code>
+   *     <li><code>Pageable.unpaged();</code>
+   *     </pre>
+   */
+  public <R> Page<R> fetchPage(
+      final Condition<?, ?> condition,
+      final Pageable pageable,
+      final Fields<T> fields,
+      final Class<R> clazz) {
+    final String orderByClause = getOrderByClause(pageable);
+    final String conditionClause = getConditionClause(condition);
+    final String limitClause = getLimitClause(pageable);
+
+    final String templateSql = "select %s from %s%s";
+    final String sql =
+        String.format(
+            templateSql,
+            getQueryString(fields),
+            getTableName(),
+            conditionClause.concat(orderByClause).concat(limitClause));
+    if (log.isTraceEnabled()) {
+      log.debug("fetchPage:[{}]", sql);
     }
+    return this.executor.fetchPage(
+        new SqlParam<T>()
+            .setSql(sql)
+            .setClazz(clazz)
+            .setCondition(condition)
+            .setStartIndex(new AtomicInteger(1)),
+        pageable,
+        fetchCount(condition, this.clazz));
+  }
 
-    /**
-     * 查询单条记录.
-     *
-     * @param <R> the type parameter
-     * @param clazz the clazz
-     * @return the r
-     */
-    public <R> R fetchOne(final Class<R> clazz, final ResultHandler<R> resultHandler) {
-      final String orderByClause = getOrderByClause();
-      final String conditionClause = getConditionClause();
-      final String limitClause = getLimitClause();
-
-      final String templateSql = "select %s from %s%s";
-      final String sql =
-          String.format(
-              templateSql,
-              getQueryString(this.query.fields),
-              getTableName(),
-              conditionClause.concat(orderByClause).concat(limitClause));
-      if (log.isTraceEnabled()) {
-        log.debug("fetchOne:[{}]", sql);
-      }
-      return query.executor.fetchOne(
-          new SqlParam<T>()
-              .setSql(sql)
-              .setClazz(clazz)
-              .setCondition(query.condition)
-              .setStartIndex(new AtomicInteger(1)),
-          resultHandler);
+  /** 获取查询列.{@code fields}为null时,根据配置判断是否写入null字段;当排除不为空时,忽略全局是否写入空配置 */
+  private String getQueryString(final Fields<T> fields) {
+    if (fields == null)
+      return EntityUtils.getAllColumnFields(this.clazz, null).stream()
+          .map(EntityUtils::fieldToColumn)
+          .collect(Collectors.joining(","));
+    final Collection<Field> queryFields;
+    final Set<Field> includeFields = fields.getIncludeFields();
+    final Set<Field> excludeFields = fields.getExcludeFields();
+    if (!includeFields.isEmpty()) {
+      queryFields =
+          excludeFields.isEmpty()
+              ? includeFields
+              : includeFields.stream()
+                  .filter(include -> !excludeFields.contains(include))
+                  .collect(Collectors.toSet());
+    } else {
+      final List<Field> allColumnFields = EntityUtils.getAllColumnFields(this.clazz, null);
+      // 当排除不为空时,忽略是否写入空配置
+      queryFields =
+          excludeFields.isEmpty()
+              ? allColumnFields
+              : allColumnFields.stream()
+                  .filter(include -> !excludeFields.contains(include))
+                  .collect(Collectors.toSet());
     }
+    return queryFields.stream().map(EntityUtils::fieldToColumn).collect(Collectors.joining(","));
+  }
 
-    /**
-     * 查询列表.
-     *
-     * @param <R> the type parameter
-     * @param clazz the clazz
-     * @return the list
-     */
-    public <R> List<R> fetchAll(final Class<R> clazz) {
-      final String orderByClause = getOrderByClause();
-      final String conditionClause = getConditionClause();
-      final String limitClause = getLimitClause();
+  private String getTableName() {
+    EntityInfo entityInfo = EntityHelper.getEntityInfo(this.clazz);
+    return entityInfo.getName();
+  }
 
-      final String templateSql = "select %s from %s%s";
-      final String sql =
-          String.format(
-              templateSql,
-              getQueryString(this.query.fields),
-              getTableName(),
-              conditionClause.concat(orderByClause).concat(limitClause));
-      if (log.isTraceEnabled()) {
-        log.debug("fetchAll:[{}]", sql);
-      }
-      return query.executor.fetchAll(
-          new SqlParam<T>()
-              .setSql(sql)
-              .setClazz(clazz)
-              .setCondition(query.condition)
-              .setStartIndex(new AtomicInteger(1)),
-          clazz);
-    }
+  private String getConditionClause(Condition<?, ?> condition) {
+    condition = condition.appendLogicNotDelete();
+    return condition.isEmpty() ? "" : WHERE.operator().concat(condition.getString());
+  }
 
-    /**
-     * 分页查询.
-     *
-     * @param <R> the type parameter
-     * @param clazz the clazz
-     * @return the page
-     */
-    public <R> Page<R> fetchPage(final Class<R> clazz) {
-      final String orderByClause = getOrderByClause();
-      final String conditionClause = getConditionClause();
-      final String limitClause = getLimitClause();
-
-      final String templateSql = "select %s from %s%s";
-      final String sql =
-          String.format(
-              templateSql,
-              getQueryString(this.query.fields),
-              getTableName(),
-              conditionClause.concat(orderByClause).concat(limitClause));
-      if (log.isTraceEnabled()) {
-        log.debug("fetchPage:[{}]", sql);
-      }
-      return query.executor.fetchPage(
-          new SqlParam<T>()
-              .setSql(sql)
-              .setClazz(clazz)
-              .setCondition(query.condition)
-              .setStartIndex(new AtomicInteger(1)),
-          query.pageable,
-          fetchCount(query.clazz));
-    }
-
-    /**
-     * count查询.
-     *
-     * @return long long
-     */
-    public long fetchCount(final Class<T> clazz) {
-      final String conditionClause = getConditionClause();
-      final String sql =
-          conditionClause.contains(GROUP_BY.operator())
-              ? "select sum(b.a) from (select 1 a from %s%s) b"
-              : "select count(1) from %s%s";
-      return query.executor.fetchCount(
-          new SqlParam<T>()
-              .setSql(String.format(sql, getTableName(), conditionClause))
-              .setClazz(Long.class)
-              .setEntityClazz(clazz)
-              .setAggregateFunction(AggregateSqlFunction.COUNT)
-              .setCondition(query.condition)
-              .setStartIndex(new AtomicInteger(1)));
-    }
-
-    /** 获取查询列.{@code fields}为null时,根据配置判断是否写入null字段;当排除不为空时,忽略全局是否写入空配置 */
-    private String getQueryString(final Fields<T> fields) {
-      if (fields == null)
-        return EntityUtils.getAllColumnFields(this.query.clazz, null).stream()
-            .map(EntityUtils::fieldToColumn)
+  private String getOrderByClause(final Pageable pageRequest) {
+    Pageable pageable = pageRequest == null ? Pageable.unpaged() : pageRequest;
+    if (pageable == null) return "";
+    String orderBy =
+        pageable.getSort().stream()
+            .map(s -> s.getProperty().concat(" ").concat(s.getDirection().name()))
             .collect(Collectors.joining(","));
-      final Collection<Field> queryFields;
-      final Set<Field> includeFields = fields.getIncludeFields();
-      final Set<Field> excludeFields = fields.getExcludeFields();
-      if (!includeFields.isEmpty()) {
-        queryFields =
-            excludeFields.isEmpty()
-                ? includeFields
-                : includeFields.stream()
-                    .filter(include -> !excludeFields.contains(include))
-                    .collect(Collectors.toSet());
-      } else {
-        final List<Field> allColumnFields = EntityUtils.getAllColumnFields(this.query.clazz, null);
-        // 当排除不为空时,忽略是否写入空配置
-        queryFields =
-            excludeFields.isEmpty()
-                ? allColumnFields
-                : allColumnFields.stream()
-                    .filter(include -> !excludeFields.contains(include))
-                    .collect(Collectors.toSet());
-      }
-      return queryFields.stream().map(EntityUtils::fieldToColumn).collect(Collectors.joining(","));
-    }
+    return orderBy.isEmpty() ? "" : " order by " + orderBy;
+  }
 
-    private String getTableName() {
-      EntityInfo entityInfo = EntityHelper.getEntityInfo(this.query.clazz);
-      return entityInfo.getName();
-    }
+  private String getLimitClause(final Pageable pageRequest) {
+    Pageable pageable = pageRequest == null ? Pageable.unpaged() : pageRequest;
+    return pageable.isPaged()
+        ? String.format(" limit %s offset %s", pageable.getPageSize(), pageable.getOffset())
+        : "";
+  }
+  /**
+   * count查询.
+   *
+   * @return long long
+   */
+  public long fetchCount(@Nonnull final Condition<?, ?> condition, final Class<T> clazz) {
+    final String conditionClause = getConditionClause(condition);
+    final String sql =
+        conditionClause.contains(GROUP_BY.operator())
+            ? "select sum(b.a) from (select 1 a from %s%s) b"
+            : "select count(1) from %s%s";
+    return this.executor.fetchCount(
+        new SqlParam<T>()
+            .setSql(String.format(sql, getTableName(), conditionClause))
+            .setClazz(Long.class)
+            .setEntityClazz(clazz)
+            .setAggregateFunction(AggregateSqlFunction.COUNT)
+            .setCondition(condition)
+            .setStartIndex(new AtomicInteger(1)));
+  }
 
-    private String getConditionClause() {
-      return query.condition.isEmpty() ? "" : WHERE.operator().concat(query.condition.getString());
-    }
-
-    private String getOrderByClause() {
-      if (query.pageable == null) return "";
-      String orderBy =
-          query.pageable.getSort().stream()
-              .map(s -> s.getProperty().concat(" ").concat(s.getDirection().name()))
-              .collect(Collectors.joining(","));
-      return orderBy.isEmpty() ? "" : " order by " + orderBy;
-    }
-
-    private String getLimitClause() {
-      return query.pageable.isPaged()
-          ? String.format(
-              " limit %s offset %s", query.pageable.getPageSize(), query.pageable.getOffset())
-          : "";
-    }
+  @Override
+  public Configuration getConfiguration() {
+    return this.configuration;
   }
 }

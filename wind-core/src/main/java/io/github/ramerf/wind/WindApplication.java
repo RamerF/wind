@@ -1,13 +1,14 @@
-package io.github.ramerf.wind.core.config;
+package io.github.ramerf.wind;
 
-import io.github.ramerf.wind.WindVersion;
+import io.github.ramerf.wind.core.WindVersion;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.ansi.*;
 import io.github.ramerf.wind.core.autoconfig.AutoConfigConfiguration;
+import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.exception.ClassInstantiationException;
 import io.github.ramerf.wind.core.exception.WindException;
-import io.github.ramerf.wind.core.executor.Query;
-import io.github.ramerf.wind.core.executor.Update;
+import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
@@ -56,7 +57,6 @@ public class WindApplication {
     printBanner();
     // 初始化Query/Update
     Update.initial(windContext);
-    Query.initial(windContext);
     // 初始化实体解析类
     EntityUtils.initial(windContext);
     EntityHelper.initial(windContext);
@@ -64,7 +64,7 @@ public class WindApplication {
     initEntityInfo(windContext.getConfiguration());
   }
 
-  public static WindContext getWindContext() {
+  static WindContext getWindContext() {
     return windContext;
   }
 

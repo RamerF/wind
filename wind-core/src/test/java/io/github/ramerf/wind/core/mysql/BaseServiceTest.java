@@ -1,10 +1,11 @@
 package io.github.ramerf.wind.core.mysql;
 
+import com.alibaba.druid.pool.DruidDataSource;
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.WindApplication;
+import io.github.ramerf.wind.WindApplication;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
-import io.github.ramerf.wind.core.executor.Update;
+import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.plugin.Interceptor;
 import io.github.ramerf.wind.core.plugin.Invocation;
@@ -304,5 +305,15 @@ public class BaseServiceTest {
       log.info("intercept:[{}]", invocation.getExecType());
       return invocation.proceed();
     }
+  }
+
+  public static void main(String[] args) {
+    DruidDataSource dataSource = new DruidDataSource();
+    dataSource.setUrl("jdbc:mysql:///wind");
+    dataSource.setUsername("root");
+    dataSource.setPassword("root");
+    final DaoFactory daoFactory = DaoFactory.newInstance(dataSource);
+    final Query<Foo> query = daoFactory.getQuery(Foo.class);
+    final Update<Foo> update = daoFactory.getUpdate(Foo.class);
   }
 }

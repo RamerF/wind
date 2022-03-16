@@ -40,13 +40,13 @@ public enum MappingType {
       final Field joinField = mappingInfo.getJoinField();
       final Class<T> targetClazz = mappingInfo.getTargetClazz();
       final Object relationValue = BeanUtils.getFieldValueIgnoreException(poJo, joinField);
-      return relationValue == null
-          ? null
-          : Query.getInstance(targetClazz)
-              .select(null)
-              .where(
-                  StringCondition.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue))
-              .fetchOne(targetClazz);
+      if (relationValue == null) {
+        return null;
+      } else {
+        final StringCondition<T> condition =
+            StringCondition.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue);
+        return Query.getInstance(targetClazz).select(null).where(condition).fetchOne(targetClazz);
+      }
     }
 
     @Override

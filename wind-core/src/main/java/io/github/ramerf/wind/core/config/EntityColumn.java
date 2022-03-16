@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.config;
 
+import io.github.ramerf.wind.WindApplication;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;

@@ -1,7 +1,8 @@
 package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
@@ -51,15 +52,15 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 @SuppressWarnings("unused")
-public class Update<T> {
+public class Update<T> implements Dao {
 
   private final Class<T> clazz;
   private Fields<T> fields;
   private final IdGenerator idGenerator;
   private final EntityInfo entityInfo;
   private final Executor executor;
-  private static WindContext windContext;
-  private static Configuration configuration;
+  private WindContext windContext;
+  private Configuration configuration;
   private final Field idField;
 
   public Update(@Nonnull final Class<T> clazz) {
@@ -628,5 +629,10 @@ public class Update<T> {
     } catch (SQLException e) {
       throw new WindException(e);
     }
+  }
+
+  @Override
+  public Configuration getConfiguration() {
+    return this.configuration;
   }
 }

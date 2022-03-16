@@ -28,23 +28,4 @@ public class PluginCglibProxy implements InvocationHandler {
       throw ExceptionUtil.unwrapThrowable(e);
     }
   }
-
-  //
-  // @Override
-  // public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy)
-  //     throws Throwable {
-  //   // 注意这里的方法调用，不是用反射哦！！！
-  //   log.info("cglib intercept:[{}]", obj.getClass());
-  //   log.info("cglib intercept:[{}]", method);
-  //   log.info("cglib intercept:[{}]", args);
-  //   log.info("cglib intercept:[{}]", proxy);
-  //   Object object = proxy.invokeSuper(obj, args);
-  //
-  //   try {
-  //     return interceptor.intercept(new Invocation(target, method, args));
-  //   } catch (Exception e) {
-  //     throw ExceptionUtil.unwrapThrowable(e);
-  //   }
-  //   return object;
-  // }
 }

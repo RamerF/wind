@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
-import io.github.ramerf.wind.core.executor.Query;
-import io.github.ramerf.wind.core.executor.Update;
+import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import java.io.Serializable;
 
@@ -20,7 +19,7 @@ public interface InterService<T, ID extends Serializable> {
    * @return the query
    */
   default Query<T> getQuery() {
-    return Query.getInstance(getPoJoClass());
+    return getQuery(getPoJoClass());
   }
 
   /**
@@ -28,9 +27,7 @@ public interface InterService<T, ID extends Serializable> {
    *
    * @return the query
    */
-  default <R> Query<R> getQuery(final Class<R> clazz) {
-    return Query.getInstance(clazz);
-  }
+  <R> Query<R> getQuery(final Class<R> clazz);
 
   /**
    * Gets update.

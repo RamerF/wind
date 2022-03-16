@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.pgsql;
 
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.WindApplication;
+import io.github.ramerf.wind.WindApplication;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.executor.Update;

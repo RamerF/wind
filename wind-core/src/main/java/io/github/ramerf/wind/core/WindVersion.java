@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.ramerf.wind;
+package io.github.ramerf.wind.core;
 
 /** Copy from {@link org.springframework.boot.SpringBootVersion}.<br> */
 public final class WindVersion {
