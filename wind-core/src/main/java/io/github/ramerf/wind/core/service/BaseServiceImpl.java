@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
 import io.github.ramerf.wind.core.executor.Dao;
-import io.github.ramerf.wind.core.executor.Query;
 import java.io.Serializable;
 
 /**
@@ -18,13 +17,13 @@ public abstract class BaseServiceImpl<T, ID extends Serializable> implements Bas
   }
 
   @Override
-  public <R> Query<R> getQuery(final Class<R> clazz) {
+  public Dao getDao() {
     // 扫描service实现类,如果有方法包含数据源时,代理一下,去configuration获取指定的,否则使用默认的
 
     // 获取当前线程绑定的数据源 TransactionSynchronizationManager.getConnection(  );
     // 先把dao层的动态代理demo了
     // TODO WARN 这里可以传数据源,否则使用默认数据源
-    return Query.getInstance(dao.getConfiguration(), clazz);
+    return dao;
   }
   // TODO WARN FooServiceImpl fooServiceImpl = new FooServiceImpl(dao);
 

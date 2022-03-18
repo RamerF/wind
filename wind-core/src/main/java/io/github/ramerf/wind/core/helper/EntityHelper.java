@@ -4,7 +4,7 @@ import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.annotation.TableInfo;
 import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
 import io.github.ramerf.wind.core.config.EntityColumn;
-import io.github.ramerf.wind.core.executor.WindContext;
+import io.github.ramerf.wind.WindContext;
 import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.FieldFunction;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
@@ -116,6 +116,7 @@ public class EntityHelper {
     return typeName;
   }
 
+  @Nonnull
   public static <T> EntityInfo getEntityInfo(@Nonnull final Class<T> clazz) {
     return initEntityIfNeeded(clazz);
   }

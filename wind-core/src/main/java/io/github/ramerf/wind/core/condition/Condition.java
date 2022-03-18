@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
  * @author ramer
  */
 public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
+  Class<POJO> getClazz();
 
   String getString();
 

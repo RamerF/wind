@@ -26,6 +26,11 @@ public abstract class AbstractConditionGroup<
   @Getter protected CONDITION condition;
 
   @Override
+  public Class<POJO> getClazz() {
+    return condition.getClazz();
+  }
+
+  @Override
   public String getString() {
     return condition.getString();
   }

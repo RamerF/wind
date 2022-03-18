@@ -8,7 +8,8 @@ import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.exception.ClassInstantiationException;
 import io.github.ramerf.wind.core.exception.WindException;
-import io.github.ramerf.wind.core.executor.*;
+import io.github.ramerf.wind.core.executor.Dao;
+import io.github.ramerf.wind.core.executor.DaoImpl;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
@@ -28,24 +29,24 @@ public class WindApplication {
   private WindApplication() {}
 
   /** 通过指定配置文件启动. */
-  public static void run(final String configPath) {
+  public static WindApplication run(final String configPath) {
     final AutoConfigConfiguration autoConfigConfiguration =
         YmlUtil.process(AutoConfigConfiguration.class, configPath);
-    run(autoConfigConfiguration.getConfiguration());
+    return run(autoConfigConfiguration.getConfiguration());
   }
 
-  public static void run(@Nonnull final DataSource dataSource) {
-    run(new JdbcTransactionFactory(), dataSource);
+  public static WindApplication run(@Nonnull final DataSource dataSource) {
+    return run(new JdbcTransactionFactory(), dataSource);
   }
 
-  public static void run(
+  public static WindApplication run(
       @Nonnull final TransactionFactory transactionFactory, @Nonnull final DataSource dataSource) {
     Configuration configuration = new Configuration();
     configuration.setJdbcEnvironment(new JdbcEnvironment(transactionFactory, dataSource));
-    run(configuration);
+    return run(configuration);
   }
 
-  public static void run(@Nonnull Configuration configuration) {
+  public static WindApplication run(@Nonnull Configuration configuration) {
     final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
     Asserts.notNull(jdbcEnvironment, "需要指定数据源");
     final DataSource dataSource = jdbcEnvironment.getDataSource();
@@ -55,17 +56,25 @@ public class WindApplication {
     populateInterceptors(configuration);
     // 打印banner
     printBanner();
-    // 初始化Query/Update
-    Update.initial(windContext);
     // 初始化实体解析类
     EntityUtils.initial(windContext);
     EntityHelper.initial(windContext);
     // 解析实体元数据
     initEntityInfo(windContext.getConfiguration());
+    WindApplication windApplication = new WindApplication();
+    return windApplication;
   }
 
-  static WindContext getWindContext() {
+  public static WindContext getWindContext() {
     return windContext;
+  }
+
+  public Configuration getConfiguration() {
+    return windContext.getConfiguration();
+  }
+
+  public Dao getDao() {
+    return new DaoImpl(getConfiguration());
   }
 
   private static void populateInterceptors(final Configuration configuration) {

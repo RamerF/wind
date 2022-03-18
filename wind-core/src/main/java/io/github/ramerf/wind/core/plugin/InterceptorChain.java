@@ -6,6 +6,7 @@ public class InterceptorChain {
 
   private final List<Interceptor> interceptors = new ArrayList<>();
 
+  // TODO WARN 这个clazz有待商榷
   public Object pluginAll(Object target, final Class<?> clazz, final Object[] args) {
     for (Interceptor interceptor : interceptors) {
       if (interceptor.supports(clazz)) {

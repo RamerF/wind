@@ -27,8 +27,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
 
   /** 创建记录,仅保存指定字段. */
   default int create(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
-    //noinspection unchecked
-    return getUpdate((Class<T>) t.getClass()).create(t, fields);
+    return getDao().create(t, fields);
   }
 
   /**
@@ -41,7 +40,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    */
   // @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> createBatch(final List<T> ts) throws DataAccessException {
-    return getUpdate().createBatch(ts);
+    return getDao().createBatch(ts);
   }
 
   /**
@@ -59,8 +58,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
     if (ts.isEmpty()) {
       return Optional.empty();
     }
-    //noinspection unchecked
-    return getUpdate((Class<T>) ts.get(0).getClass()).createBatch(ts, fields);
+    return getDao().createBatch(ts, fields);
   }
 
   /**
@@ -109,11 +107,9 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
   default int update(@Nonnull final T object, final Fields<T> fields, final Cnd<T, ?, ?> cnd)
       throws DataAccessException {
     if (cnd == null) {
-      @SuppressWarnings("unchecked")
-      final Class<T> clazz = (Class<T>) object.getClass();
-      return getUpdate(clazz).update(object, fields);
+      return getDao().update(object, fields);
     }
-    return getUpdate(cnd.getClazz()).update(object, fields, cnd.getCondition());
+    return getDao().update(object, fields, cnd.getCondition());
   }
 
   /**
@@ -143,7 +139,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
     if (ts.isEmpty()) {
       return Optional.empty();
     }
-    return getUpdate().updateBatch(ts, fields);
+    return getDao().updateBatch(ts, fields);
   }
 
   /**
@@ -157,7 +153,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    */
   default int delete(final ID id) throws DataAccessException {
     final LambdaCondition<T> condition = LambdaCondition.of(getPoJoClass());
-    return getUpdate().delete(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id));
+    return getDao().delete(condition.eq(EntityHelper.getEntityIdField(getPoJoClass()), id));
   }
 
   /**
@@ -174,7 +170,7 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
     }
     final LambdaCondition<T> condition = LambdaCondition.of(getPoJoClass());
     condition.in(EntityHelper.getEntityIdField(getPoJoClass()), ids);
-    final int affectRow = getUpdate().delete(condition);
+    final int affectRow = getDao().delete(condition);
     return affectRow == ids.size() ? Optional.empty() : Optional.of(affectRow);
   }
 
@@ -190,6 +186,6 @@ public interface UpdateService<T, ID extends Serializable> extends InterService<
    * @see DataAccessException
    */
   default int delete(@Nonnull Condition<T, ?> condition) throws DataAccessException {
-    return getUpdate().delete(condition);
+    return getDao().delete(condition);
   }
 }

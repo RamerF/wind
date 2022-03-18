@@ -14,11 +14,19 @@ import javax.annotation.Nonnull;
 public class Fields<T> {
   private final Set<Field> includes = new LinkedHashSet<>();
   private final Set<Field> excludes = new LinkedHashSet<>();
+  private final Class<T> clazz;
 
-  private Fields() {}
+  private Fields(@Nonnull final Class<T> clazz) {
+    this.clazz = clazz;
+  }
 
-  public static <T> Fields<T> of(Class<T> clazz) {
-    return new Fields<>();
+  public static <T> Fields<T> of(@Nonnull final Class<T> clazz) {
+    return new Fields<>(clazz);
+  }
+
+  @Nonnull
+  public Class<T> getClazz() {
+    return clazz;
   }
 
   @SafeVarargs

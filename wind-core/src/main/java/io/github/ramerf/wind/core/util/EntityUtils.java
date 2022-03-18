@@ -1,8 +1,9 @@
 package io.github.ramerf.wind.core.util;
 
-import io.github.ramerf.wind.core.executor.WindContext;
+import io.github.ramerf.wind.WindContext;
 import io.github.ramerf.wind.core.annotation.*;
-import io.github.ramerf.wind.core.config.*;
+import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.domain.InterEnum;
 import io.github.ramerf.wind.core.exception.NotImplementedException;

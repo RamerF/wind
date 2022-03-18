@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.executor;
+package io.github.ramerf.wind;
 
 import io.github.ramerf.wind.core.config.Configuration;
 import lombok.Data;

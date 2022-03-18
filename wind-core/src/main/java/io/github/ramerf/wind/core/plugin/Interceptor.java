@@ -1,7 +1,5 @@
 package io.github.ramerf.wind.core.plugin;
 
-import io.github.ramerf.wind.core.executor.Query;
-import io.github.ramerf.wind.core.executor.Update;
 import java.util.Properties;
 
 /** 用于拦截 {@link Query}和{@link Update} */

@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.condition.StringCondition;
-import io.github.ramerf.wind.core.executor.Query;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.BeanUtils;

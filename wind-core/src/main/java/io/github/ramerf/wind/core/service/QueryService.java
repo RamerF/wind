@@ -19,9 +19,9 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   default long count(@Nullable final Cnd<T, ?, ?> cnd) {
     if (cnd == null) {
       Class<T> clazz = getPoJoClass();
-      return getQuery(clazz).fetchCount(LambdaCondition.of(clazz), clazz);
+      return this.getDao().fetchCount(LambdaCondition.of(clazz), clazz);
     }
-    return getQuery(cnd.getClazz()).fetchCount(cnd.getCondition(), cnd.getClazz());
+    return this.getDao().fetchCount(cnd.getCondition(), cnd.getClazz());
   }
 
   /** 通过id获取对象. */
@@ -57,7 +57,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   /** 获取单个对象,指定字段,返回指定对象. */
   default <R> R getOne(
       final Cnd<T, ?, ?> cnd, @Nullable final Fields<T> fields, @Nonnull final Class<R> respClazz) {
-    return getQuery(cnd.getClazz()).fetchOne(cnd.getCondition(), fields, respClazz);
+    return this.getDao(cnd.getClazz()).fetchOne(cnd.getCondition(), fields, respClazz);
   }
 
   /** 通过id集合查询列表. */
@@ -73,7 +73,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
     final Class<T> clazz = getPoJoClass();
     final Field id = EntityHelper.getEntityInfo(clazz).getIdColumn().getField();
     final LambdaCondition<T> condition = LambdaCondition.of(clazz).in(id, ids);
-    return getQuery().fetchAll(condition, fields, clazz);
+    return this.getDao().fetchAll(condition, fields, clazz);
   }
 
   /** 列表查询对象. */
@@ -94,7 +94,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
   /** 列表查询对象,指定字段,返回指定对象. */
   default <R> List<R> list(
       @Nonnull final Cnd<T, ?, ?> cnd, final Fields<T> fields, @Nonnull final Class<R> respClazz) {
-    return getQuery(cnd.getClazz())
+    return this.getDao(cnd.getClazz())
         .fetchAll(cnd.getCondition(), cnd.getPageRequest(), fields, respClazz);
   }
 
@@ -126,8 +126,7 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
       @Nonnull final Cnd<T, ?, ?> cnd,
       @Nullable final Fields<T> fields,
       @Nonnull final Class<R> respClazz) {
-    return getQuery(cnd.getClazz())
-        .fetchPage(cnd.getCondition(), cnd.getPageRequest(), fields, respClazz);
+    return this.getDao().fetchPage(cnd.getCondition(), cnd.getPageRequest(), fields, respClazz);
   }
 
   /** 查询所有关联对象. */
@@ -152,16 +151,16 @@ public interface QueryService<T, ID extends Serializable> extends InterService<T
 
   /** 自定义sql查询clazz表. */
   default <R> R fetchOneBySql(final String sql, final Class<R> clazz, final Object... args) {
-    return getQuery(clazz).fetchOneBySql(sql, clazz, args);
+    return this.getDao().fetchOneBySql(sql, clazz, args);
   }
 
   /** 自定义sql查询clazz表. */
   default <R> List<R> fetchListBySql(final String sql, final Class<R> clazz, final Object... args) {
-    return getQuery(clazz).fetchListBySql(sql, clazz, args);
+    return this.getDao().fetchListBySql(sql, clazz, args);
   }
 
   /** 自定义sql查询clazz表. */
   default <R> long countBySql(final String sql, final Class<R> clazz, final Object... args) {
-    return getQuery(clazz).countBySql(sql, args);
+    return this.getDao().countBySql(sql, args);
   }
 }

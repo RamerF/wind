@@ -1,11 +1,15 @@
 package io.github.ramerf.wind.core.mysql;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.WindApplication;
+import io.github.ramerf.wind.core.condition.*;
+import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
+import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.executor.*;
+import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.plugin.Interceptor;
 import io.github.ramerf.wind.core.plugin.Invocation;
@@ -312,6 +316,11 @@ public class BaseServiceTest {
     dataSource.setUrl("jdbc:mysql:///wind");
     dataSource.setUsername("root");
     dataSource.setPassword("root");
+    Configuration configuration = new Configuration();
+    final JdbcEnvironment jdbcEnvironment =
+        new JdbcEnvironment(new JdbcTransactionFactory(), dataSource);
+    configuration.setJdbcEnvironment(jdbcEnvironment);
+    configuration.setDdlAuto(DdlAuto.UPDATE);
     final DaoFactory daoFactory = DaoFactory.newInstance(dataSource);
     final Query<Foo> query = daoFactory.getQuery(Foo.class);
     final Update<Foo> update = daoFactory.getUpdate(Foo.class);

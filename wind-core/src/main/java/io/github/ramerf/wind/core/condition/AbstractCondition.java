@@ -56,6 +56,11 @@ public abstract class AbstractCondition<POJO, CONDITION extends AbstractConditio
     this.clazz = clazz;
   }
 
+  @Override
+  public Class<POJO> getClazz() {
+    return clazz;
+  }
+
   /** 直接拼接sql,括号需要手动加.如: {@code (id=1 and name like 'ramer%')} */
   @Override
   public CONDITION and(final boolean condition, final String sql) {
