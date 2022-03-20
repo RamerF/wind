@@ -1,10 +1,11 @@
 package io.github.ramerf.wind.core.pgsql;
 
-import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.WindApplication;
+import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
-import io.github.ramerf.wind.core.executor.Update;
+import io.github.ramerf.wind.core.executor.Dao;
+import io.github.ramerf.wind.core.executor.DaoFactory;
 import io.github.ramerf.wind.core.pgsql.Foo.Type;
 import io.github.ramerf.wind.core.service.GenericService;
 import java.lang.reflect.Field;
@@ -58,9 +59,10 @@ public class BaseServiceTest {
 
   @BeforeEach
   public void beforeEach() {
-    WindApplication.run("pgsql.yml");
+    final WindApplication application = WindApplication.run("pgsql.yml");
+    final Dao dao = DaoFactory.of(application.getConfiguration()).getDao();
     foo.setId(id);
-    service = GenericService.with(Foo.class, Long.class);
+    service = GenericService.with(dao, Foo.class, Long.class);
     if (service.getOne(foo.getId()) == null) {
       service.create(foo);
     }
@@ -68,17 +70,16 @@ public class BaseServiceTest {
 
   @AfterEach
   public void afterEach() {
-    final Update<Foo> update = Update.getInstance(Foo.class);
-    update.getExecutor().update("delete from foo where id=" + id, ps -> {});
+    service.update("delete from foo where id=" + id, ps -> {});
   }
 
   @Test
   @Order(10)
   @DisplayName("条件构造工具类")
   public void testCnds() {
-    final Cnds<Foo> cnds =
+    final Cnd<Foo> cnds =
         // 指定操作的表
-        Cnds.of(Foo.class)
+        Cnd.of(Foo.class)
             // 条件
             .gt(Foo::setId, 0L)
             // 自定义sql
@@ -91,7 +92,7 @@ public class BaseServiceTest {
             .orderBy(Foo::getCreateTime)
             .orderBy(Foo::getId, Direction.ASC);
     // 条件组
-    LambdaConditionGroup<Foo> group = LambdaConditionGroup.of(Foo.class);
+    CndsGroup<Foo> group = CndsGroup.of(Foo.class);
     group.orLike(Foo::setName, "name").orLike(Foo::setTextString, "name");
     cnds.and(group);
 
@@ -114,7 +115,7 @@ public class BaseServiceTest {
   @Order(5)
   @DisplayName("统计")
   public void testCount() {
-    final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L);
+    final Cnd<Foo> cnds = Cnd.of(Foo.class).gt(Foo::setId, 0L);
     assertTrue(service.count(cnds) > 0);
   }
 
@@ -125,19 +126,19 @@ public class BaseServiceTest {
     // 通过id查询
     assertNotNull(service.getOne(id));
     // 条件查询
-    assertNotNull(service.getOne(Cnds.of(Foo.class).eq(Foo::setId, id)));
+    assertNotNull(service.getOne(Cnd.of(Foo.class).eq(Foo::setId, id)));
     // 条件查询指定列
-    final Cnds<Foo> cnds = Cnds.of(Foo.class).eq(Foo::setId, id);
+    final Cnd<Foo> cnds = Cnd.of(Foo.class).eq(Foo::setId, id);
     final Fields<Foo> fields = Fields.of(Foo.class).include(Foo::getName).include(Foo::getId);
     assertNotNull(service.getOne(cnds, fields));
     // 指定返回对象
     assertNotNull(
         service.getOne(
-            Cnds.of(Foo.class).eq(Foo::setId, id),
+            Cnd.of(Foo.class).eq(Foo::setId, id),
             Fields.of(Foo.class).include(Foo::getId),
             IdNameResponse.class));
     // 自定义sql
-    assertNotNull(service.fetchOneBySql("select id,name from foo limit 1", IdNameResponse.class));
+    assertNotNull(service.getOne("select id,name from foo limit 1", IdNameResponse.class));
   }
 
   @Test
@@ -146,7 +147,7 @@ public class BaseServiceTest {
   public void testList() {
     // 通过id列表查询
     assertNotNull(service.list(Arrays.asList(id, 2L, 3L)));
-    final Cnds<Foo> cnds = Cnds.of(Foo.class).eq(Foo::setId, id);
+    final Cnd<Foo> cnds = Cnd.of(Foo.class).eq(Foo::setId, id);
     // 条件查询
     assertNotNull(service.list(cnds));
     // 查询指定列
@@ -163,7 +164,7 @@ public class BaseServiceTest {
   @Order(8)
   @DisplayName("查询分页")
   public void testPage() {
-    final Cnds<Foo> cnds = Cnds.of(Foo.class).gt(Foo::setId, 0L).limit(1, 5).orderBy(Foo::getName);
+    final Cnd<Foo> cnds = Cnd.of(Foo.class).gt(Foo::setId, 0L).limit(1, 5).orderBy(Foo::getName);
     assertNotNull(service.page(cnds));
     // 指定列
     final Fields<Foo> fields = Fields.of(Foo.class).include(Foo::getId).include(Foo::getName);
@@ -221,13 +222,13 @@ public class BaseServiceTest {
     // 指定属性
     assertEquals(service.update(foo, Fields.of(Foo.class).include(Foo::getName)), 1);
     // 条件更新
-    assertEquals(service.update(foo, Cnds.of(Foo.class).eq(Foo::setId, id)), 1);
+    assertEquals(service.update(foo, Cnd.of(Foo.class).eq(Foo::setId, id)), 1);
     // 条件更新指定字段
     assertEquals(
         service.update(
             foo, //
             Fields.of(Foo.class).include(Foo::getName),
-            Cnds.of(Foo.class).eq(Foo::setId, id)),
+            Cnd.of(Foo.class).eq(Foo::setId, id)),
         1);
   }
 
@@ -261,18 +262,7 @@ public class BaseServiceTest {
     // 通过id列表删除
     assertTrue(service.delete(Arrays.asList(id, 2L, 3L, 4L)).orElse(0) > 0);
     // 条件删除
-    assertEquals(service.delete(Cnds.of(Foo.class).eq(Foo::setId, id)), 1);
-  }
-
-  @Test
-  @Order(9)
-  @DisplayName("域对象Domain")
-  public void testDomain() {
-    // 需要对象继承Domain: public class Foo extends Domain<Foo, Long>
-    foo.setId(null);
-    assertTrue(foo.create() > 0);
-    assertTrue(foo.update(Fields.of(Foo.class).include(Foo::getName)) > 0);
-    assertTrue(foo.delete(Cnds.of(Foo.class).eq(Foo::setId, id)) > 0);
+    assertEquals(service.delete(Cnd.of(Foo.class).eq(Foo::setId, id)), 1);
   }
 
   /**

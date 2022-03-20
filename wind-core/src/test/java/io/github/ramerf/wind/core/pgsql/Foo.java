@@ -4,7 +4,6 @@ import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.annotation.TableIndex.Index;
 import io.github.ramerf.wind.core.annotation.TableIndex.IndexField;
 import io.github.ramerf.wind.core.condition.Fields;
-import io.github.ramerf.wind.core.domain.Domain;
 import io.github.ramerf.wind.core.domain.InterEnum;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.handler.TypeHandler;
@@ -39,8 +38,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
-public class Foo extends Domain<Foo, Long> {
+@EqualsAndHashCode
+public class Foo {
   @Id private Long id;
   private String name;
 
@@ -166,7 +165,8 @@ public class Foo extends Domain<Foo, Long> {
   }
 
   @TableInfo
-  public static class FooSub extends Domain<io.github.ramerf.wind.core.mysql.Foo.FooSub, String> {
+  @Data
+  public static class FooSub {
     @Id private String name;
     @CreateTimestamp private LocalDateTime createTime;
   }

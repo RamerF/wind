@@ -8,12 +8,12 @@ import javax.annotation.Nonnull;
  * @since 15/08/2021
  */
 public class StringConditionGroup<T>
-    extends AbstractConditionGroup<T, StringConditionGroup<T>, StringCondition<T>>
+    extends AbstractConditionGroup<T, StringConditionGroup<T>, StringCnd<T>>
     implements IStringCondition<T, StringConditionGroup<T>> {
 
-  public static <T> StringConditionGroup<T> of(final StringCondition<T> stringCondition) {
+  public static <T> StringConditionGroup<T> of(final StringCnd<T> stringCondition) {
     final StringConditionGroup<T> group = new StringConditionGroup<>();
-    group.condition = new StringCondition<>();
+    group.condition = new StringCnd<>();
     return group;
   }
 
@@ -24,7 +24,7 @@ public class StringConditionGroup<T>
   private StringConditionGroup() {}
 
   private StringConditionGroup(final Class<T> clazz) {
-    this.condition = new StringCondition<>(clazz);
+    this.condition = new StringCnd<>(clazz);
   }
 
   @Override

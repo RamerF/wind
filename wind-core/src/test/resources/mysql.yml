@@ -8,7 +8,7 @@ wind:
   data-source:
     transaction-factory: io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory
     druid:
-      url: jdbc:mysql:///wind?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+      url: jdbc:mysql:///wind_2?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
       username: root
       password: root
       driver-class-name: com.mysql.cj.jdbc.Driver

@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.plugin;
 
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.executor.Dao;
+import io.github.ramerf.wind.core.executor.Executor;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.lang.reflect.Proxy;
 import java.util.*;
@@ -34,23 +35,22 @@ public class Plugins {
   public static Object wrap(Object target, Interceptor interceptor, final Object[] args) {
     Class<?> clazz = target.getClass();
     Class<?>[] interfaces = BeanUtils.getAllInterfaces(clazz);
-    if (interfaces.length > 0) {
+    if (false) {
       return Proxy.newProxyInstance(
-          clazz.getClassLoader(), interfaces, new PluginJdkProxy(target, interceptor));
-    } else if (Dao.class.isAssignableFrom(clazz)) {
+          clazz.getClassLoader(), interfaces, new PluginJdkProxyCallback(target, interceptor));
+    }
+    //
+    else if (Dao.class.isAssignableFrom(clazz)) {
       Enhancer enhancer = new Enhancer();
       // 继承被代理类
       enhancer.setSuperclass(target.getClass());
       // 设置回调
-      enhancer.setCallback(new PluginCglibProxy(target, interceptor));
+      enhancer.setCallback(new PluginCglibProxyCallback(target, interceptor));
       // TODO WARN 代理不同的参数
       if (Dao.class.isAssignableFrom(clazz)) {
-        target = enhancer.create(new Class[] {Configuration.class}, args);
-      } else
         target =
-            args.length == 1
-                ? enhancer.create(new Class[] {Configuration.class}, args)
-                : enhancer.create(new Class[] {Configuration.class, boolean.class}, args);
+            enhancer.create(new Class[] {Configuration.class, Executor.class, boolean.class}, args);
+      }
     }
     return target;
   }

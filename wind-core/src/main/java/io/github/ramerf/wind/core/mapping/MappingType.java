@@ -1,7 +1,8 @@
 package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.annotation.*;
-import io.github.ramerf.wind.core.condition.StringCondition;
+import io.github.ramerf.wind.core.condition.StringCnd;
+import io.github.ramerf.wind.core.executor.Dao;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.util.BeanUtils;
@@ -9,6 +10,7 @@ import io.github.ramerf.wind.core.util.StringUtils;
 import java.lang.reflect.*;
 import javax.annotation.Nonnull;
 
+import static io.github.ramerf.wind.core.util.BeanUtils.getFieldValueIgnoreException;
 import static io.github.ramerf.wind.core.util.EntityUtils.fieldToColumn;
 
 /**
@@ -31,21 +33,17 @@ import static io.github.ramerf.wind.core.util.EntityUtils.fieldToColumn;
  * @author ramer
  * @since 2020.09.19
  */
-@SuppressWarnings({"unchecked", "DuplicatedCode"})
 public enum MappingType {
   ONE_TO_ONE {
     @Override
-    public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
+    public <E> Object fetchMapping(final E poJo, final MappingInfo mappingInfo, final Dao dao) {
       final Field joinField = mappingInfo.getJoinField();
-      final Class<T> targetClazz = mappingInfo.getTargetClazz();
-      final Object relationValue = BeanUtils.getFieldValueIgnoreException(poJo, joinField);
-      if (relationValue == null) {
-        return null;
-      } else {
-        final StringCondition<T> condition =
-            StringCondition.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue);
-        return Query.getInstance(targetClazz).select(null).where(condition).fetchOne(targetClazz);
-      }
+      final Object relationValue = getFieldValueIgnoreException(poJo, joinField);
+      final Class<?> targetClazz = mappingInfo.getTargetClazz();
+      return relationValue == null
+          ? null
+          : dao.fetchOne(
+          StringCnd.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue));
     }
 
     @Override
@@ -97,20 +95,13 @@ public enum MappingType {
   },
   ONE_TO_MANY {
     @Override
-    public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
-      final Class<E> targetClazz = mappingInfo.getTargetClazz();
-      final Object relationValue =
-          BeanUtils.getFieldValueIgnoreException(poJo, mappingInfo.getJoinField());
-      final Object mapping =
-          relationValue == null
-              ? null
-              : Query.getInstance(targetClazz)
-                  .select(null)
-                  .where(
-                      StringCondition.of(targetClazz)
-                          .eq(mappingInfo.getTargetColumn(), relationValue))
-                  .fetchAll(targetClazz);
-      return (T) mapping;
+    public <E> Object fetchMapping(final E poJo, final MappingInfo mappingInfo, final Dao dao) {
+      final Class<?> targetClazz = mappingInfo.getTargetClazz();
+      final Object relationValue = getFieldValueIgnoreException(poJo, mappingInfo.getJoinField());
+      return relationValue == null
+          ? null
+          : dao.fetchAll(
+          StringCnd.of(targetClazz).eq(mappingInfo.getTargetColumn(), relationValue));
     }
 
     @Override
@@ -181,17 +172,14 @@ public enum MappingType {
   /** The Many to one. */
   MANY_TO_ONE {
     @Override
-    public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
+    public <E> Object fetchMapping(final E poJo, final MappingInfo mappingInfo, final Dao dao) {
       final Field joinField = mappingInfo.getJoinField();
-      final Class<T> targetClazz = mappingInfo.getTargetClazz();
-      final Object relationValue = BeanUtils.getFieldValueIgnoreException(poJo, joinField);
+      final Class<?> targetClazz = mappingInfo.getTargetClazz();
+      final Object relationValue = getFieldValueIgnoreException(poJo, joinField);
       return relationValue == null
           ? null
-          : Query.getInstance(targetClazz)
-              .select(null)
-              .where(
-                  StringCondition.of(targetClazz).eq(mappingInfo.getTargetField(), relationValue))
-              .fetchOne(targetClazz);
+          : dao.fetchOne(
+          StringCnd.of(targetClazz).eq(mappingInfo.getTargetField(), relationValue));
     }
 
     @Override
@@ -255,7 +243,7 @@ public enum MappingType {
   /** The None. */
   NONE {
     @Override
-    public <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo) {
+    public <E> Object fetchMapping(final E poJo, final MappingInfo mappingInfo, final Dao dao) {
       return null;
     }
 
@@ -266,7 +254,8 @@ public enum MappingType {
   },
   ;
 
-  public abstract <T, E> T fetchMapping(final E poJo, final MappingInfo mappingInfo);
+  public abstract <E> Object fetchMapping(
+      final E poJo, final MappingInfo mappingInfo, final Dao dao);
 
   abstract MappingInfo populateMappingInfo(final Field field);
 

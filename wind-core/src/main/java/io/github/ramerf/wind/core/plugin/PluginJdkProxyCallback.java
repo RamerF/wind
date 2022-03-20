@@ -4,12 +4,12 @@ import io.github.ramerf.wind.core.reflect.ExceptionUtil;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-public class PluginJdkProxy implements InvocationHandler {
+public class PluginJdkProxyCallback implements InvocationHandler {
 
   private final Object target;
   private final Interceptor interceptor;
 
-  public PluginJdkProxy(Object target, Interceptor interceptor) {
+  public PluginJdkProxyCallback(Object target, Interceptor interceptor) {
     this.target = target;
     this.interceptor = interceptor;
   }

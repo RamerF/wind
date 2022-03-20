@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.config;
 
-import io.github.ramerf.wind.WindApplication;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.dialect.identity.IdentityColumnSupport;
@@ -95,7 +94,8 @@ public class EntityColumn {
   private static final String defaultRegex = "default[ ]+[']?[\\w\\u4e00-\\u9fa5]+[']?[ ]?";
   private static final String commentRegex = "comment.*";
 
-  public static EntityColumn of(@Nonnull Field field, Dialect dialect) {
+  public static EntityColumn of(
+      @Nonnull Field field, Dialect dialect, final IdGenerator idGenerator) {
     // 如果是一对多关联的情况,不记录列信息
     if (MappingInfo.isManyMapping(field)) {
       return null;
@@ -188,7 +188,7 @@ public class EntityColumn {
     entityColumn.columnDefinition = entityColumn.getColumnDefinition(dialect);
     // 默认主键定义
     if (entityColumn.isPrimaryKey()) {
-      entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn);
+      entityColumn.columnDefinition = getPrimaryKeyDefinition(dialect, entityColumn, idGenerator);
     }
     return entityColumn;
   }
@@ -236,7 +236,7 @@ public class EntityColumn {
   }
 
   private static String getPrimaryKeyDefinition(
-      final Dialect dialect, final EntityColumn entityColumn) {
+      final Dialect dialect, final EntityColumn entityColumn, final IdGenerator idGenerator) {
     final Type type = entityColumn.type;
     // 只有主键类型是整型时,才可能自增
     if (!(type instanceof Class)
@@ -248,8 +248,6 @@ public class EntityColumn {
             || Short.class.equals(type))) {
       return entityColumn.columnDefinition;
     }
-    final IdGenerator idGenerator =
-        WindApplication.getWindContext().getConfiguration().getIdGenerator();
     Object id = 1L;
     try {
       id = idGenerator.nextId(null);

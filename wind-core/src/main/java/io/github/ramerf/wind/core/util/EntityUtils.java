@@ -6,12 +6,10 @@ import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.domain.InterEnum;
-import io.github.ramerf.wind.core.exception.NotImplementedException;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.service.BaseService;
-import io.github.ramerf.wind.core.service.InterService;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import java.io.Serializable;
 import java.lang.ref.Reference;
@@ -272,14 +270,14 @@ public final class EntityUtils {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T, S extends InterService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
+  public static <T, S extends BaseService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
       S service) {
     return getPoJoClass((Class<S>) getProxyTarget(service).getClass());
   }
 
   /** 获取Service泛型参数poJo. */
   @SuppressWarnings("unchecked")
-  public static <T, S extends InterService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
+  public static <T, S extends BaseService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
       Class<S> serviceClazz) {
     Class<T> classes =
         (Class<T>)
@@ -293,7 +291,7 @@ public final class EntityUtils {
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     final Type[] baseServiceTypes =
         Stream.of(serviceClazz.getInterfaces())
-            .filter(InterService.class::isAssignableFrom)
+            .filter(BaseService.class::isAssignableFrom)
             .findFirst()
             .get()
             .getGenericInterfaces();
@@ -302,9 +300,10 @@ public final class EntityUtils {
         ParameterizedType parameterizedType = (ParameterizedType) baseServiceType;
         final Type[] arguments = parameterizedType.getActualTypeArguments();
         try {
-          classes = (Class<T>) Class.forName(arguments[0].getTypeName());
-        } catch (ClassNotFoundException ignored) {
-          throw new WindException("cannot get service bound type poJo.");
+          classes = (Class<T>) arguments[0];
+        } catch (ClassCastException ignored) {
+          throw new WindException(
+              "Cannot get service bound poJo,Implements [getPoJoClass] method in service.");
         }
         SERVICE_POJO_MAP.put(serviceClazz, new WeakReference<>(classes));
         return classes;
@@ -325,46 +324,14 @@ public final class EntityUtils {
    * @param proxy 代理对象
    */
   private static Object getProxyTarget(Object proxy) {
-    // if (!AopUtils.isAopProxy(proxy)) {
-    //   return proxy;
-    // }
-    // if (AopUtils.isJdkDynamicProxy(proxy)) {
-    //   try {
-    //     return getJdkDynamicProxyTargetObject(proxy);
-    //   } catch (Exception e) {
-    //     log.warn(e.getMessage());
-    //     log.error(e.getMessage(), e);
-    //   }
-    // } else {
-    //   try {
-    //     return getCglibProxyTargetObject(proxy);
-    //   } catch (Exception e) {
-    //     log.warn(e.getMessage());
-    //     log.error(e.getMessage(), e);
-    //   }
-    // }
-    // return getProxyTarget(proxy);
-    throw new NotImplementedException("getCglibProxyTargetObject");
+    return proxy;
   }
 
   private static Object getCglibProxyTargetObject(Object proxy) throws Exception {
-    // Field field = proxy.getClass().getDeclaredField("CGLIB$CALLBACK_0");
-    // field.setAccessible(true);
-    // Object dynamicAdvisedInterceptor = field.get(proxy);
-    // Field advised = dynamicAdvisedInterceptor.getClass().getDeclaredField("advised");
-    // advised.setAccessible(true);
-    // return ((AdvisedSupport)
-    // advised.get(dynamicAdvisedInterceptor)).getTargetSource().getTarget();
-    throw new NotImplementedException("getCglibProxyTargetObject");
+    return proxy;
   }
 
   private static Object getJdkDynamicProxyTargetObject(Object proxy) throws Exception {
-    // Field h = proxy.getClass().getSuperclass().getDeclaredField("h");
-    // h.setAccessible(true);
-    // AopProxy aopProxy = (AopProxy) h.get(proxy);
-    // Field advised = aopProxy.getClass().getDeclaredField("advised");
-    // advised.setAccessible(true);
-    // return ((AdvisedSupport) advised.get(aopProxy)).getTargetSource().getTarget();
-    throw new NotImplementedException("getJdkDynamicProxyTargetObject");
+    return proxy;
   }
 }

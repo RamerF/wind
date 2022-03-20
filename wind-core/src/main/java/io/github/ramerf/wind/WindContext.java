@@ -1,6 +1,7 @@
 package io.github.ramerf.wind;
 
 import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.metadata.DbMetaData;
 import lombok.Data;
 
 /**
@@ -12,6 +13,9 @@ import lombok.Data;
 @Data
 public class WindContext {
   WindContext() {}
+
+  /** 默认数据源元数据,自动建表也是基于该数据 */
+  private DbMetaData dbMetaData;
 
   private Configuration configuration;
 }

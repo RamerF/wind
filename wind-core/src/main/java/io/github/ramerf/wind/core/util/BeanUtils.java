@@ -110,7 +110,7 @@ public final class BeanUtils {
         return clazz.getDeclaredField(name);
       } catch (NoSuchFieldException | SecurityException ignored) {
       }
-    } while ((clazz = clazz.getSuperclass()) != null && Object.class.equals(clazz));
+    } while ((clazz = clazz.getSuperclass()) != null && !Object.class.equals(clazz));
     return null;
   }
 
@@ -172,6 +172,17 @@ public final class BeanUtils {
       }
     }
     return classes;
+  }
+
+  public static Method getDeclaredMethod(
+      @Nonnull Class<?> clazz, final String methodName, final Class<?>... parameterTypes) {
+    do {
+      try {
+        return clazz.getDeclaredMethod(methodName, parameterTypes);
+      } catch (NoSuchMethodException | SecurityException ignored) {
+      }
+    } while ((clazz = clazz.getSuperclass()) != null && !Object.class.equals(clazz));
+    return null;
   }
 
   public static Set<Method> retrieveMethods(@Nonnull Class<?> clazz) {

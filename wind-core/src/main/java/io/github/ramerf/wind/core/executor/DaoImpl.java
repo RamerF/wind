@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.config.Configuration;
-import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Pageable;
 import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
@@ -47,60 +46,51 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @SuppressWarnings("DuplicatedCode")
 public class DaoImpl implements Dao {
-  // private final Class<?> clazz;
   private final Executor executor;
   private final Configuration configuration;
+  private final boolean autoCommit;
+  /** 包含写入操作. */
+  private boolean write;
 
-  public DaoImpl(final Configuration configuration) {
+  public DaoImpl(
+      final Configuration configuration, final Executor executor, final boolean autoCommit) {
     this.configuration = configuration;
-    // EntityHelper.getEntityInfo(clazz);
-    final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
-    this.executor =
-        new SimpleJdbcExecutor(
-            configuration,
-            jdbcEnvironment
-                .getTransactionFactory()
-                .newTransaction(jdbcEnvironment.getDataSource()));
-  }
-
-  // TODO WARN 在Configuration中获取
-  public static DaoImpl getInstance(@Nonnull final Configuration configuration) {
-    final DaoImpl query = new DaoImpl(configuration);
-    return (DaoImpl)
-        configuration
-            .getInterceptorChain()
-            .pluginAll(query, null, new Object[] {configuration, null});
+    this.executor = executor;
+    this.autoCommit = autoCommit;
   }
 
   /*查询方法.*/
 
-  /** 自定义sql查询单个. */
+  /**
+   * count查询.
+   *
+   * @return long long
+   */
   @Override
-  public <R> R fetchOneBySql(final String sql, final Class<R> respClazz, final Object... args) {
-    List<R> rs = fetchListBySql(sql, respClazz, args);
-    return rs.isEmpty() ? null : rs.get(0);
-  }
-
-  /** 自定义sql查询列表. */
-  @Override
-  public <T, R> List<R> fetchListBySql(
-      final String sql, final Class<R> respClazz, final Object... args) {
-    return executor.query(
-        new SqlParam<T>().setSql(sql).setClazz(respClazz),
-        ps -> {
-          for (int i = 1; i < args.length + 1; i++) {
-            JdbcUtils.setObject(ps, i, args[i - 1]);
-          }
-        },
-        ResultHandlerUtil.getResultHandler(respClazz));
+  public long fetchCount(@Nonnull final Condition<?, ?> condition) {
+    final String conditionClause = getConditionClause(condition);
+    final String sql =
+        conditionClause.contains(GROUP_BY.operator())
+            ? "select sum(b.a) from (select 1 a from %s%s) b"
+            : "select count(1) from %s%s";
+    final Class<?> clazz = condition.getClazz();
+    //noinspection unchecked
+    return this.executor.fetchCount(
+        new SqlParam<>()
+            .setSql(String.format(sql, getTableName(clazz), conditionClause))
+            .setClazz(Long.class)
+            .setEntityClazz((Class<Object>) clazz)
+            .setAggregateFunction(AggregateSqlFunction.COUNT)
+            .setCondition(condition)
+            .setStartIndex(new AtomicInteger(1)));
   }
 
   /** 自定义sql查询count. */
   @Override
-  public <T> long countBySql(final String sql, final Object... args) {
+  public long fetchCount(final String sql, final Object... args) {
     return Optional.ofNullable(
-            executor.<T, Long>queryForObject(
-                new SqlParam<T>()
+            executor.<Object, Long>queryForObject(
+                new SqlParam<>()
                     .setClazz(Long.class)
                     .setSql(sql)
                     .setAggregateFunction(AggregateSqlFunction.COUNT),
@@ -111,13 +101,18 @@ public class DaoImpl implements Dao {
   /** 查询单条记录. */
   @Override
   public <T> T fetchOne(@Nonnull final Condition<T, ?> condition) {
-    return fetchOne(condition, null);
+    return fetchOne(condition, null, condition.getClazz());
   }
 
   /** 查询单条记录. */
   @Override
   public <T> T fetchOne(@Nonnull final Condition<T, ?> condition, final Fields<T> fields) {
     return fetchOne(condition, fields, condition.getClazz());
+  }
+
+  @Override
+  public <T, R> R fetchOne(@Nonnull final Condition<T, ?> condition, final Class<R> respClazz) {
+    return fetchOne(condition, null, respClazz);
   }
 
   /** 查询单条记录. */
@@ -134,9 +129,9 @@ public class DaoImpl implements Dao {
       final Fields<T> fields,
       final Class<R> respClazz,
       final ResultHandler<R> resultHandler) {
-    final String orderByClause = getOrderByClause(null);
+    final String orderByClause = getOrderByClause(condition.getPageRequest());
     final String conditionClause = getConditionClause(condition);
-    final String limitClause = getLimitClause(null);
+    final String limitClause = getLimitClause(condition.getPageRequest());
     final Class<T> clazz = condition.getClazz();
     final String templateSql = "select %s from %s%s";
     final String sql =
@@ -158,10 +153,17 @@ public class DaoImpl implements Dao {
         resultHandler);
   }
 
+  /** 自定义sql查询单个. */
+  @Override
+  public <R> R fetchOne(final String sql, final Class<R> respClazz, final Object... args) {
+    List<R> rs = fetchAll(sql, respClazz, args);
+    return rs.isEmpty() ? null : rs.get(0);
+  }
+
   /** 查询列表. */
   @Override
   public <T> List<T> fetchAll(@Nonnull final Condition<T, ?> condition) {
-    return fetchAll(condition, null);
+    return fetchAll(condition, null, condition.getClazz());
   }
 
   /** 查询列表. */
@@ -170,20 +172,17 @@ public class DaoImpl implements Dao {
     return fetchAll(condition, fields, null);
   }
 
-  /** 查询列表,返回指定对象. */
   @Override
   public <T, R> List<R> fetchAll(
-      @Nonnull final Condition<T, ?> condition, final Fields<T> fields, final Class<R> respClazz) {
-    return fetchAll(condition, null, fields, respClazz);
+      @Nonnull final Condition<T, ?> condition, final Class<R> respClazz) {
+    return fetchAll(condition, null, respClazz);
   }
 
   /** 查询列表,查询指定页,返回指定对象. */
   @Override
   public <T, R> List<R> fetchAll(
-      @Nonnull final Condition<T, ?> condition,
-      final Pageable pageable,
-      final Fields<T> fields,
-      final Class<R> respClazz) {
+      @Nonnull final Condition<T, ?> condition, final Fields<T> fields, final Class<R> respClazz) {
+    final Pageable pageable = condition.getPageRequest();
     final String orderByClause = getOrderByClause(pageable);
     final String conditionClause = getConditionClause(condition);
     final String limitClause = getLimitClause(pageable);
@@ -209,24 +208,41 @@ public class DaoImpl implements Dao {
         respClazz);
   }
 
-  /**
-   * 分页查询.
-   *
-   * @param pageable 指定分页和排序.示例:
-   *     <pre>
-   *     <li><code>PageRequest.of(1);</code>
-   *     <li><code>PageRequest.of(1, 10).desc(Foo::setId);</code>
-   *     <li><code>cnds.limit(1);</code>
-   *     <li><code>cnds.limit(1, 10).orderBy(Foo::setId);</code>
-   *     <li><code>Pageable.unpaged();</code>
-   *     </pre>
-   */
+  /** 自定义sql查询列表. */
+  @Override
+  public <T, R> List<R> fetchAll(final String sql, final Class<R> respClazz, final Object... args) {
+    return executor.query(
+        new SqlParam<T>().setSql(sql).setClazz(respClazz),
+        ps -> {
+          for (int i = 1; i < args.length + 1; i++) {
+            JdbcUtils.setObject(ps, i, args[i - 1]);
+          }
+        },
+        ResultHandlerUtil.getResultHandler(respClazz));
+  }
+
+  @Override
+  public <T> Page<T> fetchPage(final Condition<T, ?> condition) throws DataAccessException {
+    return fetchPage(condition, null, condition.getClazz());
+  }
+
+  @Override
+  public <T> Page<T> fetchPage(final Condition<T, ?> condition, final Fields<T> fields)
+      throws DataAccessException {
+    return fetchPage(condition, fields, condition.getClazz());
+  }
+
+  @Override
+  public <T, R> Page<R> fetchPage(final Condition<T, ?> condition, final Class<R> respClazz)
+      throws DataAccessException {
+    return fetchPage(condition, null, respClazz);
+  }
+
+  /** 分页查询. */
   @Override
   public <T, R> Page<R> fetchPage(
-      final Condition<T, ?> condition,
-      final Pageable pageable,
-      final Fields<T> fields,
-      final Class<R> respClazz) {
+      final Condition<T, ?> condition, final Fields<T> fields, final Class<R> respClazz) {
+    final Pageable pageable = condition.getPageRequest();
     final String orderByClause = getOrderByClause(pageable);
     final String conditionClause = getConditionClause(condition);
     final String limitClause = getLimitClause(pageable);
@@ -308,29 +324,7 @@ public class DaoImpl implements Dao {
         ? String.format(" limit %s offset %s", pageable.getPageSize(), pageable.getOffset())
         : "";
   }
-  /**
-   * count查询.
-   *
-   * @return long long
-   */
-  @Override
-  public long fetchCount(@Nonnull final Condition<?, ?> condition) {
-    final String conditionClause = getConditionClause(condition);
-    final String sql =
-        conditionClause.contains(GROUP_BY.operator())
-            ? "select sum(b.a) from (select 1 a from %s%s) b"
-            : "select count(1) from %s%s";
-    final Class<?> clazz = condition.getClazz();
-    //noinspection unchecked
-    return this.executor.fetchCount(
-        new SqlParam<>()
-            .setSql(String.format(sql, getTableName(clazz), conditionClause))
-            .setClazz(Long.class)
-            .setEntityClazz((Class<Object>) clazz)
-            .setAggregateFunction(AggregateSqlFunction.COUNT)
-            .setCondition(condition)
-            .setStartIndex(new AtomicInteger(1)));
-  }
+
   /*查询方法.*/
 
   /* 写入方法. */
@@ -572,7 +566,7 @@ public class DaoImpl implements Dao {
   @Override
   public <T> int update(@Nonnull final T t, final Fields<T> fields) throws DataAccessException {
     //noinspection unchecked
-    return update(t, fields, LambdaCondition.of((Class<T>) t.getClass()));
+    return update(t, fields, Cnd.of((Class<T>) t.getClass()));
   }
 
   /**
@@ -660,7 +654,7 @@ public class DaoImpl implements Dao {
             setBuilder.append(
                 String.format(
                     setBuilder.length() > 0 ? ",%s=?" : "%s=?", EntityUtils.fieldToColumn(field))));
-    LambdaCondition<T> condition = LambdaCondition.of(clazz);
+    Cnd<T> condition = Cnd.of(clazz);
     // 保证占位符对应
     condition.eq(idField, null);
     condition.appendLogicNotDelete();
@@ -686,7 +680,7 @@ public class DaoImpl implements Dao {
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getFieldValue(obj, field), ps));
-                      LambdaCondition.of(clazz)
+                      Cnd.of(clazz)
                           .eq(idField, BeanUtils.getFieldValue(obj, idField))
                           .appendLogicNotDelete()
                           .getValues(index)
@@ -701,6 +695,12 @@ public class DaoImpl implements Dao {
           updateRow.getAndAdd(Arrays.stream(batchUpdate).filter(o -> o > 0).map(o -> 1).sum());
         });
     return updateRow.get() == ts.size() ? Optional.empty() : Optional.of(updateRow.get());
+  }
+
+  @Override
+  public int update(final String sql, @Nonnull final PreparedStatementSetter pss)
+      throws DataAccessException {
+    return executor.update(sql, pss);
   }
 
   /**
@@ -893,5 +893,36 @@ public class DaoImpl implements Dao {
   @Override
   public Configuration getConfiguration() {
     return configuration;
+  }
+
+  @Override
+  public void commit() {
+    commit(false);
+  }
+
+  @Override
+  public void commit(boolean force) {
+    executor.commit(isCommitOrRollbackRequired(force));
+    write = false;
+  }
+
+  @Override
+  public void rollback() {
+    rollback(false);
+  }
+
+  @Override
+  public void rollback(boolean force) {
+    executor.rollback(isCommitOrRollbackRequired(force));
+    write = false;
+  }
+
+  @Override
+  public Connection getConnection() {
+    return executor.getTransaction().getConnection();
+  }
+
+  private boolean isCommitOrRollbackRequired(boolean force) {
+    return (!autoCommit && write) || force;
   }
 }

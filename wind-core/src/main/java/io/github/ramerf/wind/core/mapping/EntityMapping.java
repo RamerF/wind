@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.mapping;
 
 import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.config.EntityColumn;
+import io.github.ramerf.wind.core.executor.Dao;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
@@ -153,8 +154,10 @@ public class EntityMapping {
       return StringUtils.camelToUnderline(field.getName());
     }
 
-    public <T> T getMappingObject(final Object object) {
-      return this.mappingType.fetchMapping(object, this);
+    public <T> T getMappingObject(final Object object, final Dao dao) {
+      @SuppressWarnings("unchecked")
+      final T mappingObj = (T) this.mappingType.fetchMapping(object, this, dao);
+      return mappingObj;
     }
 
     @SuppressWarnings("unchecked")

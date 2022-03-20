@@ -13,18 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManagedTransaction implements Transaction {
-  private final DataSource dataSource;
+  private DataSource dataSource;
   private TransactionIsolationLevel level;
   private Connection connection;
-  private boolean autoCommit = true;
+  private boolean autoCommit;
 
-  public ManagedTransaction(DataSource dataSource) {
-    this.dataSource = dataSource;
-  }
-
-  public ManagedTransaction(DataSource dataSource, boolean autoCommit) {
-    this.dataSource = dataSource;
-    this.autoCommit = autoCommit;
+  public ManagedTransaction(final Connection connection) {
+    this.connection = connection;
   }
 
   public ManagedTransaction(DataSource ds, TransactionIsolationLevel level, boolean autoCommit) {
@@ -100,6 +95,7 @@ public class ManagedTransaction implements Transaction {
         log.warn("The Connection not support to set TransactionIsolation", e);
       }
     }
+    this.setAutoCommit(this.autoCommit);
   }
 
   @Override

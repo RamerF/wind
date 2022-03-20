@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.condition.Condition;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Pageable;
+import io.github.ramerf.wind.core.executor.logging.Log;
 import io.github.ramerf.wind.core.handler.ResultHandler;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import java.util.List;
@@ -16,10 +17,10 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
- * The jdbc executor.
+ * The executor.
  *
+ * @since 2022.03.19
  * @author ramer
- * @since 2020 /5/19
  */
 public interface Executor {
   /**
@@ -74,7 +75,7 @@ public interface Executor {
    */
   <T> long fetchCount(@Nonnull SqlParam<T> sqlParam);
 
-  <T, R> R queryForObject(@Nonnull final SqlParam<?> sqlParam, Object[] args)
+  <T, R> R queryForObject(@Nonnull final SqlParam<T> sqlParam, Object[] args)
       throws DataAccessException;
 
   /**
@@ -139,6 +140,8 @@ public interface Executor {
   void rollback(boolean required) throws DataAccessException;
 
   void setExecutorWrapper(Executor wrapper);
+
+  void setLog(final Log log);
 
   @Getter
   @Setter

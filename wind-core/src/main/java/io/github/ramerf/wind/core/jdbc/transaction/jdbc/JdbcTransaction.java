@@ -20,20 +20,14 @@ public class JdbcTransaction implements Transaction {
   protected TransactionIsolationLevel level;
   protected boolean autoCommit;
 
+  public JdbcTransaction(final Connection connection) {
+    this.connection = connection;
+  }
+
   public JdbcTransaction(
-      DataSource ds, TransactionIsolationLevel desiredLevel, boolean autoCommit) {
-    this.dataSource = ds;
+      DataSource dataSource, TransactionIsolationLevel desiredLevel, boolean autoCommit) {
+    this.dataSource = dataSource;
     this.level = desiredLevel;
-    this.autoCommit = autoCommit;
-  }
-
-  public JdbcTransaction(DataSource dataSource) {
-    this.dataSource = dataSource;
-    this.autoCommit = true;
-  }
-
-  public JdbcTransaction(DataSource dataSource, boolean autoCommit) {
-    this.dataSource = dataSource;
     this.autoCommit = autoCommit;
   }
 
@@ -43,7 +37,7 @@ public class JdbcTransaction implements Transaction {
       this.openConnection();
       return this.connectionHolder.getConnection();
     }
-    return this.connectionHolder.requestConnection();
+    return this.connectionHolder != null ? this.connectionHolder.requestConnection() : connection;
   }
 
   @Override
@@ -126,7 +120,7 @@ public class JdbcTransaction implements Transaction {
       log.debug("Opening JDBC Connection");
     }
     final ConnectionHolder connectionHolder =
-        TransactionSynchronizationManager.getConnection(this.dataSource);
+        TransactionSynchronizationManager.getConnectionHolder(this.dataSource);
     this.connection = connectionHolder.getConnection();
     this.connectionHolder = connectionHolder;
     if (this.level != null) {

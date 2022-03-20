@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
+import io.github.ramerf.wind.core.executor.Dao;
 import java.io.Serializable;
 
 /**
@@ -9,6 +10,7 @@ import java.io.Serializable;
  * @author ramer
  */
 public class GenericService<T, ID extends Serializable> implements BaseService<T, ID> {
+  private Dao dao;
   private Class<T> clazz;
 
   /**
@@ -18,10 +20,16 @@ public class GenericService<T, ID extends Serializable> implements BaseService<T
    * @param id 主键
    */
   public static <T, ID extends Serializable> GenericService<T, ID> with(
-      Class<T> clazz, Class<ID> id) {
+      final Dao dao, Class<T> clazz, Class<ID> id) {
     final GenericService<T, ID> service = new GenericService<>();
+    service.dao = dao;
     service.clazz = clazz;
     return service;
+  }
+
+  @Override
+  public Dao getDao() {
+    return dao;
   }
 
   @Override

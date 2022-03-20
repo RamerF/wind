@@ -119,7 +119,8 @@ public final class EntityInfo {
         timeField[1] = field;
       }
       // 列信息
-      final EntityColumn entityColumn = EntityColumn.of(field, dialect);
+      final EntityColumn entityColumn =
+          EntityColumn.of(field, dialect, entityInfo.getIdGenerator());
       if (entityColumn == null) {
         continue;
       }

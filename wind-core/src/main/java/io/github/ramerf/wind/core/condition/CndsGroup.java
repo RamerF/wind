@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.function.GetterFunction;
+import io.github.ramerf.wind.core.function.SetterFunction;
 import java.util.Collection;
 import javax.annotation.Nonnull;
 
@@ -9,84 +9,83 @@ import javax.annotation.Nonnull;
  * @author ramer
  * @since 24/11/2020
  */
-public class LambdaConditionGroup<T>
-    extends AbstractConditionGroup<T, LambdaConditionGroup<T>, LambdaCondition<T>>
-    implements ILambdaCondition<T, LambdaConditionGroup<T>> {
+public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>>
+    implements ILambdaCondition<T, CndsGroup<T>> {
 
-  public static <T> LambdaConditionGroup<T> of(final LambdaCondition<T> lambdaCondition) {
-    final LambdaConditionGroup<T> group = new LambdaConditionGroup<>();
-    group.condition = new LambdaCondition<>();
+  public static <T> CndsGroup<T> of(final Cnd<T> cnds) {
+    final CndsGroup<T> group = new CndsGroup<>();
+    group.condition = new Cnd<>();
     return group;
   }
 
-  public static <T> LambdaConditionGroup<T> of(final Class<T> clazz) {
-    return new LambdaConditionGroup<>(clazz);
+  public static <T> CndsGroup<T> of(final Class<T> clazz) {
+    return new CndsGroup<>(clazz);
   }
 
-  private LambdaConditionGroup() {}
+  private CndsGroup() {}
 
-  private LambdaConditionGroup(final Class<T> clazz) {
-    this.condition = new LambdaCondition<>(clazz);
+  private CndsGroup(final Class<T> clazz) {
+    this.condition = new Cnd<>(clazz);
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> eq(
+  public <V> CndsGroup<T> eq(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.eq(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> ne(
+  public <V> CndsGroup<T> ne(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.ne(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> gt(
+  public <V> CndsGroup<T> gt(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.gt(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> ge(
+  public <V> CndsGroup<T> ge(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.ge(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> lt(
+  public <V> CndsGroup<T> lt(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.lt(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> le(
+  public <V> CndsGroup<T> le(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.le(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> like(
+  public <V> CndsGroup<T> like(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
     this.condition.like(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> notLike(
+  public <V> CndsGroup<T> notLike(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
     this.condition.notLike(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> between(
+  public <V> CndsGroup<T> between(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
@@ -96,7 +95,7 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> notBetween(
+  public <V> CndsGroup<T> notBetween(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
@@ -106,21 +105,21 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> isNull(
+  public <V> CndsGroup<T> isNull(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
     this.condition.isNull(condition, setter);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> isNotNull(
+  public <V> CndsGroup<T> isNotNull(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
     this.condition.isNotNull(condition, setter);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> in(
+  public <V> CndsGroup<T> in(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
@@ -129,7 +128,7 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> notIn(
+  public <V> CndsGroup<T> notIn(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
@@ -138,63 +137,63 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orEq(
+  public <V> CndsGroup<T> orEq(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orEq(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orNe(
+  public <V> CndsGroup<T> orNe(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orNe(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orGt(
+  public <V> CndsGroup<T> orGt(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orGt(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orGe(
+  public <V> CndsGroup<T> orGe(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orGe(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orLt(
+  public <V> CndsGroup<T> orLt(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orLt(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orLe(
+  public <V> CndsGroup<T> orLe(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orLe(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orLike(
+  public <V> CndsGroup<T> orLike(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
     this.condition.orLike(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orNotLike(
+  public <V> CndsGroup<T> orNotLike(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
     this.condition.orNotLike(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orBetween(
+  public <V> CndsGroup<T> orBetween(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
@@ -204,7 +203,7 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orNotBetween(
+  public <V> CndsGroup<T> orNotBetween(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
@@ -214,21 +213,21 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orIsNull(
+  public <V> CndsGroup<T> orIsNull(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
     this.condition.orIsNull(condition, setter);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orIsNotNull(
+  public <V> CndsGroup<T> orIsNotNull(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
     this.condition.orIsNotNull(condition, setter);
     return this;
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orIn(
+  public <V> CndsGroup<T> orIn(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
@@ -237,7 +236,7 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public <V> LambdaConditionGroup<T> orNotIn(
+  public <V> CndsGroup<T> orNotIn(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
@@ -246,19 +245,19 @@ public class LambdaConditionGroup<T>
   }
 
   @Override
-  public LambdaConditionGroup<T> and(@Nonnull LambdaConditionGroup<T> group) {
+  public CndsGroup<T> and(@Nonnull CndsGroup<T> group) {
     this.condition.and(group);
     return this;
   }
 
   @Override
-  public LambdaConditionGroup<T> or(@Nonnull LambdaConditionGroup<T> group) {
+  public CndsGroup<T> or(@Nonnull CndsGroup<T> group) {
     this.condition.or(group);
     return this;
   }
 
   @Override
-  public LambdaConditionGroup<T> groupBy(@Nonnull final GetterFunction<T, ?> getter) {
+  public CndsGroup<T> groupBy(@Nonnull final GetterFunction<T, ?> getter) {
     this.condition.groupBy(getter);
     return this;
   }

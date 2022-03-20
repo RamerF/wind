@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
-import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.function.GetterFunction;
+import io.github.ramerf.wind.core.function.SetterFunction;
 import java.util.Collection;
 import javax.annotation.Nonnull;
 
@@ -183,9 +183,9 @@ public interface ILambdaCondition<T, U extends ILambdaCondition<T, U>> extends C
 
   <V> U orNotIn(boolean condition, @Nonnull SetterFunction<T, V> setter, Collection<V> values);
 
-  U and(@Nonnull LambdaConditionGroup<T> group);
+  U and(@Nonnull CndsGroup<T> group);
 
-  U or(@Nonnull LambdaConditionGroup<T> group);
+  U or(@Nonnull CndsGroup<T> group);
 
   U groupBy(@Nonnull final GetterFunction<T, ?> getter);
 }

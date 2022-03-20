@@ -63,6 +63,15 @@ public class DataSourceUtils {
     throw new DataAccessException("Failed to getAutoCommit from JDBC Connection for null");
   }
 
+  public static boolean getAutoCommit(Connection connection, final boolean defaultValue)
+      throws DataAccessException {
+    try {
+      return getAutoCommit(connection);
+    } catch (DataAccessException e) {
+      return defaultValue;
+    }
+  }
+
   public static void commit(Connection connection) throws DataAccessException {
     if (connection != null) {
       try {

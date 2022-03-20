@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.domain.Pageable;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.util.Collection;
@@ -21,13 +22,19 @@ import lombok.Getter;
 public abstract class AbstractConditionGroup<
         POJO,
         CONDITION_GROUP extends AbstractConditionGroup<POJO, CONDITION_GROUP, CONDITION>,
-        CONDITION extends AbstractCondition<POJO, CONDITION>>
+        CONDITION extends AbstractCnd<POJO, CONDITION>>
     implements Condition<POJO, CONDITION_GROUP> {
   @Getter protected CONDITION condition;
 
   @Override
   public Class<POJO> getClazz() {
     return condition.getClazz();
+  }
+
+  @Nonnull
+  @Override
+  public Pageable getPageRequest() {
+    return condition.getPageRequest();
   }
 
   @Override

@@ -4,8 +4,7 @@ import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Pageable;
 import io.github.ramerf.wind.core.exception.TooManyResultException;
-import io.github.ramerf.wind.core.executor.logging.ConnectionLogger;
-import io.github.ramerf.wind.core.executor.logging.SimpleLog;
+import io.github.ramerf.wind.core.executor.logging.*;
 import io.github.ramerf.wind.core.handler.*;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import io.github.ramerf.wind.core.util.DataSourceUtils;
@@ -17,17 +16,20 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
- * The jdbc template executor.
+ * The simple jdbc executor.
  *
+ * @since 2022.03.19
  * @author ramer
- * @since 2020/5/19
  */
-@SuppressWarnings("DuplicatedCode")
 public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
 
   public SimpleJdbcExecutor(final Configuration configuration, final Transaction transaction) {
-    super(configuration, transaction);
-    this.log = new SimpleLog(SimpleJdbcExecutor.class);
+    this(configuration, transaction, new SimpleLog(SimpleJdbcExecutor.class));
+  }
+
+  public SimpleJdbcExecutor(
+      final Configuration configuration, final Transaction transaction, final Log log) {
+    super(configuration, transaction, log);
   }
 
   @Override
@@ -114,7 +116,7 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
   }
 
   @Override
-  public <T, R> R queryForObject(@Nonnull final SqlParam<?> sqlParam, final Object[] args)
+  public <T, R> R queryForObject(@Nonnull final SqlParam<T> sqlParam, final Object[] args)
       throws DataAccessException {
     return aroundRead(
         sqlParam,

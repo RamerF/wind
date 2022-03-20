@@ -95,7 +95,6 @@ public class AutoConfigConfiguration {
         throw e;
       }
     }
-    // TODO WARN  支持多数据源
     configuration.setJdbcEnvironment(
         new JdbcEnvironment(
             BeanUtils.initial(dataSource.getTransactionFactory()),

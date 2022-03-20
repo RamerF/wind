@@ -25,6 +25,7 @@ public abstract class BaseServiceImpl<T, ID extends Serializable> implements Bas
     // TODO WARN 这里可以传数据源,否则使用默认数据源
     return dao;
   }
+
   // TODO WARN FooServiceImpl fooServiceImpl = new FooServiceImpl(dao);
 
   // TODO WARN 需要一个辅助代理service的东西

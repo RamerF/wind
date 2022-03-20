@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.executor;
 
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.executor.logging.Log;
+import io.github.ramerf.wind.core.executor.logging.SimpleLog;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,10 +21,15 @@ public abstract class BaseExecutor implements Executor {
   protected Log log;
 
   protected BaseExecutor(Configuration configuration, Transaction transaction) {
+    this(configuration, transaction, new SimpleLog(BaseExecutor.class));
+  }
+
+  protected BaseExecutor(Configuration configuration, Transaction transaction, final Log log) {
     this.transaction = transaction;
     this.closed = false;
     this.configuration = configuration;
     this.wrapper = this;
+    this.log = log;
   }
 
   @Override
@@ -99,5 +105,8 @@ public abstract class BaseExecutor implements Executor {
     this.wrapper = wrapper;
   }
 
-
+  @Override
+  public void setLog(final Log log) {
+    this.log = log;
+  }
 }

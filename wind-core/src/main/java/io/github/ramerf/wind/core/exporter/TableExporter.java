@@ -4,6 +4,7 @@ import io.github.ramerf.wind.WindContext;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.executor.*;
+import io.github.ramerf.wind.core.jdbc.session.TransactionIsolationLevel;
 import io.github.ramerf.wind.core.metadata.TableColumnInformation;
 import io.github.ramerf.wind.core.metadata.TableInformation;
 import io.github.ramerf.wind.core.support.EntityInfo;
@@ -40,7 +41,10 @@ public class TableExporter {
     final TableExporter tableExporter = new TableExporter(windContext);
     tableExporter.executor =
         new SimpleJdbcExecutor(
-            configuration, jdbcEnvironment.getTransactionFactory().newTransaction(dataSource));
+            configuration,
+            jdbcEnvironment
+                .getTransactionFactory()
+                .newTransaction(dataSource, TransactionIsolationLevel.READ_COMMITTED, true));
     return tableExporter;
   }
 

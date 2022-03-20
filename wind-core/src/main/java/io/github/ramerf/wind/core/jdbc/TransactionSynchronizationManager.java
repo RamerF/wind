@@ -5,16 +5,17 @@ import io.github.ramerf.wind.core.util.Asserts;
 import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
 public class TransactionSynchronizationManager {
   private static final ThreadLocal<Map<DataSource, ConnectionHolder>> DATASOURCE_CONNECTION_HOLDER =
-      ThreadLocal.withInitial(HashMap::new);
+      ThreadLocal.withInitial(ConcurrentHashMap::new);
 
-  public static ConnectionHolder getConnection(final DataSource dataSource) {
+  /** 从数据源获取连接,<b>同时连接引用数加1</b> */
+  public static ConnectionHolder getConnectionHolder(final DataSource dataSource) {
     Asserts.notNull(dataSource, "No DataSource specified");
     final Map<DataSource, ConnectionHolder> holderMap = DATASOURCE_CONNECTION_HOLDER.get();
     ConnectionHolder connectionHolder = holderMap.get(dataSource);

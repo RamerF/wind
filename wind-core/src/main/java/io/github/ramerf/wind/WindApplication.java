@@ -8,8 +8,8 @@ import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.exception.ClassInstantiationException;
 import io.github.ramerf.wind.core.exception.WindException;
-import io.github.ramerf.wind.core.executor.Dao;
-import io.github.ramerf.wind.core.executor.DaoImpl;
+import io.github.ramerf.wind.core.executor.DaoFactory;
+import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
@@ -22,9 +22,15 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * The type Wind application.
+ *
+ * @since 2022.03.19
+ * @author ramer
+ */
 @Slf4j
 public class WindApplication {
-  private static final WindContext windContext = new WindContext();
+  private WindContext windContext = new WindContext();
 
   private WindApplication() {}
 
@@ -48,8 +54,9 @@ public class WindApplication {
 
   public static WindApplication run(@Nonnull Configuration configuration) {
     final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
-    Asserts.notNull(jdbcEnvironment, "需要指定数据源");
+    Asserts.notNull(jdbcEnvironment, "DataSource not found");
     final DataSource dataSource = jdbcEnvironment.getDataSource();
+    WindContext windContext = new WindContext();
     windContext.setDbMetaData(DbMetaData.getInstance(dataSource, configuration.getDialect()));
     windContext.setConfiguration(configuration);
     // 设置拦截器
@@ -61,11 +68,14 @@ public class WindApplication {
     EntityHelper.initial(windContext);
     // 解析实体元数据
     initEntityInfo(windContext.getConfiguration());
+    // 注册默认类型处理器
+    BeanUtils.getClazz(TypeHandlerRegistryFactory.class.getName());
     WindApplication windApplication = new WindApplication();
+    windApplication.windContext = windContext;
     return windApplication;
   }
 
-  public static WindContext getWindContext() {
+  public WindContext getWindContext() {
     return windContext;
   }
 
@@ -73,8 +83,8 @@ public class WindApplication {
     return windContext.getConfiguration();
   }
 
-  public Dao getDao() {
-    return new DaoImpl(getConfiguration());
+  public DaoFactory getDaoFactory() {
+    return DaoFactory.of(getConfiguration());
   }
 
   private static void populateInterceptors(final Configuration configuration) {

@@ -34,11 +34,13 @@ public class Page<T> {
     page.content.addAll(content);
     page.pageable = pageable;
     page.total =
-        Optional.of(pageable)
-            .filter(it -> !content.isEmpty()) //
-            .filter(it -> it.getOffset() + it.getPageSize() > total) //
-            .map(it -> it.getOffset() + content.size()) //
-            .orElse(total);
+        pageable.isPaged()
+            ? Optional.of(pageable)
+                .filter(it -> !content.isEmpty()) //
+                .filter(it -> it.getOffset() + it.getPageSize() > total) //
+                .map(it -> it.getOffset() + content.size()) //
+                .orElse(total)
+            : total;
     return page;
   }
 

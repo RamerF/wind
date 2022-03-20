@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.domain.Pageable;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.util.Collection;
@@ -18,6 +19,20 @@ import javax.annotation.Nonnull;
  */
 public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
   Class<POJO> getClazz();
+
+  /**
+   * 获取分页和排序参数.示例:
+   *
+   * <pre>
+   *     <li><code>PageRequest.of(1);</code>
+   *     <li><code>PageRequest.of(1, 10).desc(Foo::setId);</code>
+   *     <li><code>cnds.limit(1);</code>
+   *     <li><code>cnds.limit(1, 10).orderBy(Foo::setId);</code>
+   *     <li><code>Pageable.unpaged();</code>
+   * </pre>
+   */
+  @Nonnull
+  Pageable getPageRequest();
 
   String getString();
 
