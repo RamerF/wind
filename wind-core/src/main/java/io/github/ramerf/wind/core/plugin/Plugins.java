@@ -32,12 +32,12 @@ public class Plugins {
     QUERY_METHODS = Collections.unmodifiableSet(queryMethods);
   }
 
-  public static Object wrap(Object target, Interceptor interceptor, final Object[] args) {
+  public static Object wrap(Object target, DaoInterceptor daoInterceptor, final Object[] args) {
     Class<?> clazz = target.getClass();
     Class<?>[] interfaces = BeanUtils.getAllInterfaces(clazz);
     if (false) {
       return Proxy.newProxyInstance(
-          clazz.getClassLoader(), interfaces, new PluginJdkProxyCallback(target, interceptor));
+          clazz.getClassLoader(), interfaces, new PluginJdkProxyCallback(target, daoInterceptor));
     }
     //
     else if (Dao.class.isAssignableFrom(clazz)) {
@@ -45,7 +45,7 @@ public class Plugins {
       // 继承被代理类
       enhancer.setSuperclass(target.getClass());
       // 设置回调
-      enhancer.setCallback(new PluginCglibProxyCallback(target, interceptor));
+      enhancer.setCallback(new PluginCglibProxyCallback(target, daoInterceptor));
       // TODO WARN 代理不同的参数
       if (Dao.class.isAssignableFrom(clazz)) {
         target =

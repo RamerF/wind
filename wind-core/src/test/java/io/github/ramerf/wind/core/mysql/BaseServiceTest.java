@@ -14,8 +14,7 @@ import io.github.ramerf.wind.core.jdbc.dynamicdatasource.DynamicDataSource;
 import io.github.ramerf.wind.core.jdbc.dynamicdatasource.DynamicDataSourceHolder;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
-import io.github.ramerf.wind.core.plugin.Interceptor;
-import io.github.ramerf.wind.core.plugin.Invocation;
+import io.github.ramerf.wind.core.plugin.*;
 import io.github.ramerf.wind.core.service.GenericService;
 import io.github.ramerf.wind.core.util.LogUtil;
 import java.lang.reflect.Field;
@@ -104,7 +103,7 @@ public class BaseServiceTest {
             .orderBy(Foo::getCreateTime)
             .orderBy(Foo::getId, Direction.ASC);
     // 条件组
-    CndsGroup<Foo> group = CndsGroup.of(Foo.class);
+    CndGroup<Foo> group = CndGroup.of(Foo.class);
     group.orLike(Foo::setName, "name").orLike(Foo::setTextString, "name");
     cnds.and(group);
 
@@ -288,56 +287,85 @@ public class BaseServiceTest {
     private String name;
   }
 
-  /** 自定义拦截器. */
-  public static class FooInterceptor implements Interceptor {
+  /** 自定义dao拦截器,拦截所有的dao层调用. */
+  public static class FooDaoInterceptor implements DaoInterceptor {
+
+    @Override
+    public Object intercept(final Invocation invocation) throws Throwable {
+      log.info("intercept:[{}]", "---------Foo Dao Interceptor---------");
+      log.info("intercept:[{}]", invocation.getTarget());
+      log.info("intercept:[{}]", invocation.getMethod());
+      log.info("intercept:[{}]", invocation.getArgs());
+      log.info("intercept:[{}]", invocation.isWriteMethod());
+      if (invocation.getArgs() != null) {
+        final Object[] args = invocation.getArgs();
+        for (final Object arg : args) {
+          if (arg instanceof Cnd) {
+            @SuppressWarnings("unchecked")
+            final Cnd<Foo> cnd = (Cnd<Foo>) arg;
+            cnd.eq(Foo::setName, "string");
+          }
+        }
+      }
+      return invocation.proceed();
+    }
+  }
+
+  /** 自定义service拦截器,拦截 绑定 对象为clazz的service方法调用. */
+  public static class FooServiceInterceptor implements ServiceInterceptor {
+
     @Override
     public boolean supports(final Class<?> clazz) {
-      // return Foo.class.isAssignableFrom(clazz);
-      return true;
+      return clazz.isAssignableFrom(Foo.class);
     }
 
     @Override
     public Object intercept(final Invocation invocation) throws Throwable {
-      log.info("intercept:[{}]", "---------Foo Interceptor---------");
+      log.info("intercept:[{}]", "---------Foo Service Interceptor---------");
       log.info("intercept:[{}]", invocation.getTarget());
       log.info("intercept:[{}]", invocation.getMethod());
       log.info("intercept:[{}]", invocation.getArgs());
-      log.info("intercept:[{}]", invocation.getExecType());
+      log.info("intercept:[{}]", invocation.isWriteMethod());
       return invocation.proceed();
     }
   }
 
   public static void main(String[] args) {
+    LogUtil.setLoggerLevel(SimpleJdbcExecutor.class, Level.TRACE);
+
     Configuration configuration = new Configuration();
-    final JdbcEnvironment jdbcEnvironment =
-        new JdbcEnvironment(new JdbcTransactionFactory(), getDynamicDataSource());
+    final JdbcTransactionFactory transactionFactory = new JdbcTransactionFactory();
+    final DataSource dataSource = getDynamicDataSource();
+    final JdbcEnvironment jdbcEnvironment = new JdbcEnvironment(transactionFactory, dataSource);
     configuration.setJdbcEnvironment(jdbcEnvironment);
     configuration.setDdlAuto(DdlAuto.UPDATE);
     configuration.setEntityPackage("io.github.ramerf.wind.core.mysql");
     configuration.setInterceptorPackage("io.github.ramerf.wind.core.mysql");
     final WindApplication windApplication = WindApplication.run(configuration);
-    final Dao dao = windApplication.getDaoFactory().getDao(true);
-    LogUtil.setLoggerLevel(SimpleJdbcExecutor.class, Level.TRACE);
-    //
+    final DaoFactory daoFactory = windApplication.getDaoFactory();
+
+    final Dao dao1 = daoFactory.getDao();
     DynamicDataSourceHolder.push("d2");
     Foo foo1 = new Foo();
     foo1.setName(1 + "-" + LocalDateTime.now());
-    dao.create(foo1);
+    dao1.create(foo1);
     DynamicDataSourceHolder.poll();
-
+    final Dao dao2 = daoFactory.getDao();
     DynamicDataSourceHolder.push("d1");
     Foo foo2 = new Foo();
     foo2.setName(2 + "-" + LocalDateTime.now());
-    dao.create(foo2);
+    dao2.create(foo2);
     DynamicDataSourceHolder.poll();
 
     log.info("main:[{}]", foo1.getId() + "-" + foo2.getId());
-    if (System.currentTimeMillis() % 2 == 0) {
-      dao.commit(true);
+    if (System.currentTimeMillis() % 2 == 0 || true) {
+      dao1.commit(true);
+      dao2.commit(true);
     } else {
-      dao.rollback(true);
+      dao1.rollback(true);
+      dao2.rollback(true);
     }
-    // TODO WARN 动态数据源,Executor需要可以切换事务Transaction,使用TranactionHolder
+    dao1.fetchAll(Cnd.of(Foo.class).eq(Foo::setId, 1L));
   }
 
   private static DataSource getDynamicDataSource() {

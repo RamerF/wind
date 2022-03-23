@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.plugin.Interceptor;
+import io.github.ramerf.wind.core.plugin.DaoInterceptor;
 import io.github.ramerf.wind.core.plugin.InterceptorChain;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import lombok.Data;
@@ -48,8 +48,8 @@ public class Configuration {
   protected final InterceptorChain interceptorChain = new InterceptorChain();
 
   /** 添加拦截器. */
-  public void addInterceptor(Interceptor interceptor) {
-    interceptorChain.addInterceptor(interceptor);
+  public void addInterceptor(DaoInterceptor daoInterceptor) {
+    interceptorChain.addInterceptor(daoInterceptor);
   }
 
   public enum DdlAuto {

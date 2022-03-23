@@ -92,7 +92,7 @@ public class BaseServiceTest {
             .orderBy(Foo::getCreateTime)
             .orderBy(Foo::getId, Direction.ASC);
     // 条件组
-    CndsGroup<Foo> group = CndsGroup.of(Foo.class);
+    CndGroup<Foo> group = CndGroup.of(Foo.class);
     group.orLike(Foo::setName, "name").orLike(Foo::setTextString, "name");
     cnds.and(group);
 

@@ -29,7 +29,12 @@ import java.util.Deque;
  */
 public final class DynamicDataSourceHolder {
   private static final ThreadLocal<Deque<String>> LOOKUP_KEY_HOLDER =
-      ThreadLocal.withInitial(ArrayDeque::new);
+      ThreadLocal.withInitial(
+          () -> {
+            final ArrayDeque<String> arrayDeque = new ArrayDeque<>();
+            arrayDeque.push("primary");
+            return arrayDeque;
+          });
 
   private DynamicDataSourceHolder() {}
 
@@ -40,6 +45,12 @@ public final class DynamicDataSourceHolder {
    */
   public static String peek() {
     return LOOKUP_KEY_HOLDER.get().peek();
+  }
+
+  /** 清空再添加. */
+  static String clearPush(String ds) {
+    clear();
+    return push(ds);
   }
 
   public static String push(String ds) {

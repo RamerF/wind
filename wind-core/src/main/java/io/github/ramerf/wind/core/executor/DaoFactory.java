@@ -47,7 +47,7 @@ public class DaoFactory {
     return (DaoImpl)
         configuration
             .getInterceptorChain()
-            .pluginAll(dao, null, new Object[] {configuration, executor, autoCommit});
+            .pluginAll(dao, new Object[] {configuration, executor, autoCommit});
   }
 
   public Dao getDao(final Connection connection) {
@@ -61,6 +61,6 @@ public class DaoFactory {
     return (DaoImpl)
         configuration
             .getInterceptorChain()
-            .pluginAll(dao, null, new Object[] {configuration, executor, autoCommit});
+            .pluginAll(dao, new Object[] {configuration, executor, autoCommit});
   }
 }

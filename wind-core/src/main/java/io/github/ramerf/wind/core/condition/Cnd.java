@@ -460,7 +460,7 @@ public class Cnd<T> extends AbstractCnd<T, Cnd<T>> implements ILambdaCondition<T
   }
 
   @Override
-  public Cnd<T> and(@Nonnull CndsGroup<T> group) {
+  public Cnd<T> and(@Nonnull CndGroup<T> group) {
     if (!group.isEmpty()) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator() : "")
@@ -471,7 +471,7 @@ public class Cnd<T> extends AbstractCnd<T, Cnd<T>> implements ILambdaCondition<T
   }
 
   @Override
-  public Cnd<T> or(@Nonnull CndsGroup<T> group) {
+  public Cnd<T> or(@Nonnull CndGroup<T> group) {
     if (!group.isEmpty()) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator() : "")

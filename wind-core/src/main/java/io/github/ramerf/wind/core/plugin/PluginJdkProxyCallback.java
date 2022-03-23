@@ -7,11 +7,11 @@ import java.lang.reflect.Method;
 public class PluginJdkProxyCallback implements InvocationHandler {
 
   private final Object target;
-  private final Interceptor interceptor;
+  private final DaoInterceptor daoInterceptor;
 
-  public PluginJdkProxyCallback(Object target, Interceptor interceptor) {
+  public PluginJdkProxyCallback(Object target, DaoInterceptor daoInterceptor) {
     this.target = target;
-    this.interceptor = interceptor;
+    this.daoInterceptor = daoInterceptor;
   }
 
   @Override
@@ -19,7 +19,7 @@ public class PluginJdkProxyCallback implements InvocationHandler {
     try {
       final String name = method.getName();
       if (Plugins.QUERY_METHODS.contains(name) || Plugins.UPDATE_METHODS.contains(name)) {
-        return interceptor.intercept(new Invocation(target, method, args));
+        return daoInterceptor.intercept(new Invocation(target, method, args));
       }
       return method.invoke(target, method, args);
     } catch (Exception e) {

@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.jdbc;
 
 import io.github.ramerf.wind.core.executor.DataAccessException;
+import io.github.ramerf.wind.core.jdbc.dynamicdatasource.DynamicConnectionHolder;
 import io.github.ramerf.wind.core.util.Asserts;
 import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.Connection;
@@ -22,13 +23,12 @@ public class TransactionSynchronizationManager {
     if (connectionHolder != null) {
       Connection connection = connectionHolder.getConnection();
       if (connection == null || DataSourceUtils.isClosed(connection)) {
-        connectionHolder.setConnection(connection = DataSourceUtils.getConnection(dataSource));
+        connectionHolder.setConnection(DataSourceUtils.getConnection(dataSource));
       }
       connectionHolder.requestConnection();
       return connectionHolder;
     }
-    final Connection connection = DataSourceUtils.getConnection(dataSource);
-    connectionHolder = new ConnectionHolder(connection);
+    connectionHolder = new DynamicConnectionHolder(dataSource);
     holderMap.put(dataSource, connectionHolder);
     connectionHolder.requestConnection();
     return connectionHolder;

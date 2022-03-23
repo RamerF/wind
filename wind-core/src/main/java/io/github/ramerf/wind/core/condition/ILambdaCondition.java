@@ -183,9 +183,9 @@ public interface ILambdaCondition<T, U extends ILambdaCondition<T, U>> extends C
 
   <V> U orNotIn(boolean condition, @Nonnull SetterFunction<T, V> setter, Collection<V> values);
 
-  U and(@Nonnull CndsGroup<T> group);
+  U and(@Nonnull CndGroup<T> group);
 
-  U or(@Nonnull CndsGroup<T> group);
+  U or(@Nonnull CndGroup<T> group);
 
   U groupBy(@Nonnull final GetterFunction<T, ?> getter);
 }

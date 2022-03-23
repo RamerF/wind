@@ -4,23 +4,20 @@ import java.util.*;
 
 public class InterceptorChain {
 
-  private final List<Interceptor> interceptors = new ArrayList<>();
+  private final List<DaoInterceptor> daoInterceptors = new ArrayList<>();
 
-  // TODO WARN 这个clazz有待商榷
-  public Object pluginAll(Object target, final Class<?> clazz, final Object[] args) {
-    for (Interceptor interceptor : interceptors) {
-      if (interceptor.supports(clazz)) {
-        target = interceptor.plugin(target, args);
-      }
+  public Object pluginAll(Object target, final Object[] args) {
+    for (DaoInterceptor daoInterceptor : daoInterceptors) {
+      target = daoInterceptor.plugin(target, args);
     }
     return target;
   }
 
-  public void addInterceptor(Interceptor interceptor) {
-    interceptors.add(interceptor);
+  public void addInterceptor(DaoInterceptor daoInterceptor) {
+    daoInterceptors.add(daoInterceptor);
   }
 
-  public List<Interceptor> getInterceptors() {
-    return Collections.unmodifiableList(interceptors);
+  public List<DaoInterceptor> getInterceptors() {
+    return Collections.unmodifiableList(daoInterceptors);
   }
 }

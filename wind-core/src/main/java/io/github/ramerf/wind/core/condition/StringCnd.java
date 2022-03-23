@@ -365,7 +365,7 @@ public class StringCnd<T> extends AbstractCnd<T, StringCnd<T>>
   }
 
   @Override
-  public StringCnd<T> and(@Nonnull final StringConditionGroup<T> group) {
+  public StringCnd<T> and(@Nonnull final StringCndGroup<T> group) {
     if (!group.isEmpty()) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator() : "")
@@ -376,7 +376,7 @@ public class StringCnd<T> extends AbstractCnd<T, StringCnd<T>>
   }
 
   @Override
-  public StringCnd<T> or(@Nonnull final StringConditionGroup<T> group) {
+  public StringCnd<T> or(@Nonnull final StringCndGroup<T> group) {
     if (!group.isEmpty()) {
       conditionSql.add(
           (conditionSql.size() > 0 ? OR.operator() : "")

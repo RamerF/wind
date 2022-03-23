@@ -187,9 +187,9 @@ public interface IStringCondition<T, U extends IStringCondition<T, U>> extends C
 
   U orNotIn(final boolean condition, @Nonnull final String column, final Collection<?> values);
 
-  U and(@Nonnull StringConditionGroup<T> group);
+  U and(@Nonnull StringCndGroup<T> group);
 
-  U or(@Nonnull StringConditionGroup<T> group);
+  U or(@Nonnull StringCndGroup<T> group);
 
   default U and(final String column, final MatchPattern operator, final Object value) {
     return and(column, operator.operator, value);

@@ -119,10 +119,9 @@ public class JdbcTransaction implements Transaction {
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
-    final ConnectionHolder connectionHolder =
-        TransactionSynchronizationManager.getConnectionHolder(this.dataSource);
+
+    this.connectionHolder = TransactionSynchronizationManager.getConnectionHolder(this.dataSource);
     this.connection = connectionHolder.getConnection();
-    this.connectionHolder = connectionHolder;
     if (this.level != null) {
       try {
         //noinspection MagicConstant

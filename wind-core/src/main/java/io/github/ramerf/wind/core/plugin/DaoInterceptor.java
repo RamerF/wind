@@ -1,12 +1,10 @@
 package io.github.ramerf.wind.core.plugin;
 
+import io.github.ramerf.wind.core.executor.Dao;
 import java.util.Properties;
 
-/** 用于拦截 {@link Query}和{@link Update} */
-public interface Interceptor {
-
-  /** 是否支持拦截当前类. */
-  boolean supports(Class<?> clazz);
+/** 用于拦截 {@link Dao} */
+public interface DaoInterceptor {
 
   Object intercept(Invocation invocation) throws Throwable;
 

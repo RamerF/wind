@@ -6,86 +6,88 @@ import java.util.Collection;
 import javax.annotation.Nonnull;
 
 /**
+ * 基于 {@link Cnd} 的分组.
+ *
  * @author ramer
  * @since 24/11/2020
  */
-public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>>
-    implements ILambdaCondition<T, CndsGroup<T>> {
+public class CndGroup<T> extends AbstractConditionGroup<T, CndGroup<T>, Cnd<T>>
+    implements ILambdaCondition<T, CndGroup<T>> {
 
-  public static <T> CndsGroup<T> of(final Cnd<T> cnds) {
-    final CndsGroup<T> group = new CndsGroup<>();
+  public static <T> CndGroup<T> of(final Cnd<T> cnds) {
+    final CndGroup<T> group = new CndGroup<>();
     group.condition = new Cnd<>();
     return group;
   }
 
-  public static <T> CndsGroup<T> of(final Class<T> clazz) {
-    return new CndsGroup<>(clazz);
+  public static <T> CndGroup<T> of(final Class<T> clazz) {
+    return new CndGroup<>(clazz);
   }
 
-  private CndsGroup() {}
+  private CndGroup() {}
 
-  private CndsGroup(final Class<T> clazz) {
+  private CndGroup(final Class<T> clazz) {
     this.condition = new Cnd<>(clazz);
   }
 
   @Override
-  public <V> CndsGroup<T> eq(
+  public <V> CndGroup<T> eq(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.eq(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> ne(
+  public <V> CndGroup<T> ne(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.ne(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> gt(
+  public <V> CndGroup<T> gt(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.gt(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> ge(
+  public <V> CndGroup<T> ge(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.ge(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> lt(
+  public <V> CndGroup<T> lt(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.lt(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> le(
+  public <V> CndGroup<T> le(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.le(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> like(
+  public <V> CndGroup<T> like(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
     this.condition.like(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> notLike(
+  public <V> CndGroup<T> notLike(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
     this.condition.notLike(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> between(
+  public <V> CndGroup<T> between(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
@@ -95,7 +97,7 @@ public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>
   }
 
   @Override
-  public <V> CndsGroup<T> notBetween(
+  public <V> CndGroup<T> notBetween(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
@@ -105,21 +107,21 @@ public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>
   }
 
   @Override
-  public <V> CndsGroup<T> isNull(
+  public <V> CndGroup<T> isNull(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
     this.condition.isNull(condition, setter);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> isNotNull(
+  public <V> CndGroup<T> isNotNull(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
     this.condition.isNotNull(condition, setter);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> in(
+  public <V> CndGroup<T> in(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
@@ -128,7 +130,7 @@ public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>
   }
 
   @Override
-  public <V> CndsGroup<T> notIn(
+  public <V> CndGroup<T> notIn(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
@@ -137,63 +139,63 @@ public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>
   }
 
   @Override
-  public <V> CndsGroup<T> orEq(
+  public <V> CndGroup<T> orEq(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orEq(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orNe(
+  public <V> CndGroup<T> orNe(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orNe(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orGt(
+  public <V> CndGroup<T> orGt(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orGt(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orGe(
+  public <V> CndGroup<T> orGe(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orGe(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orLt(
+  public <V> CndGroup<T> orLt(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orLt(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orLe(
+  public <V> CndGroup<T> orLe(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
     this.condition.orLe(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orLike(
+  public <V> CndGroup<T> orLike(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
     this.condition.orLike(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orNotLike(
+  public <V> CndGroup<T> orNotLike(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
     this.condition.orNotLike(condition, setter, value);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orBetween(
+  public <V> CndGroup<T> orBetween(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
@@ -203,7 +205,7 @@ public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>
   }
 
   @Override
-  public <V> CndsGroup<T> orNotBetween(
+  public <V> CndGroup<T> orNotBetween(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final V start,
@@ -213,21 +215,21 @@ public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>
   }
 
   @Override
-  public <V> CndsGroup<T> orIsNull(
+  public <V> CndGroup<T> orIsNull(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
     this.condition.orIsNull(condition, setter);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orIsNotNull(
+  public <V> CndGroup<T> orIsNotNull(
       final boolean condition, @Nonnull final SetterFunction<T, V> setter) {
     this.condition.orIsNotNull(condition, setter);
     return this;
   }
 
   @Override
-  public <V> CndsGroup<T> orIn(
+  public <V> CndGroup<T> orIn(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
@@ -236,7 +238,7 @@ public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>
   }
 
   @Override
-  public <V> CndsGroup<T> orNotIn(
+  public <V> CndGroup<T> orNotIn(
       final boolean condition,
       @Nonnull final SetterFunction<T, V> setter,
       @Nonnull final Collection<V> values) {
@@ -245,19 +247,19 @@ public class CndsGroup<T> extends AbstractConditionGroup<T, CndsGroup<T>, Cnd<T>
   }
 
   @Override
-  public CndsGroup<T> and(@Nonnull CndsGroup<T> group) {
+  public CndGroup<T> and(@Nonnull CndGroup<T> group) {
     this.condition.and(group);
     return this;
   }
 
   @Override
-  public CndsGroup<T> or(@Nonnull CndsGroup<T> group) {
+  public CndGroup<T> or(@Nonnull CndGroup<T> group) {
     this.condition.or(group);
     return this;
   }
 
   @Override
-  public CndsGroup<T> groupBy(@Nonnull final GetterFunction<T, ?> getter) {
+  public CndGroup<T> groupBy(@Nonnull final GetterFunction<T, ?> getter) {
     this.condition.groupBy(getter);
     return this;
   }

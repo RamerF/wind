@@ -10,11 +10,11 @@ import net.sf.cglib.proxy.MethodProxy;
 public class PluginCglibProxyCallback implements MethodInterceptor {
 
   private final Object target;
-  private final Interceptor interceptor;
+  private final DaoInterceptor daoInterceptor;
 
-  public PluginCglibProxyCallback(Object target, Interceptor interceptor) {
+  public PluginCglibProxyCallback(Object target, DaoInterceptor daoInterceptor) {
     this.target = target;
-    this.interceptor = interceptor;
+    this.daoInterceptor = daoInterceptor;
   }
 
   @Override
@@ -24,7 +24,7 @@ public class PluginCglibProxyCallback implements MethodInterceptor {
     try {
       final String name = method.getName();
       if (Plugins.QUERY_METHODS.contains(name) || Plugins.UPDATE_METHODS.contains(name)) {
-        return interceptor.intercept(new Invocation(target, method, args));
+        return daoInterceptor.intercept(new Invocation(target, method, args));
       }
       return method.invoke(target, args);
     } catch (Exception e) {

@@ -14,7 +14,7 @@ import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
-import io.github.ramerf.wind.core.plugin.Interceptor;
+import io.github.ramerf.wind.core.plugin.DaoInterceptor;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
 import java.util.Set;
@@ -91,9 +91,9 @@ public class WindApplication {
     final String interceptorPackage = configuration.getInterceptorPackage();
     if (StringUtils.nonEmpty(interceptorPackage)) {
       try {
-        final Set<Class<? extends Interceptor>> classes =
-            BeanUtils.scanClasses(interceptorPackage, Interceptor.class);
-        for (Class<? extends Interceptor> clazz : classes) {
+        final Set<Class<? extends DaoInterceptor>> classes =
+            BeanUtils.scanClasses(interceptorPackage, DaoInterceptor.class);
+        for (Class<? extends DaoInterceptor> clazz : classes) {
           try {
             configuration.addInterceptor(BeanUtils.initial(clazz));
           } catch (ClassInstantiationException e) {

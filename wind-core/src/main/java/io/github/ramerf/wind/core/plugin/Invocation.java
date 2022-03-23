@@ -4,9 +4,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class Invocation {
-
+  /** 被代理的目标对象. */
   private final Object target;
+
+  /** 被代理的方法. */
   private final Method method;
+
+  /** 被代理的方法参数. */
   private final Object[] args;
   /** 数据库操作类型. */
   private final ExecType execType;
@@ -33,6 +37,10 @@ public class Invocation {
 
   public ExecType getExecType() {
     return execType;
+  }
+
+  public boolean isWriteMethod() {
+    return execType.equals(ExecType.WRITE);
   }
 
   public Object proceed() throws InvocationTargetException, IllegalAccessException {

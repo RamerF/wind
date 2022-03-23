@@ -12,8 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -26,8 +25,14 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 public class DynamicDataSource implements DataSource {
   @Setter private boolean strict = false;
-  @Setter private String primary = "master";
+  @Getter private String primary = "master";
   private final Map<String, DataSource> dataSourceMap = new ConcurrentHashMap<>();
+
+  public void setPrimary(final String primary) {
+    this.primary = primary;
+    // 设置默认主库
+    DynamicDataSourceHolder.clearPush(primary);
+  }
 
   /**
    * 添加数据源

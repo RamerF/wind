@@ -4,87 +4,88 @@ import java.util.Collection;
 import javax.annotation.Nonnull;
 
 /**
+ * 基于 {@link StringCnd} 的分组.
+ *
  * @author ramer
  * @since 15/08/2021
  */
-public class StringConditionGroup<T>
-    extends AbstractConditionGroup<T, StringConditionGroup<T>, StringCnd<T>>
-    implements IStringCondition<T, StringConditionGroup<T>> {
+public class StringCndGroup<T> extends AbstractConditionGroup<T, StringCndGroup<T>, StringCnd<T>>
+    implements IStringCondition<T, StringCndGroup<T>> {
 
-  public static <T> StringConditionGroup<T> of(final StringCnd<T> stringCondition) {
-    final StringConditionGroup<T> group = new StringConditionGroup<>();
+  public static <T> StringCndGroup<T> of(final StringCnd<T> stringCondition) {
+    final StringCndGroup<T> group = new StringCndGroup<>();
     group.condition = new StringCnd<>();
     return group;
   }
 
-  public static <T> StringConditionGroup<T> of(final Class<T> clazz) {
-    return new StringConditionGroup<>(clazz);
+  public static <T> StringCndGroup<T> of(final Class<T> clazz) {
+    return new StringCndGroup<>(clazz);
   }
 
-  private StringConditionGroup() {}
+  private StringCndGroup() {}
 
-  private StringConditionGroup(final Class<T> clazz) {
+  private StringCndGroup(final Class<T> clazz) {
     this.condition = new StringCnd<>(clazz);
   }
 
   @Override
-  public StringConditionGroup<T> eq(
+  public StringCndGroup<T> eq(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.eq(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> ne(
+  public StringCndGroup<T> ne(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.ne(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> gt(
+  public StringCndGroup<T> gt(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.gt(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> ge(
+  public StringCndGroup<T> ge(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.ge(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> lt(
+  public StringCndGroup<T> lt(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.lt(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> le(
+  public StringCndGroup<T> le(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.le(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> like(
+  public StringCndGroup<T> like(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.like(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> notLike(
+  public StringCndGroup<T> notLike(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.notLike(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> between(
+  public StringCndGroup<T> between(
       final boolean condition,
       @Nonnull final String column,
       @Nonnull final Object start,
@@ -94,7 +95,7 @@ public class StringConditionGroup<T>
   }
 
   @Override
-  public StringConditionGroup<T> notBetween(
+  public StringCndGroup<T> notBetween(
       final boolean condition,
       @Nonnull final String column,
       @Nonnull final Object start,
@@ -104,89 +105,89 @@ public class StringConditionGroup<T>
   }
 
   @Override
-  public StringConditionGroup<T> isNull(final boolean condition, @Nonnull final String column) {
+  public StringCndGroup<T> isNull(final boolean condition, @Nonnull final String column) {
     this.condition.isNull(condition, column);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> isNotNull(final boolean condition, @Nonnull final String column) {
+  public StringCndGroup<T> isNotNull(final boolean condition, @Nonnull final String column) {
     this.condition.isNotNull(condition, column);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> in(
+  public StringCndGroup<T> in(
       final boolean condition, @Nonnull final String column, @Nonnull final Collection<?> values) {
     this.condition.in(condition, column, values);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> notIn(
+  public StringCndGroup<T> notIn(
       final boolean condition, @Nonnull final String column, @Nonnull final Collection<?> values) {
     this.condition.notIn(condition, column, values);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orEq(
+  public StringCndGroup<T> orEq(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.orEq(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orNe(
+  public StringCndGroup<T> orNe(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.orNe(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orGt(
+  public StringCndGroup<T> orGt(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.orGt(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orGe(
+  public StringCndGroup<T> orGe(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.orGe(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orLt(
+  public StringCndGroup<T> orLt(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.orLt(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orLe(
+  public StringCndGroup<T> orLe(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.orLe(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orLike(
+  public StringCndGroup<T> orLike(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.orLike(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orNotLike(
+  public StringCndGroup<T> orNotLike(
       final boolean condition, @Nonnull final String column, @Nonnull final Object value) {
     this.condition.orNotLike(condition, column, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orBetween(
+  public StringCndGroup<T> orBetween(
       final boolean condition,
       @Nonnull final String column,
       @Nonnull final Object start,
@@ -196,7 +197,7 @@ public class StringConditionGroup<T>
   }
 
   @Override
-  public StringConditionGroup<T> orNotBetween(
+  public StringCndGroup<T> orNotBetween(
       final boolean condition,
       @Nonnull final String column,
       @Nonnull final Object start,
@@ -206,60 +207,57 @@ public class StringConditionGroup<T>
   }
 
   @Override
-  public StringConditionGroup<T> orIsNull(final boolean condition, @Nonnull final String column) {
+  public StringCndGroup<T> orIsNull(final boolean condition, @Nonnull final String column) {
     this.condition.orIsNull(condition, column);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orIsNotNull(
-      final boolean condition, @Nonnull final String column) {
+  public StringCndGroup<T> orIsNotNull(final boolean condition, @Nonnull final String column) {
     this.condition.orIsNotNull(condition, column);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orIn(
+  public StringCndGroup<T> orIn(
       final boolean condition, @Nonnull final String column, @Nonnull final Collection<?> values) {
     this.condition.orIn(condition, column, values);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> orNotIn(
+  public StringCndGroup<T> orNotIn(
       final boolean condition, @Nonnull final String column, @Nonnull final Collection<?> values) {
     this.condition.orNotIn(condition, column, values);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> and(@Nonnull final StringConditionGroup<T> group) {
+  public StringCndGroup<T> and(@Nonnull final StringCndGroup<T> group) {
     this.condition.and(group);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> or(@Nonnull final StringConditionGroup<T> group) {
+  public StringCndGroup<T> or(@Nonnull final StringCndGroup<T> group) {
     this.condition.or(group);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> and(
-      final String column, final String operator, final Object value) {
+  public StringCndGroup<T> and(final String column, final String operator, final Object value) {
     this.condition.and(column, operator, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> or(
-      final String column, final String operator, final Object value) {
+  public StringCndGroup<T> or(final String column, final String operator, final Object value) {
     this.condition.or(column, operator, value);
     return this;
   }
 
   @Override
-  public StringConditionGroup<T> groupBy(@Nonnull final String column) {
+  public StringCndGroup<T> groupBy(@Nonnull final String column) {
     this.condition.groupBy(column);
     return this;
   }
