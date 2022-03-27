@@ -1,8 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import io.github.ramerf.wind.core.plugin.DaoInterceptor;
-import io.github.ramerf.wind.core.plugin.InterceptorChain;
+import io.github.ramerf.wind.core.plugin.*;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -44,12 +43,19 @@ public class Configuration {
   /** jdbc环境配置.数据源,事务 */
   protected JdbcEnvironment jdbcEnvironment;
 
-  /** 拦截器 */
-  protected final InterceptorChain interceptorChain = new InterceptorChain();
+  /** dao拦截器 */
+  protected final DaoInterceptorChain daoInterceptorChain = new DaoInterceptorChain();
+  /** service拦截器 */
+  protected final ServiceInterceptorChain serviceInterceptorChain = new ServiceInterceptorChain();
+
+  /** 添加dao拦截器. */
+  public void addInterceptor(DaoInterceptor daoInterceptor) {
+    daoInterceptorChain.addInterceptor(daoInterceptor);
+  }
 
   /** 添加拦截器. */
-  public void addInterceptor(DaoInterceptor daoInterceptor) {
-    interceptorChain.addInterceptor(daoInterceptor);
+  public void addInterceptor(ServiceInterceptor serviceInterceptor) {
+    serviceInterceptorChain.addInterceptor(serviceInterceptor);
   }
 
   public enum DdlAuto {

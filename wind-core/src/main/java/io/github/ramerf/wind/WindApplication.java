@@ -15,6 +15,7 @@ import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.metadata.DbMetaData;
 import io.github.ramerf.wind.core.plugin.DaoInterceptor;
+import io.github.ramerf.wind.core.plugin.ServiceInterceptor;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
 import java.util.Set;
@@ -90,6 +91,7 @@ public class WindApplication {
   private static void populateInterceptors(final Configuration configuration) {
     final String interceptorPackage = configuration.getInterceptorPackage();
     if (StringUtils.nonEmpty(interceptorPackage)) {
+      // dao 拦截器
       try {
         final Set<Class<? extends DaoInterceptor>> classes =
             BeanUtils.scanClasses(interceptorPackage, DaoInterceptor.class);
@@ -98,11 +100,26 @@ public class WindApplication {
             configuration.addInterceptor(BeanUtils.initial(clazz));
           } catch (ClassInstantiationException e) {
             throw new WindException(
-                "Fail to initial interceptor:" + clazz + ",require no arg constructor", e);
+                "Fail to initial dao interceptor:" + clazz + ",require no arg constructor", e);
           }
         }
       } catch (IOException e) {
-        log.warn("Fail to populate interceptors:" + interceptorPackage, e);
+        log.warn("Fail to populate dao interceptors:" + interceptorPackage, e);
+      }
+      // service 拦截器
+      try {
+        final Set<Class<? extends ServiceInterceptor>> classes =
+            BeanUtils.scanClasses(interceptorPackage, ServiceInterceptor.class);
+        for (Class<? extends ServiceInterceptor> clazz : classes) {
+          try {
+            configuration.addInterceptor(BeanUtils.initial(clazz));
+          } catch (ClassInstantiationException e) {
+            throw new WindException(
+                "Fail to initial service interceptor:" + clazz + ",require no arg constructor", e);
+          }
+        }
+      } catch (IOException e) {
+        log.warn("Fail to populate service interceptors:" + interceptorPackage, e);
       }
     }
   }

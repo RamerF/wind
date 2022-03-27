@@ -17,11 +17,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.reader.UnicodeReader;
 
+/**
+ * 读取yml文件.
+ *
+ * @since 2022.03.26
+ * @author ramer
+ */
 @Slf4j
 public final class YmlUtil {
   private YmlUtil() {}
 
-  /** @see #process(Class, String, boolean) */
+  /**
+   * @see #process(Class, String, boolean)
+   */
   public static <T> T process(final Class<T> clazz, final String resourcePath)
       throws WindException {
     return process(clazz, resourcePath, true);

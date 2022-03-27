@@ -93,7 +93,7 @@ public class DynamicDataSource implements DataSource {
   public Connection getConnection() throws SQLException {
     final ConnectionHolder connectionHolder =
         TransactionSynchronizationManager.getConnectionHolder(determineDataSource());
-    return connectionHolder.requestConnection();
+    return connectionHolder.getConnection();
   }
 
   @Override

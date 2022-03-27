@@ -20,7 +20,10 @@ public class Invocation {
     this.method = method;
     this.args = args;
     this.execType =
-        Plugins.QUERY_METHODS.contains(method.getName()) ? ExecType.READ : ExecType.WRITE;
+        Plugins.QUERY_METHODS_DAO.contains(method.getName())
+                || Plugins.QUERY_METHODS_SERVICE.contains(method.getName())
+            ? ExecType.READ
+            : ExecType.WRITE;
   }
 
   public Object getTarget() {

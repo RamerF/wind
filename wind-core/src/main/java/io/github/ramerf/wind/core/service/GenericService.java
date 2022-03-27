@@ -10,21 +10,23 @@ import java.io.Serializable;
  * @author ramer
  */
 public class GenericService<T, ID extends Serializable> implements BaseService<T, ID> {
-  private Dao dao;
-  private Class<T> clazz;
+  private final Dao dao;
+  private final Class<T> clazz;
 
-  /**
-   * 生成对应clazz的service
-   *
-   * @param clazz 操作的实体
-   * @param id 主键
-   */
+  /** 生成对应clazz的service */
+  public GenericService(final Dao dao, Class<T> clazz, Class<ID> id) {
+    this.dao = dao;
+    this.clazz = clazz;
+  }
+
   public static <T, ID extends Serializable> GenericService<T, ID> with(
-      final Dao dao, Class<T> clazz, Class<ID> id) {
-    final GenericService<T, ID> service = new GenericService<>();
-    service.dao = dao;
-    service.clazz = clazz;
-    return service;
+      final Dao dao, final Class<T> clazz, final Class<ID> id) {
+    final GenericService<T, ID> service = new GenericService<>(dao, clazz, id);
+    //noinspection unchecked
+    return (GenericService<T, ID>)
+        dao.getConfiguration()
+            .getServiceInterceptorChain()
+            .pluginAll(service, clazz, new Object[] {dao, clazz, id});
   }
 
   @Override

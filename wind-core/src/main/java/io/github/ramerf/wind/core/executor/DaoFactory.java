@@ -46,7 +46,7 @@ public class DaoFactory {
     final DaoImpl dao = new DaoImpl(configuration, executor, autoCommit);
     return (DaoImpl)
         configuration
-            .getInterceptorChain()
+            .getDaoInterceptorChain()
             .pluginAll(dao, new Object[] {configuration, executor, autoCommit});
   }
 
@@ -60,7 +60,7 @@ public class DaoFactory {
     final DaoImpl dao = new DaoImpl(configuration, executor, autoCommit);
     return (DaoImpl)
         configuration
-            .getInterceptorChain()
+            .getDaoInterceptorChain()
             .pluginAll(dao, new Object[] {configuration, executor, autoCommit});
   }
 }

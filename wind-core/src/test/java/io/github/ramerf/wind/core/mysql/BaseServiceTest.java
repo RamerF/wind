@@ -11,11 +11,11 @@ import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.jdbc.dynamicdatasource.DynamicDataSource;
-import io.github.ramerf.wind.core.jdbc.dynamicdatasource.DynamicDataSourceHolder;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.plugin.*;
 import io.github.ramerf.wind.core.service.GenericService;
+import io.github.ramerf.wind.core.service.ServiceFactory;
 import io.github.ramerf.wind.core.util.LogUtil;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -324,8 +324,13 @@ public class BaseServiceTest {
       log.info("intercept:[{}]", "---------Foo Service Interceptor---------");
       log.info("intercept:[{}]", invocation.getTarget());
       log.info("intercept:[{}]", invocation.getMethod());
-      log.info("intercept:[{}]", invocation.getArgs());
       log.info("intercept:[{}]", invocation.isWriteMethod());
+      final Object[] args = invocation.getArgs();
+      for (final Object arg : args) {
+        if (arg instanceof Foo) {
+          log.info("intercept:[{}]", arg);
+        }
+      }
       return invocation.proceed();
     }
   }
@@ -335,7 +340,7 @@ public class BaseServiceTest {
 
     Configuration configuration = new Configuration();
     final JdbcTransactionFactory transactionFactory = new JdbcTransactionFactory();
-    final DataSource dataSource = getDynamicDataSource();
+    final DataSource dataSource = getDataSource1();
     final JdbcEnvironment jdbcEnvironment = new JdbcEnvironment(transactionFactory, dataSource);
     configuration.setJdbcEnvironment(jdbcEnvironment);
     configuration.setDdlAuto(DdlAuto.UPDATE);
@@ -345,27 +350,34 @@ public class BaseServiceTest {
     final DaoFactory daoFactory = windApplication.getDaoFactory();
 
     final Dao dao1 = daoFactory.getDao();
-    DynamicDataSourceHolder.push("d2");
+    // DynamicDataSourceHolder.push("d2");
     Foo foo1 = new Foo();
     foo1.setName(1 + "-" + LocalDateTime.now());
-    dao1.create(foo1);
-    DynamicDataSourceHolder.poll();
+    // dao1.create(foo1);
+    // DynamicDataSourceHolder.poll();
     final Dao dao2 = daoFactory.getDao();
-    DynamicDataSourceHolder.push("d1");
+    // DynamicDataSourceHolder.push("d1");
     Foo foo2 = new Foo();
     foo2.setName(2 + "-" + LocalDateTime.now());
-    dao2.create(foo2);
-    DynamicDataSourceHolder.poll();
+    // dao2.create(foo2);
+    // DynamicDataSourceHolder.poll();
 
     log.info("main:[{}]", foo1.getId() + "-" + foo2.getId());
-    if (System.currentTimeMillis() % 2 == 0 || true) {
-      dao1.commit(true);
-      dao2.commit(true);
+    if (System.currentTimeMillis() % 2 == 0) {
+      // dao1.commit(true);
+      // dao2.commit(true);
     } else {
-      dao1.rollback(true);
-      dao2.rollback(true);
+      // dao1.rollback(true);
+      // dao2.rollback(true);
     }
-    dao1.fetchAll(Cnd.of(Foo.class).eq(Foo::setId, 1L));
+    final GenericService<Foo, Long> genericService =
+        GenericService.with(dao1, Foo.class, Long.class);
+    log.info("main:[{}]", genericService.getOne(Cnd.of(Foo.class).ge(Foo::setId, 0L).limit(1)));
+    Foo foo3 = new Foo();
+    foo3.setName("foo3");
+    // log.info("main:[{}]", genericService.create(foo3));
+    final FooServiceImpl fooService = ServiceFactory.getService(new FooServiceImpl(dao1));
+    fooService.foo();
   }
 
   private static DataSource getDynamicDataSource() {

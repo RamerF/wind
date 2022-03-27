@@ -2,7 +2,7 @@ package io.github.ramerf.wind.core.plugin;
 
 import java.util.*;
 
-public class InterceptorChain {
+public class DaoInterceptorChain {
 
   private final List<DaoInterceptor> daoInterceptors = new ArrayList<>();
 

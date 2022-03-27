@@ -10,7 +10,7 @@ public interface ServiceInterceptor {
 
   Object intercept(Invocation invocation) throws Throwable;
 
-  // default Object plugin(Object target, final Object[] args) {
-  //   return Plugins.wrap(target, this, args);
-  // }
+  default Object plugin(Object target, final Object[] args) {
+    return Plugins.wrap(target, this, args);
+  }
 }

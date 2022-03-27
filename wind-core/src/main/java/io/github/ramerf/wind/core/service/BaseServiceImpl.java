@@ -10,7 +10,7 @@ import java.io.Serializable;
  * @since 2019/12/20
  */
 public abstract class BaseServiceImpl<T, ID extends Serializable> implements BaseService<T, ID> {
-  private final Dao dao;
+  protected final Dao dao;
 
   public BaseServiceImpl(final Dao dao) {
     this.dao = dao;

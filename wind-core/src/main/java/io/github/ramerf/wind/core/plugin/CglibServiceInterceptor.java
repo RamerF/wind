@@ -7,14 +7,14 @@ import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
 @Slf4j
-public class PluginCglibProxyCallback implements MethodInterceptor {
+public class CglibServiceInterceptor implements MethodInterceptor {
 
   private final Object target;
-  private final DaoInterceptor daoInterceptor;
+  private final ServiceInterceptor interceptor;
 
-  public PluginCglibProxyCallback(Object target, DaoInterceptor daoInterceptor) {
+  public CglibServiceInterceptor(Object target, ServiceInterceptor interceptor) {
     this.target = target;
-    this.daoInterceptor = daoInterceptor;
+    this.interceptor = interceptor;
   }
 
   @Override
@@ -23,8 +23,9 @@ public class PluginCglibProxyCallback implements MethodInterceptor {
       throws Throwable {
     try {
       final String name = method.getName();
-      if (Plugins.QUERY_METHODS.contains(name) || Plugins.UPDATE_METHODS.contains(name)) {
-        return daoInterceptor.intercept(new Invocation(target, method, args));
+      if (Plugins.QUERY_METHODS_SERVICE.contains(name)
+          || Plugins.UPDATE_METHODS_SERVICE.contains(name)) {
+        return interceptor.intercept(new Invocation(target, method, args));
       }
       return method.invoke(target, args);
     } catch (Exception e) {
