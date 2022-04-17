@@ -63,8 +63,6 @@ public final class DbResolver {
     try {
       return connection.getSchema();
     } catch (SQLException e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
       // throw new IllegalStateException(e);
       return null;
     }
@@ -136,7 +134,9 @@ public final class DbResolver {
     }
   }
 
-  /** @see DatabaseMetaData#getTables(String, String, String, String[]) */
+  /**
+   * @see DatabaseMetaData#getTables(String, String, String, String[])
+   */
   private static NameTableInformation extractTablesResultSet(final ResultSet resultSet)
       throws SQLException {
     NameTableInformation nameTableInformation = new NameTableInformation();
@@ -150,7 +150,9 @@ public final class DbResolver {
     return nameTableInformation;
   }
 
-  /** @see DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean) */
+  /**
+   * @see DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)
+   */
   private static void extractTableIndexesResultSet(
       final ResultSet resultSet, @Nonnull final TableInformation tableInformation)
       throws SQLException {
@@ -173,7 +175,9 @@ public final class DbResolver {
     }
   }
 
-  /** @see DatabaseMetaData#getColumns(String, String, String, String) */
+  /**
+   * @see DatabaseMetaData#getColumns(String, String, String, String)
+   */
   private static void extractTableColumnsResultSet(
       final ResultSet resultSet, final NameTableInformation nameTableInformation)
       throws SQLException {
