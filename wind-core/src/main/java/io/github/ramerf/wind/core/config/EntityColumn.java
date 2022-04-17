@@ -195,15 +195,29 @@ public class EntityColumn {
 
   private Type getType(Field field) {
     if (this.type instanceof Class && InterEnum.class.isAssignableFrom((Class<?>) this.type)) {
-      int maxDepth = 3;
+      final Object[] enumConstants = ((Class<?>) this.type).getEnumConstants();
+      if (enumConstants != null && enumConstants.length > 0) {
+        @SuppressWarnings("rawtypes")
+        final InterEnum interEnum = (InterEnum) enumConstants[0];
+        return interEnum.value().getClass();
+      }
+
       Deque<Type> interfaceDeque =
           new ArrayDeque<>(Arrays.asList(field.getType().getGenericInterfaces()));
       do {
-        maxDepth--;
         Type current = interfaceDeque.pop();
         if (current instanceof ParameterizedType
             && ((ParameterizedType) current).getRawType().equals(InterEnum.class)) {
           return ((ParameterizedType) current).getActualTypeArguments()[0];
+        }
+        if (current instanceof ParameterizedType) {
+          final Type rawType = ((ParameterizedType) current).getRawType();
+          if (rawType instanceof Class) {
+            Type[] subInterfaces = ((Class<?>) rawType).getGenericInterfaces();
+            for (Type anInterface : subInterfaces) {
+              interfaceDeque.push(anInterface);
+            }
+          }
         }
         if (current instanceof Class) {
           Type[] subInterfaces = ((Class<?>) current).getGenericInterfaces();
@@ -211,7 +225,7 @@ public class EntityColumn {
             interfaceDeque.push(anInterface);
           }
         }
-      } while (!interfaceDeque.isEmpty() && maxDepth > 0);
+      } while (!interfaceDeque.isEmpty());
       throw new WindException("could not reference generic type for: " + field.getType());
     }
     return this.type;
