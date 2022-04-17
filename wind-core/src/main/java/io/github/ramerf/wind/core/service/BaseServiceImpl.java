@@ -1,7 +1,10 @@
 package io.github.ramerf.wind.core.service;
 
+import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.executor.Dao;
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 /**
  * 预留实现.
@@ -18,16 +21,25 @@ public abstract class BaseServiceImpl<T, ID extends Serializable> implements Bas
 
   @Override
   public Dao getDao() {
-    // 扫描service实现类,如果有方法包含数据源时,代理一下,去configuration获取指定的,否则使用默认的
-
-    // 获取当前线程绑定的数据源 TransactionSynchronizationManager.getConnection(  );
-    // 先把dao层的动态代理demo了
-    // TODO WARN 这里可以传数据源,否则使用默认数据源
     return dao;
   }
 
-  // TODO WARN FooServiceImpl fooServiceImpl = new FooServiceImpl(dao);
+  @Override
+  public Class<T> getPoJoClass() {
+    return getTypeParameter(getClass());
+  }
 
-  // TODO WARN 需要一个辅助代理service的东西
-  // FooServiceImpl fooServiceImpl = ServiceManager.getService(FooServiceImpl.class,dao);
+  private <U> Class<U> getTypeParameter(Class<?> clazz) {
+    Type genericSuperclass = clazz.getGenericSuperclass();
+    if (genericSuperclass instanceof Class) {
+      if (BaseServiceImpl.class != genericSuperclass) {
+        return getTypeParameter(clazz.getSuperclass());
+      }
+      throw new WindException(
+          getClass() + " extends BaseServiceImpl, but missing the type parameter");
+    }
+    Type rawType = ((ParameterizedType) genericSuperclass).getActualTypeArguments()[0];
+    //noinspection unchecked
+    return (Class<U>) rawType;
+  }
 }

@@ -4,6 +4,7 @@ import io.github.ramerf.wind.core.domain.InterEnum;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.*;
+import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
 import static java.util.stream.Collectors.toMap;
@@ -71,11 +72,13 @@ public class InterEnumUtils {
       this.desc = desc;
     }
 
+    @Nonnull
     @Override
     public Integer value() {
       return this.value;
     }
 
+    @Nonnull
     @Override
     public String desc() {
       return this.desc;

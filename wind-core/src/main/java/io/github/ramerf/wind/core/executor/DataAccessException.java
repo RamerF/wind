@@ -8,6 +8,10 @@ public class DataAccessException extends WindException {
     super(message);
   }
 
+  public DataAccessException(@Nullable Throwable cause) {
+    super(cause);
+  }
+
   public DataAccessException(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }

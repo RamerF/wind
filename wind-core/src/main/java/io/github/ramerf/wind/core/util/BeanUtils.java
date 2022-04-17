@@ -346,12 +346,18 @@ public final class BeanUtils {
   }
 
   /** 获取所有接口. */
-  public static Class<?>[] getAllInterfaces(Class<?> type) {
-    Set<Class<?>> interfaces = new HashSet<>();
-    while (type != null) {
-      interfaces.addAll(Arrays.asList(type.getInterfaces()));
-      type = type.getSuperclass();
+  public static Set<Class<?>> getAllInterfaces(Class<?> clazz) {
+    Set<Class<?>> allInterfaces = new HashSet<>();
+    Deque<Class<?>> deque = new ArrayDeque<>();
+    deque.push(clazz);
+    while (!deque.isEmpty()) {
+      final Class<?> currentClazz = deque.pop();
+      final Class<?>[] interfaces = currentClazz.getInterfaces();
+      for (Class<?> aClass : interfaces) {
+        deque.add(aClass);
+        allInterfaces.add(aClass);
+      }
     }
-    return interfaces.toArray(new Class<?>[0]);
+    return allInterfaces;
   }
 }

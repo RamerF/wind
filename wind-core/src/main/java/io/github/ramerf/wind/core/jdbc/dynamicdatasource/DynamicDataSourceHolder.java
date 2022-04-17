@@ -18,6 +18,7 @@ package io.github.ramerf.wind.core.jdbc.dynamicdatasource;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Copy from {@link com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder}
@@ -27,6 +28,7 @@ import java.util.Deque;
  * @since 2022.03.20
  * @author ramer
  */
+@Slf4j
 public final class DynamicDataSourceHolder {
   private static final ThreadLocal<Deque<String>> LOOKUP_KEY_HOLDER =
       ThreadLocal.withInitial(
@@ -38,13 +40,13 @@ public final class DynamicDataSourceHolder {
 
   private DynamicDataSourceHolder() {}
 
-  /**
-   * 获取当前线程数据源
-   *
-   * <p>如果当前线程是连续切换数据源 只会移除掉当前线程的数据源名称
-   */
+  /** 获取当前线程数据源 */
   public static String peek() {
-    return LOOKUP_KEY_HOLDER.get().peek();
+    final String ds = LOOKUP_KEY_HOLDER.get().peek();
+    if (log.isDebugEnabled()) {
+      log.debug(Thread.currentThread().getName() + " peek DynamicDataSource: " + ds);
+    }
+    return ds;
   }
 
   /** 清空再添加. */
@@ -55,6 +57,9 @@ public final class DynamicDataSourceHolder {
 
   public static String push(String ds) {
     String key = StringUtils.isEmpty(ds) ? "primary" : ds;
+    if (log.isDebugEnabled()) {
+      log.debug(Thread.currentThread().getName() + " push DynamicDataSource: " + key);
+    }
     LOOKUP_KEY_HOLDER.get().push(key);
     return key;
   }
@@ -64,12 +69,15 @@ public final class DynamicDataSourceHolder {
    *
    * <p>如果当前线程是连续切换数据源 只会移除掉当前线程的数据源名称
    */
-  public static void poll() {
+  public static String poll() {
     Deque<String> deque = LOOKUP_KEY_HOLDER.get();
-    deque.poll();
+    if (log.isDebugEnabled()) {
+      log.debug(Thread.currentThread().getName() + " poll DynamicDataSource");
+    }
     if (deque.isEmpty()) {
       LOOKUP_KEY_HOLDER.remove();
     }
+    return deque.poll();
   }
 
   /**
@@ -78,6 +86,9 @@ public final class DynamicDataSourceHolder {
    * <p>防止内存泄漏，如手动调用了push可调用此方法确保清除
    */
   public static void clear() {
+    if (log.isDebugEnabled()) {
+      log.debug(Thread.currentThread().getName() + " clear DynamicDataSource.");
+    }
     LOOKUP_KEY_HOLDER.remove();
   }
 }

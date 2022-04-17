@@ -27,6 +27,7 @@ import javax.sql.DataSource;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.cglib.core.DebuggingClassWriter;
 import org.junit.jupiter.api.*;
 
 import static java.util.stream.Collectors.joining;
@@ -337,10 +338,12 @@ public class BaseServiceTest {
 
   public static void main(String[] args) {
     LogUtil.setLoggerLevel(SimpleJdbcExecutor.class, Level.TRACE);
+    System.setProperty(
+        DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "C:\\users\\ramer\\Desktop\\wind");
 
     Configuration configuration = new Configuration();
     final JdbcTransactionFactory transactionFactory = new JdbcTransactionFactory();
-    final DataSource dataSource = getDataSource1();
+    final DataSource dataSource = getDynamicDataSource();
     final JdbcEnvironment jdbcEnvironment = new JdbcEnvironment(transactionFactory, dataSource);
     configuration.setJdbcEnvironment(jdbcEnvironment);
     configuration.setDdlAuto(DdlAuto.UPDATE);
@@ -349,11 +352,11 @@ public class BaseServiceTest {
     final WindApplication windApplication = WindApplication.run(configuration);
     final DaoFactory daoFactory = windApplication.getDaoFactory();
 
-    final Dao dao1 = daoFactory.getDao();
+    final Dao dao = daoFactory.getDao();
     // DynamicDataSourceHolder.push("d2");
     Foo foo1 = new Foo();
     foo1.setName(1 + "-" + LocalDateTime.now());
-    // dao1.create(foo1);
+    // dao.create(foo1);
     // DynamicDataSourceHolder.poll();
     final Dao dao2 = daoFactory.getDao();
     // DynamicDataSourceHolder.push("d1");
@@ -364,20 +367,21 @@ public class BaseServiceTest {
 
     log.info("main:[{}]", foo1.getId() + "-" + foo2.getId());
     if (System.currentTimeMillis() % 2 == 0) {
-      // dao1.commit(true);
+      // dao.commit(true);
       // dao2.commit(true);
     } else {
-      // dao1.rollback(true);
+      // dao.rollback(true);
       // dao2.rollback(true);
     }
     final GenericService<Foo, Long> genericService =
-        GenericService.with(dao1, Foo.class, Long.class);
-    log.info("main:[{}]", genericService.getOne(Cnd.of(Foo.class).ge(Foo::setId, 0L).limit(1)));
+        GenericService.with(dao, Foo.class, Long.class);
+    // log.info("main:[{}]", genericService.getOne(Cnd.of(Foo.class).ge(Foo::setId, 0L).limit(1)));
     Foo foo3 = new Foo();
     foo3.setName("foo3");
     // log.info("main:[{}]", genericService.create(foo3));
-    final FooServiceImpl fooService = ServiceFactory.getService(new FooServiceImpl(dao1));
+    final FooServiceImpl fooService = ServiceFactory.getService(new FooServiceImpl(dao));
     fooService.foo();
+    fooService.foo2();
   }
 
   private static DataSource getDynamicDataSource() {

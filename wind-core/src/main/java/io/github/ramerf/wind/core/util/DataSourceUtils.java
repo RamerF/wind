@@ -101,6 +101,10 @@ public class DataSourceUtils {
   }
 
   public static void doClose(Connection connection) throws SQLException {
+    if (log.isDebugEnabled()) {
+      log.debug(
+          Thread.currentThread().getName() + " Do close JDBC Connection [" + connection + "]");
+    }
     if (connection != null) {
       connection.close();
     }

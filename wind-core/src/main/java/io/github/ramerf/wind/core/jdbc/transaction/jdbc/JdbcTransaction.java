@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JdbcTransaction implements Transaction {
   protected DataSource dataSource;
+  // TODO WARN 事务支持多个连接和数据源
   protected Connection connection;
   protected ConnectionHolder connectionHolder;
   protected TransactionIsolationLevel level;
@@ -37,11 +38,41 @@ public class JdbcTransaction implements Transaction {
       this.openConnection();
       return this.connectionHolder.getConnection();
     }
-    return this.connectionHolder != null ? this.connectionHolder.requestConnection() : connection;
+    if (this.connectionHolder == null) {
+      return this.connection;
+    }
+    final Connection currentConnection = this.connectionHolder.requestConnection();
+    if (currentConnection == null) {
+      this.openConnection();
+      return this.connectionHolder.getConnection();
+    }
+    return currentConnection;
+  }
+
+  protected void openConnection() throws DataAccessException {
+    if (log.isDebugEnabled()) {
+      log.debug(Thread.currentThread().getName() + " Opening JDBC Connection");
+    }
+
+    this.connectionHolder = TransactionSynchronizationManager.getConnectionHolder(this.dataSource);
+    this.connection = connectionHolder.getConnection();
+    if (this.level != null) {
+      try {
+        //noinspection MagicConstant
+        this.connection.setTransactionIsolation(this.level.getLevel());
+      } catch (SQLException e) {
+        log.warn("The Connection not support to set TransactionIsolation", e);
+      }
+    }
+    this.setAutoCommit(this.autoCommit);
   }
 
   @Override
   public void releaseConnection() {
+    if (log.isDebugEnabled()) {
+      log.debug(
+          Thread.currentThread().getName() + " Release JDBC Connection [" + this.connection + "]");
+    }
     TransactionSynchronizationManager.releaseConnection(this.connection, this.dataSource);
   }
 
@@ -49,8 +80,10 @@ public class JdbcTransaction implements Transaction {
   public void commit() throws DataAccessException {
     if (this.connection != null && !DataSourceUtils.getAutoCommit(this.connection)) {
       if (log.isDebugEnabled()) {
-        log.debug("Committing JDBC Connection [" + this.connection + "]");
+        log.debug(
+            Thread.currentThread().getName() + " Commit JDBC Connection [" + this.connection + "]");
       }
+      // TODO WARN 提交需要支持多数据源
       DataSourceUtils.commit(this.connection);
     }
   }
@@ -59,7 +92,11 @@ public class JdbcTransaction implements Transaction {
   public void rollback() throws DataAccessException {
     if (this.connection != null && !DataSourceUtils.getAutoCommit(this.connection)) {
       if (log.isDebugEnabled()) {
-        log.debug("Rolling back JDBC Connection [" + this.connection + "]");
+        log.debug(
+            Thread.currentThread().getName()
+                + " Rolling back JDBC Connection ["
+                + this.connection
+                + "]");
       }
       DataSourceUtils.rollback(this.connection);
     }
@@ -70,7 +107,11 @@ public class JdbcTransaction implements Transaction {
     if (this.connection != null) {
       this.resetAutoCommit();
       if (log.isDebugEnabled()) {
-        log.debug("Closing JDBC Connection [" + this.connection + "]");
+        log.debug(
+            Thread.currentThread().getName()
+                + " Closing JDBC Connection ["
+                + this.connection
+                + "]");
       }
       DataSourceUtils.close(this.connection);
     }
@@ -82,7 +123,8 @@ public class JdbcTransaction implements Transaction {
       if (this.connection.getAutoCommit() != desiredAutoCommit) {
         if (log.isDebugEnabled()) {
           log.debug(
-              "Setting autocommit to "
+              Thread.currentThread().getName()
+                  + " Setting autocommit to "
                   + desiredAutoCommit
                   + " on JDBC Connection ["
                   + this.connection
@@ -113,24 +155,6 @@ public class JdbcTransaction implements Transaction {
         log.debug("Error resetting autocommit to true before closing the connection.  Cause: " + e);
       }
     }
-  }
-
-  protected void openConnection() throws DataAccessException {
-    if (log.isDebugEnabled()) {
-      log.debug("Opening JDBC Connection");
-    }
-
-    this.connectionHolder = TransactionSynchronizationManager.getConnectionHolder(this.dataSource);
-    this.connection = connectionHolder.getConnection();
-    if (this.level != null) {
-      try {
-        //noinspection MagicConstant
-        this.connection.setTransactionIsolation(this.level.getLevel());
-      } catch (SQLException e) {
-        log.warn("The Connection not support to set TransactionIsolation", e);
-      }
-    }
-    this.setAutoCommit(this.autoCommit);
   }
 
   @Override

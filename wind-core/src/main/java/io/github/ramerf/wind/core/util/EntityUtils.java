@@ -6,16 +6,15 @@ import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.EntityColumn;
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.domain.InterEnum;
-import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
 import io.github.ramerf.wind.core.service.BaseService;
 import io.github.ramerf.wind.core.support.EntityInfo;
-import java.io.Serializable;
-import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -267,71 +266,5 @@ public final class EntityUtils {
       return tableInfo.name();
     }
     return StringUtils.camelToUnderline(clazz.getSimpleName());
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T, S extends BaseService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
-      S service) {
-    return getPoJoClass((Class<S>) getProxyTarget(service).getClass());
-  }
-
-  /** 获取Service泛型参数poJo. */
-  @SuppressWarnings("unchecked")
-  public static <T, S extends BaseService<T, ID>, ID extends Serializable> Class<T> getPoJoClass(
-      Class<S> serviceClazz) {
-    Class<T> classes =
-        (Class<T>)
-            Optional.ofNullable(SERVICE_POJO_MAP.get(serviceClazz))
-                .map(Reference::get)
-                .orElse(null);
-    if (classes != null) {
-      return classes;
-    }
-
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
-    final Type[] baseServiceTypes =
-        Stream.of(serviceClazz.getInterfaces())
-            .filter(BaseService.class::isAssignableFrom)
-            .findFirst()
-            .get()
-            .getGenericInterfaces();
-    for (Type baseServiceType : baseServiceTypes) {
-      if (baseServiceType instanceof ParameterizedType) {
-        ParameterizedType parameterizedType = (ParameterizedType) baseServiceType;
-        final Type[] arguments = parameterizedType.getActualTypeArguments();
-        try {
-          classes = (Class<T>) arguments[0];
-        } catch (ClassCastException ignored) {
-          throw new WindException(
-              "Cannot get service bound poJo,Implements [getPoJoClass] method in service.");
-        }
-        SERVICE_POJO_MAP.put(serviceClazz, new WeakReference<>(classes));
-        return classes;
-      }
-    }
-    Class<S> cls;
-    try {
-      cls = (Class<S>) BeanUtils.getTypeClass(baseServiceTypes[0]);
-    } catch (ClassCastException e) {
-      throw new WindException("cannot get service bound type poJo.");
-    }
-    return getPoJoClass(cls);
-  }
-
-  /**
-   * 获取代理对象的目标对象.
-   *
-   * @param proxy 代理对象
-   */
-  private static Object getProxyTarget(Object proxy) {
-    return proxy;
-  }
-
-  private static Object getCglibProxyTargetObject(Object proxy) throws Exception {
-    return proxy;
-  }
-
-  private static Object getJdkDynamicProxyTargetObject(Object proxy) throws Exception {
-    return proxy;
   }
 }

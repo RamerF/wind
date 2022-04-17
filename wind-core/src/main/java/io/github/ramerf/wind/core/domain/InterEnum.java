@@ -6,6 +6,7 @@ import io.github.ramerf.wind.core.util.InterEnumUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.io.Serializable;
 import java.util.function.Supplier;
+import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,7 @@ public interface InterEnum<V> extends Serializable {
    *
    * @return the integer
    */
+  @Nonnull
   V value();
 
   /**
@@ -32,6 +34,7 @@ public interface InterEnum<V> extends Serializable {
    *
    * @return the string
    */
+  @Nonnull
   String desc();
 
   /**

@@ -362,7 +362,5 @@ public interface BaseService<T, ID extends Serializable> {
   Dao getDao();
 
   /** 获取service操作的实体. */
-  default Class<T> getPoJoClass() {
-    return EntityUtils.getPoJoClass(this);
-  }
+  Class<T> getPoJoClass();
 }

@@ -15,11 +15,11 @@ public class WindException extends RuntimeException {
     super(message);
   }
 
-  public WindException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
-
   public WindException(final Throwable cause) {
     super(cause);
+  }
+
+  public WindException(final String message, final Throwable cause) {
+    super(message, cause);
   }
 }

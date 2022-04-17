@@ -31,5 +31,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Transactional {
   /** 方法执行抛出指定异常时回滚. */
-  Class<? extends Exception> rollbackFor() default Exception.class;
+  Class<? extends Exception> rollbackFor() default RuntimeException.class;
 }

@@ -26,10 +26,11 @@ public class DynamicConnectionHolder implements ConnectionHolder {
 
   @Override
   public void setConnection(final Connection connection) {
-    SimpleConnectionHolder connectionHolder = dataSourceMap.get(DynamicDataSourceHolder.peek());
+    final String ds = DynamicDataSourceHolder.peek();
+    SimpleConnectionHolder connectionHolder = dataSourceMap.get(ds);
     if (connectionHolder == null) {
       connectionHolder = new SimpleConnectionHolder(connection);
-      dataSourceMap.put(DynamicDataSourceHolder.peek(), connectionHolder);
+      dataSourceMap.put(ds, connectionHolder);
     }
     connectionHolder.setConnection(connection);
   }
@@ -43,7 +44,12 @@ public class DynamicConnectionHolder implements ConnectionHolder {
 
   @Override
   public Connection requestConnection() {
-    return dataSourceMap.get(DynamicDataSourceHolder.peek()).requestConnection();
+    final String ds = DynamicDataSourceHolder.peek();
+    final SimpleConnectionHolder holder = dataSourceMap.get(ds);
+    if (holder == null) {
+      return null;
+    }
+    return holder.requestConnection();
   }
 
   @Override

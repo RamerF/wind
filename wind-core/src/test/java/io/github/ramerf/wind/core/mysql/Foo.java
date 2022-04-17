@@ -8,6 +8,7 @@ import io.github.ramerf.wind.core.handler.typehandler.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import javax.annotation.Nonnull;
 import javax.persistence.Id;
 import lombok.*;
 
@@ -95,11 +96,13 @@ public class Foo {
       this.desc = desc;
     }
 
+    @Nonnull
     @Override
     public Integer value() {
       return this.value;
     }
 
+    @Nonnull
     @Override
     public String desc() {
       return this.desc;
@@ -119,11 +122,13 @@ public class Foo {
       this.desc = desc;
     }
 
+    @Nonnull
     @Override
     public String value() {
       return this.value;
     }
 
+    @Nonnull
     @Override
     public String desc() {
       return this.desc;

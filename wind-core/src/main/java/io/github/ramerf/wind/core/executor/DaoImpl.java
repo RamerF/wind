@@ -42,7 +42,6 @@ import static java.util.stream.Collectors.toList;
  * @author ramer
  * @since 2022.03.12
  */
-// TODO WARN 聚合query/update方法,去掉泛型
 @Slf4j
 @SuppressWarnings("DuplicatedCode")
 public class DaoImpl implements Dao {
