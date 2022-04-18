@@ -48,9 +48,7 @@ public final class DbResolver {
     }
     try {
       return connection.getCatalog();
-    } catch (SQLException e) {
-      log.warn(e.getMessage());
-      log.error(e.getMessage(), e);
+    } catch (Exception e) {
       // throw new IllegalStateException(e);
       return null;
     }
@@ -62,7 +60,7 @@ public final class DbResolver {
     }
     try {
       return connection.getSchema();
-    } catch (SQLException e) {
+    } catch (Exception e) {
       // throw new IllegalStateException(e);
       return null;
     }
