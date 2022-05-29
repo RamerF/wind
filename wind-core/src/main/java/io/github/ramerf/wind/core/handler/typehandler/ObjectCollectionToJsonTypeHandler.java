@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
  * @author ramer
  * @since 2020.12.27
  */
-@Skip
+@IgnoreScan
 public class ObjectCollectionToJsonTypeHandler implements ITypeHandler<Collection<?>, String> {
 
   @Override

@@ -4,8 +4,10 @@ import io.github.ramerf.wind.core.asm.ClassMetadata;
 import io.github.ramerf.wind.core.asm.ClassReader;
 import io.github.ramerf.wind.core.asm.tree.ClassNode;
 import io.github.ramerf.wind.core.exception.*;
-import java.io.*;
-import java.lang.annotation.Annotation;
+import io.github.ramerf.wind.core.io.Resource;
+import io.github.ramerf.wind.core.io.ResourceResolver;
+import java.io.IOException;
+import java.lang.annotation.*;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
@@ -25,6 +27,13 @@ import lombok.extern.slf4j.Slf4j;
 public final class BeanUtils {
   private static final Map<Class<?>, WeakReference<Collection<Field>>> PRIVATE_FIELDS_MAP =
       new ConcurrentHashMap<>();
+
+  private static final Set<String> IGNORED_FILES = new HashSet<>();
+
+  static {
+    IGNORED_FILES.add("io\\github\\ramerf\\wind\\core\\io\\VfsUtils.class]");
+    IGNORED_FILES.add("io\\github\\ramerf\\wind\\core\\io\\VfsPatternUtils.class]");
+  }
 
   public static ArrayList<Field> retrieveDeclaredFields(@Nonnull final Class<?> clazz) {
     ArrayList<Field> container = new ArrayList<>();
@@ -114,19 +123,28 @@ public final class BeanUtils {
     return null;
   }
 
+  /**
+   * 扫描指定路径下对象的子类,不包含当前对象.
+   *
+   * @param packagePatterns 扫描路径,支持路径分割符 <code>,; \t\n</code>
+   * @param assignableType 当前对象
+   */
   public static <T> Set<Class<? extends T>> scanClasses(
       String packagePatterns, Class<T> assignableType) throws IOException {
     Set<Class<? extends T>> classes = new HashSet<>();
     String[] packagePatternArray = StringUtils.tokenizeToStringArray(packagePatterns, ",; \t\n");
     for (String packagePattern : packagePatternArray) {
-      final Set<File> files =
-          ResourceUtils.getFiles(
+      final Resource[] resources =
+          ResourceResolver.getResources(
               "classpath*:" //
-                  .concat(ResourceUtils.convertToResourcePath(packagePattern))
+                  .concat(ResourceResolver.convertToResourcePath(packagePattern))
                   .concat("/**/*.class"));
-      for (File file : files) {
+      for (Resource resource : resources) {
+        if (IGNORED_FILES.stream().anyMatch(o -> resource.toString().endsWith(o))) {
+          continue;
+        }
         try {
-          ClassReader classReader = new ClassReader(new FileInputStream(file));
+          ClassReader classReader = new ClassReader(resource.getInputStream());
           ClassNode classNode = new ClassNode();
           classReader.accept(classNode, ClassReader.SKIP_DEBUG);
           final ClassMetadata classMetadata = new ClassMetadata(classNode);
@@ -137,7 +155,7 @@ public final class BeanUtils {
             classes.add((Class<? extends T>) clazz);
           }
         } catch (Throwable e) {
-          log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", file, e.toString());
+          log.warn("scanClasses:Cannot load the[resource:{},CausedBy:{}]", resource, e.toString());
         }
       }
     }
@@ -149,14 +167,17 @@ public final class BeanUtils {
     Set<Class<? extends T>> classes = new HashSet<>();
     String[] packagePatternArray = StringUtils.tokenizeToStringArray(packagePatterns, ",; \t\n");
     for (String packagePattern : packagePatternArray) {
-      final Set<File> files =
-          ResourceUtils.getFiles(
+      final Resource[] resources =
+          ResourceResolver.getResources(
               "classpath*:"
-                  .concat(ResourceUtils.convertToResourcePath(packagePattern))
+                  .concat(ResourceResolver.convertToResourcePath(packagePattern))
                   .concat("/**/*.class"));
-      for (File file : files) {
+      for (Resource resource : resources) {
+        if (IGNORED_FILES.stream().anyMatch(o -> resource.toString().endsWith(o))) {
+          continue;
+        }
         try {
-          ClassReader classReader = new ClassReader(new FileInputStream(file));
+          ClassReader classReader = new ClassReader(resource.getInputStream());
           ClassNode classNode = new ClassNode();
           classReader.accept(classNode, ClassReader.SKIP_DEBUG);
           final ClassMetadata classMetadata = new ClassMetadata(classNode);
@@ -166,8 +187,7 @@ public final class BeanUtils {
             classes.add((Class<? extends T>) clazz);
           }
         } catch (Throwable e) {
-          log.warn("Cannot load the[resource:{},CausedBy:{}]", file, e.toString());
-          e.printStackTrace();
+          log.warn("Cannot load the[resource:{},CausedBy:{}]", resource, e.toString());
         }
       }
     }
@@ -206,7 +226,7 @@ public final class BeanUtils {
    * @throws ReflectiveInvokeException 包装实际异常
    * @see #invokeMethodIgnoreException(Object, Method, Object...)
    */
-  public static Object invokeMethod(final Object obj, Method method, Object... value)
+  public static Object invokeMethod(final Object obj, @Nonnull Method method, Object... value)
       throws ReflectiveInvokeException {
     try {
       if (!method.isAccessible()) {

@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.util;
 
+import com.alibaba.fastjson.serializer.ObjectSerializer;
 import io.github.ramerf.wind.core.exception.ReflectiveInvokeException;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import java.io.IOException;
@@ -20,8 +21,11 @@ public class BeanUtilsTest {
   @Test
   @DisplayName("获取指定包下,指定接口/类的子类")
   public void testScanClasses() throws IOException {
-    // TODO WARN 参考: org/apache/ibatis/type/TypeAliasRegistry.java:130
+    log.info("testScanClasses:[===============io.github.ramerf===============]");
     BeanUtils.scanClasses("io.github.ramerf", ITypeHandler.class).forEach(System.out::println);
+    log.info("testScanClasses:[===============javax.annotation===============]");
+    BeanUtils.scanClasses("com.alibaba.fastjson", ObjectSerializer.class)
+        .forEach(System.out::println);
   }
 
   @Test

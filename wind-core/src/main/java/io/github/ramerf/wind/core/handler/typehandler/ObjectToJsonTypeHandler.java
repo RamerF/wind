@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  * @author Tang Xiaofeng
  * @since 2020.12.27
  */
-@Skip
+@IgnoreScan
 public class ObjectToJsonTypeHandler implements ITypeHandler<Object, String> {
 
   @Override

@@ -37,7 +37,7 @@ public class TypeHandlerRegistryFactory {
           .stream()
           .filter(clazz -> !clazz.equals(ITypeHandler.class))
           // 跳过类型处理器
-          .filter(clazz -> !clazz.isAnnotationPresent(Skip.class))
+          .filter(clazz -> !clazz.isAnnotationPresent(IgnoreScan.class))
           .map(BeanUtils::initial)
           .forEach(
               typeHandler -> {
@@ -172,10 +172,10 @@ public class TypeHandlerRegistryFactory {
     }
     final Class<?> type = valueType.getField().getType();
     if (InterEnum.class.isAssignableFrom(type)) {
-      return typeHandlerMap.get(EnumTypeHandler.class);
+      return getTypeHandler(EnumTypeHandler.class);
     }
     if (Date.class.isAssignableFrom(type)) {
-      return typeHandlerMap.get(DateTypeHandler.class);
+      return getTypeHandler(DateTypeHandler.class);
     }
     if (Collection.class.isAssignableFrom(type)) {
       ParameterizedType parameterizedType =
@@ -184,13 +184,13 @@ public class TypeHandlerRegistryFactory {
       if (arguments.length > 0) {
         final Class<?> argument = (Class<?>) arguments[0];
         if (Integer.class.isAssignableFrom(argument)) {
-          return typeHandlerMap.get(CollectionIntegerArrayTypeHandler.class);
+          return getTypeHandler(CollectionIntegerArrayTypeHandler.class);
         }
         if (Long.class.isAssignableFrom(argument)) {
-          return typeHandlerMap.get(CollectionLongArrayTypeHandler.class);
+          return getTypeHandler(CollectionLongArrayTypeHandler.class);
         }
         if (String.class.isAssignableFrom(argument)) {
-          return typeHandlerMap.get(CollectionStringArrayTypeHandler.class);
+          return getTypeHandler(CollectionStringArrayTypeHandler.class);
         }
       }
     }

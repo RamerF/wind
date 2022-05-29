@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  * @author ramer
  * @since 2020/3/4
  */
-@Skip
+@IgnoreScan
 public class LongTimestampTypeHandler implements ITypeHandler<Long, Timestamp> {
   @Override
   public Object convertToJdbc(

@@ -38,7 +38,7 @@ public class JdbcTransaction implements Transaction {
       this.openConnection();
       return this.connectionHolder.getConnection();
     }
-    if (this.connectionHolder == null) {
+    if (this.connectionHolder == null && !DataSourceUtils.isClosed(this.connection)) {
       return this.connection;
     }
     final Connection currentConnection = this.connectionHolder.requestConnection();
