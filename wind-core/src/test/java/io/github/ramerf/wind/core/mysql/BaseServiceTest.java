@@ -1,33 +1,22 @@
 package io.github.ramerf.wind.core.mysql;
 
-import ch.qos.logback.classic.Level;
-import com.alibaba.druid.pool.DruidDataSource;
 import io.github.ramerf.wind.WindApplication;
 import io.github.ramerf.wind.core.condition.*;
-import io.github.ramerf.wind.core.config.Configuration;
-import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
-import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
-import io.github.ramerf.wind.core.executor.*;
-import io.github.ramerf.wind.core.jdbc.dynamicdatasource.DynamicDataSource;
-import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
+import io.github.ramerf.wind.core.executor.Dao;
+import io.github.ramerf.wind.core.executor.DaoFactory;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.plugin.*;
 import io.github.ramerf.wind.core.service.GenericService;
-import io.github.ramerf.wind.core.service.ServiceFactory;
-import io.github.ramerf.wind.core.util.LogUtil;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.LongStream;
-import javax.annotation.Nonnull;
-import javax.sql.DataSource;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.core.DebuggingClassWriter;
 import org.junit.jupiter.api.*;
 
 import static java.util.stream.Collectors.joining;
@@ -304,7 +293,7 @@ public class BaseServiceTest {
           if (arg instanceof Cnd) {
             @SuppressWarnings("unchecked")
             final Cnd<Foo> cnd = (Cnd<Foo>) arg;
-            cnd.eq(Foo::setName, "string");
+            // cnd.eq(Foo::setName, "string");
           }
         }
       }
@@ -334,82 +323,5 @@ public class BaseServiceTest {
       }
       return invocation.proceed();
     }
-  }
-
-  public static void main(String[] args) {
-    LogUtil.setLoggerLevel(SimpleJdbcExecutor.class, Level.TRACE);
-    System.setProperty(
-        DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "C:\\users\\ramer\\Desktop\\wind");
-
-    Configuration configuration = new Configuration();
-    final JdbcTransactionFactory transactionFactory = new JdbcTransactionFactory();
-    final DataSource dataSource = getDynamicDataSource();
-    final JdbcEnvironment jdbcEnvironment = new JdbcEnvironment(transactionFactory, dataSource);
-    configuration.setJdbcEnvironment(jdbcEnvironment);
-    configuration.setDdlAuto(DdlAuto.UPDATE);
-    configuration.setEntityPackage("io.github.ramerf.wind.core.mysql");
-    configuration.setInterceptorPackage("io.github.ramerf.wind.core.mysql");
-    final WindApplication windApplication = WindApplication.run(configuration);
-    final DaoFactory daoFactory = windApplication.getDaoFactory();
-
-    final Dao dao = daoFactory.getDao();
-    // DynamicDataSourceHolder.push("d2");
-    Foo foo1 = new Foo();
-    foo1.setName(1 + "-" + LocalDateTime.now());
-    // dao.create(foo1);
-    // DynamicDataSourceHolder.poll();
-    final Dao dao2 = daoFactory.getDao();
-    // DynamicDataSourceHolder.push("d1");
-    Foo foo2 = new Foo();
-    foo2.setName(2 + "-" + LocalDateTime.now());
-    // dao2.create(foo2);
-    // DynamicDataSourceHolder.poll();
-
-    log.info("main:[{}]", foo1.getId() + "-" + foo2.getId());
-    if (System.currentTimeMillis() % 2 == 0) {
-      // dao.commit(true);
-      // dao2.commit(true);
-    } else {
-      // dao.rollback(true);
-      // dao2.rollback(true);
-    }
-    final GenericService<Foo, Long> genericService =
-        GenericService.with(dao, Foo.class, Long.class);
-    // log.info("main:[{}]", genericService.getOne(Cnd.of(Foo.class).ge(Foo::setId, 0L).limit(1)));
-    Foo foo3 = new Foo();
-    foo3.setName("foo3");
-    // log.info("main:[{}]", genericService.create(foo3));
-    final FooServiceImpl fooService = ServiceFactory.getService(new FooServiceImpl(dao));
-    fooService.foo();
-    fooService.foo2();
-  }
-
-  private static DataSource getDynamicDataSource() {
-    final DynamicDataSource dynamicDataSource = new DynamicDataSource();
-    dynamicDataSource.addDataSource("d1", getDataSource1());
-    dynamicDataSource.addDataSource("d2", getDataSource2());
-    dynamicDataSource.setPrimary("d1");
-    dynamicDataSource.setStrict(true);
-    return dynamicDataSource;
-  }
-
-  @Nonnull
-  private static DruidDataSource getDataSource1() {
-    DruidDataSource dataSource = new DruidDataSource();
-    dataSource.setUrl(
-        "jdbc:mysql:///wind?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false");
-    dataSource.setUsername("root");
-    dataSource.setPassword("root");
-    return dataSource;
-  }
-
-  @Nonnull
-  private static DruidDataSource getDataSource2() {
-    DruidDataSource dataSource = new DruidDataSource();
-    dataSource.setUrl(
-        "jdbc:mysql:///wind_2?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false");
-    dataSource.setUsername("root");
-    dataSource.setPassword("root");
-    return dataSource;
   }
 }

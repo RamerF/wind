@@ -9,11 +9,6 @@ package io.github.ramerf.wind.core.exception;
 public class NotImplementedException extends WindException {
 
   public NotImplementedException(String method) {
-    super(method);
-  }
-
-  @Override
-  public String toString() {
-    return "Method " + getMessage() + " not implemented yet";
+    super("Method " + method + " not implemented yet");
   }
 }

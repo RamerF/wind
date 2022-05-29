@@ -8,10 +8,7 @@ package io.github.ramerf.wind.core.dialect.identity;
 
 import java.lang.reflect.Type;
 
-/**
- * @author Andrea Boriero
- */
-public class PostgreSQL81IdentityColumnSupport extends IdentityColumnSupportImpl {
+public class SQLiteIdentityColumnSupport extends IdentityColumnSupportImpl {
   @Override
   public boolean containDataTypeInIdentityColumn() {
     return true;
@@ -19,8 +16,6 @@ public class PostgreSQL81IdentityColumnSupport extends IdentityColumnSupportImpl
 
   @Override
   public String getIdentityColumnString(Type type) {
-    return type.equals(Long.class) || type.equals(long.class)
-        ? "bigserial not null"
-        : "serial not null";
+    return "INTEGER";
   }
 }

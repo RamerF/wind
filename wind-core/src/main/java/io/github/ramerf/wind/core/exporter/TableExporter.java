@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.exporter;
 import io.github.ramerf.wind.WindContext;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.dialect.Dialect;
+import io.github.ramerf.wind.core.dialect.sqlite.SqliteDialect;
 import io.github.ramerf.wind.core.executor.*;
 import io.github.ramerf.wind.core.jdbc.session.TransactionIsolationLevel;
 import io.github.ramerf.wind.core.metadata.TableColumnInformation;
@@ -80,7 +81,11 @@ public class TableExporter {
       final String entityComment = entityInfo.getComment();
       // 不支持comment on的数据库直接跟comment
       if (!dialect.isSupportCommentOn() && StringUtils.nonEmpty(entityComment)) {
-        sql.append(" comment ").append("'").append(entityComment).append("'");
+        if (dialect instanceof SqliteDialect) {
+          // sqlite no table comment
+        } else {
+          sql.append(" comment ").append("'").append(entityComment).append("'");
+        }
       }
       // 存储引擎,针对mysql
       sql.append(dialect.getTableTypeString());

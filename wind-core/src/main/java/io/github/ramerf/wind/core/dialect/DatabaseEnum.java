@@ -2,6 +2,7 @@ package io.github.ramerf.wind.core.dialect;
 
 import io.github.ramerf.wind.core.dialect.mysql.*;
 import io.github.ramerf.wind.core.dialect.postgresql.*;
+import io.github.ramerf.wind.core.dialect.sqlite.SqliteDialect;
 import io.github.ramerf.wind.core.util.BeanUtils;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -88,6 +89,30 @@ public enum DatabaseEnum {
 
             return latestDialectInstance(this);
           }
+        } else {
+          return null;
+        }
+      } catch (Exception e) {
+        log.warn(e.getMessage());
+        log.error(e.getMessage(), e);
+        return null;
+      }
+    }
+  },
+  SQLITE {
+    @Override
+    public Class<? extends Dialect> latestDialect() {
+      return SqliteDialect.class;
+    }
+
+    @Override
+    public Dialect resolveDialect(DatabaseMetaData metaData) {
+      try {
+        String databaseName = metaData.getDatabaseProductName();
+        if ("SQLite".equals(databaseName)) {
+          int majorVersion = metaData.getDatabaseMajorVersion();
+          int minorVersion = metaData.getDatabaseMinorVersion();
+          return new SqliteDialect();
         } else {
           return null;
         }
