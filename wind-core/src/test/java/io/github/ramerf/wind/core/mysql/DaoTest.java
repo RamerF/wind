@@ -61,7 +61,7 @@ public class DaoTest {
   @Test
   @DisplayName("单一数据源事务2")
   public void dao2() {
-    final DaoFactory daoFactory = getDaoFactory(getDataSource3());
+    final DaoFactory daoFactory = getDaoFactory(getDataSource2());
     final Dao dao = daoFactory.getDao();
     final long maxId =
         Optional.ofNullable(dao.fetchOne(Cnd.of(Foo.class).desc(Foo::getId).limit(1)))
