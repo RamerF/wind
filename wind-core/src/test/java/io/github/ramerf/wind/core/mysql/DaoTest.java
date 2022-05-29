@@ -29,7 +29,8 @@ public class DaoTest {
   @BeforeAll
   public static void beforeEach() {
     LogUtil.setLoggerLevel(SimpleJdbcExecutor.class, Level.TRACE);
-    System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "C:\\users\\ramer\\Desktop\\wind");
+    System.setProperty(
+        DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "C:\\users\\ramer\\Desktop\\wind");
   }
 
   @Test
@@ -62,8 +63,10 @@ public class DaoTest {
   public void dao2() {
     final DaoFactory daoFactory = getDaoFactory(getDataSource3());
     final Dao dao = daoFactory.getDao();
-    final long maxId = Optional.ofNullable(dao.fetchOne(Cnd.of(Foo.class).desc(Foo::getId).limit(1))).map(Foo::getId)
-        .orElse(0L);
+    final long maxId =
+        Optional.ofNullable(dao.fetchOne(Cnd.of(Foo.class).desc(Foo::getId).limit(1)))
+            .map(Foo::getId)
+            .orElse(0L);
     Foo foo1 = new Foo();
     foo1.setName(1 + "-" + LocalDateTime.now());
     dao.create(foo1);
@@ -72,8 +75,11 @@ public class DaoTest {
     dao.create(foo2);
     log.info("dao2:[{}]", foo1.getId() + "-" + foo2.getId());
     dao.rollback(true);
-    Assertions.assertEquals(maxId, Optional.ofNullable(dao.fetchOne(Cnd.of(Foo.class).desc(Foo::getId).limit(1)))
-        .map(Foo::getId).orElse(0L));
+    Assertions.assertEquals(
+        maxId,
+        Optional.ofNullable(dao.fetchOne(Cnd.of(Foo.class).desc(Foo::getId).limit(1)))
+            .map(Foo::getId)
+            .orElse(0L));
   }
 
   @Test
