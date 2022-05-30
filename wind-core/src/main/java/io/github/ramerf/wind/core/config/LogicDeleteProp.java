@@ -2,7 +2,6 @@ package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.LogicDelete;
 import io.github.ramerf.wind.core.annotation.TableInfo;
-import java.io.Serializable;
 import javax.annotation.Nonnull;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -55,9 +54,5 @@ public class LogicDeleteProp {
     logicDeleteProp.setDeleted(logicDelete.deleted());
     logicDeleteProp.setNotDelete(logicDelete.notDelete());
     return logicDeleteProp;
-  }
-
-  public <ID extends Serializable> ID getIdClass(final Class<?> clazz) {
-    throw new RuntimeException("Not implemented");
   }
 }
