@@ -94,6 +94,10 @@ public class Page<T> {
     return !hasNext();
   }
 
+  public Pageable getPageable() {
+    return pageable;
+  }
+
   public void setPageable(final Pageable pageable) {
     this.pageable = pageable;
   }

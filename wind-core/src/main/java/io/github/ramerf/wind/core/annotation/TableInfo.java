@@ -22,7 +22,7 @@ public @interface TableInfo {
   String comment() default "";
 
   /** 支持逻辑删除. */
-  LogicDelete logicDelete() default @LogicDelete(enable = false, fieldName = "");
+  LogicDelete logicDelete() default @LogicDelete(enable = false);
 
   /** id生成器,默认使用全局配置.该值会覆盖全局配置 */
   Class<? extends IdGenerator> idGenerator() default VoidIdGenerator.class;

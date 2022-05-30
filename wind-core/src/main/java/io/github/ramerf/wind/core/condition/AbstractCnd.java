@@ -224,6 +224,22 @@ public abstract class AbstractCnd<POJO, CONDITION extends AbstractCnd<POJO, COND
   }
 
   @Override
+  public CONDITION logicDelete(final boolean deleted) {
+    hasAppendNotDeleteCondition = true;
+    EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
+    final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
+    final EntityColumn logicDeletePropColumn = entityInfo.getLogicDeletePropColumn();
+    conditionSql.add(
+        (conditionSql.size() > 0 ? AND.operator : "")
+            .concat(logicDeletePropColumn.getName())
+            .concat(MatchPattern.EQUAL.operator)
+            .concat(toPreFormatSqlVal(deleted)));
+    valueTypes.add(ValueType.of(deleted));
+    //noinspection unchecked
+    return (CONDITION) this;
+  }
+
+  @Override
   public final synchronized CONDITION appendLogicNotDelete() {
     if (hasAppendNotDeleteCondition) {
       //noinspection unchecked

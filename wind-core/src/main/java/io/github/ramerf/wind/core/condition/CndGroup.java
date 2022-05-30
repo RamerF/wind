@@ -11,9 +11,8 @@ import javax.annotation.Nonnull;
  * @author ramer
  * @since 24/11/2020
  */
-public class CndGroup<T> extends AbstractConditionGroup<T, CndGroup<T>, Cnd<T>>
+public class CndGroup<T> extends AbstractCndGroup<T, CndGroup<T>, Cnd<T>>
     implements ILambdaCondition<T, CndGroup<T>> {
-
   public static <T> CndGroup<T> of(final Cnd<T> cnds) {
     final CndGroup<T> group = new CndGroup<>();
     group.condition = new Cnd<>();

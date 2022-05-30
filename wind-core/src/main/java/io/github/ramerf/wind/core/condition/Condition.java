@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.core.condition;
 
+import io.github.ramerf.wind.core.annotation.LogicDelete;
+import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.domain.Pageable;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
@@ -77,6 +79,15 @@ public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
   }
 
   CONDITION or(final boolean condition, final String sql);
+
+  /**
+   * 添加逻辑删除条件,默认未删除.
+   *
+   * @see LogicDelete
+   * @see LogicDeleteProp#isDeleted()
+   * @see LogicDeleteProp#isNotDelete()
+   */
+  CONDITION logicDelete(final boolean deleted);
 
   /** 拼接逻辑未删除条件,如果不支持逻辑删除,不执行操作. */
   CONDITION appendLogicNotDelete();

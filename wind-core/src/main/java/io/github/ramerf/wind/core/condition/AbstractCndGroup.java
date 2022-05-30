@@ -19,9 +19,9 @@ import lombok.Getter;
  * @since 2021.08.15
  * @author ramer
  */
-public abstract class AbstractConditionGroup<
+public abstract class AbstractCndGroup<
         POJO,
-        CONDITION_GROUP extends AbstractConditionGroup<POJO, CONDITION_GROUP, CONDITION>,
+        CONDITION_GROUP extends AbstractCndGroup<POJO, CONDITION_GROUP, CONDITION>,
         CONDITION extends AbstractCnd<POJO, CONDITION>>
     implements Condition<POJO, CONDITION_GROUP> {
   @Getter protected CONDITION condition;
@@ -95,6 +95,13 @@ public abstract class AbstractConditionGroup<
   @Override
   public final CONDITION_GROUP appendLogicNotDelete() {
     condition.appendLogicNotDelete();
+    //noinspection unchecked
+    return (CONDITION_GROUP) this;
+  }
+
+  @Override
+  public CONDITION_GROUP logicDelete(final boolean deleted) {
+    condition.logicDelete(deleted);
     //noinspection unchecked
     return (CONDITION_GROUP) this;
   }

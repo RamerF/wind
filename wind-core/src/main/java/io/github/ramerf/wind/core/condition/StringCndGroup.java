@@ -9,9 +9,8 @@ import javax.annotation.Nonnull;
  * @author ramer
  * @since 15/08/2021
  */
-public class StringCndGroup<T> extends AbstractConditionGroup<T, StringCndGroup<T>, StringCnd<T>>
+public class StringCndGroup<T> extends AbstractCndGroup<T, StringCndGroup<T>, StringCnd<T>>
     implements IStringCondition<T, StringCndGroup<T>> {
-
   public static <T> StringCndGroup<T> of(final StringCnd<T> stringCondition) {
     final StringCndGroup<T> group = new StringCndGroup<>();
     group.condition = new StringCnd<>();
