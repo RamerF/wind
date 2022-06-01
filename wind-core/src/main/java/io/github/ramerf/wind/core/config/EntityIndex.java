@@ -21,7 +21,7 @@ import lombok.Data;
 @Data
 public class EntityIndex {
   private String tableName;
-  /** 名称. */
+  /** 名称.{@link Index#name()} */
   private String name;
   /** 是否唯一. */
   private boolean unique;
@@ -45,20 +45,18 @@ public class EntityIndex {
       final String tableName,
       Set<EntityColumn> entityColumns,
       Dialect dialect) {
-    final TableIndex annotation = clazz.getAnnotation(TableIndex.class);
-    if (annotation == null) {
+    final TableIndex tableIndex = clazz.getAnnotation(TableIndex.class);
+    if (tableIndex == null) {
       return Collections.emptyList();
     }
-    final Index[] indexes = annotation.value();
+    final Index[] indexes = tableIndex.value();
     List<EntityIndex> entityIndexes = new ArrayList<>();
     for (Index index : indexes) {
-      if ("".equals(index.name())) {
-        throw new SimpleException("invalid table index: name must be present");
-      }
       IndexField[] indexFields = index.indexFields();
       if (indexFields.length == 0) {
         throw new SimpleException("invalid table index: no fields set");
       }
+      final StringBuilder indexNames = new StringBuilder();
       IndexColumn[] indexColumns = new IndexColumn[indexFields.length];
       for (int i = 0; i < indexFields.length; i++) {
         IndexField indexField = indexFields[i];
@@ -71,10 +69,16 @@ public class EntityIndex {
         }
         indexColumns[i] =
             IndexColumn.of(optional.get().getName(), indexField.length(), indexField.direction());
+        indexNames.append(indexColumns[i].column);
       }
       final EntityIndex entityIndex = new EntityIndex();
       entityIndex.tableName = tableName;
-      entityIndex.name = index.name();
+      entityIndex.name =
+          !"".equals(index.name())
+              ? index.name()
+              : "".equals(tableIndex.prefix())
+                  ? "idx_" + tableName + "_" + indexNames
+                  : tableIndex.prefix() + "_" + indexNames;
       entityIndex.unique = index.unique();
       entityIndex.comment = index.comment();
       entityIndex.indexColumns = indexColumns;
