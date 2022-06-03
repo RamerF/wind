@@ -38,6 +38,9 @@ public class AutoConfigConfiguration {
   /** 拦截器所在包路径,多个以,分割. */
   protected String interceptorPackage = "";
 
+  /** 类型处理器路径,多个以,分割 */
+  protected String typeHandlerPackage = "";
+
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 500;
 
@@ -82,9 +85,9 @@ public class AutoConfigConfiguration {
     configuration.setLogicDeleteProp(logicDeleteProp);
     configuration.setEntityPackage(entityPackage);
     configuration.setInterceptorPackage(interceptorPackage);
+    configuration.setTypeHandlerPackage(typeHandlerPackage);
     configuration.setBatchSize(batchSize);
     configuration.setDdlAuto(ddlAuto);
-    configuration.setDialect(dataSource.getDialect());
     configuration.setWriteNullProp(writeNullProp);
     if (StringUtils.hasText(idGenerator)) {
       try {
@@ -95,10 +98,13 @@ public class AutoConfigConfiguration {
         throw e;
       }
     }
-    configuration.setJdbcEnvironment(
-        new JdbcEnvironment(
-            BeanUtils.initial(dataSource.getTransactionFactory()),
-            DataSourceConfigurationFactory.getDataSource(dataSource)));
+    if (dataSource != null) {
+      configuration.setDialect(dataSource.getDialect());
+      configuration.setJdbcEnvironment(
+          new JdbcEnvironment(
+              BeanUtils.initial(dataSource.getTransactionFactory()),
+              DataSourceConfigurationFactory.getDataSource(dataSource)));
+    }
     return configuration;
   }
 }

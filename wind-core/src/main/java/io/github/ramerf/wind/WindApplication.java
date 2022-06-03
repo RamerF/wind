@@ -9,6 +9,7 @@ import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.exception.ClassInstantiationException;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.executor.DaoFactory;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
@@ -62,13 +63,15 @@ public class WindApplication {
     windContext.setConfiguration(configuration);
     // 设置拦截器
     populateInterceptors(configuration);
+    // 类型处理器
+    populateTypeHandler(configuration);
     // 打印banner
     printBanner();
     // 初始化实体解析类
     EntityUtils.initial(windContext);
     EntityHelper.initial(windContext);
     // 解析实体元数据
-    initEntityInfo(windContext.getConfiguration());
+    initEntityInfo(configuration);
     // 注册默认类型处理器
     BeanUtils.getClazz(TypeHandlerRegistryFactory.class.getName());
     WindApplication windApplication = new WindApplication();
@@ -120,6 +123,28 @@ public class WindApplication {
         }
       } catch (IOException e) {
         log.warn("Fail to populate service interceptors:" + interceptorPackage, e);
+      }
+    }
+  }
+
+  private static void populateTypeHandler(final Configuration configuration) {
+    final String typeHandlerPackage = configuration.getTypeHandlerPackage();
+    if (StringUtils.nonEmpty(typeHandlerPackage)) {
+      try {
+        @SuppressWarnings("rawtypes")
+        final Set<Class<? extends ITypeHandler>> classes =
+            BeanUtils.scanClasses(typeHandlerPackage, ITypeHandler.class);
+        //noinspection rawtypes
+        for (Class<? extends ITypeHandler> clazz : classes) {
+          try {
+            configuration.addTypeHandler(BeanUtils.initial(clazz));
+          } catch (ClassInstantiationException e) {
+            throw new WindException(
+                "Fail to initial dao type handler:" + clazz + ",require no arg constructor", e);
+          }
+        }
+      } catch (IOException e) {
+        log.warn("Fail to populate type handler:" + typeHandlerPackage, e);
       }
     }
   }

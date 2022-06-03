@@ -11,6 +11,8 @@
     <version>4.0.8</version>
     <modules>
         <module>wind-core</module>
+        <module>wind-spring</module>
+        <module>wind-spring-boot-starter</module>
     </modules>
     <url>http://maven.apache.org</url>
     <description>Another orm in choice.</description>
@@ -50,6 +52,8 @@
         <druid.version>1.2.8</druid.version>
         <commons-dbcp2.version>2.8.0</commons-dbcp2.version>
         <hikaricp.version>4.0.0</hikaricp.version>
+        <spring.version>5.0.12.RELEASE</spring.version>
+        <spring-boot.version>2.0.8.RELEASE</spring-boot.version>
     </properties>
     <dependencies>
         <!-- findbugs -->
@@ -168,7 +172,18 @@
                 <artifactId>HikariCP</artifactId>
                 <version>${hikaricp.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-jdbc</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
         </dependencies>
+
     </dependencyManagement>
     <distributionManagement>
         <repository>

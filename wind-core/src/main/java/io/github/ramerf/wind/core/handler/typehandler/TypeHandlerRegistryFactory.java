@@ -20,16 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressWarnings({"rawtypes"})
 public class TypeHandlerRegistryFactory {
-  private static final List<ITypeHandler> typeHandlers;
   /** 缓存字段类型处理器. */
   private static final Map<Field, ITypeHandler> toJavaTypeHandlers;
 
   private static final Map<Class<? extends ITypeHandler>, ITypeHandler> typeHandlerMap;
 
   static {
-    typeHandlers = new LinkedList<>();
     toJavaTypeHandlers = Collections.synchronizedMap(new WeakHashMap<>());
-    typeHandlerMap = Collections.synchronizedMap(new WeakHashMap<>());
+    typeHandlerMap = Collections.synchronizedMap(new LinkedHashMap<>());
     // 注册默认类型转换器
     try {
       BeanUtils.scanClasses(
@@ -39,12 +37,7 @@ public class TypeHandlerRegistryFactory {
           // 跳过类型处理器
           .filter(clazz -> !clazz.isAnnotationPresent(IgnoreScan.class))
           .map(BeanUtils::initial)
-          .forEach(
-              typeHandler -> {
-                typeHandlerMap.put(typeHandler.getClass(), typeHandler);
-                log.debug("registerDefaultTypeHandlers:[{}]", typeHandler.getClass().getName());
-                addTypeHandlers(typeHandler);
-              });
+          .forEach(TypeHandlerRegistryFactory::addTypeHandlers);
     } catch (IOException e) {
       log.warn(e.getMessage());
       log.error(e.getMessage(), e);
@@ -60,12 +53,13 @@ public class TypeHandlerRegistryFactory {
   public static void addTypeHandlers(@Nonnull List<ITypeHandler> typeHandlers) {
     for (int i = typeHandlers.size() - 1; i >= 0; i--) {
       ITypeHandler typeHandler = typeHandlers.get(i);
-      TypeHandlerRegistryFactory.typeHandlers.add(0, typeHandler);
+      TypeHandlerRegistryFactory.typeHandlerMap.put(typeHandler.getClass(), typeHandler);
+      log.debug("register type handler:[{}]", typeHandler.getClass().getName());
     }
   }
 
   public static List<ITypeHandler> getTypeHandlers() {
-    return typeHandlers;
+    return new LinkedList<>(typeHandlerMap.values());
   }
 
   public static ITypeHandler getTypeHandler(Class<? extends ITypeHandler> clazz) {

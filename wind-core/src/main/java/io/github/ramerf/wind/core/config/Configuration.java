@@ -1,6 +1,8 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
+import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.plugin.*;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import lombok.Data;
@@ -24,6 +26,9 @@ public class Configuration {
 
   /** 拦截器所在包路径,多个以,分割. */
   protected String interceptorPackage = "";
+
+  /** 类型处理器路径,多个以,分割 */
+  protected String typeHandlerPackage = "";
 
   /** 批量操作时,每次处理的大小. */
   protected int batchSize = 500;
@@ -56,6 +61,10 @@ public class Configuration {
   /** 添加拦截器. */
   public void addInterceptor(ServiceInterceptor serviceInterceptor) {
     serviceInterceptorChain.addInterceptor(serviceInterceptor);
+  }
+
+  public void addTypeHandler(ITypeHandler<?, ?>... typeHandler) {
+    TypeHandlerRegistryFactory.addTypeHandlers(typeHandler);
   }
 
   public enum DdlAuto {
