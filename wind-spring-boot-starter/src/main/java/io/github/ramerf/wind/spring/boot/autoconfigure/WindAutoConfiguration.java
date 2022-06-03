@@ -1,8 +1,9 @@
 package io.github.ramerf.wind.spring.boot.autoconfigure;
 
 import io.github.ramerf.wind.WindApplication;
-import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.JdbcEnvironment;
+import io.github.ramerf.wind.core.executor.Dao;
 import io.github.ramerf.wind.core.executor.DaoFactory;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
@@ -56,5 +57,11 @@ public class WindAutoConfiguration {
     daoInterceptors.forEach(configuration::addInterceptor);
     typeHandlers.forEach(configuration::addTypeHandler);
     return WindApplication.run(configuration).getDaoFactory();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public Dao dao(DaoFactory daoFactory) {
+    return daoFactory.getDao();
   }
 }
