@@ -8,10 +8,6 @@ public interface DaoInterceptor {
 
   Object intercept(Invocation invocation) throws Throwable;
 
-  default Object plugin(Object target, final Object[] args) {
-    return Plugins.wrap(target, this, args);
-  }
-
   default void setProperties(Properties properties) {
     // NOP
   }

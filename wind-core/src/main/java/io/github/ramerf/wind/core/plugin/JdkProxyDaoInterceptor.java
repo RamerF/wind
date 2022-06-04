@@ -4,14 +4,14 @@ import io.github.ramerf.wind.core.reflect.ExceptionUtil;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-public class JdkProxyDaoCallback implements InvocationHandler {
+public class JdkProxyDaoInterceptor implements InvocationHandler {
 
   private final Object target;
-  private final DaoInterceptor daoInterceptor;
+  private final DaoInterceptorChain interceptorChain;
 
-  public JdkProxyDaoCallback(Object target, DaoInterceptor daoInterceptor) {
+  public JdkProxyDaoInterceptor(Object target, DaoInterceptorChain interceptorChain) {
     this.target = target;
-    this.daoInterceptor = daoInterceptor;
+    this.interceptorChain = interceptorChain;
   }
 
   @Override
@@ -19,7 +19,7 @@ public class JdkProxyDaoCallback implements InvocationHandler {
     try {
       final String name = method.getName();
       if (Plugins.QUERY_METHODS_DAO.contains(name) || Plugins.UPDATE_METHODS_DAO.contains(name)) {
-        return daoInterceptor.intercept(new Invocation(target, method, args));
+        return interceptorChain.proceed(new Invocation(target, method, args, interceptorChain));
       }
       return method.invoke(target, method, args);
     } catch (Exception e) {

@@ -9,7 +9,7 @@ import java.io.Serializable;
  * @since 2020.10.28
  * @author ramer
  */
-public class GenericService<T, ID extends Serializable> implements BaseService<T, ID> {
+public final class GenericService<T, ID extends Serializable> implements BaseService<T, ID> {
   private final Dao dao;
   private final Class<T> clazz;
 

@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 @Slf4j
 @org.springframework.context.annotation.Configuration
 @ConfigurationProperties(prefix = "wind")
-public class WindProperties {
+public class WindProperty {
   /** 逻辑删除配置. */
   @NestedConfigurationProperty private LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
 

@@ -3,7 +3,8 @@ package io.github.ramerf.wind.core.plugin;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.executor.Dao;
 import io.github.ramerf.wind.core.executor.Executor;
-import io.github.ramerf.wind.core.service.BaseService;
+import io.github.ramerf.wind.core.service.BaseServiceImpl;
+import io.github.ramerf.wind.core.service.GenericService;
 import java.util.*;
 import net.sf.cglib.proxy.Enhancer;
 
@@ -52,7 +53,7 @@ public class Plugins {
     QUERY_METHODS_SERVICE = Collections.unmodifiableSet(queryMethods);
   }
 
-  public static Object wrap(Object target, DaoInterceptor interceptor, final Object[] args) {
+  public static Object wrap(Object target, DaoInterceptorChain chain, final Object[] args) {
     Class<?> clazz = target.getClass();
     /* jdk代理
     Class<?>[] interfaces = BeanUtils.getAllInterfaces(clazz);
@@ -63,23 +64,24 @@ public class Plugins {
     if (Dao.class.isAssignableFrom(clazz)) {
       Enhancer enhancer = new Enhancer();
       enhancer.setSuperclass(clazz);
-      enhancer.setCallback(new CglibDaointerceptor(target, interceptor));
+      enhancer.setCallback(new CglibDaoInterceptor(target, chain));
       target =
           enhancer.create(new Class[] {Configuration.class, Executor.class, boolean.class}, args);
     }
     return target;
   }
 
-  public static Object wrap(Object target, ServiceInterceptor interceptor, final Object[] args) {
+
+  public static Object wrap(Object target, ServiceInterceptorChain chain, final Object[] args) {
     final Class<?> clazz = target.getClass();
-    if (BaseService.class.isAssignableFrom(clazz)) {
-      Enhancer enhancer = new Enhancer();
-      enhancer.setSuperclass(clazz);
-      enhancer.setCallback(new CglibServiceInterceptor(target, interceptor));
-      target =
-          args.length == 1
-              ? enhancer.create(new Class[] {Dao.class}, args)
-              : enhancer.create(new Class[] {Dao.class, Class.class, Class.class}, args);
+    Enhancer enhancer = new Enhancer();
+    enhancer.setSuperclass(clazz);
+    enhancer.setCallback(new CglibServiceInterceptor(target, chain));
+    if (BaseServiceImpl.class.isAssignableFrom(clazz)) {
+      target = enhancer.create(new Class[] {Dao.class}, args);
+    } //
+    else if (GenericService.class.isAssignableFrom(clazz)) {
+      target = enhancer.create(new Class[] {Dao.class, Class.class, Class.class}, args);
     }
     return target;
   }

@@ -10,11 +10,11 @@ import net.sf.cglib.proxy.MethodProxy;
 public class CglibServiceInterceptor implements MethodInterceptor {
 
   private final Object target;
-  private final ServiceInterceptor interceptor;
+  private final ServiceInterceptorChain interceptorChain;
 
-  public CglibServiceInterceptor(Object target, ServiceInterceptor interceptor) {
+  public CglibServiceInterceptor(Object target, ServiceInterceptorChain interceptorChain) {
     this.target = target;
-    this.interceptor = interceptor;
+    this.interceptorChain = interceptorChain;
   }
 
   @Override
@@ -25,7 +25,7 @@ public class CglibServiceInterceptor implements MethodInterceptor {
       final String name = method.getName();
       if (Plugins.QUERY_METHODS_SERVICE.contains(name)
           || Plugins.UPDATE_METHODS_SERVICE.contains(name)) {
-        return interceptor.intercept(new Invocation(target, method, args));
+        return interceptorChain.proceed(new Invocation(target, method, args, interceptorChain));
       }
       return method.invoke(target, args);
     } catch (Exception e) {

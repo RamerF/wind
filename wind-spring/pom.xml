@@ -19,7 +19,7 @@
         <dependency>
             <groupId>io.github.ramerf</groupId>
             <artifactId>wind-core</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

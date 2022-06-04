@@ -15,7 +15,10 @@ public class Invocation {
   /** 数据库操作类型. */
   private final ExecType execType;
 
-  public Invocation(Object target, Method method, Object[] args) {
+  private final InterceptorChain interceptorChain;
+
+  public Invocation(
+      Object target, Method method, Object[] args, InterceptorChain interceptorChain) {
     this.target = target;
     this.method = method;
     this.args = args;
@@ -24,6 +27,7 @@ public class Invocation {
                 || Plugins.QUERY_METHODS_SERVICE.contains(method.getName())
             ? ExecType.READ
             : ExecType.WRITE;
+    this.interceptorChain = interceptorChain;
   }
 
   public Object getTarget() {
@@ -46,7 +50,12 @@ public class Invocation {
     return execType.equals(ExecType.WRITE);
   }
 
-  public Object proceed() throws InvocationTargetException, IllegalAccessException {
+  public Object proceed() throws Throwable {
+    return interceptorChain.proceed(this);
+  }
+
+  Object invoke() throws InvocationTargetException, IllegalAccessException {
+    interceptorChain.reset();
     return method.invoke(target, args);
   }
 

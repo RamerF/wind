@@ -8,6 +8,7 @@ import io.github.ramerf.wind.core.executor.DaoFactory;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.plugin.DaoInterceptor;
+import io.github.ramerf.wind.core.plugin.ServiceInterceptor;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.spring.transaction.SpringManagedTransactionFactory;
 import java.util.ArrayList;
@@ -28,16 +29,19 @@ import org.springframework.context.annotation.Bean;
  */
 @org.springframework.context.annotation.Configuration
 @ConditionalOnSingleCandidate(DataSource.class)
-@EnableConfigurationProperties(WindProperties.class)
+@EnableConfigurationProperties(WindProperty.class)
 @AutoConfigureAfter({DataSourceAutoConfiguration.class})
 public class WindAutoConfiguration {
-  @Autowired private WindProperties windProperties;
+  @Autowired private WindProperty windProperty;
 
   @Autowired(required = false)
   private List<ITypeHandler<?, ?>> typeHandlers = new ArrayList<>();
 
   @Autowired(required = false)
   private List<DaoInterceptor> daoInterceptors = new ArrayList<>();
+
+  @Autowired(required = false)
+  private List<ServiceInterceptor> serviceInterceptors = new ArrayList<>();
 
   @Bean
   @ConditionalOnMissingBean
@@ -51,10 +55,11 @@ public class WindAutoConfiguration {
       DataSource dataSource,
       TransactionFactory transactionFactory,
       ObjectProvider<IdGenerator> idGenerator) {
-    final Configuration configuration = windProperties.getConfiguration();
+    final Configuration configuration = windProperty.getConfiguration();
     configuration.setJdbcEnvironment(new JdbcEnvironment(transactionFactory, dataSource));
     idGenerator.ifAvailable(configuration::setIdGenerator);
     daoInterceptors.forEach(configuration::addInterceptor);
+    serviceInterceptors.forEach(configuration::addInterceptor);
     typeHandlers.forEach(configuration::addTypeHandler);
     return WindApplication.run(configuration).getDaoFactory();
   }
