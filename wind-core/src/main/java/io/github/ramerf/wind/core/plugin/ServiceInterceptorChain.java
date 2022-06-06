@@ -7,6 +7,7 @@ public class ServiceInterceptorChain implements InterceptorChain {
   private final List<ServiceInterceptor> serviceInterceptors = new ArrayList<>();
   private int index = -1;
 
+  /** 代理加入拦截器 */
   public Object pluginAll(Object target, final Class<?> clazz, final Object[] args) {
     final ServiceInterceptorChain chain = new ServiceInterceptorChain();
     for (ServiceInterceptor serviceInterceptor : serviceInterceptors) {
@@ -15,6 +16,17 @@ public class ServiceInterceptorChain implements InterceptorChain {
       }
     }
     return Plugins.wrap(target, chain, args);
+  }
+
+  /***/
+  public ServiceInterceptorChain support(final Class<?> clazz) {
+    final ServiceInterceptorChain chain = new ServiceInterceptorChain();
+    for (ServiceInterceptor serviceInterceptor : serviceInterceptors) {
+      if (serviceInterceptor.supports(clazz)) {
+        chain.addInterceptor(serviceInterceptor);
+      }
+    }
+    return chain;
   }
 
   public void addInterceptor(ServiceInterceptor serviceInterceptor) {

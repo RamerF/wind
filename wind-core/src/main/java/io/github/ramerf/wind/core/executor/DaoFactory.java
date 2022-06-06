@@ -63,4 +63,8 @@ public class DaoFactory {
             .getDaoInterceptorChain()
             .pluginAll(dao, new Object[] {configuration, executor, autoCommit});
   }
+
+  public Configuration getConfiguration() {
+    return configuration;
+  }
 }

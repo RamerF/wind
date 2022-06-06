@@ -46,6 +46,12 @@ public class Invocation {
     return execType;
   }
 
+  /** 是否读数据库. */
+  public boolean isReadMethod() {
+    return execType.equals(ExecType.READ);
+  }
+
+  /** 是否写数据库. */
   public boolean isWriteMethod() {
     return execType.equals(ExecType.WRITE);
   }

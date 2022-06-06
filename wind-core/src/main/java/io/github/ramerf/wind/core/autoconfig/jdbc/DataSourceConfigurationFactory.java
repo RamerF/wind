@@ -1,6 +1,5 @@
 package io.github.ramerf.wind.core.autoconfig.jdbc;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -66,7 +65,6 @@ public class DataSourceConfigurationFactory {
   }
 
   private static DataSource getDruidDataSource(final Properties properties) {
-    DruidDataSource dataSource = new DruidDataSource();
     try {
       return DruidDataSourceFactory.createDataSource(properties);
     } catch (Exception e) {

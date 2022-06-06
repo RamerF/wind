@@ -1,25 +1,23 @@
 package io.github.ramerf.wind.core.plugin;
 
 import io.github.ramerf.wind.core.reflect.ExceptionUtil;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
 
 @Slf4j
-public class CglibServiceInterceptor implements MethodInterceptor {
+public class JdkProxyServiceInterceptor implements InvocationHandler {
 
   private final Object target;
   private final ServiceInterceptorChain interceptorChain;
 
-  public CglibServiceInterceptor(Object target, ServiceInterceptorChain interceptorChain) {
+  public JdkProxyServiceInterceptor(Object target, ServiceInterceptorChain interceptorChain) {
     this.target = target;
     this.interceptorChain = interceptorChain;
   }
 
   @Override
-  public Object intercept(
-      final Object proxy, final Method method, final Object[] args, final MethodProxy methodProxy)
+  public Object invoke(final Object proxy, final Method method, final Object[] args)
       throws Throwable {
     try {
       final String name = method.getName();

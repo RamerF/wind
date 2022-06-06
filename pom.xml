@@ -53,6 +53,7 @@
         <commons-dbcp2.version>2.8.0</commons-dbcp2.version>
         <hikaricp.version>4.0.0</hikaricp.version>
         <spring.version>5.0.12.RELEASE</spring.version>
+        <aspectj.version>1.9.4</aspectj.version>
         <spring-boot.version>2.0.8.RELEASE</spring-boot.version>
     </properties>
     <dependencies>
@@ -181,6 +182,21 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-jdbc</artifactId>
                 <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-aop</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjweaver</artifactId>
+                <version>${aspectj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjrt</artifactId>
+                <version>${aspectj.version}</version>
             </dependency>
         </dependencies>
 

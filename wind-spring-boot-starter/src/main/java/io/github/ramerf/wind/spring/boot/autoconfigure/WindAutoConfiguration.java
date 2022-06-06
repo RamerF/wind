@@ -10,6 +10,7 @@ import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.plugin.DaoInterceptor;
 import io.github.ramerf.wind.core.plugin.ServiceInterceptor;
 import io.github.ramerf.wind.core.support.IdGenerator;
+import io.github.ramerf.wind.spring.ServiceInterceptorAop;
 import io.github.ramerf.wind.spring.transaction.SpringManagedTransactionFactory;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +52,7 @@ public class WindAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public DaoFactory daoFactory(
+  public WindApplication windApplication(
       DataSource dataSource,
       TransactionFactory transactionFactory,
       ObjectProvider<IdGenerator> idGenerator) {
@@ -61,12 +62,24 @@ public class WindAutoConfiguration {
     daoInterceptors.forEach(configuration::addInterceptor);
     serviceInterceptors.forEach(configuration::addInterceptor);
     typeHandlers.forEach(configuration::addTypeHandler);
-    return WindApplication.run(configuration).getDaoFactory();
+    return WindApplication.run(configuration);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public DaoFactory daoFactory(WindApplication windApplication) {
+    return windApplication.getDaoFactory();
   }
 
   @Bean
   @ConditionalOnMissingBean
   public Dao dao(DaoFactory daoFactory) {
     return daoFactory.getDao();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public ServiceInterceptorAop serviceInterceptorAop(WindApplication windApplication) {
+    return new ServiceInterceptorAop(windApplication.getConfiguration());
   }
 }

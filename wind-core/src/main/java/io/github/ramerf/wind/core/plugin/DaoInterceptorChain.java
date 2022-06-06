@@ -7,6 +7,7 @@ public class DaoInterceptorChain implements InterceptorChain {
   private final List<DaoInterceptor> daoInterceptors = new ArrayList<>();
   private int index = -1;
 
+  /** 代理加入拦截器 */
   public Object pluginAll(Object target, final Object[] args) {
     final DaoInterceptorChain chain = new DaoInterceptorChain();
     for (DaoInterceptor interceptor : daoInterceptors) {

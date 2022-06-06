@@ -1,3 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.github.ramerf.wind.spring.boot.autoconfigure.WindAutoConfiguration,\
-io.github.ramerf.wind.spring.boot.annotation.ServiceRegistry
+io.github.ramerf.wind.spring.boot.autoconfigure.WindAutoConfiguration
