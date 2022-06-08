@@ -1,10 +1,10 @@
 package io.github.ramerf.wind.core.autoconfig;
 
-import io.github.ramerf.wind.core.annotation.ConfigurationProperties;
-import io.github.ramerf.wind.core.annotation.NestedConfigurationProperties;
+import io.github.ramerf.wind.core.annotation.*;
 import io.github.ramerf.wind.core.autoconfig.jdbc.DataSourceConfigurationFactory;
 import io.github.ramerf.wind.core.config.*;
 import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
+import io.github.ramerf.wind.core.config.Configuration.TimestampStrategy;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
@@ -50,6 +50,9 @@ public class AutoConfigConfiguration {
   /** 新增/更新时写入值为null的属性,默认写入所有字段. */
   private boolean writeNullProp = true;
 
+  /** 指定{@link UpdateTimestamp}注解的更新策略,默认总是赋值为当前时间 */
+  protected TimestampStrategy updateTimeStrategy = TimestampStrategy.ALWAYS;
+
   /** 全局id生成器,类全路径,默认自增 {@link IdGenerator#AUTO_INCREMENT_ID_GENERATOR } */
   private String idGenerator;
 
@@ -89,6 +92,7 @@ public class AutoConfigConfiguration {
     configuration.setBatchSize(batchSize);
     configuration.setDdlAuto(ddlAuto);
     configuration.setWriteNullProp(writeNullProp);
+    configuration.setUpdateTimeStrategy(updateTimeStrategy);
     if (StringUtils.hasText(idGenerator)) {
       try {
         final IdGenerator idGenerator = BeanUtils.initial(this.idGenerator);

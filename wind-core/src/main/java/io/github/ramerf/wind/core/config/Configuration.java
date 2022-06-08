@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.annotation.TableInfo;
+import io.github.ramerf.wind.core.annotation.UpdateTimestamp;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.plugin.*;
@@ -42,6 +43,9 @@ public class Configuration {
   /** 新增/更新时写入值为null的属性,默认写入所有字段. */
   protected boolean writeNullProp = true;
 
+  /** 指定{@link UpdateTimestamp}注解的更新策略,默认总是赋值为当前时间 */
+  protected TimestampStrategy updateTimeStrategy = TimestampStrategy.ALWAYS;
+
   /** 全局id生成器,默认自增,实体可以单独指定{@link TableInfo#idGenerator()} */
   protected IdGenerator idGenerator = IdGenerator.AUTO_INCREMENT_ID_GENERATOR;
 
@@ -74,5 +78,12 @@ public class Configuration {
     UPDATE,
     /** None ddl auto. */
     NONE
+  }
+
+  public enum TimestampStrategy {
+    /** 总是设置为当前时间 */
+    ALWAYS,
+    /** 仅字段为空时设置为当前时间 */
+    NULL
   }
 }

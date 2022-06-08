@@ -1,6 +1,6 @@
 package io.github.ramerf.wind.core.plugin;
 
-import java.lang.reflect.InvocationTargetException;
+import io.github.ramerf.wind.core.reflect.ExceptionUtil;
 import java.lang.reflect.Method;
 
 public class Invocation {
@@ -60,9 +60,13 @@ public class Invocation {
     return interceptorChain.proceed(this);
   }
 
-  Object invoke() throws InvocationTargetException, IllegalAccessException {
+  Object invoke() throws Throwable {
     interceptorChain.reset();
-    return method.invoke(target, args);
+    try {
+      return method.invoke(target, args);
+    } catch (Exception e) {
+      throw ExceptionUtil.unwrapThrowable(e);
+    }
   }
 
   /** 数据库操作类型. */

@@ -1,5 +1,7 @@
 package io.github.ramerf.wind.spring.boot.autoconfigure;
 
+import io.github.ramerf.wind.core.annotation.UpdateTimestamp;
+import io.github.ramerf.wind.core.config.Configuration.TimestampStrategy;
 import io.github.ramerf.wind.core.config.LogicDeleteProp;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.Configuration.DdlAuto;
@@ -38,6 +40,9 @@ public class WindProperty {
   /** 新增/更新时写入值为null的属性,默认写入所有字段. */
   private boolean writeNullProp = true;
 
+  /** 指定{@link UpdateTimestamp}注解的更新策略,默认总是赋值为当前时间 */
+  protected TimestampStrategy updateTimeStrategy = TimestampStrategy.ALWAYS;
+
   public Configuration getConfiguration() {
     Configuration configuration = new Configuration();
     configuration.setLogicDeleteProp(logicDeleteProp);
@@ -47,6 +52,7 @@ public class WindProperty {
     configuration.setBatchSize(batchSize);
     configuration.setDdlAuto(ddlAuto);
     configuration.setWriteNullProp(writeNullProp);
+    configuration.setUpdateTimeStrategy(updateTimeStrategy);
     return configuration;
   }
 }

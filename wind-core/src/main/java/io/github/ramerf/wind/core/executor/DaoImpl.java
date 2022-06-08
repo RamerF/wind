@@ -3,6 +3,7 @@ package io.github.ramerf.wind.core.executor;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.config.Configuration;
+import io.github.ramerf.wind.core.config.Configuration.TimestampStrategy;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Pageable;
 import io.github.ramerf.wind.core.exception.NotAllowedDataAccessException;
@@ -357,8 +358,11 @@ public class DaoImpl implements Dao {
         BeanUtils.setFieldValue(t, idField, id);
       }
     }
-    setCurrentTime(t, entityInfo.getCreateTimeField());
-    setCurrentTime(t, entityInfo.getUpdateTimeField());
+    setCurrentTime(t, entityInfo.getCreateTimeField(), false);
+    setCurrentTime(
+        t,
+        entityInfo.getUpdateTimeField(),
+        configuration.getUpdateTimeStrategy().equals(TimestampStrategy.ALWAYS));
     // 插入列
     final StringBuilder columns = new StringBuilder();
     // values中的?占位符
@@ -442,8 +446,11 @@ public class DaoImpl implements Dao {
               BeanUtils.setFieldValue(t, idField, id);
             }
           }
-          setCurrentTime(t, entityInfo.getCreateTimeField());
-          setCurrentTime(t, entityInfo.getUpdateTimeField());
+          setCurrentTime(t, entityInfo.getCreateTimeField(), false);
+          setCurrentTime(
+              t,
+              entityInfo.getUpdateTimeField(),
+              configuration.getUpdateTimeStrategy().equals(TimestampStrategy.ALWAYS));
         });
     // 取第一条记录获取批量保存sql
     final T t = ts.get(0);
@@ -583,7 +590,10 @@ public class DaoImpl implements Dao {
     final EntityInfo entityInfo = getEntityInfo(t.getClass());
     final Field idField = entityInfo.getIdColumn().getField();
 
-    setCurrentTime(t, entityInfo.getUpdateTimeField());
+    setCurrentTime(
+        t,
+        entityInfo.getUpdateTimeField(),
+        configuration.getUpdateTimeStrategy().equals(TimestampStrategy.ALWAYS));
     final StringBuilder setBuilder = new StringBuilder();
     final AtomicInteger index = new AtomicInteger(1);
     List<Consumer<PreparedStatement>> list = new LinkedList<>();
@@ -642,7 +652,10 @@ public class DaoImpl implements Dao {
     final EntityInfo entityInfo = getEntityInfo(clazz);
     final Field idField = entityInfo.getIdColumn().getField();
     // 保存更新时间
-    setCurrentTime(t, entityInfo.getUpdateTimeField());
+    setCurrentTime(
+        t,
+        entityInfo.getUpdateTimeField(),
+        configuration.getUpdateTimeStrategy().equals(TimestampStrategy.ALWAYS));
 
     final List<Field> savingFields = getWritingFields(t, fields, SqlStatementType.UPDATE);
     final StringBuilder setBuilder = new StringBuilder();
@@ -675,7 +688,10 @@ public class DaoImpl implements Dao {
                     public void setValues(@Nonnull final PreparedStatement ps, final int i) {
                       final AtomicInteger index = new AtomicInteger(1);
                       final T obj = execList.get(i);
-                      setCurrentTime(obj, entityInfo.getUpdateTimeField());
+                      setCurrentTime(
+                          obj,
+                          entityInfo.getUpdateTimeField(),
+                          configuration.getUpdateTimeStrategy().equals(TimestampStrategy.ALWAYS));
                       savingFields.forEach(
                           field ->
                               setArgsValue(index, field, BeanUtils.getFieldValue(obj, field), ps));
@@ -794,9 +810,17 @@ public class DaoImpl implements Dao {
     return savingFields;
   }
 
-  /** 设置为当前时间. */
-  private void setCurrentTime(@Nonnull final Object t, final Field field) {
+  /**
+   * 设置为当前时间.
+   *
+   * @param force 当为false且字段不为空时不执行任何操作,否则总是设置为当前时间
+   */
+  private void setCurrentTime(@Nonnull final Object t, final Field field, final boolean force) {
     if (field == null) {
+      return;
+    }
+    if (force) {
+      BeanUtils.setFieldValue(t, field, getCurrentTimeValue(field));
       return;
     }
     final Object val = BeanUtils.getFieldValue(t, field);
