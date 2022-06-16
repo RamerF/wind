@@ -129,6 +129,8 @@ public interface Executor {
       final KeyHolder generatedKeyHolder)
       throws DataAccessException;
 
+  int[] batchUpdate(String[] sqls) throws DataAccessException;
+
   Transaction getTransaction();
 
   void close(boolean forceRollback);

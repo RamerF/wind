@@ -10,8 +10,7 @@ import io.github.ramerf.wind.core.metadata.TableColumnInformation;
 import io.github.ramerf.wind.core.metadata.TableInformation;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.StringUtils;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
@@ -118,16 +117,16 @@ public class TableExporter {
     }
     // 索引
     {
-      StringBuilder sql = new StringBuilder();
+      List<String> sqls = new ArrayList<>();
       final List<EntityIndex> entityIndexes = entityInfo.getEntityIndexes();
       if (!entityIndexes.isEmpty()) {
         for (EntityIndex entityIndex : entityIndexes) {
           String sqlDefinition = entityIndex.getSqlDefinition(dialect);
-          sql.append(sqlDefinition).append(";\n");
+          sqls.add(sqlDefinition);
         }
-        log.info("createTable:index[\n{}]", sql);
+        log.info("createTable:index[\n{}]", sqls);
         try {
-          executor.update(sql.toString(), ps -> {});
+          executor.batchUpdate(sqls.toArray(new String[0]));
         } catch (DataAccessException e) {
           log.warn("Fail to create index of table:" + entityInfo.getName(), e);
         }

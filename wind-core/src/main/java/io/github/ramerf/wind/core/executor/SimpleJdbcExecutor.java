@@ -302,6 +302,32 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
     }
   }
 
+  @Override
+  public int[] batchUpdate(final String[] sqls) {
+    Connection connection = getConnection();
+    Statement statement = DataSourceUtils.statement(connection);
+    try {
+      if (JdbcUtils.supportsBatchUpdates(connection)) {
+        for (final String sql : sqls) {
+          statement.addBatch(sql);
+        }
+        return statement.executeBatch();
+      } else {
+        int[] rowsAffectedArray = new int[sqls.length];
+        for (int i = 0; i < sqls.length; i++) {
+          final String sql = sqls[i];
+          rowsAffectedArray[i] = statement.executeUpdate(sql);
+        }
+        return rowsAffectedArray;
+      }
+    } catch (SQLException e) {
+      throw new DataAccessException("Fail to execute batch update", e);
+    } finally {
+      DataSourceUtils.close(statement);
+      transaction.releaseConnection();
+    }
+  }
+
   private Connection getConnection() {
     final Connection connection = transaction.getConnection();
     if (log.isDebugEnabled()) {

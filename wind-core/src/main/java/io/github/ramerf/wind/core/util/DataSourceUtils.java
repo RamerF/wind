@@ -26,6 +26,20 @@ public class DataSourceUtils {
     }
   }
 
+  public static Statement statement(Connection connection) throws DataAccessException {
+    Asserts.notNull(connection, "No Connection specified");
+    try {
+      Statement statement = connection.createStatement();
+      if (statement == null) {
+        throw new DataAccessException("Failed to obtain Statement");
+      }
+      return statement;
+    } catch (SQLException e) {
+      close(connection);
+      throw new DataAccessException("Failed to obtain Statement", e);
+    }
+  }
+
   public static PreparedStatement preparedStatement(Connection connection, String sql)
       throws DataAccessException {
     Asserts.notNull(connection, "No Connection specified");
@@ -125,6 +139,18 @@ public class DataSourceUtils {
     if (preparedStatement != null) {
       try {
         preparedStatement.close();
+      } catch (SQLException ex) {
+        log.trace("Could not close JDBC PreparedStatement", ex);
+      } catch (Throwable ex) {
+        log.trace("Unexpected exception on closing JDBC PreparedStatement", ex);
+      }
+    }
+  }
+
+  public static void close(Statement statement) {
+    if (statement != null) {
+      try {
+        statement.close();
       } catch (SQLException ex) {
         log.trace("Could not close JDBC PreparedStatement", ex);
       } catch (Throwable ex) {

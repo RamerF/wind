@@ -29,7 +29,6 @@ public class JdbcUtils {
     }
   }
 
-  /** 复制于: {@link org.springframework.jdbc.support.JdbcUtils#supportsBatchUpdates(Connection)} */
   public static boolean supportsBatchUpdates(Connection con) {
     try {
       DatabaseMetaData dbmd = con.getMetaData();

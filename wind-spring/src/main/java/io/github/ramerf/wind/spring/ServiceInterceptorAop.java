@@ -38,6 +38,9 @@ public class ServiceInterceptorAop {
     final BaseService baseService = (BaseService) target;
     final ServiceInterceptorChain interceptorChain =
         configuration.getServiceInterceptorChain().support(baseService.getPoJoClass());
+    if (interceptorChain.getInterceptors().isEmpty()) {
+      return pjp.proceed();
+    }
     return interceptorChain.proceed(
         new Invocation(
             baseService,
