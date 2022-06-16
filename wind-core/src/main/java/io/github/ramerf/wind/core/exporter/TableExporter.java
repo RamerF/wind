@@ -133,7 +133,7 @@ public class TableExporter {
           String sqlDefinition = entityIndex.getSqlDefinition(dialect);
           sqls.add(sqlDefinition);
         }
-        log.info("createTable:index[\n{}]", sqls);
+        log.info("createTable:index[\n{}\n]", String.join("\n", sqls));
         try {
           executor.batchUpdate(sqls.toArray(new String[0]));
         } catch (DataAccessException e) {
