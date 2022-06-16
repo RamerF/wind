@@ -73,14 +73,18 @@ public class CndGroup<T> extends AbstractCndGroup<T, CndGroup<T>, Cnd<T>>
 
   @Override
   public <V> CndGroup<T> like(
-      final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
+      final boolean condition,
+      @Nonnull final SetterFunction<T, V> setter,
+      @Nonnull final String value) {
     this.condition.like(condition, setter, value);
     return this;
   }
 
   @Override
   public <V> CndGroup<T> notLike(
-      final boolean condition, @Nonnull final SetterFunction<T, V> setter, @Nonnull final V value) {
+      final boolean condition,
+      @Nonnull final SetterFunction<T, V> setter,
+      @Nonnull final String value) {
     this.condition.notLike(condition, setter, value);
     return this;
   }

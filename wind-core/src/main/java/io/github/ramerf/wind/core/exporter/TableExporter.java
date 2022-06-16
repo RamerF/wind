@@ -11,6 +11,7 @@ import io.github.ramerf.wind.core.metadata.TableInformation;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.StringUtils;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
@@ -27,25 +28,33 @@ public class TableExporter {
   private Executor executor;
   private final WindContext windContext;
   private final Dialect dialect;
+  private static final Map<WindContext, TableExporter> INSTANCE_MAP = new ConcurrentHashMap<>();
 
-  private TableExporter(WindContext windContext) {
+  private TableExporter(final WindContext windContext) {
     this.windContext = windContext;
     this.dialect = windContext.getDbMetaData().getDialect();
   }
 
-  public static TableExporter of(WindContext windContext) {
-    final Configuration configuration = windContext.getConfiguration();
-    final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
-    final DataSource dataSource = jdbcEnvironment.getDataSource();
+  public static TableExporter of(final WindContext windContext) {
+    TableExporter tableExporter = INSTANCE_MAP.get(windContext);
+    synchronized (TableExporter.class) {
+      if (tableExporter != null) {
+        return tableExporter;
+      }
+      final Configuration configuration = windContext.getConfiguration();
+      final JdbcEnvironment jdbcEnvironment = configuration.getJdbcEnvironment();
+      final DataSource dataSource = jdbcEnvironment.getDataSource();
 
-    final TableExporter tableExporter = new TableExporter(windContext);
-    tableExporter.executor =
-        new SimpleJdbcExecutor(
-            configuration,
-            jdbcEnvironment
-                .getTransactionFactory()
-                .newTransaction(dataSource, TransactionIsolationLevel.READ_COMMITTED, true));
-    return tableExporter;
+      tableExporter = new TableExporter(windContext);
+      tableExporter.executor =
+          new SimpleJdbcExecutor(
+              configuration,
+              jdbcEnvironment
+                  .getTransactionFactory()
+                  .newTransaction(dataSource, TransactionIsolationLevel.READ_COMMITTED, true));
+      INSTANCE_MAP.put(windContext, tableExporter);
+      return tableExporter;
+    }
   }
 
   /** 先删除,再创建. */

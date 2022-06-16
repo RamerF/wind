@@ -49,10 +49,24 @@ public class TypeHandlerHelper {
     /** 泛型参数类型,可能是{@link Field#getGenericType()}或者{@link Method#getGenericParameterTypes()}[0]. */
     @Getter private final Type genericParameterType;
 
+    @Getter private final boolean ignoreTypeHandler;
+
     private ValueType(final Object originVal, final Type genericParameterType, final Field field) {
       this.originVal = originVal;
       this.genericParameterType = genericParameterType;
       this.field = field;
+      this.ignoreTypeHandler = false;
+    }
+
+    private ValueType(
+        final Object originVal,
+        final Type genericParameterType,
+        final Field field,
+        final boolean ignoreTypeHandler) {
+      this.originVal = originVal;
+      this.genericParameterType = genericParameterType;
+      this.field = field;
+      this.ignoreTypeHandler = ignoreTypeHandler;
     }
 
     public static ValueType of(final Object value) {
@@ -61,6 +75,12 @@ public class TypeHandlerHelper {
 
     public static ValueType of(final Object originVal, final FieldFunction function) {
       return new ValueType(originVal, function.getGenericType(), function.getField());
+    }
+
+    public static ValueType of(
+        final Object originVal, final FieldFunction function, final boolean ignoreTypeHandler) {
+      return new ValueType(
+          originVal, function.getGenericType(), function.getField(), ignoreTypeHandler);
     }
 
     public static ValueType of(final Object originVal, final Field field) {

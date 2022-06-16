@@ -120,26 +120,26 @@ public class Cnd<T> extends AbstractCnd<T, Cnd<T>> implements ILambdaCondition<T
 
   @Override
   public <V> Cnd<T> like(
-      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final String value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(setter.getColumn())
               .concat(String.format(LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      valueTypes.add(ValueType.of(value, setter));
+      valueTypes.add(ValueType.of(value, setter, true));
     }
     return this;
   }
 
   @Override
   public <V> Cnd<T> notLike(
-      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final String value) {
     if (condition) {
       conditionSql.add(
           (conditionSql.size() > 0 ? AND.operator : "")
               .concat(setter.getColumn())
               .concat(String.format(NOT_LIKE_PLAIN.operator, QUESTION_MARK.operator)));
-      valueTypes.add(ValueType.of(value, setter));
+      valueTypes.add(ValueType.of(value, setter, true));
     }
     return this;
   }

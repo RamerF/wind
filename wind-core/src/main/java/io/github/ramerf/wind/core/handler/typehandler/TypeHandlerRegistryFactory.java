@@ -153,6 +153,9 @@ public class TypeHandlerRegistryFactory {
    * <p>转换为jdbc值时,只有字段注解了类型转换器或者{@link InterEnum}的子类会用到,其余返回原值
    */
   public static ITypeHandler getToJdbcTypeHandler(final ValueType valueType) {
+    if (valueType.isIgnoreTypeHandler()) {
+      return null;
+    }
     final Object value = valueType.getOriginVal();
     if (value == null) {
       return null;

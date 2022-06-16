@@ -50,17 +50,17 @@ public interface ILambdaCondition<T, U extends ILambdaCondition<T, U>> extends C
 
   <V> U le(boolean condition, @Nonnull SetterFunction<T, V> setter, V value);
 
-  default <V> U like(@Nonnull SetterFunction<T, V> setter, @Nonnull V value) {
+  default <V> U like(@Nonnull SetterFunction<T, V> setter, @Nonnull String value) {
     return like(true, setter, value);
   }
 
-  <V> U like(boolean condition, @Nonnull SetterFunction<T, V> setter, V value);
+  <V> U like(boolean condition, @Nonnull SetterFunction<T, V> setter, String value);
 
-  default <V> U notLike(@Nonnull SetterFunction<T, V> setter, @Nonnull V value) {
+  default <V> U notLike(@Nonnull SetterFunction<T, V> setter, @Nonnull String value) {
     return notLike(true, setter, value);
   }
 
-  <V> U notLike(boolean condition, @Nonnull SetterFunction<T, V> setter, V value);
+  <V> U notLike(boolean condition, @Nonnull SetterFunction<T, V> setter, String value);
 
   default <V> U between(@Nonnull SetterFunction<T, V> setter, @Nonnull V start, @Nonnull V end) {
     return between(true, setter, start, end);
