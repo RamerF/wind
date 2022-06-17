@@ -37,7 +37,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <lombok.version>1.18.20</lombok.version>
-        <fastjson.version>1.2.76</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
         <findgugs.annotations.version>3.0.1u2</findgugs.annotations.version>
