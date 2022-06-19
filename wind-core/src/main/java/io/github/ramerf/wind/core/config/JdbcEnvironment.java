@@ -1,7 +1,7 @@
 package io.github.ramerf.wind.core.config;
 
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
-import io.github.ramerf.wind.core.metadata.DbMetaData;
+import io.github.ramerf.wind.core.jdbc.metadata.DbMetaData;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import lombok.Getter;

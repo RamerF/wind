@@ -1,7 +1,7 @@
 package io.github.ramerf.wind;
 
 import io.github.ramerf.wind.core.config.Configuration;
-import io.github.ramerf.wind.core.metadata.DbMetaData;
+import io.github.ramerf.wind.core.jdbc.metadata.DbMetaData;
 import lombok.Data;
 
 /**

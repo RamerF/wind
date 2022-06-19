@@ -5,7 +5,7 @@ import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.executor.Dao;
-import io.github.ramerf.wind.core.executor.DaoFactory;
+import io.github.ramerf.wind.core.executor.DefaultDaoFactory;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.plugin.*;
 import io.github.ramerf.wind.core.service.GenericService;
@@ -61,7 +61,7 @@ public class BaseServiceTest {
   @BeforeEach
   public void beforeEach() {
     final WindApplication application = WindApplication.run("mysql.yml");
-    final Dao dao = DaoFactory.of(application.getConfiguration()).getDao();
+    final Dao dao = DefaultDaoFactory.of(application.getConfiguration()).getDao();
     foo.setId(id);
     service = GenericService.with(dao, Foo.class, Long.class);
     if (service.getOne(foo.getId()) == null) {

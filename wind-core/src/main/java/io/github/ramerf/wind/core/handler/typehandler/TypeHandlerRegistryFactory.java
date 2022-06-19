@@ -34,7 +34,6 @@ public class TypeHandlerRegistryFactory {
               TypeHandlerRegistryFactory.class.getPackage().getName(), ITypeHandler.class)
           .stream()
           .filter(clazz -> !clazz.equals(ITypeHandler.class))
-          // 跳过类型处理器
           .filter(clazz -> !clazz.isAnnotationPresent(IgnoreScan.class))
           .map(BeanUtils::initial)
           .forEach(TypeHandlerRegistryFactory::addTypeHandlers);

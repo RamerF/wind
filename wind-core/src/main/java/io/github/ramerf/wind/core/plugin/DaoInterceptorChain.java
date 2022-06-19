@@ -2,6 +2,13 @@ package io.github.ramerf.wind.core.plugin;
 
 import java.util.*;
 
+/**
+ * The type Dao interceptor chain.
+ *
+ * @since 2022.06.19
+ * @author ramer
+ * @see DaoInterceptor
+ */
 public class DaoInterceptorChain implements InterceptorChain {
 
   private final List<DaoInterceptor> daoInterceptors = new ArrayList<>();

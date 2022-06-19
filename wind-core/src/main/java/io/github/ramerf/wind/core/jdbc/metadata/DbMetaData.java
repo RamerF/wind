@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.metadata;
+package io.github.ramerf.wind.core.jdbc.metadata;
 
 import io.github.ramerf.wind.core.dialect.Dialect;
 import io.github.ramerf.wind.core.util.DataSourceUtils;
@@ -9,8 +9,8 @@ import javax.sql.DataSource;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static io.github.ramerf.wind.core.metadata.DbResolver.getConnection;
-import static io.github.ramerf.wind.core.metadata.DbResolver.getMetaData;
+import static io.github.ramerf.wind.core.jdbc.metadata.DbResolver.getConnection;
+import static io.github.ramerf.wind.core.jdbc.metadata.DbResolver.getMetaData;
 
 /**
  * 数据库元数据.

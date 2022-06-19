@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: wind-demo-spring-boot
+  datasource:
+    hikari:
+      username: root
+      password: root
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql:///wind_demo?characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+server:
+  port: 18900
+logging:
+  level:
+    root: info
+    # 打印sql
+    io.github.ramerf.wind.core.executor: debug
+wind:
+  logic-delete-prop:
+    enable: true
+    field-name: deleted
+  #  逻辑未删除值
+  #  not-delete: false
+  #  逻辑已删除值
+  #  deleted: true
+  entity-package: io.github.ramerf.wind.demo.entity.pojo
+  #  拦截器所在包路径,多个以,分割
+  #  interceptor-package:
+  #  类型处理器路径,多个以,分割
+  #  type-handler-package:
+  #  批量操作时,每次处理的大小
+  batch-size: 500
+  #  表更新模式
+  ddl-auto: update
+  #  新增/更新时写入值为null的属性,默认写入所有字段
+  #  write-null-prop: true
+  #  指定UpdateTimestamp注解的更新策略,默认总是赋值为当前时间
+  update-time-strategy: always

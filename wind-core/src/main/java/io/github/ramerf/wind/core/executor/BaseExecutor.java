@@ -35,7 +35,7 @@ public abstract class BaseExecutor implements Executor {
   @Override
   public Transaction getTransaction() {
     if (closed) {
-      throw new ExecutorException("Executor was closed.");
+      throw new DataAccessException("Executor was closed.");
     }
     return transaction;
   }
@@ -67,7 +67,7 @@ public abstract class BaseExecutor implements Executor {
   @Override
   public void commit(boolean required) throws DataAccessException {
     if (closed) {
-      throw new ExecutorException("Cannot commit, transaction is already closed");
+      throw new DataAccessException("Cannot commit, transaction is already closed");
     }
     if (required) {
       transaction.commit();

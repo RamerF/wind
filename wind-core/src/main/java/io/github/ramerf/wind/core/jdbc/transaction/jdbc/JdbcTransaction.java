@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JdbcTransaction implements Transaction {
   protected DataSource dataSource;
-  // TODO WARN 事务支持多个连接和数据源
   protected Connection connection;
   protected ConnectionHolder connectionHolder;
   protected TransactionIsolationLevel level;
@@ -83,7 +82,6 @@ public class JdbcTransaction implements Transaction {
         log.debug(
             Thread.currentThread().getName() + " Commit JDBC Connection [" + this.connection + "]");
       }
-      // TODO WARN 提交需要支持多数据源
       DataSourceUtils.commit(this.connection);
     }
   }
@@ -117,8 +115,7 @@ public class JdbcTransaction implements Transaction {
     }
   }
 
-  @Override
-  public void setAutoCommit(boolean desiredAutoCommit) {
+  protected void setAutoCommit(boolean desiredAutoCommit) {
     try {
       if (this.connection.getAutoCommit() != desiredAutoCommit) {
         if (log.isDebugEnabled()) {

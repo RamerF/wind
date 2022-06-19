@@ -3,7 +3,7 @@ package io.github.ramerf.wind.core.handler.typehandler;
 import java.lang.annotation.*;
 
 /**
- * 表示注解的类型处理器不会注册,需要手动在字段上指定才能使用.
+ * 表示注解的类需要跳过自动扫描.
  *
  * @author ramer
  * @since 2020.12.27

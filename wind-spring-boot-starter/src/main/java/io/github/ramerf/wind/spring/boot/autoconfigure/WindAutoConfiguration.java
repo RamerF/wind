@@ -3,13 +3,13 @@ package io.github.ramerf.wind.spring.boot.autoconfigure;
 import io.github.ramerf.wind.WindApplication;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.JdbcEnvironment;
-import io.github.ramerf.wind.core.executor.Dao;
 import io.github.ramerf.wind.core.executor.DaoFactory;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.plugin.DaoInterceptor;
 import io.github.ramerf.wind.core.plugin.ServiceInterceptor;
 import io.github.ramerf.wind.core.support.IdGenerator;
+import io.github.ramerf.wind.spring.DaoTemplate;
 import io.github.ramerf.wind.spring.ServiceInterceptorAop;
 import io.github.ramerf.wind.spring.transaction.SpringManagedTransactionFactory;
 import java.util.ArrayList;
@@ -23,6 +23,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandi
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 
 /**
  * @author ramer
@@ -73,11 +74,12 @@ public class WindAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public Dao dao(DaoFactory daoFactory) {
-    return daoFactory.getDao();
+  public DaoTemplate daoTemplate(DaoFactory daoFactory) {
+    return new DaoTemplate(daoFactory);
   }
 
   @Bean
+  @Order(10)
   @ConditionalOnMissingBean
   public ServiceInterceptorAop serviceInterceptorAop(WindApplication windApplication) {
     return new ServiceInterceptorAop(windApplication.getConfiguration());

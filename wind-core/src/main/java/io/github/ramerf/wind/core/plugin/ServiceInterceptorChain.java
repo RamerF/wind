@@ -2,6 +2,13 @@ package io.github.ramerf.wind.core.plugin;
 
 import java.util.*;
 
+/**
+ * The type Service interceptor chain.
+ *
+ * @since 2022.06.19
+ * @author ramer
+ * @see ServiceInterceptor
+ */
 public class ServiceInterceptorChain implements InterceptorChain {
 
   private final List<ServiceInterceptor> serviceInterceptors = new ArrayList<>();
@@ -18,7 +25,7 @@ public class ServiceInterceptorChain implements InterceptorChain {
     return Plugins.wrap(target, chain, args);
   }
 
-  /***/
+  /** 获取当前service支持的拦截器 */
   public ServiceInterceptorChain support(final Class<?> clazz) {
     final ServiceInterceptorChain chain = new ServiceInterceptorChain();
     for (ServiceInterceptor serviceInterceptor : serviceInterceptors) {

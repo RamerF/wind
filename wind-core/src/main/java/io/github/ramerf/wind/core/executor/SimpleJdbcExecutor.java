@@ -12,7 +12,6 @@ import io.github.ramerf.wind.core.util.JdbcUtils;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /**
@@ -40,131 +39,104 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
   @Override
   public <T, R> R fetchOne(@Nonnull final SqlParam<T> sqlParam, ResultHandler<R> resultHandler)
       throws DataAccessException {
-    return aroundRead(
-        sqlParam,
-        () -> {
-          @SuppressWarnings("unchecked")
-          final Class<R> clazz = (Class<R>) sqlParam.getClazz();
-          final List<R> result =
-              query(
-                  sqlParam,
-                  ps ->
-                      sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
-                  ResultHandlerUtil.getResultHandler(clazz, resultHandler));
-          if (result.isEmpty()) {
-            return null;
-          }
-          if (result.size() > 1) {
-            throw new TooManyResultException("fetch one", result.size());
-          }
-          return result.get(0);
-        });
+
+    @SuppressWarnings("unchecked")
+    final Class<R> clazz = (Class<R>) sqlParam.getClazz();
+    final List<R> result =
+        query(
+            sqlParam,
+            ps -> sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
+            ResultHandlerUtil.getResultHandler(clazz, resultHandler));
+    if (result.isEmpty()) {
+      return null;
+    }
+    if (result.size() > 1) {
+      throw new TooManyResultException("fetch one", result.size());
+    }
+    return result.get(0);
   }
 
   @Override
   public <T, R> List<R> fetchAll(@Nonnull final SqlParam<T> sqlParam, final Class<R> clazz)
       throws DataAccessException {
-    return aroundRead(
+    return query(
         sqlParam,
-        () ->
-            query(
-                sqlParam,
-                ps -> sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
-                ResultHandlerUtil.getResultHandler(clazz)));
+        ps -> sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
+        ResultHandlerUtil.getResultHandler(clazz));
   }
 
   @Override
   public <T, R> Page<R> fetchPage(
       @Nonnull final SqlParam<T> sqlParam, final Pageable pageable, final long total)
       throws DataAccessException {
-    return aroundRead(
-        sqlParam,
-        () -> {
-          @SuppressWarnings("unchecked")
-          Class<R> clazz = (Class<R>) sqlParam.clazz;
-          final List<R> content =
-              total < 1
-                  ? Collections.emptyList()
-                  : query(
-                      sqlParam,
-                      ps ->
-                          sqlParam
-                              .condition
-                              .getValues(sqlParam.startIndex)
-                              .forEach(o -> o.accept(ps)),
-                      ResultHandlerUtil.getResultHandler(clazz));
-          return Page.of(content, pageable == null ? Pageable.unpaged() : pageable, total);
-        });
+    @SuppressWarnings("unchecked")
+    Class<R> clazz = (Class<R>) sqlParam.clazz;
+    final List<R> content =
+        total < 1
+            ? Collections.emptyList()
+            : query(
+                sqlParam,
+                ps -> sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
+                ResultHandlerUtil.getResultHandler(clazz));
+    return Page.of(content, pageable == null ? Pageable.unpaged() : pageable, total);
   }
 
   @Override
   public <T> long fetchCount(@Nonnull final SqlParam<T> sqlParam) {
-    return aroundRead(
-        sqlParam,
-        () -> {
-          List<Long> result =
-              query(
-                  sqlParam,
-                  ps ->
-                      sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
-                  new PrimitiveResultHandler<>(Long.class));
-          if (result.isEmpty()) {
-            return 0L;
-          }
-          return result.get(0);
-        });
+    List<Long> result =
+        query(
+            sqlParam,
+            ps -> sqlParam.condition.getValues(sqlParam.startIndex).forEach(o -> o.accept(ps)),
+            new PrimitiveResultHandler<>(Long.class));
+    if (result.isEmpty()) {
+      return 0L;
+    }
+    return result.get(0);
   }
 
   @Override
   public <T, R> R queryForObject(@Nonnull final SqlParam<T> sqlParam, final Object[] args)
       throws DataAccessException {
-    return aroundRead(
-        sqlParam,
-        () -> {
-          @SuppressWarnings("unchecked")
-          final Class<R> clazz = (Class<R>) sqlParam.getClazz();
-          final List<R> result =
-              query(
-                  sqlParam,
-                  ps -> {
-                    AtomicInteger startIndex = sqlParam.startIndex;
-                    for (Object arg : args) {
-                      JdbcUtils.setObject(ps, startIndex.getAndIncrement(), arg);
-                    }
-                  },
-                  ResultHandlerUtil.getResultHandler(clazz));
-          if (result.isEmpty()) {
-            return null;
-          }
-          if (result.size() > 1) {
-            throw new TooManyResultException("query for object", result.size());
-          }
-          return result.get(0);
-        });
+    @SuppressWarnings("unchecked")
+    final Class<R> clazz = (Class<R>) sqlParam.getClazz();
+    final List<R> result =
+        query(
+            sqlParam,
+            ps -> {
+              AtomicInteger startIndex = sqlParam.startIndex;
+              for (Object arg : args) {
+                JdbcUtils.setObject(ps, startIndex.getAndIncrement(), arg);
+              }
+            },
+            ResultHandlerUtil.getResultHandler(clazz));
+    if (result.isEmpty()) {
+      return null;
+    }
+    if (result.size() > 1) {
+      throw new TooManyResultException("query for object", result.size());
+    }
+    return result.get(0);
   }
 
   @Override
   public Map<String, Object> queryForMap(@Nonnull final SqlParam<?> sqlParam, final Object... args)
       throws DataAccessException {
     List<Map<String, Object>> maps = queryForList(sqlParam, args);
-    return maps.isEmpty() ? null : maps.get(0);
+    return maps.isEmpty() ? Collections.emptyMap() : maps.get(0);
   }
 
   @Override
   public List<Map<String, Object>> queryForList(
       @Nonnull final SqlParam<?> sqlParam, final Object... args) throws DataAccessException {
-    return aroundRead(
+    return query(
         sqlParam,
-        () ->
-            query(
-                sqlParam,
-                ps -> {
-                  AtomicInteger startIndex = sqlParam.startIndex;
-                  for (Object arg : args) {
-                    JdbcUtils.setObject(ps, startIndex.getAndIncrement(), arg);
-                  }
-                },
-                new MapResultHandler()));
+        ps -> {
+          AtomicInteger startIndex = sqlParam.startIndex;
+          for (Object arg : args) {
+            JdbcUtils.setObject(ps, startIndex.getAndIncrement(), arg);
+          }
+        },
+        new MapResultHandler());
   }
 
   @Override
@@ -204,60 +176,54 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
   @Override
   public int update(final PreparedStatementCreator psc, final KeyHolder generatedKeyHolder)
       throws DataAccessException {
-    return aroundWrite(
-        () -> {
-          Connection connection = getConnection();
-          PreparedStatement ps = psc.createPreparedStatement(connection);
-          try {
-            List<Map<String, Object>> generatedKeys = generatedKeyHolder.getKeyList();
-            generatedKeys.clear();
+    Connection connection = getConnection();
+    PreparedStatement ps = psc.createPreparedStatement(connection);
+    try {
+      List<Map<String, Object>> generatedKeys = generatedKeyHolder.getKeyList();
+      generatedKeys.clear();
 
-            int rows = ps.executeUpdate();
-            MapResultHandler resultHandler = new MapResultHandler();
-            ResultSet resultSet = ps.getGeneratedKeys();
-            while (resultSet.next()) {
-              generatedKeys.add(resultHandler.handle(resultSet));
-            }
-            return rows;
-          } catch (SQLException e) {
-            throw new DataAccessException("Fail to exexute update", e);
-          } finally {
-            DataSourceUtils.close(ps);
-            transaction.releaseConnection();
-          }
-        });
+      int rows = ps.executeUpdate();
+      MapResultHandler resultHandler = new MapResultHandler();
+      ResultSet resultSet = ps.getGeneratedKeys();
+      while (resultSet.next()) {
+        generatedKeys.add(resultHandler.handle(resultSet));
+      }
+      return rows;
+    } catch (SQLException e) {
+      throw new DataAccessException("Fail to exexute update", e);
+    } finally {
+      DataSourceUtils.close(ps);
+      transaction.releaseConnection();
+    }
   }
 
   @Override
   public int[] batchUpdate(String sql, final BatchPreparedStatementSetter pss)
       throws DataAccessException {
-    return aroundWrite(
-        () -> {
-          Connection connection = getConnection();
-          PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
-          int batchSize = pss.getBatchSize();
-          try {
-            if (JdbcUtils.supportsBatchUpdates(connection)) {
-              for (int i = 0; i < batchSize; i++) {
-                pss.setValues(ps, i);
-                ps.addBatch();
-              }
-              return ps.executeBatch();
-            } else {
-              int[] rowsAffectedArray = new int[batchSize];
-              for (int i = 0; i < batchSize; i++) {
-                pss.setValues(ps, i);
-                rowsAffectedArray[i] = ps.executeUpdate();
-              }
-              return rowsAffectedArray;
-            }
-          } catch (SQLException e) {
-            throw new DataAccessException("Fail to execute batch update", e);
-          } finally {
-            DataSourceUtils.close(ps);
-            transaction.releaseConnection();
-          }
-        });
+    Connection connection = getConnection();
+    PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
+    int batchSize = pss.getBatchSize();
+    try {
+      if (JdbcUtils.supportsBatchUpdates(connection)) {
+        for (int i = 0; i < batchSize; i++) {
+          pss.setValues(ps, i);
+          ps.addBatch();
+        }
+        return ps.executeBatch();
+      } else {
+        int[] rowsAffectedArray = new int[batchSize];
+        for (int i = 0; i < batchSize; i++) {
+          pss.setValues(ps, i);
+          rowsAffectedArray[i] = ps.executeUpdate();
+        }
+        return rowsAffectedArray;
+      }
+    } catch (SQLException e) {
+      throw new DataAccessException("Fail to execute batch update", e);
+    } finally {
+      DataSourceUtils.close(ps);
+      transaction.releaseConnection();
+    }
   }
 
   @Override
@@ -328,6 +294,21 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
     }
   }
 
+  @Override
+  public int update(String sql, @Nonnull PreparedStatementSetter pss) throws DataAccessException {
+    Connection connection = getConnection();
+    PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
+    try {
+      pss.setValues(ps);
+      return ps.executeUpdate();
+    } catch (SQLException e) {
+      throw new DataAccessException("Fail to exexute update", e);
+    } finally {
+      DataSourceUtils.close(ps);
+      transaction.releaseConnection();
+    }
+  }
+
   private Connection getConnection() {
     final Connection connection = transaction.getConnection();
     if (log.isDebugEnabled()) {
@@ -335,35 +316,5 @@ public class SimpleJdbcExecutor extends BaseExecutor implements Executor {
     } else {
       return connection;
     }
-  }
-
-  @Override
-  public int update(String sql, @Nonnull PreparedStatementSetter pss) throws DataAccessException {
-    return aroundWrite(
-        () -> {
-          Connection connection = getConnection();
-          PreparedStatement ps = DataSourceUtils.preparedStatement(connection, sql);
-          try {
-            pss.setValues(ps);
-            return ps.executeUpdate();
-          } catch (SQLException e) {
-            throw new DataAccessException("Fail to exexute update", e);
-          } finally {
-            DataSourceUtils.close(ps);
-            transaction.releaseConnection();
-          }
-        });
-  }
-
-  private <T> T aroundRead(@Nonnull final SqlParam<?> sqlParam, Supplier<T> supplier) {
-    return supplier.get();
-  }
-
-  private <T> T aroundWrite(Supplier<T> supplier) {
-    return supplier.get();
-  }
-
-  private <T> T aroundWrite(@Nonnull final Class<?> clazz, Supplier<T> supplier) {
-    return supplier.get();
   }
 }

@@ -5,13 +5,13 @@
     <parent>
         <artifactId>wind</artifactId>
         <groupId>io.github.ramerf</groupId>
-        <version>4.0.8</version>
+        <version>5.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>wind-spring</artifactId>
     <name>wind-spring</name>
-    <version>4.0.8</version>
+    <version>5.0.0</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>

@@ -14,7 +14,7 @@ import io.github.ramerf.wind.core.handler.ResultHandlerUtil;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.helper.EntityHelper;
-import io.github.ramerf.wind.core.metadata.DbMetaData;
+import io.github.ramerf.wind.core.jdbc.metadata.DbMetaData;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
@@ -40,8 +40,11 @@ import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.WHERE;
 import static java.util.stream.Collectors.toList;
 
 /**
+ * {@link Dao}的默认实现,非线程安全.
+ *
  * @author ramer
  * @since 2022.03.12
+ * @see DaoManager
  */
 @Slf4j
 @SuppressWarnings("DuplicatedCode")
@@ -947,5 +950,14 @@ public class DaoImpl implements Dao {
 
   private boolean isCommitOrRollbackRequired(boolean force) {
     return (!autoCommit && write) || force;
+  }
+
+  @Override
+  public void close() {
+    try {
+      executor.close(isCommitOrRollbackRequired(false));
+    } finally {
+      // do nothing
+    }
   }
 }

@@ -1,6 +1,6 @@
-package io.github.ramerf.wind.core.metadata;
+package io.github.ramerf.wind.core.jdbc.metadata;
 
-import io.github.ramerf.wind.core.metadata.TableIndexInformation.FlatTableIndexInformation;
+import io.github.ramerf.wind.core.jdbc.metadata.TableIndexInformation.FlatTableIndexInformation;
 import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.*;
 import java.util.HashSet;

@@ -8,11 +8,12 @@
     <groupId>io.github.ramerf</groupId>
     <artifactId>wind</artifactId>
     <name>wind</name>
-    <version>4.0.8</version>
+    <version>5.0.0</version>
     <modules>
         <module>wind-core</module>
         <module>wind-spring</module>
         <module>wind-spring-boot-starter</module>
+        <module>wind-demo</module>
     </modules>
     <url>http://maven.apache.org</url>
     <description>Another orm in choice.</description>

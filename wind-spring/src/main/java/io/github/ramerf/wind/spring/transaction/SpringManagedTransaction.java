@@ -2,9 +2,7 @@ package io.github.ramerf.wind.spring.transaction;
 
 import io.github.ramerf.wind.core.executor.DataAccessException;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
-import io.github.ramerf.wind.core.jdbc.transaction.TransactionException;
 import java.sql.Connection;
-import java.sql.SQLException;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.ConnectionHolder;
@@ -67,10 +65,10 @@ public class SpringManagedTransaction implements Transaction {
       log.debug(Thread.currentThread().getName() + " Opening JDBC Connection");
     }
     this.connection = DataSourceUtils.getConnection(this.dataSource);
-    setAutoCommit(io.github.ramerf.wind.core.util.DataSourceUtils.getAutoCommit(this.connection));
+    this.autoCommit =
+        io.github.ramerf.wind.core.util.DataSourceUtils.getAutoCommit(this.connection);
     this.isConnectionTransactional =
         DataSourceUtils.isConnectionTransactional(this.connection, this.dataSource);
-
     log.debug(
         "JDBC Connection ["
             + this.connection
@@ -101,33 +99,6 @@ public class SpringManagedTransaction implements Transaction {
   @Override
   public void close() throws DataAccessException {
     DataSourceUtils.releaseConnection(this.connection, this.dataSource);
-  }
-
-  @Override
-  public void setAutoCommit(final boolean autoCommit) {
-    try {
-      if (this.connection.getAutoCommit() != autoCommit) {
-        if (log.isDebugEnabled()) {
-          log.debug(
-              Thread.currentThread().getName()
-                  + " Setting autocommit to "
-                  + autoCommit
-                  + " on JDBC Connection ["
-                  + this.connection
-                  + "]");
-        }
-
-        this.connection.setAutoCommit(autoCommit);
-      }
-
-    } catch (SQLException var3) {
-      throw new TransactionException(
-          "Error configuring AutoCommit.  Your driver may not support getAutoCommit() or setAutoCommit(). Requested setting: "
-              + autoCommit
-              + ".  Cause: "
-              + var3,
-          var3);
-    }
   }
 
   /** {@inheritDoc} */

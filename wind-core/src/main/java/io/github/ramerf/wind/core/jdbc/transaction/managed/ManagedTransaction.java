@@ -4,7 +4,6 @@ import io.github.ramerf.wind.core.executor.DataAccessException;
 import io.github.ramerf.wind.core.jdbc.TransactionSynchronizationManager;
 import io.github.ramerf.wind.core.jdbc.session.TransactionIsolationLevel;
 import io.github.ramerf.wind.core.jdbc.transaction.Transaction;
-import io.github.ramerf.wind.core.jdbc.transaction.TransactionException;
 import io.github.ramerf.wind.core.util.DataSourceUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -16,16 +15,18 @@ public class ManagedTransaction implements Transaction {
   private DataSource dataSource;
   private TransactionIsolationLevel level;
   private Connection connection;
-  private boolean autoCommit;
+  private final boolean closeConnection;
 
-  public ManagedTransaction(final Connection connection) {
+  public ManagedTransaction(final Connection connection, boolean closeConnection) {
     this.connection = connection;
+    this.closeConnection = closeConnection;
   }
 
-  public ManagedTransaction(DataSource ds, TransactionIsolationLevel level, boolean autoCommit) {
+  public ManagedTransaction(
+      DataSource ds, TransactionIsolationLevel level, boolean closeConnection) {
     this.dataSource = ds;
     this.level = level;
-    this.autoCommit = autoCommit;
+    this.closeConnection = closeConnection;
   }
 
   @Override
@@ -49,35 +50,11 @@ public class ManagedTransaction implements Transaction {
 
   @Override
   public void close() throws DataAccessException {
-    if (this.connection != null) {
+    if (this.closeConnection && this.connection != null) {
       if (log.isDebugEnabled()) {
         log.debug("Closing JDBC Connection [" + this.connection + "]");
       }
       DataSourceUtils.close(this.connection);
-    }
-  }
-
-  @Override
-  public void setAutoCommit(final boolean desiredAutoCommit) {
-    try {
-      if (this.connection.getAutoCommit() != desiredAutoCommit) {
-        if (log.isDebugEnabled()) {
-          log.debug(
-              "Setting autocommit to "
-                  + desiredAutoCommit
-                  + " on JDBC Connection ["
-                  + this.connection
-                  + "]");
-        }
-        this.connection.setAutoCommit(desiredAutoCommit);
-      }
-    } catch (SQLException e) {
-      throw new TransactionException(
-          "Error configuring AutoCommit.  Your driver may not support getAutoCommit() or setAutoCommit(). Requested setting: "
-              + desiredAutoCommit
-              + ".  Cause: "
-              + e,
-          e);
     }
   }
 
@@ -95,7 +72,6 @@ public class ManagedTransaction implements Transaction {
         log.warn("The Connection not support to set TransactionIsolation", e);
       }
     }
-    this.setAutoCommit(this.autoCommit);
   }
 
   @Override

@@ -26,6 +26,7 @@ public final class GenericService<T, ID extends Serializable> implements BaseSer
     return (GenericService<T, ID>)
         dao.getConfiguration()
             .getServiceInterceptorChain()
+            .support(clazz)
             .pluginAll(service, clazz, new Object[] {dao, clazz, id});
   }
 

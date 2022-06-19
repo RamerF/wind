@@ -14,7 +14,5 @@ public interface Transaction {
 
   void close() throws DataAccessException;
 
-  void setAutoCommit(boolean desiredAutoCommit);
-
   Integer getTimeout() throws DataAccessException;
 }

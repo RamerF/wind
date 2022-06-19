@@ -5,6 +5,7 @@ import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.handler.ResultHandler;
+import java.io.Closeable;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
@@ -14,8 +15,10 @@ import javax.annotation.Nullable;
 /**
  * @author ramer
  * @since 2022.03.12
+ * @see DaoImpl
+ * @see DaoManager
  */
-public interface Dao {
+public interface Dao extends Closeable {
 
   long fetchCount(@Nonnull Condition<?, ?> condition) throws DataAccessException;
 
@@ -97,6 +100,9 @@ public interface Dao {
   void rollback();
 
   void rollback(boolean force);
+
+  @Override
+  void close();
 
   Connection getConnection();
 }

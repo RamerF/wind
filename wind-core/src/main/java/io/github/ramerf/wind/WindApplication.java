@@ -9,12 +9,13 @@ import io.github.ramerf.wind.core.config.JdbcEnvironment;
 import io.github.ramerf.wind.core.exception.ClassInstantiationException;
 import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.executor.DaoFactory;
+import io.github.ramerf.wind.core.executor.DefaultDaoFactory;
 import io.github.ramerf.wind.core.handler.typehandler.ITypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerRegistryFactory;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.jdbc.transaction.TransactionFactory;
 import io.github.ramerf.wind.core.jdbc.transaction.jdbc.JdbcTransactionFactory;
-import io.github.ramerf.wind.core.metadata.DbMetaData;
+import io.github.ramerf.wind.core.jdbc.metadata.DbMetaData;
 import io.github.ramerf.wind.core.plugin.DaoInterceptor;
 import io.github.ramerf.wind.core.plugin.ServiceInterceptor;
 import io.github.ramerf.wind.core.util.*;
@@ -88,7 +89,7 @@ public class WindApplication {
   }
 
   public DaoFactory getDaoFactory() {
-    return DaoFactory.of(getConfiguration());
+    return DefaultDaoFactory.of(getConfiguration());
   }
 
   private static void populateInterceptors(final Configuration configuration) {

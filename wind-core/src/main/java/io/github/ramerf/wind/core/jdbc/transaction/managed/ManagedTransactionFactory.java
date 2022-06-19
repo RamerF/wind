@@ -24,7 +24,7 @@ public class ManagedTransactionFactory implements TransactionFactory {
 
   @Override
   public Transaction newTransaction(Connection connection) {
-    return new ManagedTransaction(connection);
+    return new ManagedTransaction(connection, closeConnection);
   }
 
   @Override

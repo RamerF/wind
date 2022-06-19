@@ -38,7 +38,7 @@ public class BatchExecUtil {
   public static <T> void batchExec(
       final String taskName, final List<T> list, int batchSize, Consumer<List<T>> consumer) {
     if (CollectionUtils.isEmpty(list)) {
-      log.info("batchExec:{}[empty!]", taskName);
+      log.info("{}[empty!]", taskName);
       return;
     }
     List<T> subList = new ArrayList<>(batchSize);
@@ -50,7 +50,7 @@ public class BatchExecUtil {
       final int end = lastTrunk ? total : (i + 1) * batchSize;
       subList.addAll(list.subList(start, end));
       if (lastTrunk || subList.size() == batchSize) {
-        log.debug("batchExec:{}[start:{},end:{}]", taskName, start, end);
+        log.debug("{}[start:{},end:{}]", taskName, start, end);
         consumer.accept(subList);
         subList.clear();
       }

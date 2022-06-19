@@ -1,4 +1,4 @@
-package io.github.ramerf.wind.core.metadata;
+package io.github.ramerf.wind.core.jdbc.metadata;
 
 import java.util.*;
 import lombok.Data;
