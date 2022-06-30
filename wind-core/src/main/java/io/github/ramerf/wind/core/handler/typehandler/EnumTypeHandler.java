@@ -25,9 +25,4 @@ public class EnumTypeHandler implements ITypeHandler<InterEnum, Object> {
       final Object value, final Object defaultValue, final Field field) {
     return value != null ? InterEnum.ofNullable(value, (Class<InterEnum>) field.getType()) : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return null;
-  }
 }

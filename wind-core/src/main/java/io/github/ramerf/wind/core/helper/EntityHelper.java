@@ -13,6 +13,7 @@ import io.github.ramerf.wind.core.util.*;
 import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -95,25 +96,28 @@ public class EntityHelper {
    * @see Types
    */
   public static String getJdbcTypeName(final Field field, final String defaultValue) {
-    String typeName = defaultValue;
-    final TableColumn column = field.getAnnotation(TableColumn.class);
-    if (column != null) {
-      final String columnDefinition = column.columnDefinition();
-      if (StringUtils.nonEmpty(columnDefinition)) {
-        final String trim = StringUtils.trimWhitespace(columnDefinition);
-        String definition = trim.contains(" ") ? trim.substring(0, trim.indexOf(" ")) : trim;
-        final String leftParenthesis = "(";
-        final String leftSquareBracket = "[";
-        if (definition.contains(leftParenthesis)) {
-          typeName = definition.substring(0, definition.indexOf(leftParenthesis));
-        } else if (definition.contains(leftSquareBracket)) {
-          typeName = definition.substring(0, definition.indexOf(leftSquareBracket));
-        } else {
-          typeName = definition;
-        }
-      }
-    }
-    return typeName;
+    return Optional.of(getEntityInfo(field.getDeclaringClass()))
+        .map(EntityInfo::getFieldColumnMap)
+        .map(o -> o.get(field))
+        .map(EntityColumn::getTypeName)
+        .orElse(defaultValue);
+  }
+
+  /**
+   * 获取Field对应的jdbc 数组名称.<br>
+   * 默认使用{@link TableColumn#columnDefinition()}内的列定义,如果为空则使用默认值.
+   *
+   * @param field the field
+   * @param defaultValue 默认值
+   * @return jdbc数组类型名称
+   * @see Types
+   */
+  public static String getJdbcArrayTypeName(final Field field, final String defaultValue) {
+    return Optional.of(getEntityInfo(field.getDeclaringClass()))
+        .map(EntityInfo::getFieldColumnMap)
+        .map(o -> o.get(field))
+        .map(EntityColumn::getArrayTypeName)
+        .orElse(defaultValue);
   }
 
   @Nonnull

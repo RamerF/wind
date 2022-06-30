@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
+import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.ref.Reference;
@@ -77,19 +78,30 @@ public interface ITypeHandler<T, V> {
   }
 
   /**
-   * 获取jdbcType.<br>
+   * 获取jdbcType.
    *
    * <pre>
    *    示例:
    *    return EntityHelper.getJdbcTypeName(field, "varchar");
    *  </pre>
    *
-   * @param field the field
    * @return jdbcType名称
    * @see Types
    * @see EntityHelper#getJdbcTypeName(Field, String)
    */
-  String getJdbcType(@Nonnull final Field field);
+  default String getJdbcType(@Nonnull final Field field) {
+    return EntityHelper.getJdbcTypeName(field, "");
+  }
+
+  /**
+   * 获取jdbc数组类型.
+   *
+   * @return jdbc数组类型名称
+   * @see TableColumn#arrayType
+   */
+  default String getArrayType(@Nonnull final Field field) {
+    return EntityHelper.getJdbcArrayTypeName(field, "");
+  }
 
   /**
    * 获取泛型参数.

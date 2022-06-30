@@ -266,4 +266,25 @@ public class CndGroup<T> extends AbstractCndGroup<T, CndGroup<T>, Cnd<T>>
     this.condition.groupBy(getter);
     return this;
   }
+
+  @Override
+  public <COLLECTION extends Collection<V>, V> CndGroup<T> anyArray(
+      final boolean condition, @Nonnull final SetterFunction<T, COLLECTION> setter, final V value) {
+    this.condition.anyArray(condition, setter, value);
+    return this;
+  }
+
+  @Override
+  public <V> CndGroup<T> contain(
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.contain(condition, setter, value);
+    return this;
+  }
+
+  @Override
+  public <V> CndGroup<T> contained(
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.contained(condition, setter, value);
+    return this;
+  }
 }

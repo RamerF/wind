@@ -8,22 +8,25 @@ import java.io.Serializable;
  *
  * @since 2020.10.28
  * @author ramer
+ * @see ServiceFactory
  */
-public final class GenericService<T, ID extends Serializable> implements BaseService<T, ID> {
+final class GenericService<T, ID extends Serializable> implements BaseService<T, ID> {
   private final Dao dao;
   private final Class<T> clazz;
+  private final Class<ID> idClazz;
 
   /** 生成对应clazz的service */
-  public GenericService(final Dao dao, Class<T> clazz, Class<ID> id) {
+  public GenericService(final Dao dao, Class<T> clazz, Class<ID> idClazz) {
     this.dao = dao;
     this.clazz = clazz;
+    this.idClazz = idClazz;
   }
 
-  public static <T, ID extends Serializable> GenericService<T, ID> with(
+  public static <T, ID extends Serializable> BaseService<T, ID> with(
       final Dao dao, final Class<T> clazz, final Class<ID> id) {
     final GenericService<T, ID> service = new GenericService<>(dao, clazz, id);
     //noinspection unchecked
-    return (GenericService<T, ID>)
+    return (BaseService<T, ID>)
         dao.getConfiguration()
             .getServiceInterceptorChain()
             .support(clazz)
@@ -38,5 +41,10 @@ public final class GenericService<T, ID extends Serializable> implements BaseSer
   @Override
   public Class<T> getPoJoClass() {
     return clazz;
+  }
+
+  @Override
+  public Class<ID> getIdClass() {
+    return idClazz;
   }
 }

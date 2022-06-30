@@ -23,9 +23,4 @@ public class BitSetByteArrTypeHandler implements ITypeHandler<BitSet, byte[]> {
       final byte[] jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal != null ? BitSet.valueOf(jdbcVal) : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return null;
-  }
 }

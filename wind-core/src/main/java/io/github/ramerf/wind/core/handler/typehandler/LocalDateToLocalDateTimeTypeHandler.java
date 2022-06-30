@@ -23,9 +23,4 @@ public class LocalDateToLocalDateTimeTypeHandler implements ITypeHandler<LocalDa
       final LocalDateTime jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal != null ? jdbcVal.toLocalDate() : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "TIMESTAMP";
-  }
 }

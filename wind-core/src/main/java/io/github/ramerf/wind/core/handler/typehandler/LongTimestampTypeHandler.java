@@ -24,9 +24,4 @@ public class LongTimestampTypeHandler implements ITypeHandler<Long, Timestamp> {
       final Timestamp jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal == null ? null : jdbcVal.getTime();
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return null;
-  }
 }

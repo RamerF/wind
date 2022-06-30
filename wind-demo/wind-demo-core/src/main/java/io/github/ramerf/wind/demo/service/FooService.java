@@ -9,4 +9,6 @@ import io.github.ramerf.wind.demo.entity.Foo;
  * @since 2022.06.19
  * @author ramer
  */
-public interface FooService extends BaseService<Foo, Long> {}
+public interface FooService extends BaseService<Foo, Long> {
+  void foo(final String string);
+}

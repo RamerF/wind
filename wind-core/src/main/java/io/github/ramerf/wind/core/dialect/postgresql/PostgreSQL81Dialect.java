@@ -85,6 +85,7 @@ public class PostgreSQL81Dialect extends Dialect {
     addSupportedJavaType(JavaType.LIST_FLOAT);
     addSupportedJavaType(JavaType.LIST_DOUBLE);
     addSupportedJavaType(JavaType.LIST_BIGDECIMAL);
+    addSupportedJavaType(JavaType.LIST_STRING);
 
     addSupportedJavaType(JavaType.SET_SHORT);
     addSupportedJavaType(JavaType.SET_INTEGER);
@@ -92,8 +93,7 @@ public class PostgreSQL81Dialect extends Dialect {
     addSupportedJavaType(JavaType.SET_FLOAT);
     addSupportedJavaType(JavaType.SET_DOUBLE);
     addSupportedJavaType(JavaType.SET_BIGDECIMAL);
-
-    addSupportedJavaType(JavaType.LIST_STRING);
+    addSupportedJavaType(JavaType.SET_STRING);
 
     addSupportedJavaType(BitSet.class);
   }

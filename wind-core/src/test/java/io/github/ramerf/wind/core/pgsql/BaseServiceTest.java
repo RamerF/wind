@@ -4,9 +4,10 @@ import io.github.ramerf.wind.WindApplication;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
-import io.github.ramerf.wind.core.executor.*;
+import io.github.ramerf.wind.core.executor.Dao;
+import io.github.ramerf.wind.core.executor.DefaultDaoFactory;
 import io.github.ramerf.wind.core.pgsql.Foo.Type;
-import io.github.ramerf.wind.core.service.GenericService;
+import io.github.ramerf.wind.core.service.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Pgsql 测试")
 public class BaseServiceTest {
-  private GenericService<Foo, Long> service;
+  private BaseService<Foo, Long> service;
   private static final Foo foo;
   private static final Long id = 10000L;
 
@@ -61,7 +62,7 @@ public class BaseServiceTest {
     final WindApplication application = WindApplication.run("pgsql.yml");
     final Dao dao = DefaultDaoFactory.of(application.getConfiguration()).getDao();
     foo.setId(id);
-    service = GenericService.with(dao, Foo.class, Long.class);
+    service = ServiceFactory.getService(dao, Foo.class, Long.class);
     if (service.getOne(foo.getId()) == null) {
       service.create(foo);
     }

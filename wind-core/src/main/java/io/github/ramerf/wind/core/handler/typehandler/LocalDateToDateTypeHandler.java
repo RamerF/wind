@@ -31,9 +31,4 @@ public class LocalDateToDateTypeHandler implements ITypeHandler<LocalDate, Date>
             .toLocalDate()
         : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "DATETIME";
-  }
 }

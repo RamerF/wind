@@ -25,9 +25,4 @@ public class ObjectToJsonTypeHandler implements ITypeHandler<Object, String> {
       final String jdbcVal, final Object defaultValue, final Field field) {
     return JSON.parseObject(jdbcVal, field.getType());
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "text";
-  }
 }

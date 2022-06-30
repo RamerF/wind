@@ -8,7 +8,7 @@ import io.github.ramerf.wind.core.executor.Dao;
 import io.github.ramerf.wind.core.executor.DefaultDaoFactory;
 import io.github.ramerf.wind.core.mysql.Foo.Type;
 import io.github.ramerf.wind.core.plugin.*;
-import io.github.ramerf.wind.core.service.GenericService;
+import io.github.ramerf.wind.core.service.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Mysql 测试")
 public class BaseServiceTest {
-  private GenericService<Foo, Long> service;
+  private BaseService<Foo, Long> service;
   private static final Foo foo;
   private static final Long id = 10000L;
 
@@ -63,7 +63,7 @@ public class BaseServiceTest {
     final WindApplication application = WindApplication.run("mysql.yml");
     final Dao dao = DefaultDaoFactory.of(application.getConfiguration()).getDao();
     foo.setId(id);
-    service = GenericService.with(dao, Foo.class, Long.class);
+    service = ServiceFactory.getService(dao, Foo.class, Long.class);
     if (service.getOne(foo.getId()) == null) {
       service.create(foo);
     }

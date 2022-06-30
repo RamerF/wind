@@ -47,9 +47,4 @@ public class ObjectCollectionToJsonTypeHandler implements ITypeHandler<Collectio
         ? JSON.parseArray(jdbcVal, (Class<?>) fieldType)
         : new HashSet<>(JSON.parseArray(jdbcVal, (Class<?>) fieldType));
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "text";
-  }
 }

@@ -188,4 +188,28 @@ public interface ILambdaCondition<T, U extends ILambdaCondition<T, U>> extends C
   U or(@Nonnull CndGroup<T> group);
 
   U groupBy(@Nonnull final GetterFunction<T, ?> getter);
+
+  /* 数组 */
+  /** value = any(array) */
+  default <COLLECTION extends Collection<V>, V> U anyArray(
+      @Nonnull SetterFunction<T, COLLECTION> setter, final V value) {
+    return anyArray(true, setter, value);
+  }
+
+  /** value = any(array) */
+  <COLLECTION extends Collection<V>, V> U anyArray(
+      boolean condition, @Nonnull SetterFunction<T, COLLECTION> setter, final V value);
+
+  /** array @> value::ARRAY */
+  default <V> U contain(@Nonnull SetterFunction<T, V> setter, final V value) {
+    return contain(true, setter, value);
+  }
+  /** array @> value::ARRAY */
+  <V> U contain(boolean condition, @Nonnull SetterFunction<T, V> setter, final V value);
+  /** array <@ value::ARRAY */
+  default <V> U contained(@Nonnull SetterFunction<T, V> setter, final V value) {
+    return contained(true, setter, value);
+  }
+  /** array <@ value::ARRAY */
+  <V> U contained(boolean condition, @Nonnull SetterFunction<T, V> setter, final V value);
 }

@@ -132,6 +132,10 @@ public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
     IN(" in (%s)"),
     /** NOT IN () */
     NOT_IN(" not in (%s)"),
+
+    /** ANY() */
+    ANY(" any(%s)"),
+
     /** &gt;ANY() */
     GREATER_ANY(" >any(%s)"),
     /** &gt;=ANY() */
@@ -201,6 +205,16 @@ public interface Condition<POJO, CONDITION extends Condition<POJO, CONDITION>> {
     GROUP_BY(" group by "),
 
     OR(" or "),
+    /** 任意 */
+    ANY(" any "),
+    /** 包含 */
+    CONTAIN(" @> "),
+    /** 被包含 */
+    CONTAINED(" <@ "),
+    /** 重叠 */
+    OVERLAP(" && "),
+    /** 连接 */
+    CONCATENATES(" || "),
     ;
 
     final String operator;

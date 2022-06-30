@@ -43,6 +43,9 @@ public @interface TableColumn {
    */
   String columnDefinition() default "";
 
+  /** 对应的jdbc数组类型.如:text表示text[] */
+  String arrayType() default "";
+
   /** 列名默认为该属性的下划线格式,如果是关联属性,默认为[关联类名_属性名]的下划线格式. */
   String name() default "";
 

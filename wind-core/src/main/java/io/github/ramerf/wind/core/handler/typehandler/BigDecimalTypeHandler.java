@@ -23,9 +23,4 @@ public class BigDecimalTypeHandler implements ITypeHandler<BigDecimal, Double> {
       final Double val, final Object defaultValue, final Field field) {
     return val != null ? BigDecimal.valueOf(val) : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return null;
-  }
 }

@@ -1,18 +1,10 @@
-spring:
-  application:
-    name: wind-demo-spring-boot
-  datasource:
+wind:
+  data-source:
     hikari:
       username: root
       password: root
       driver-class-name: com.mysql.cj.jdbc.Driver
       jdbc-url: jdbc:mysql:///wind_demo?characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-logging:
-  level:
-    root: info
-    # 打印sql
-    io.github.ramerf.wind.core.executor: debug
-wind:
   logic-delete-prop:
     enable: true
     field-name: deleted
@@ -31,5 +23,5 @@ wind:
   ddl-auto: update
   #  新增/更新时写入值为null的属性,默认写入所有字段
   #  write-null-prop: true
-  #  指定UpdateTimestamp注解的更新策略,默认总是赋值为当前时间
+  #  指定UpdateTimestamp注解的更新策略,默认总是赋值为当前时间;设置NULL时表示仅字段为空时设置为当前时间
   update-time-strategy: always

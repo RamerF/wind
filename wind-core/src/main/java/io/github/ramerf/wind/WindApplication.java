@@ -20,6 +20,7 @@ import io.github.ramerf.wind.core.plugin.DaoInterceptor;
 import io.github.ramerf.wind.core.plugin.ServiceInterceptor;
 import io.github.ramerf.wind.core.util.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
@@ -36,6 +37,13 @@ public class WindApplication {
   private WindContext windContext = new WindContext();
 
   private WindApplication() {}
+
+  /** 通过指定配置文件启动. */
+  public static WindApplication run(final InputStream inputStream) {
+    final AutoConfigConfiguration autoConfigConfiguration =
+        YmlUtil.process(AutoConfigConfiguration.class, inputStream);
+    return run(autoConfigConfiguration.getConfiguration());
+  }
 
   /** 通过指定配置文件启动. */
   public static WindApplication run(final String configPath) {

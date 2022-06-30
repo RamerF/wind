@@ -5,6 +5,7 @@ import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.handler.ResultHandler;
+import io.github.ramerf.wind.core.plugin.DaoInterceptor;
 import java.io.Closeable;
 import java.sql.Connection;
 import java.util.List;
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
  * @since 2022.03.12
  * @see DaoImpl
  * @see DaoManager
+ * @see DaoInterceptor
  */
 public interface Dao extends Closeable {
 

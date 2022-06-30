@@ -16,4 +16,9 @@ public class FooServiceImpl extends BaseServiceImpl<Foo, Long> implements FooSer
   public FooServiceImpl(final Dao dao) {
     super(dao);
   }
+
+  @Override
+  public void foo(final String string) {
+    log.info("[{}]", string);
+  }
 }

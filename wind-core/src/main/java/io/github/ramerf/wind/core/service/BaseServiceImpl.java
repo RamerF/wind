@@ -26,10 +26,18 @@ public abstract class BaseServiceImpl<T, ID extends Serializable> implements Bas
 
   @Override
   public Class<T> getPoJoClass() {
-    return getTypeParameter(getClass());
+    //noinspection unchecked
+    return (Class<T>) getTypeParameter(getClass())[0];
   }
 
-  private <U> Class<U> getTypeParameter(Class<?> clazz) {
+  @Override
+  public Class<ID> getIdClass() {
+    //noinspection unchecked
+    return (Class<ID>) getTypeParameter(getClass())[0];
+  }
+
+  @SuppressWarnings("rawtypes")
+  private Class[] getTypeParameter(Class<?> clazz) {
     Type genericSuperclass = clazz.getGenericSuperclass();
     if (genericSuperclass instanceof Class) {
       if (BaseServiceImpl.class != genericSuperclass) {
@@ -38,8 +46,11 @@ public abstract class BaseServiceImpl<T, ID extends Serializable> implements Bas
       throw new WindException(
           getClass() + " extends BaseServiceImpl, but missing the type parameter");
     }
-    Type rawType = ((ParameterizedType) genericSuperclass).getActualTypeArguments()[0];
-    //noinspection unchecked
-    return (Class<U>) rawType;
+    final Type[] arguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
+    Class[] classes = new Class[arguments.length];
+    for (int i = 0; i < arguments.length; i++) {
+      classes[i] = (Class) arguments[i];
+    }
+    return classes;
   }
 }

@@ -11,16 +11,7 @@ import org.slf4j.LoggerFactory;
  */
 public class LogUtil {
   public static void setLoggerLevel(Class<?> clazz, Level level) {
-    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    List<Logger> loggers = loggerContext.getLoggerList();
-    final String loggerPackage = clazz.getName();
-    List<Logger> packageLoggerList =
-        loggers.stream()
-            .filter(a -> a.getName().startsWith(loggerPackage))
-            .collect(Collectors.toList());
-    for (Logger logger : packageLoggerList) {
-      logger.setLevel(level);
-    }
+    setLoggerLevel(clazz.getName(), level);
   }
 
   public static void setLoggerLevel(String loggerPackage, Level level) {
@@ -30,6 +21,10 @@ public class LogUtil {
         loggers.stream()
             .filter(a -> a.getName().startsWith(loggerPackage))
             .collect(Collectors.toList());
+    if (packageLoggerList.isEmpty()) {
+      loggerContext.getLogger(loggerPackage).setLevel(level);
+      return;
+    }
     for (Logger logger : packageLoggerList) {
       logger.setLevel(level);
     }

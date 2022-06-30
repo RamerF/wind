@@ -1,11 +1,14 @@
 package io.github.ramerf.wind.core.plugin;
 
+import io.github.ramerf.wind.core.service.BaseService;
+
 /**
- * The interface Service interceptor.
+ * service公共方法拦截器.
  *
  * @since 2022.06.19
  * @author ramer
  * @see ServiceInterceptorChain
+ * @see BaseService
  */
 public interface ServiceInterceptor {
 

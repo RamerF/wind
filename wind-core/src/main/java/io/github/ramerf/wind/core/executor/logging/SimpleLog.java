@@ -1,6 +1,7 @@
 package io.github.ramerf.wind.core.executor.logging;
 
 import javax.annotation.Nonnull;
+import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
  * @since 2022.02.26
  * @author ramer
  */
+@ToString
 public class SimpleLog implements Log {
   private static Logger log;
 

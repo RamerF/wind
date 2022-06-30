@@ -41,6 +41,9 @@ public class EntityColumn {
   /** sql类型名. */
   private String typeName;
 
+  /** jdbc数组类型名. */
+  private String arrayTypeName;
+
   /** 长度. */
   private int length = DEFAULT_LENGTH;
 
@@ -129,7 +132,6 @@ public class EntityColumn {
                   entityColumn.precision,
                   entityColumn.scale)
               : null;
-
     } else {
       entityColumn.comment = tableColumn.comment();
       if (!tableColumn.defaultValue().isEmpty()) {
@@ -148,7 +150,7 @@ public class EntityColumn {
               String replacement =
                   " default '" + (defaultValue.equals("''") ? "" : defaultValue) + "'";
               entityColumn.columnDefinition =
-                  columnDefinition.replaceAll(defaultRegex, replacement);
+                  entityColumn.columnDefinition.replaceAll(defaultRegex, replacement);
               if (!entityColumn.columnDefinition.contains("default")) {
                 entityColumn.columnDefinition += replacement;
               }
@@ -157,14 +159,14 @@ public class EntityColumn {
             if (StringUtils.nonEmpty(comment)) {
               String replacement = " comment '" + comment + "'";
               entityColumn.columnDefinition =
-                  columnDefinition.replaceAll(commentRegex, replacement);
+                  entityColumn.columnDefinition.replaceAll(commentRegex, replacement);
               if (!dialect.isSupportCommentOn()
                   && !entityColumn.columnDefinition.contains("comment")) {
                 entityColumn.columnDefinition += replacement;
               }
             }
           });
-
+      entityColumn.arrayTypeName = tableColumn.arrayType();
       entityColumn.length = tableColumn.length();
       // 使用默认值而不是0
       NumberUtils.doIfGreaterThanZero(tableColumn.precision(), o -> entityColumn.precision = o);
@@ -183,6 +185,41 @@ public class EntityColumn {
                     entityColumn.precision,
                     entityColumn.scale)
                 : null;
+        if (entityColumn.typeName != null && entityColumn.arrayTypeName.equals("")) {
+          final String typeName = entityColumn.typeName;
+          final String definition =
+              typeName.contains(" ") ? typeName.substring(0, typeName.indexOf(" ")) : typeName;
+          final String leftParenthesis = "(";
+          final String leftSquareBracket = "[";
+          if (definition.contains(leftParenthesis)) {
+            entityColumn.arrayTypeName =
+                definition.substring(0, definition.indexOf(leftParenthesis));
+          } else if (definition.contains(leftSquareBracket)) {
+            entityColumn.arrayTypeName =
+                definition.substring(0, definition.indexOf(leftSquareBracket));
+          } else {
+            entityColumn.arrayTypeName = definition;
+          }
+        }
+      } //
+      else if (entityColumn.typeName == null) {
+        final String columnDefinition = entityColumn.columnDefinition;
+        if (StringUtils.nonEmpty(columnDefinition)) {
+          final String trim = StringUtils.trimWhitespace(columnDefinition);
+          String definition = trim.contains(" ") ? trim.substring(0, trim.indexOf(" ")) : trim;
+          final String leftParenthesis = "(";
+          final String leftSquareBracket = "[";
+          if (definition.contains(leftParenthesis)) {
+            entityColumn.typeName = definition.substring(0, definition.indexOf(leftParenthesis));
+          } else if (definition.contains(leftSquareBracket)) {
+            entityColumn.typeName = definition.substring(0, definition.indexOf(leftSquareBracket));
+          } else {
+            entityColumn.typeName = definition;
+          }
+        }
+        if (entityColumn.arrayTypeName.equals("")) {
+          entityColumn.arrayTypeName = entityColumn.typeName;
+        }
       }
     }
     entityColumn.columnDefinition = entityColumn.getColumnDefinition(dialect);

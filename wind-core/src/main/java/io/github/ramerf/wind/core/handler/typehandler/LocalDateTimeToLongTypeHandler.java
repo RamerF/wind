@@ -26,9 +26,4 @@ public class LocalDateTimeToLongTypeHandler implements ITypeHandler<LocalDateTim
         ? LocalDateTime.ofInstant(Instant.ofEpochMilli(jdbcVal), TimeZone.getDefault().toZoneId())
         : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "BIGINT";
-  }
 }

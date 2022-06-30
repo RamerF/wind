@@ -23,9 +23,4 @@ public class DateTypeHandler implements ITypeHandler<Date, java.sql.Date> {
       final java.sql.Date jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal != null ? new Date(jdbcVal.getTime()) : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return null;
-  }
 }

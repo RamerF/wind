@@ -25,12 +25,6 @@ public class WindProperty {
   /** entity所在包路径,多个以,分割.<br> */
   private String entityPackage = "";
 
-  /** 拦截器所在包路径,多个以,分割. */
-  protected String interceptorPackage = "";
-
-  /** 类型处理器路径,多个以,分割 */
-  protected String typeHandlerPackage = "";
-
   /** 批量操作时,每次处理的大小. */
   private int batchSize = 500;
 
@@ -47,8 +41,6 @@ public class WindProperty {
     Configuration configuration = new Configuration();
     configuration.setLogicDeleteProp(logicDeleteProp);
     configuration.setEntityPackage(entityPackage);
-    configuration.setInterceptorPackage(interceptorPackage);
-    configuration.setTypeHandlerPackage(typeHandlerPackage);
     configuration.setBatchSize(batchSize);
     configuration.setDdlAuto(ddlAuto);
     configuration.setWriteNullProp(writeNullProp);

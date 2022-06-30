@@ -4,7 +4,8 @@
 
 #### 5.0.0
 
-- 修复：已知bug
+- `wind-core` 移除spring相关依赖,添加`wind-spring`,`wind-spring-boot-starter`模板
+- 修复：已知BUG
 
 #### 4.0.7
 

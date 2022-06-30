@@ -25,9 +25,4 @@ public class DateToLocalDateTimeTypeHandler implements ITypeHandler<Date, LocalD
       final LocalDateTime jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal != null ? Date.from(jdbcVal.atZone(ZoneId.systemDefault()).toInstant()) : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "DATETIME";
-  }
 }

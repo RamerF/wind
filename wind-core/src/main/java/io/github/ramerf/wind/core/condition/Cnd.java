@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Condition.MatchPattern.*;
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.*;
+import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.ANY;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
 
 /**
@@ -484,6 +485,49 @@ public class Cnd<T> extends AbstractCnd<T, Cnd<T>> implements ILambdaCondition<T
   @Override
   public final Cnd<T> groupBy(@Nonnull final GetterFunction<T, ?> getter) {
     groupBySql.add(getter.getColumn());
+    return this;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public <COLLECTION extends Collection<V>, V> Cnd<T> anyArray(
+      boolean condition, @Nonnull SetterFunction<T, COLLECTION> setter, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(toPreFormatSqlVal(value))
+              .concat(MatchPattern.EQUAL.operator)
+              .concat(ANY.operator + "(" + setter.getColumn() + ")"));
+      valueTypes.add(ValueType.of(value, setter, true));
+    }
+    return this;
+  }
+
+  @Override
+  public <V> Cnd<T> contain(
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(setter.getColumn())
+              .concat(CONTAIN.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, setter));
+    }
+    return this;
+  }
+
+  @Override
+  public <V> Cnd<T> contained(
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(setter.getColumn())
+              .concat(CONTAINED.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, setter));
+    }
     return this;
   }
 }

@@ -1,7 +1,6 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.exception.WindException;
-import io.github.ramerf.wind.core.helper.EntityHelper;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
@@ -22,8 +21,7 @@ public class CollectionStringArrayTypeHandler
       return null;
     }
     try {
-      final Connection connection = ps.getConnection();
-      return connection.createArrayOf(getJdbcType(field), javaVal.toArray());
+      return ps.getConnection().createArrayOf(getArrayType(field), javaVal.toArray(new String[0]));
     } catch (SQLException e) {
       throw new WindException(e);
     }
@@ -43,10 +41,5 @@ public class CollectionStringArrayTypeHandler
     initial.clear();
     initial.addAll(Arrays.asList(jdbcVal));
     return initial;
-  }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return EntityHelper.getJdbcTypeName(field, "varchar");
   }
 }

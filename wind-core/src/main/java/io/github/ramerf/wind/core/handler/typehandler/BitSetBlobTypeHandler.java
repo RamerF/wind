@@ -33,9 +33,4 @@ public class BitSetBlobTypeHandler implements ITypeHandler<BitSet, byte[]> {
       final byte[] jdbcVal, final Object defaultValue, final Field field) {
     return BitSet.valueOf(jdbcVal);
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "blob";
-  }
 }

@@ -1,5 +1,6 @@
 package io.github.ramerf.wind.core.service;
 
+import io.github.ramerf.wind.core.annotation.Transactional;
 import io.github.ramerf.wind.core.condition.*;
 import io.github.ramerf.wind.core.domain.Page;
 import io.github.ramerf.wind.core.exception.WindException;
@@ -8,7 +9,9 @@ import io.github.ramerf.wind.core.function.SetterFunction;
 import io.github.ramerf.wind.core.helper.EntityHelper;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.mapping.EntityMapping.MappingInfo;
-import io.github.ramerf.wind.core.util.*;
+import io.github.ramerf.wind.core.plugin.ServiceInterceptor;
+import io.github.ramerf.wind.core.util.BeanUtils;
+import io.github.ramerf.wind.core.util.CollectionUtils;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -20,8 +23,10 @@ import javax.annotation.Nullable;
  *
  * @param <T> 实体
  * @param <ID> 主键类型
+ * @since 2022.06.25
  * @author ramer
- * @since 2019/11/13
+ * @see ServiceFactory
+ * @see ServiceInterceptor
  */
 public interface BaseService<T, ID extends Serializable> {
   /* 读取  */
@@ -200,7 +205,7 @@ public interface BaseService<T, ID extends Serializable> {
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  // @Transactional(rollbackFor = Exception.class)
+  @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> createBatch(final List<T> ts) throws DataAccessException {
     return getDao().createBatch(ts);
   }
@@ -214,7 +219,7 @@ public interface BaseService<T, ID extends Serializable> {
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  // @Transactional(rollbackFor = Exception.class)
+  @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> createBatch(@Nonnull final List<T> ts, final Fields<T> fields)
       throws DataAccessException {
     if (ts.isEmpty()) {
@@ -247,7 +252,7 @@ public interface BaseService<T, ID extends Serializable> {
   }
 
   /**
-   * 更新所有符合条件的记录的指定字段.
+   * 根据id更新指定字段.
    *
    * @param object the t
    * @param fields 更新字段
@@ -284,7 +289,7 @@ public interface BaseService<T, ID extends Serializable> {
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  // @Transactional(rollbackFor = Exception.class)
+  @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> updateBatch(final List<T> ts) throws DataAccessException {
     return updateBatch(ts, null);
   }
@@ -297,7 +302,7 @@ public interface BaseService<T, ID extends Serializable> {
    *     否则{@link Optional#get()}返回实际受影响的行数
    * @throws DataAccessException 如果执行失败
    */
-  // @Transactional(rollbackFor = Exception.class)
+  @Transactional(rollbackFor = Exception.class)
   default Optional<Integer> updateBatch(final List<T> ts, final Fields<T> fields)
       throws DataAccessException {
     if (ts.isEmpty()) {
@@ -361,6 +366,9 @@ public interface BaseService<T, ID extends Serializable> {
 
   Dao getDao();
 
-  /** 获取service操作的实体. */
+  /** 获取service操作的实体类型. */
   Class<T> getPoJoClass();
+
+  /** 获取实体对应的主键类型. */
+  Class<ID> getIdClass();
 }

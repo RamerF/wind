@@ -36,12 +36,20 @@ public final class YmlUtil {
   }
 
   /**
+   * @see #process(Class, String, boolean)
+   */
+  public static <T> T process(final Class<T> clazz, final InputStream inputStream)
+      throws WindException {
+    return process(clazz, inputStream, true);
+  }
+
+  /**
    * 读取yml文件.
    *
    * @param clazz 需要填充的对象,必须包含默认构造器
    * @param resourcePath 类路径的相对路径,如 application.yml
    * @param ignoreInvalidValues 忽略配置中无效/错误的值
-   * @return 如果{@code clazz}未包含注解{@link ConfigurationProperties},返回默认实例
+   * @return 如果clazz未包含注解{@link ConfigurationProperties},返回默认实例
    * @throws WindException 文件读取失败时抛出.
    */
   public static <T> T process(
@@ -52,10 +60,31 @@ public final class YmlUtil {
         (classLoader == null ? YmlUtil.class.getClassLoader() : classLoader)
             .getResource(resourcePath);
     if (url == null) {
-      throw new WindException("Could not get resource from " + resourcePath);
+      throw new WindException("Could not get resource from: " + resourcePath);
     }
-    try (final FileInputStream inputStream = new FileInputStream(url.getFile())) {
-      final Map<String, Object> configMap = yamlHandler(new FileInputStream[] {inputStream});
+    try (final FileInputStream fileInputStream = new FileInputStream(url.getFile())) {
+      return process(clazz, fileInputStream, ignoreInvalidValues);
+    } catch (IOException e) {
+      throw new WindException(e);
+    }
+  }
+  /**
+   * 读取yml文件.
+   *
+   * @param clazz 需要填充的对象,必须包含默认构造器
+   * @param inputStream 类路径的相对路径,如 application.yml
+   * @param ignoreInvalidValues 忽略配置中无效/错误的值
+   * @return 如果{@code clazz}未包含注解{@link ConfigurationProperties},返回默认实例
+   * @throws WindException 文件读取失败时抛出.
+   */
+  public static <T> T process(
+      final Class<T> clazz,
+      @Nonnull final InputStream inputStream,
+      final boolean ignoreInvalidValues)
+      throws WindException {
+    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      final Map<String, Object> configMap = yamlHandler(new InputStream[] {inputStream});
       final ConfigurationProperties annotation = clazz.getAnnotation(ConfigurationProperties.class);
       if (annotation == null) {
         return null;
@@ -72,6 +101,11 @@ public final class YmlUtil {
       return obj;
     } catch (IOException e) {
       throw new WindException(e);
+    } finally {
+      try {
+        inputStream.close();
+      } catch (IOException ignored) {
+      }
     }
   }
 

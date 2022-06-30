@@ -13,6 +13,10 @@ import javax.annotation.Nonnull;
 public class Page<T> {
   private Pageable pageable;
   private final List<T> content = new ArrayList<>();
+
+  @SuppressWarnings("rawtypes")
+  public static final Page EMPTY = Page.of(Collections.emptyList());
+
   /** 总记录数. */
   private long total;
 
@@ -104,5 +108,10 @@ public class Page<T> {
 
   public void setTotal(final long total) {
     this.total = total;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> Page<T> empty() {
+    return (Page<T>) EMPTY;
   }
 }

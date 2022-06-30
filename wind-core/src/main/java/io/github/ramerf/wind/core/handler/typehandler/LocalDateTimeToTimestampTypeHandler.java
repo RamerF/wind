@@ -30,9 +30,4 @@ public class LocalDateTimeToTimestampTypeHandler implements ITypeHandler<LocalDa
             Instant.ofEpochMilli(jdbcVal.getTime()), TimeZone.getDefault().toZoneId())
         : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "TIMESTAMP";
-  }
 }

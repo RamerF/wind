@@ -24,9 +24,4 @@ public class TimestampTypeHandler implements ITypeHandler<Date, Timestamp> {
       final Timestamp jdbcVal, final Object defaultValue, final Field field) {
     return jdbcVal != null ? new Date(jdbcVal.getTime()) : null;
   }
-
-  @Override
-  public String getJdbcType(@Nonnull final Field field) {
-    return "TIMESTAMP";
-  }
 }

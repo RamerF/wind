@@ -3,7 +3,6 @@ package io.github.ramerf.wind.core.plugin;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.executor.Dao;
 import io.github.ramerf.wind.core.executor.Executor;
-import io.github.ramerf.wind.core.util.BeanUtils;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import net.sf.cglib.proxy.Enhancer;
@@ -55,12 +54,6 @@ public class Plugins {
 
   public static Object wrap(Object target, DaoInterceptorChain chain, final Object[] args) {
     Class<?> clazz = target.getClass();
-    /* jdk代理
-    Class<?>[] interfaces = BeanUtils.getAllInterfaces(clazz);
-    if (interfaces.length > 0) {
-      return Proxy.newProxyInstance(
-          clazz.getClassLoader(), interfaces, new PluginJdkProxyCallback(target, interceptor));
-    }*/
     if (Dao.class.isAssignableFrom(clazz)) {
       Enhancer enhancer = new Enhancer();
       enhancer.setSuperclass(clazz);
@@ -73,21 +66,10 @@ public class Plugins {
 
   public static Object wrap(Object target, ServiceInterceptorChain chain, final Object[] args) {
     final Class<?> clazz = target.getClass();
-    // Enhancer enhancer = new Enhancer();
-    // enhancer.setSuperclass(clazz);
-    // enhancer.setCallback(new JdkProxyServiceInterceptor(target, chain));
-    // if (BaseServiceImpl.class.isAssignableFrom(clazz)) {
-    //   target = enhancer.create(new Class[] {Dao.class}, args);
-    // } //
-    // else if (GenericService.class.isAssignableFrom(clazz)) {
-    //   target = enhancer.create(new Class[] {Dao.class, Class.class, Class.class}, args);
-    // }
-
-    Set<Class<?>> interfaces = BeanUtils.getAllInterfaces(clazz);
     target =
         Proxy.newProxyInstance(
             clazz.getClassLoader(),
-            interfaces.toArray(new Class[0]),
+            clazz.getInterfaces(),
             new JdkProxyServiceInterceptor(target, chain));
     return target;
   }
