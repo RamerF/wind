@@ -387,24 +387,24 @@ public class StringCnd<T> extends AbstractCnd<T, StringCnd<T>>
   }
 
   @Override
-  public StringCnd<T> and(final String column, final String operator, final Object value) {
+  public StringCnd<T> and(final String left, final String operator, final Object right) {
     conditionSql.add(
         (conditionSql.size() > 0 ? AND.operator : "")
-            .concat(column)
+            .concat(left)
             .concat(operator)
-            .concat(toPreFormatSqlVal(value)));
-    valueTypes.add(ValueType.of(value));
+            .concat(toPreFormatSqlVal(right)));
+    valueTypes.add(ValueType.of(right));
     return this;
   }
 
   @Override
-  public StringCnd<T> or(final String column, final String operator, final Object value) {
+  public StringCnd<T> or(final String left, final String operator, final Object right) {
     conditionSql.add(
         (conditionSql.size() > 0 ? OR.operator : "")
-            .concat(column)
+            .concat(left)
             .concat(operator)
-            .concat(toPreFormatSqlVal(value)));
-    valueTypes.add(ValueType.of(value));
+            .concat(toPreFormatSqlVal(right)));
+    valueTypes.add(ValueType.of(right));
     return this;
   }
 

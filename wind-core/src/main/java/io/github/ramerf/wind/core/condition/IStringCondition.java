@@ -191,17 +191,17 @@ public interface IStringCondition<T, U extends IStringCondition<T, U>> extends C
 
   U or(@Nonnull StringCndGroup<T> group);
 
-  default U and(final String column, final MatchPattern operator, final Object value) {
-    return and(column, operator.operator, value);
+  default U and(final String left, final MatchPattern operator, final Object right) {
+    return and(left, operator.operator, right);
   }
 
-  U and(final String column, final String operator, final Object value);
+  U and(final String left, final String operator, final Object right);
 
-  default U or(final String column, final MatchPattern operator, final Object value) {
-    return or(column, operator.operator, value);
+  default U or(final String left, final MatchPattern operator, final Object right) {
+    return or(left, operator.operator, right);
   }
 
-  U or(final String column, final String operator, final Object value);
+  U or(final String left, final String operator, final Object right);
 
   U groupBy(@Nonnull final String column);
 }

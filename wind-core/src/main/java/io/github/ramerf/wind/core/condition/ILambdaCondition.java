@@ -212,4 +212,10 @@ public interface ILambdaCondition<T, U extends ILambdaCondition<T, U>> extends C
   }
   /** array <@ value::ARRAY */
   <V> U contained(boolean condition, @Nonnull SetterFunction<T, V> setter, final V value);
+  /** array && value::ARRAY */
+  default <V> U overlap(@Nonnull SetterFunction<T, V> setter, final V value) {
+    return overlap(true, setter, value);
+  }
+  /** array <@ value::ARRAY */
+  <V> U overlap(boolean condition, @Nonnull SetterFunction<T, V> setter, final V value);
 }

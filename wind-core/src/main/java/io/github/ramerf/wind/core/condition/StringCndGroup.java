@@ -244,14 +244,14 @@ public class StringCndGroup<T> extends AbstractCndGroup<T, StringCndGroup<T>, St
   }
 
   @Override
-  public StringCndGroup<T> and(final String column, final String operator, final Object value) {
-    this.condition.and(column, operator, value);
+  public StringCndGroup<T> and(final String left, final String operator, final Object right) {
+    this.condition.and(left, operator, right);
     return this;
   }
 
   @Override
-  public StringCndGroup<T> or(final String column, final String operator, final Object value) {
-    this.condition.or(column, operator, value);
+  public StringCndGroup<T> or(final String left, final String operator, final Object right) {
+    this.condition.or(left, operator, right);
     return this;
   }
 

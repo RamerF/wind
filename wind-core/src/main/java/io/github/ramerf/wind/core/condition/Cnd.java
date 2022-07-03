@@ -530,4 +530,18 @@ public class Cnd<T> extends AbstractCnd<T, Cnd<T>> implements ILambdaCondition<T
     }
     return this;
   }
+
+  @Override
+  public <V> Cnd<T> overlap(
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    if (condition) {
+      conditionSql.add(
+          (conditionSql.size() > 0 ? AND.operator : "")
+              .concat(setter.getColumn())
+              .concat(OVERLAP.operator)
+              .concat(toPreFormatSqlVal(value)));
+      valueTypes.add(ValueType.of(value, setter));
+    }
+    return this;
+  }
 }

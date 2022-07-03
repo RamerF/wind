@@ -287,4 +287,11 @@ public class CndGroup<T> extends AbstractCndGroup<T, CndGroup<T>, Cnd<T>>
     this.condition.contained(condition, setter, value);
     return this;
   }
+
+  @Override
+  public <V> CndGroup<T> overlap(
+      final boolean condition, @Nonnull final SetterFunction<T, V> setter, final V value) {
+    this.condition.overlap(condition, setter, value);
+    return this;
+  }
 }
