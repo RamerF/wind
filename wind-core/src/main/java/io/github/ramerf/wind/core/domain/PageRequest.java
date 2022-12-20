@@ -3,10 +3,11 @@ package io.github.ramerf.wind.core.domain;
 import io.github.ramerf.wind.core.domain.Sort.Direction;
 import io.github.ramerf.wind.core.domain.Sort.Order;
 import io.github.ramerf.wind.core.function.GetterFunction;
+import lombok.NonNull;
+
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.Nonnull;
-import lombok.NonNull;
 
 /**
  * 排序规则.示例: <code>PageRequest.of(1, 10).asc(Foo::getUpdateTime)</code>
@@ -46,7 +47,7 @@ public class PageRequest implements Pageable {
       throw new IllegalArgumentException("Page index must not be less than 1!");
     }
     if (size < 1) {
-      throw new IllegalArgumentException("Page size must not be less than 1!");
+      throw new IllegalArgumentException("Size must not be less than 1!");
     }
     final PageRequest pageRequest = new PageRequest();
     pageRequest.page = page;

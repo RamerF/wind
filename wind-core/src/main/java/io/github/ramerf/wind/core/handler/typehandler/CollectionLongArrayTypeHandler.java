@@ -1,10 +1,12 @@
 package io.github.ramerf.wind.core.handler.typehandler;
 
 import io.github.ramerf.wind.core.exception.WindException;
-import java.lang.reflect.Field;
-import java.sql.*;
-import java.util.*;
+
 import javax.annotation.Nonnull;
+import java.lang.reflect.Field;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * {@literal java:List<Long> <=> jdbc:Long[]}.
@@ -20,7 +22,8 @@ public class CollectionLongArrayTypeHandler implements ITypeHandler<Collection<L
       return null;
     }
     try {
-      return ps.getConnection().createArrayOf(getArrayType(field), javaVal.toArray(new Long[0]));
+      return ps.getConnection()
+          .createArrayOf(getArrayType(field, "bigint"), javaVal.toArray(new Long[0]));
     } catch (SQLException e) {
       throw new WindException(e);
     }

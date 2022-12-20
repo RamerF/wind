@@ -9,14 +9,17 @@ import io.github.ramerf.wind.core.exporter.TableExporter;
 import io.github.ramerf.wind.core.function.FieldFunction;
 import io.github.ramerf.wind.core.mapping.EntityMapping;
 import io.github.ramerf.wind.core.support.EntityInfo;
-import io.github.ramerf.wind.core.util.*;
+import io.github.ramerf.wind.core.util.BeanUtils;
+import io.github.ramerf.wind.core.util.CollectionUtils;
+import io.github.ramerf.wind.core.util.EntityUtils;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.annotation.Nonnull;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * The type Entity helper.
@@ -79,6 +82,9 @@ public class EntityHelper {
     if (log.isTraceEnabled()) {
       log.trace("getColumn:[{}]", CLAZZ_ENTITY_MAP);
     }
+    if (windContext == null || windContext.getConfiguration() == null) {
+      return EntityUtils.fieldToColumn(function.getField());
+    }
     final EntityColumn entityColumn =
         initEntityIfNeeded(function.getImplClassFullPath())
             .getFieldColumnMap()
@@ -113,11 +119,24 @@ public class EntityHelper {
    * @see Types
    */
   public static String getJdbcArrayTypeName(final Field field, final String defaultValue) {
-    return Optional.of(getEntityInfo(field.getDeclaringClass()))
-        .map(EntityInfo::getFieldColumnMap)
-        .map(o -> o.get(field))
-        .map(EntityColumn::getArrayTypeName)
-        .orElse(defaultValue);
+    final Optional<EntityInfo> entityInfo = Optional.of(getEntityInfo(field.getDeclaringClass()));
+    final Optional<Map<Field, EntityColumn>> fieldEntityColumnMap =
+        entityInfo.map(EntityInfo::getFieldColumnMap);
+    final Optional<EntityColumn> entityColumn = fieldEntityColumnMap.map(o -> o.get(field));
+    if (entityColumn.isPresent()) {
+      return entityColumn.get().getArrayTypeName();
+    }
+    final Optional<Field> factField =
+        entityInfo
+            .map(EntityInfo::getColumnFieldMap)
+            .map(o -> o.get(EntityUtils.fieldToColumn(field)));
+    if (factField.isPresent()) {
+      return fieldEntityColumnMap
+          .map(o -> o.get(factField.get()))
+          .map(EntityColumn::getArrayTypeName)
+          .orElse(defaultValue);
+    }
+    return defaultValue;
   }
 
   @Nonnull

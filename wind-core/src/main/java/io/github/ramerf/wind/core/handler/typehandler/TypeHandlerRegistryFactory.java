@@ -5,11 +5,14 @@ import io.github.ramerf.wind.core.exception.WindException;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.handler.typehandler.TypeHandlerHelper.ValueType;
 import io.github.ramerf.wind.core.util.BeanUtils;
-import java.io.IOException;
-import java.lang.reflect.*;
-import java.util.*;
-import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 
 /**
  * 注册类型转换器.
@@ -174,8 +177,11 @@ public class TypeHandlerRegistryFactory {
       return getTypeHandler(DateTypeHandler.class);
     }
     if (Collection.class.isAssignableFrom(type)) {
+      final Type genericType = valueType.getField().getGenericType();
       ParameterizedType parameterizedType =
-          (ParameterizedType) valueType.getField().getGenericType();
+          genericType instanceof ParameterizedType
+              ? (ParameterizedType) genericType
+              : (ParameterizedType) valueType.getGenericParameterType();
       final Type[] arguments = parameterizedType.getActualTypeArguments();
       if (arguments.length > 0) {
         final Class<?> argument = (Class<?>) arguments[0];

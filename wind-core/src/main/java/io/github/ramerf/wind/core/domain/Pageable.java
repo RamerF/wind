@@ -1,5 +1,10 @@
 package io.github.ramerf.wind.core.domain;
 
+import io.github.ramerf.wind.core.domain.Sort.Order;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+
 /**
  * 分页信息.
  *
@@ -10,6 +15,10 @@ public interface Pageable {
   /** 返回一个无分页信息的实例. */
   static Pageable unpaged() {
     return Unpaged.INSTANCE;
+  }
+
+  static Pageable unpaged(@Nonnull final List<Order> orders) {
+    return Unpaged.of(orders);
   }
 
   /** 是否包含分页信息. */

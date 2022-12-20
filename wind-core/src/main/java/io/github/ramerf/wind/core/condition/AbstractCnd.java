@@ -15,16 +15,19 @@ import io.github.ramerf.wind.core.helper.SqlHelper;
 import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.util.EntityUtils;
 import io.github.ramerf.wind.core.util.StringUtils;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.*;
 import static io.github.ramerf.wind.core.helper.SqlHelper.toPreFormatSqlVal;
@@ -134,7 +137,9 @@ public abstract class AbstractCnd<POJO, CONDITION extends AbstractCnd<POJO, COND
   @Nonnull
   @Override
   public Pageable getPageRequest() {
-    return page > 0 && size > 0 ? PageRequest.of(page, size, orders) : Pageable.unpaged();
+    return page > 0 && size > 0
+        ? PageRequest.of(page, size, orders)
+        : !orders.isEmpty() ? Pageable.unpaged(orders) : Pageable.unpaged();
   }
 
   @Override
@@ -249,15 +254,18 @@ public abstract class AbstractCnd<POJO, CONDITION extends AbstractCnd<POJO, COND
     EntityInfo entityInfo = EntityHelper.getEntityInfo(clazz);
     final LogicDeleteProp logicDeleteProp = entityInfo.getLogicDeleteProp();
     final EntityColumn logicDeletePropColumn = entityInfo.getLogicDeletePropColumn();
-    // 启用逻辑删除且当前未包含该条件(这个有必要?)
+    // 启用逻辑删除且当前未包含该条件
     if (logicDeleteProp.isEnable()) {
       final Field logicDeleteField = logicDeletePropColumn.getField();
-      conditionSql.add(
-          (conditionSql.size() > 0 ? AND.operator : "")
-              .concat(EntityUtils.fieldToColumn(logicDeleteField))
-              .concat(MatchPattern.EQUAL.operator)
-              .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
-      valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), logicDeleteField));
+      final String logicDeleteColumn = EntityUtils.fieldToColumn(logicDeleteField);
+      if (conditionSql.stream().noneMatch(o -> o.contains(logicDeleteColumn))) {
+        conditionSql.add(
+            (conditionSql.size() > 0 ? AND.operator : "")
+                .concat(logicDeleteColumn)
+                .concat(MatchPattern.EQUAL.operator)
+                .concat(toPreFormatSqlVal(logicDeleteProp.isNotDelete())));
+        valueTypes.add(ValueType.of(logicDeleteProp.isNotDelete(), logicDeleteField));
+      }
     }
     //noinspection unchecked
     return (CONDITION) this;

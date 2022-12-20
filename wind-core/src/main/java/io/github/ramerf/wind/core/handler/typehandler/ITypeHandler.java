@@ -3,15 +3,20 @@ package io.github.ramerf.wind.core.handler.typehandler;
 import io.github.ramerf.wind.core.annotation.TableColumn;
 import io.github.ramerf.wind.core.handler.TypeHandler;
 import io.github.ramerf.wind.core.helper.EntityHelper;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
-import java.sql.PreparedStatement;
-import java.sql.Types;
-import java.util.*;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.sql.PreparedStatement;
+import java.sql.Types;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * 数据库与Java类型之间转换.可以在字段上添加{@link TypeHandler}指定使用的类型转换器.
@@ -99,8 +104,8 @@ public interface ITypeHandler<T, V> {
    * @return jdbc数组类型名称
    * @see TableColumn#arrayType
    */
-  default String getArrayType(@Nonnull final Field field) {
-    return EntityHelper.getJdbcArrayTypeName(field, "");
+  default String getArrayType(@Nonnull final Field field, final String defaultValue) {
+    return EntityHelper.getJdbcArrayTypeName(field, defaultValue);
   }
 
   /**

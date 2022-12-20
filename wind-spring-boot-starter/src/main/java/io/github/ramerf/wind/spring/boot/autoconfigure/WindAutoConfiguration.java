@@ -12,18 +12,20 @@ import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.spring.DaoTemplate;
 import io.github.ramerf.wind.spring.ServiceInterceptorAop;
 import io.github.ramerf.wind.spring.transaction.SpringManagedTransactionFactory;
-import java.util.ArrayList;
-import java.util.List;
-import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
+
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author ramer
@@ -32,6 +34,7 @@ import org.springframework.core.annotation.Order;
 @org.springframework.context.annotation.Configuration
 @ConditionalOnSingleCandidate(DataSource.class)
 @EnableConfigurationProperties(WindProperty.class)
+@ConditionalOnProperty(prefix = WindProperty.WIND_PROPERTY_PREFIX, name = "ddl-auto")
 @AutoConfigureAfter({DataSourceAutoConfiguration.class})
 public class WindAutoConfiguration {
   @Autowired private WindProperty windProperty;

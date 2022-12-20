@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
+import static io.github.ramerf.wind.spring.boot.autoconfigure.WindProperty.WIND_PROPERTY_PREFIX;
+
 /**
  * @author ramer
  * @since 2022.06.03
@@ -17,8 +19,9 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 @Data
 @Slf4j
 @org.springframework.context.annotation.Configuration
-@ConfigurationProperties(prefix = "wind")
+@ConfigurationProperties(prefix = WIND_PROPERTY_PREFIX)
 public class WindProperty {
+  public static final String WIND_PROPERTY_PREFIX = "wind";
   /** 逻辑删除配置. */
   @NestedConfigurationProperty private LogicDeleteProp logicDeleteProp = new LogicDeleteProp();
 

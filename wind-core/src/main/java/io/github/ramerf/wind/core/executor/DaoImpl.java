@@ -1,6 +1,8 @@
 package io.github.ramerf.wind.core.executor;
 
-import io.github.ramerf.wind.core.condition.*;
+import io.github.ramerf.wind.core.condition.Cnd;
+import io.github.ramerf.wind.core.condition.Condition;
+import io.github.ramerf.wind.core.condition.Fields;
 import io.github.ramerf.wind.core.condition.function.AggregateSqlFunction;
 import io.github.ramerf.wind.core.config.Configuration;
 import io.github.ramerf.wind.core.config.Configuration.TimestampStrategy;
@@ -19,21 +21,26 @@ import io.github.ramerf.wind.core.support.EntityInfo;
 import io.github.ramerf.wind.core.support.IdGenerator;
 import io.github.ramerf.wind.core.util.*;
 import io.github.ramerf.wind.core.util.EntityUtils.SqlStatementType;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
-import java.sql.*;
-import java.time.*;
-import java.util.Date;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.sql.DataSource;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.GROUP_BY;
 import static io.github.ramerf.wind.core.condition.Condition.SqlOperator.WHERE;
@@ -313,7 +320,6 @@ public class DaoImpl implements Dao {
 
   private String getOrderByClause(final Pageable pageRequest) {
     Pageable pageable = pageRequest == null ? Pageable.unpaged() : pageRequest;
-    if (pageable == null) return "";
     String orderBy =
         pageable.getSort().stream()
             .map(s -> s.getProperty().concat(" ").concat(s.getDirection().name()))
