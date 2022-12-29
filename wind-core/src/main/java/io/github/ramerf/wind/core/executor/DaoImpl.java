@@ -804,9 +804,16 @@ public class DaoImpl implements Dao {
                     : EntityUtils.getNonNullColumnFields(t, sqlStatementType))
                 .stream().filter(field -> !excludeFields.contains(field)).collect(toList());
       } else {
-        savingFields =
+        final List<Field> allColumnFields =
+            EntityUtils.getAllColumnFields(t.getClass(), sqlStatementType);
+        final Set<String> incluFieldNames =
             includeFields.stream()
                 .filter(field -> !excludeFields.contains(field))
+                .map(Field::getName)
+                .collect(Collectors.toSet());
+        savingFields =
+            allColumnFields.stream()
+                .filter(o -> incluFieldNames.contains(o.getName()))
                 .collect(toList());
       }
     }
